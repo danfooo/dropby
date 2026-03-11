@@ -1,0 +1,52 @@
+import express from 'express';
+import cors from 'cors';
+import { join } from 'path';
+import { existsSync } from 'fs';
+
+import authRouter from './routes/auth.js';
+import friendsRouter from './routes/friends.js';
+import statusRouter from './routes/status.js';
+import invitesRouter from './routes/invites.js';
+import goingRouter from './routes/going.js';
+import notesRouter from './routes/notes.js';
+import nudgesRouter from './routes/nudges.js';
+import eventsRouter from './routes/events.js';
+
+// Start cron jobs
+import './cron.js';
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const isDev = process.env.NODE_ENV !== 'production';
+
+app.use(cors({
+  origin: isDev ? ['http://localhost:5173', 'http://localhost:4173'] : true,
+  credentials: true,
+}));
+
+app.use(express.json());
+
+// API routes
+app.use('/api/auth', authRouter);
+app.use('/api/friends', friendsRouter);
+app.use('/api/status', statusRouter);
+app.use('/api/invites', invitesRouter);
+app.use('/api/going', goingRouter);
+app.use('/api/notes', notesRouter);
+app.use('/api/nudges', nudgesRouter);
+app.use('/api/events', eventsRouter);
+
+// Serve static client in production
+if (!isDev) {
+  const clientDist = join(process.cwd(), '..', 'client', 'dist');
+  if (existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+    app.get('*', (_req, res) => res.sendFile(join(clientDist, 'index.html')));
+  }
+}
+
+app.listen(PORT, () => {
+  console.log(`Drop By server running on http://localhost:${PORT}`);
+});
+
+export default app;
