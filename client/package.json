@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dicebear/core": "^9.4.0",
+    "@dicebear/shapes": "^9.4.0",
     "@react-oauth/google": "^0.12.1",
     "@tanstack/react-query": "^5.17.19",
     "axios": "^1.6.7",
