@@ -446,14 +446,59 @@ Accessible from the Home screen (e.g. avatar/name in header).
 - Muted friend is unchecked by default in the recipient selection UI
 - Muting does not affect the muted friend's ability to open their door to the muting user
 
-### Invite Links
+### Connection Patterns
 
-- Generated on demand; valid for 1 hour
-- Multi-use (any number of people can use the same link)
-- Accepting creates a bidirectional friendship
-- If inviter has an active status, new friend is auto-added as a recipient
-- Self-invite: if a user accepts their own invite link, nothing happens (no-op)
-- Already-friends: skips friendship creation, shows inviter's current status
+Friendships are formed exclusively via invite links. There is no search, no directory, no follow request. Every connection starts with one person sharing a link with another.
+
+#### Generating an invite link
+
+- Any logged-in user can generate a link at any time from the Friends page or the Door Open view
+- Links are valid for 1 hour and multi-use (multiple people can accept the same link)
+- If generated from the Door Open view, `status_id` is recorded on the link — this unlocks session-aware behaviour when the link is accepted
+- The link is copied to clipboard; sharing mechanism is up to the user (message, chat, wherever)
+
+#### Accepting a link — all cases
+
+The outcome depends on the recipient's auth state and whether the host's door is open at the time of acceptance.
+
+| Recipient state | Host door | Outcome |
+|---|---|---|
+| Logged in, not yet friends | Open | Friendship created; recipient auto-added as status recipient; success screen shows open door + note |
+| Logged in, not yet friends | Closed | Friendship created; success screen confirms connection |
+| Logged in, already friends | Open | No new friendship; success screen shows open door |
+| Logged in, already friends | Closed | No new friendship; goes to home |
+| Logged in, own link | Either | No-op; shown a friendly message |
+| Not logged in | Open | Door card shown immediately (avatar, name, note); can signal Going as guest without an account; "Sign up to join" link below |
+| Not logged in | Closed | Redirected to auth with `?redirect=/invite/:token` preserved |
+
+#### New user signup via invite link
+
+When a not-logged-in user arrives via an invite link and chooses to sign up, the redirect destination must survive the full signup + email verification flow:
+
+1. User arrives at `/invite/:token` — if door is closed, redirected to `/auth?redirect=/invite/:token`
+2. User fills in signup form; client sends `redirect_url` to server alongside email/password
+3. Server embeds `redirect_url` as a query param on the verification link: `/api/auth/verify-email/:token?redirect=/invite/:token`
+4. User clicks the verification email; server verifies, then redirects to `/auth?verified=true&redirect=/invite/:token`
+5. User logs in; client reads `redirect` param and navigates to `/invite/:token`
+6. Invite page auto-accepts the invite and shows the appropriate success state (with open door if still active)
+
+This ensures a user who signed up specifically because of an invite immediately lands in the context they came from — seeing the connection established and, if the door is still open, the host's current status.
+
+#### What the host sees
+
+- When a new friend accepts via a session link (door open): they are silently added to `status_recipients` — host does not need to do anything
+- If the new friend signals Going: host sees their name appear in the going signals section on the Door Open view
+- If the door has already closed by the time the link is accepted: friendship is still created, but the new friend is not added as a recipient (the session is over)
+
+#### Guest Going (no account required)
+
+A visitor who arrives at a session-linked invite while not logged in can signal they're going without creating an account:
+
+- Tap "Going ✅" on the door card → modal opens
+- Required: first name
+- Optional: email or phone number; if provided, an opt-in checkbox appears to receive an app download link
+- On submit: host sees the guest's name in going signals immediately
+- The guest receives no further UI — just a confirmation that the host knows they're coming
 
 ### AI Note Suggestions
 
