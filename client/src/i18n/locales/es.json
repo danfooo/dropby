@@ -45,8 +45,6 @@
     "nudgeConfirmed": "¡Recordatorio guardado! Puedes cambiarlo en tu",
     "nudgeConfirmedLink": "Perfil",
     "nudgePickOther": "Elegir otra hora",
-    "reminders": "Recordatorios: {{summary}}",
-    "editReminders": "Editar",
     "youreOpen": "¡Estás abierto!",
     "closesIn": "Cierra en {{minutes}} min",
     "keepItOpen": "Mantener abierto +30 min",

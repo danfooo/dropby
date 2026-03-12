@@ -7,6 +7,7 @@ import { useAuthStore } from '../stores/auth';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
+import Toast from '../components/Toast';
 import { getSuggestions } from '../i18n/suggestions';
 
 type HomeView = 'closed' | 'open' | 'edit';
@@ -429,27 +430,7 @@ export default function Home() {
           {createStatus.isPending ? t('home.opening') : t('home.openDoor')}
         </button>
 
-        {/* Invite friends card */}
-        {!hasFriends && (
-          <div className="mt-4 bg-white rounded-2xl p-4 border border-dashed border-gray-200">
-            <p className="text-sm text-gray-600 mb-3">
-              {t('home.inviteFriendsText')}
-            </p>
-            <button
-              onClick={async () => {
-                const data = await invitesApi.generate();
-                await navigator.clipboard.writeText(data.url);
-                alert(t('home.inviteLinkCopied'));
-              }}
-              className="text-sm font-semibold text-emerald-600"
-            >
-              {t('home.copyInviteLink')}
-            </button>
-          </div>
-        )}
-
-        {/* Nudge card — shown only if no nudge schedules */}
-        <NudgeCard />
+        <TipsSection />
       </div>
     );
   }
@@ -633,62 +614,89 @@ export default function Home() {
   );
 }
 
-function NudgeCard() {
+function usePermanentDismiss(key: string): [boolean, () => void] {
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem(key) === '1');
+  const dismiss = () => { localStorage.setItem(key, '1'); setDismissed(true); };
+  return [dismissed, dismiss];
+}
+
+function TipsSection() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
-  const [confirmed, setConfirmed] = useState(false);
+  const [nudgeDismissed, dismissNudge] = usePermanentDismiss('tip_nudge_dismissed');
+  const [inviteDismissed, dismissInvite] = usePermanentDismiss('tip_invite_dismissed');
+  const [toast, setToast] = useState<{ message: string; linkText: string; linkTo: string } | null>(null);
+
   const { data: nudges = [] } = useQuery({ queryKey: ['nudges'], queryFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.list(); } });
 
   const addNudge = useMutation({
     mutationFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.add('sat', 11); },
-    onSuccess: () => { setConfirmed(true); qc.invalidateQueries({ queryKey: ['nudges'] }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['nudges'] });
+      setToast({ message: t('home.nudgeConfirmed'), linkText: t('home.nudgeConfirmedLink'), linkTo: '/profile' });
+    },
   });
 
   const use24h = ['de', 'es', 'fr'].includes(i18n.language.split('-')[0]);
   const timeLabel = use24h ? '11:00' : '11am';
   const dayLabel = t('profile.days.sat');
 
-  if (confirmed) {
-    return (
-      <p className="mt-4 text-sm text-gray-500">
-        {t('home.nudgeConfirmed')}{' '}
-        <Link to="/profile" className="text-emerald-600 font-medium">{t('home.nudgeConfirmedLink')}</Link>.
-      </p>
-    );
-  }
-
-  if ((nudges as any[]).length > 0) {
-    const summary = (nudges as any[]).slice(0, 3).map((n: any) => {
-      const dayShort = t(`profile.daysShort.${n.day_of_week}`);
-      const time = use24h ? `${n.hour}:00` : (() => { const h = n.hour; return `${h > 12 ? h - 12 : h === 0 ? 12 : h}${h < 12 ? 'am' : 'pm'}`; })();
-      return `${dayShort} ${time}`;
-    }).join(' · ');
-    return (
-      <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-        <span>{t('home.reminders', { summary: summary + ((nudges as any[]).length > 3 ? ' …' : '') })}</span>
-        <Link to="/profile" className="text-emerald-600 font-medium">{t('home.editReminders')}</Link>
-      </div>
-    );
-  }
+  const showNudgeTip = !nudgeDismissed && (nudges as any[]).length === 0;
+  const showInviteTip = !inviteDismissed && !showNudgeTip;
 
   return (
-    <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100">
-      <p className="text-sm font-semibold text-gray-900 mb-1">{t('home.nudgeQuestion')}</p>
-      <p className="text-sm text-gray-500 mb-4">
-        {t('home.nudgeSuggestion', { day: dayLabel, time: timeLabel })}
-      </p>
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => addNudge.mutate()}
-          disabled={addNudge.isPending}
-          className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
-        >
-          {t('home.nudgeAccept')}
-        </button>
-        <Link to="/profile?addReminder=1" className="text-sm text-gray-500 hover:text-gray-700">
-          {t('home.nudgePickOther')}
-        </Link>
-      </div>
-    </div>
+    <>
+      {showNudgeTip && (
+        <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100">
+          <div className="flex items-start justify-between mb-1">
+            <p className="text-sm font-semibold text-gray-900">{t('home.nudgeQuestion')}</p>
+            <button onClick={dismissNudge} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 mb-4">{t('home.nudgeSuggestion', { day: dayLabel, time: timeLabel })}</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => addNudge.mutate()}
+              disabled={addNudge.isPending}
+              className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            >
+              {t('home.nudgeAccept')}
+            </button>
+            <Link to="/profile?addReminder=1" className="text-sm text-gray-500 hover:text-gray-700">
+              {t('home.nudgePickOther')}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {showInviteTip && (
+        <div className="mt-4 bg-white rounded-2xl p-4 border border-dashed border-gray-200">
+          <div className="flex items-start justify-between mb-2">
+            <p className="text-sm text-gray-600 flex-1">{t('home.inviteFriendsText')}</p>
+            <button onClick={dismissInvite} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <button
+            onClick={async () => {
+              const { invitesApi } = await import('../api');
+              const data = await invitesApi.generate();
+              await navigator.clipboard.writeText(data.url);
+              setToast({ message: t('home.inviteLinkCopied'), linkText: '', linkTo: '' });
+            }}
+            className="text-sm font-semibold text-emerald-600"
+          >
+            {t('home.copyInviteLink')}
+          </button>
+        </div>
+      )}
+
+      {toast && <Toast message={toast.message} linkText={toast.linkText || undefined} linkTo={toast.linkTo || undefined} onDismiss={() => setToast(null)} />}
+    </>
   );
 }

@@ -45,8 +45,6 @@
     "nudgeConfirmed": "Rappel enregistré ! Tu peux le modifier dans ton",
     "nudgeConfirmedLink": "Profil",
     "nudgePickOther": "Choisir un autre moment",
-    "reminders": "Rappels : {{summary}}",
-    "editReminders": "Modifier",
     "youreOpen": "Tu es ouvert !",
     "closesIn": "Ferme dans {{minutes}} min",
     "keepItOpen": "Prolonger de +30 min",

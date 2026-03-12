@@ -45,8 +45,6 @@
     "nudgeConfirmed": "Reminder set! You can change it in your",
     "nudgeConfirmedLink": "Profile",
     "nudgePickOther": "Pick another time",
-    "reminders": "Reminders: {{summary}}",
-    "editReminders": "Edit",
     "youreOpen": "You're open!",
     "closesIn": "Closes in {{minutes}} min",
     "keepItOpen": "Keep it open +30 min",
