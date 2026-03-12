@@ -23,7 +23,8 @@
     "verifyEmailSent": "Revisa tu correo para verificar tu cuenta antes de entrar.",
     "resendVerification": "Reenviar correo de verificación",
     "emailVerified": "¡Correo verificado! Ya puedes iniciar sesión.",
-    "verificationInvalid": "El enlace de verificación no es válido o ha expirado."
+    "verificationInvalid": "El enlace de verificación no es válido o ha expirado.",
+    "connectWithName": "Regístrate para conectar con {{name}}"
   },
   "home": {
     "greeting": "¡Hola, {{name}} 👋",
@@ -31,7 +32,7 @@
     "openFor": "Abierto {{minutes}} min",
     "closingSoon": "Cerrando pronto",
     "goingButton": "Voy ✅",
-    "customNotePlaceholder": "O escribe una nota… (opcional)",
+    "customNotePlaceholder": "O escribe una nota…",
     "notifyFriends": "Avisar a amigos",
     "muted": "Silenciado",
     "openDoor": "Abrir 30 min 🚪",
@@ -56,7 +57,7 @@
     "alsoAvailable": "También disponibles",
     "yourDoorIsOpen": "Tu puerta está abierta — toca para volver",
     "edit": "Editar",
-    "notePlaceholder": "Nota (opcional)",
+    "notePlaceholder": "Nota",
     "recipients": "Destinatarios",
     "saveChanges": "Guardar cambios",
     "undo": "Deshacer ({{seconds}}s)",
@@ -117,7 +118,7 @@
     "email": "Correo",
     "remindersTitle": "Recordatorios",
     "addReminder": "+ Añadir",
-    "remindersDesc": "Recordatorios personales para abrir tu puerta — no se envían a amigos.",
+    "remindersDesc": "Te enviaremos una notificación para que abras tu puerta.",
     "noReminders": "Sin recordatorios.",
     "autoNudgeTitle": "Recuérdame cuando abrí mi puerta a esta hora la semana pasada",
     "autoNudgeDesc": "Activado por defecto",

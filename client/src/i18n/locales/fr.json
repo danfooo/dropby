@@ -23,7 +23,8 @@
     "verifyEmailSent": "Vérifie ton e-mail pour confirmer ton compte avant de te connecter.",
     "resendVerification": "Renvoyer l'e-mail de vérification",
     "emailVerified": "E-mail vérifié ! Tu peux maintenant te connecter.",
-    "verificationInvalid": "Le lien de vérification est invalide ou expiré."
+    "verificationInvalid": "Le lien de vérification est invalide ou expiré.",
+    "connectWithName": "Inscris-toi pour te connecter avec {{name}}"
   },
   "home": {
     "greeting": "Salut, {{name}} 👋",
@@ -31,7 +32,7 @@
     "openFor": "Ouvert {{minutes}} min",
     "closingSoon": "Ferme bientôt",
     "goingButton": "J'arrive ✅",
-    "customNotePlaceholder": "Ou écris une note… (facultatif)",
+    "customNotePlaceholder": "Ou écris une note…",
     "notifyFriends": "Prévenir les amis",
     "muted": "En sourdine",
     "openDoor": "Ouvrir 30 min 🚪",
@@ -56,7 +57,7 @@
     "alsoAvailable": "Aussi disponibles",
     "yourDoorIsOpen": "Ta porte est ouverte — appuie pour revenir",
     "edit": "Modifier",
-    "notePlaceholder": "Note (facultatif)",
+    "notePlaceholder": "Note",
     "recipients": "Destinataires",
     "saveChanges": "Enregistrer",
     "undo": "Annuler ({{seconds}}s)",
@@ -117,7 +118,7 @@
     "email": "E-mail",
     "remindersTitle": "Rappels",
     "addReminder": "+ Ajouter",
-    "remindersDesc": "Des petits rappels personnels pour ouvrir ta porte — pas envoyés à tes amis.",
+    "remindersDesc": "On t'enverra une notification pour ouvrir ta porte.",
     "noReminders": "Aucun rappel configuré.",
     "autoNudgeTitle": "Me rappeler quand j'ai ouvert ma porte à cette heure la semaine dernière",
     "autoNudgeDesc": "Activé par défaut",

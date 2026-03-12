@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useTranslation } from 'react-i18next';
-import { authApi } from '../api';
+import { authApi, invitesApi } from '../api';
 import { useAuthStore } from '../stores/auth';
+import Avatar from '../components/Avatar';
 
 type Tab = 'login' | 'signup';
 
@@ -17,10 +18,25 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [showResend, setShowResend] = useState(false);
+  const [inviter, setInviter] = useState<{ display_name: string } | null>(null);
   const { setAuth } = useAuthStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/home';
+
+  const inviteToken = redirect.match(/^\/invite\/([^/?]+)/)?.[1] ?? null;
+
+  useEffect(() => {
+    if (!inviteToken) return;
+    invitesApi.get(inviteToken)
+      .then(data => {
+        if (data?.inviter) {
+          setInviter(data.inviter);
+          setTab('signup');
+        }
+      })
+      .catch(() => {});
+  }, [inviteToken]);
 
   useEffect(() => {
     const verified = searchParams.get('verified');
@@ -92,6 +108,13 @@ export default function Auth() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Drop By</h1>
         </div>
+
+        {inviter && (
+          <div className="text-center mb-6">
+            <Avatar name={inviter.display_name} size="lg" className="mx-auto mb-3" />
+            <p className="text-gray-700 font-medium">{t('auth.connectWithName', { name: inviter.display_name })}</p>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex bg-gray-100 rounded-xl p-1 mb-6">

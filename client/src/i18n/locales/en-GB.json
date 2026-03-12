@@ -23,7 +23,8 @@
     "verifyEmailSent": "Check your email to verify your account before logging in.",
     "resendVerification": "Resend verification email",
     "emailVerified": "Email verified! You can now log in.",
-    "verificationInvalid": "Verification link is invalid or expired."
+    "verificationInvalid": "Verification link is invalid or expired.",
+    "connectWithName": "Sign up to connect with {{name}}"
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",
@@ -31,7 +32,7 @@
     "openFor": "Open for {{minutes}} min",
     "closingSoon": "Closing soon",
     "goingButton": "Going ✅",
-    "customNotePlaceholder": "Or type a custom note… (optional)",
+    "customNotePlaceholder": "Or type a note…",
     "notifyFriends": "Notify friends",
     "muted": "Muted",
     "openDoor": "Open for 30 min 🚪",
@@ -56,7 +57,7 @@
     "alsoAvailable": "Also available",
     "yourDoorIsOpen": "Your door is open — tap to return",
     "edit": "Edit",
-    "notePlaceholder": "Note (optional)",
+    "notePlaceholder": "Note",
     "recipients": "Recipients",
     "saveChanges": "Save changes",
     "undo": "Undo ({{seconds}}s)",
@@ -117,7 +118,7 @@
     "email": "Email",
     "remindersTitle": "Reminders",
     "addReminder": "+ Add",
-    "remindersDesc": "Personal nudges to open your door — not sent to friends.",
+    "remindersDesc": "We'll send you a notification to open your door.",
     "noReminders": "No reminders set.",
     "autoNudgeTitle": "Remind me when I opened my door this time last week",
     "autoNudgeDesc": "On by default",

@@ -23,7 +23,8 @@
     "verifyEmailSent": "Schau in deine E-Mails, um dein Konto zu bestätigen.",
     "resendVerification": "Bestätigungs-E-Mail erneut senden",
     "emailVerified": "E-Mail bestätigt! Du kannst dich jetzt anmelden.",
-    "verificationInvalid": "Der Bestätigungslink ist ungültig oder abgelaufen."
+    "verificationInvalid": "Der Bestätigungslink ist ungültig oder abgelaufen.",
+    "connectWithName": "Registriere dich, um dich mit {{name}} zu verbinden"
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",
@@ -31,7 +32,7 @@
     "openFor": "Offen noch {{minutes}} Min.",
     "closingSoon": "Schließt bald",
     "goingButton": "Ich komm ✅",
-    "customNotePlaceholder": "Oder eigene Notiz eingeben… (optional)",
+    "customNotePlaceholder": "Oder eigene Notiz eingeben…",
     "notifyFriends": "Freunde benachrichtigen",
     "muted": "Stummgeschaltet",
     "openDoor": "30 Min. offen 🚪",
@@ -56,7 +57,7 @@
     "alsoAvailable": "Auch verfügbar",
     "yourDoorIsOpen": "Deine Tür ist offen — tippen um zurückzukehren",
     "edit": "Bearbeiten",
-    "notePlaceholder": "Notiz (optional)",
+    "notePlaceholder": "Notiz",
     "recipients": "Empfänger",
     "saveChanges": "Änderungen speichern",
     "undo": "Rückgängig ({{seconds}}s)",
@@ -117,7 +118,7 @@
     "email": "E-Mail",
     "remindersTitle": "Erinnerungen",
     "addReminder": "+ Hinzufügen",
-    "remindersDesc": "Persönliche Erinnerungen, um deine Tür zu öffnen — werden nicht an Freunde gesendet.",
+    "remindersDesc": "Wir schicken dir eine Benachrichtigung, damit du deine Tür öffnest.",
     "noReminders": "Keine Erinnerungen gesetzt.",
     "autoNudgeTitle": "Erinnere mich, wenn ich vor einer Woche um diese Zeit meine Tür geöffnet hatte",
     "autoNudgeDesc": "Standardmäßig aktiviert",
