@@ -132,8 +132,9 @@ Drop By is a presence signal app. One tap tells your friends you're available fo
 
 ---
 
-## 6. Known Gaps
+## 6. Specifics about the /auth page
 
-- **No inbound status view**: Users cannot see when friends have opened their door to them. The data exists (statuses + recipients) but there is no UI consuming it.
-- **Email/SMS delivery**: Invite sending logs to console but doesn't actually send emails or SMS.
-- **Push notification delivery**: Backend function exists but requires APNs/FCM credentials to actually deliver.
+When arriving via an invite link, the flow always ends with the connection being made:
+
+- **Already logged in** → invite accepted immediately, redirected to home with a success message
+- **Not logged in** → auth page shows the inviter's name and avatar with a prompt to connect; once authenticated (whether via login or signup), the connection is made and home shows a success message
