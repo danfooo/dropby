@@ -90,7 +90,6 @@
     "cancelInvite": "Cancel invite"
   },
   "invite": {
-    "loading": "",
     "expiredTitle": "Invite expired",
     "expiredDesc": "This invite expired {{ago}}.",
     "invalidTitle": "Invalid invite",
@@ -128,7 +127,6 @@
     "remindersDesc": "We'll send you a notification to open your door.",
     "noReminders": "No reminders set.",
     "autoNudgeTitle": "Remind me when I opened my door this time last week",
-    "autoNudgeDesc": "On by default",
     "deleteAccount": "Delete account",
     "deleteTitle": "Delete account",
     "deleteMessage": "This will permanently delete your account, friends, and all data. This cannot be undone.",

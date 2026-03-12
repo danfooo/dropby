@@ -387,7 +387,6 @@ export default function Profile() {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="font-medium text-gray-900 text-sm">{t('profile.autoNudgeTitle')}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{t('profile.autoNudgeDesc')}</p>
             </div>
             <button
               onClick={() => updateMe.mutate({ auto_nudge_enabled: !user?.auto_nudge_enabled })}

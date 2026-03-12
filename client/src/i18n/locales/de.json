@@ -90,7 +90,6 @@
     "cancelInvite": "Einladung zurückziehen"
   },
   "invite": {
-    "loading": "",
     "expiredTitle": "Einladung abgelaufen",
     "expiredDesc": "Diese Einladung ist {{ago}} abgelaufen.",
     "invalidTitle": "Ungültige Einladung",
@@ -128,7 +127,6 @@
     "remindersDesc": "Wir schicken dir eine Benachrichtigung, damit du deine Tür öffnest.",
     "noReminders": "Keine Erinnerungen gesetzt.",
     "autoNudgeTitle": "Erinnere mich, wenn ich vor einer Woche um diese Zeit meine Tür geöffnet hatte",
-    "autoNudgeDesc": "Standardmäßig aktiviert",
     "deleteAccount": "Konto löschen",
     "deleteTitle": "Konto löschen",
     "deleteMessage": "Dadurch werden dein Konto, Freunde und alle Daten dauerhaft gelöscht. Das kann nicht rückgängig gemacht werden.",

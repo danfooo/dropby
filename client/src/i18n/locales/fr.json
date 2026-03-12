@@ -90,7 +90,6 @@
     "cancelInvite": "Annuler l'invitation"
   },
   "invite": {
-    "loading": "",
     "expiredTitle": "Invitation expirée",
     "expiredDesc": "Cette invitation a expiré {{ago}}.",
     "invalidTitle": "Invitation invalide",
@@ -128,7 +127,6 @@
     "remindersDesc": "On t'enverra une notification pour ouvrir ta porte.",
     "noReminders": "Aucun rappel configuré.",
     "autoNudgeTitle": "Me rappeler quand j'ai ouvert ma porte à cette heure la semaine dernière",
-    "autoNudgeDesc": "Activé par défaut",
     "deleteAccount": "Supprimer le compte",
     "deleteTitle": "Supprimer le compte",
     "deleteMessage": "Cela supprimera définitivement ton compte, tes amis et toutes tes données. Cette action est irréversible.",
