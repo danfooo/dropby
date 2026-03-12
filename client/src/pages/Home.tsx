@@ -554,13 +554,24 @@ export default function Home() {
 }
 
 function NudgeCard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
   const { data: nudges = [] } = useQuery({ queryKey: ['nudges'], queryFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.list(); } });
+
+  const addNudge = useMutation({
+    mutationFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.add('sat', 11); },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['nudges'] }),
+  });
+
+  const use24h = ['de', 'es', 'fr'].includes(i18n.language.split('-')[0]);
+  const timeLabel = use24h ? '11:00' : '11am';
+  const dayLabel = t('profile.days.sat');
 
   if ((nudges as any[]).length > 0) {
     const summary = (nudges as any[]).slice(0, 3).map((n: any) => {
       const dayShort = t(`profile.daysShort.${n.day_of_week}`);
-      return `${dayShort} ${n.hour}:00`;
+      const time = use24h ? `${n.hour}:00` : (() => { const h = n.hour; return `${h > 12 ? h - 12 : h === 0 ? 12 : h}${h < 12 ? 'am' : 'pm'}`; })();
+      return `${dayShort} ${time}`;
     }).join(' · ');
     return (
       <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
@@ -572,13 +583,22 @@ function NudgeCard() {
 
   return (
     <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100">
-      <p className="text-sm font-semibold text-gray-900 mb-1">{t('home.setReminder')}</p>
-      <p className="text-sm text-gray-500 mb-3">
-        {t('home.reminderDesc')}
+      <p className="text-sm font-semibold text-gray-900 mb-1">{t('home.nudgeQuestion')}</p>
+      <p className="text-sm text-gray-500 mb-4">
+        {t('home.nudgeSuggestion', { day: dayLabel, time: timeLabel })}
       </p>
-      <Link to="/profile" className="text-sm font-semibold text-emerald-600">
-        {t('home.setReminderCta')}
-      </Link>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => addNudge.mutate()}
+          disabled={addNudge.isPending}
+          className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
+        >
+          {t('home.nudgeAccept')}
+        </button>
+        <Link to="/profile" className="text-sm text-gray-500 hover:text-gray-700">
+          {t('home.nudgePickOther')}
+        </Link>
+      </div>
     </div>
   );
 }

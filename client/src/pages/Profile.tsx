@@ -65,22 +65,19 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
           </div>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">
-            {t('profile.time', { time: formatHour(hour) })}
-          </label>
-          <input
-            type="range"
-            min={6}
-            max={23}
-            value={hour}
-            onChange={e => setHour(Number(e.target.value))}
-            className="w-full accent-emerald-500"
-          />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>{t('profile.timeLabels.morning')}</span>
-            <span>{t('profile.timeLabels.noon')}</span>
-            <span>{t('profile.timeLabels.evening')}</span>
-            <span>{t('profile.timeLabels.night')}</span>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">{t('profile.time', { time: formatHour(hour) })}</label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22].map(h => (
+              <button
+                key={h}
+                onClick={() => setHour(h)}
+                className={`py-2 rounded-lg text-xs font-medium transition-colors ${
+                  hour === h ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {formatHour(h)}
+              </button>
+            ))}
           </div>
         </div>
         <div className="bg-emerald-50 rounded-xl p-3">
