@@ -36,6 +36,18 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
   res.status(201).json({ token, url: `${appUrl}/invite/${token}`, expires_at: expiresAt });
 });
 
+// GET /api/invites/pending — list pending email invites sent by the current user
+router.get('/pending', requireAuth, (req: AuthRequest, res) => {
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const pending = db.prepare(`
+    SELECT token, invited_email, created_at, expires_at
+    FROM invite_links
+    WHERE created_by = ? AND invited_email IS NOT NULL AND revoked = 0 AND expires_at > ?
+    ORDER BY created_at DESC
+  `).all(req.userId, nowUnix) as Array<{ token: string; invited_email: string; created_at: number; expires_at: number }>;
+  res.json(pending);
+});
+
 // GET /api/invites/:token — get invite info (no auth required)
 router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
   const { token } = req.params;
@@ -131,18 +143,6 @@ router.post('/email', requireAuth, async (req: AuthRequest, res) => {
   await sendInviteEmail(emailLower, inviter.display_name, `${appUrl}/invite/${token}`);
 
   res.status(201).json({ ok: true, token });
-});
-
-// GET /api/invites/pending — list pending email invites sent by the current user
-router.get('/pending', requireAuth, (req: AuthRequest, res) => {
-  const nowUnix = Math.floor(Date.now() / 1000);
-  const pending = db.prepare(`
-    SELECT token, invited_email, created_at, expires_at
-    FROM invite_links
-    WHERE created_by = ? AND invited_email IS NOT NULL AND revoked = 0 AND expires_at > ?
-    ORDER BY created_at DESC
-  `).all(req.userId, nowUnix) as Array<{ token: string; invited_email: string; created_at: number; expires_at: number }>;
-  res.json(pending);
 });
 
 // POST /api/invites/:token/revoke
