@@ -16,13 +16,14 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
     display_name: u.display_name,
     timezone: u.timezone,
     auto_nudge_enabled: Boolean(u.auto_nudge_enabled),
+    avatar_seed: u.avatar_seed ?? 0,
     email_verified: Boolean(u.email_verified),
   });
 });
 
 // PUT /api/auth/me
 router.put('/me', requireAuth, (req: AuthRequest, res) => {
-  const { display_name, auto_nudge_enabled } = req.body;
+  const { display_name, auto_nudge_enabled, avatar_seed } = req.body;
   const updates: string[] = [];
   const values: unknown[] = [];
 
@@ -37,6 +38,10 @@ router.put('/me', requireAuth, (req: AuthRequest, res) => {
     updates.push('auto_nudge_enabled = ?');
     values.push(auto_nudge_enabled ? 1 : 0);
   }
+  if (avatar_seed !== undefined) {
+    updates.push('avatar_seed = ?');
+    values.push(Number(avatar_seed));
+  }
 
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
 
@@ -49,6 +54,7 @@ router.put('/me', requireAuth, (req: AuthRequest, res) => {
     display_name: user.display_name,
     timezone: user.timezone,
     auto_nudge_enabled: Boolean(user.auto_nudge_enabled),
+    avatar_seed: user.avatar_seed ?? 0,
   });
 });
 
@@ -60,7 +66,7 @@ router.delete('/me', requireAuth, (req: AuthRequest, res) => {
 
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
-  const { email, password, display_name } = req.body;
+  const { email, password, display_name, locale } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   if (!display_name?.trim()) return res.status(400).json({ error: 'Display name required' });
 
@@ -76,11 +82,11 @@ router.post('/signup', async (req, res) => {
   const verificationExpires = Math.floor(Date.now() / 1000) + 24 * 3600;
 
   db.prepare(`
-    INSERT INTO users (id, email, display_name, password_hash, email_verified, email_verification_token, email_verification_expires_at)
-    VALUES (?, ?, ?, ?, 0, ?, ?)
-  `).run(id, emailLower, name, hash, verificationToken, verificationExpires);
+    INSERT INTO users (id, email, display_name, password_hash, email_verified, email_verification_token, email_verification_expires_at, locale)
+    VALUES (?, ?, ?, ?, 0, ?, ?, ?)
+  `).run(id, emailLower, name, hash, verificationToken, verificationExpires, locale ?? null);
 
-  sendVerificationEmail(emailLower, name, verificationToken);
+  sendVerificationEmail(emailLower, name, verificationToken, locale);
 
   res.status(201).json({ message: 'Check your email to verify your account' });
 });
@@ -119,7 +125,7 @@ router.post('/resend-verification', (req, res) => {
   const token = randomUUID().replace(/-/g, '');
   const expires = Math.floor(Date.now() / 1000) + 24 * 3600;
   db.prepare('UPDATE users SET email_verification_token = ?, email_verification_expires_at = ? WHERE id = ?').run(token, expires, user.id);
-  sendVerificationEmail(user.email, user.display_name, token);
+  sendVerificationEmail(user.email, user.display_name, token, user.locale);
 
   res.json({ message: 'If that email exists, a verification link was sent' });
 });

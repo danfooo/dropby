@@ -26,8 +26,8 @@ api.interceptors.response.use(
 // Auth
 export const authApi = {
   me: () => api.get('/auth/me').then(r => r.data),
-  signup: (email: string, password: string, display_name?: string) =>
-    api.post('/auth/signup', { email, password, display_name }).then(r => r.data),
+  signup: (email: string, password: string, display_name?: string, locale?: string) =>
+    api.post('/auth/signup', { email, password, display_name, locale }).then(r => r.data),
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }).then(r => r.data),
   google: (credential: string) => api.post('/auth/google', { credential }).then(r => r.data),

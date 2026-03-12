@@ -15,22 +15,59 @@ async function send(to: string, subject: string, html: string) {
   await resend.emails.send({ from: FROM, to, subject, html });
 }
 
+const verificationCopy: Record<string, {
+  subject: string;
+  greeting: (name: string) => string;
+  body: string;
+  linkText: string;
+  expiry: string;
+}> = {
+  de: {
+    subject: 'Willkommen bei Drop By — bitte bestätige deine E-Mail',
+    greeting: name => `Hey ${name},`,
+    body: 'Schön, dass du dabei bist! Nur noch ein Schritt — klick unten, um deine E-Mail zu bestätigen:',
+    linkText: 'E-Mail bestätigen',
+    expiry: 'Dieser Link läuft in 24 Stunden ab.',
+  },
+  es: {
+    subject: 'Bienvenido a Drop By — por favor verifica tu correo',
+    greeting: name => `Hola ${name},`,
+    body: '¡Qué bueno que te unes! Solo un paso más — haz clic abajo para verificar tu correo:',
+    linkText: 'Verificar mi correo',
+    expiry: 'Este enlace expirará en 24 horas.',
+  },
+  fr: {
+    subject: 'Bienvenue sur Drop By — merci de vérifier ton e-mail',
+    greeting: name => `Salut ${name},`,
+    body: "Vraiment content·e que tu nous rejoignes ! Une dernière étape — clique ci-dessous pour vérifier ton e-mail :",
+    linkText: 'Vérifier mon e-mail',
+    expiry: 'Ce lien expirera dans 24 heures.',
+  },
+};
+
+const defaultVerificationCopy = {
+  subject: 'Welcome to Drop By — please verify your email',
+  greeting: (name: string) => `Hey ${name},`,
+  body: "Really happy you're joining! Just one step left — click below to verify your email and you're in:",
+  linkText: 'Verify my email',
+  expiry: 'This link will expire in 24 hours.',
+};
+
 export async function sendVerificationEmail(
   to: string,
   displayName: string,
-  token: string
+  token: string,
+  locale?: string
 ) {
+  const lang = locale?.split('-')[0] ?? 'en';
+  const copy = verificationCopy[lang] ?? defaultVerificationCopy;
   const link = `${APP_URL()}/api/auth/verify-email/${token}`;
-  await send(
-    to,
-    "Welcome to Drop By — please verify your email",
-    `
-    <p>Hey ${displayName},</p>
-    <p>Really happy you're joining! Just one step left — click below to verify your email and you're in:</p>
-    <p><a href="${link}">Verify my email</a></p>
-    <p>This link will expire in 24 hours.</p>
-  `
-  );
+  await send(to, copy.subject, `
+    <p>${copy.greeting(displayName)}</p>
+    <p>${copy.body}</p>
+    <p><a href="${link}">${copy.linkText}</a></p>
+    <p>${copy.expiry}</p>
+  `);
 }
 
 export async function sendInviteEmail(

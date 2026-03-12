@@ -176,13 +176,17 @@ Multiple devices per user are supported.
 - "Hey, [display_name]"
 
 **Note selection**
-- Horizontally scrollable chip row (up to 7 chips total)
-  - AI-suggested chips come first
-  - User-saved notes follow (hidden notes are not shown)
-  - Max 7 total across both sources
+- Two separate horizontally scrollable chip rows:
+  - **Suggestion chips** (row 1): up to 7 contextual suggestions, no delete button
+  - **Saved notes** (row 2): user's saved notes, each with an × to hide; only shown when at least one saved note exists
 - AI suggestions are contextual: time of day, day of week, weekday vs. weekend, season, locale
-- Custom free-text input always available below chips (max 60 chars)
-- Using a custom note saves it to the user's saved notes automatically
+- Free-text input always visible below chips (max 60 chars); no "(optional)" label — it's implied
+- Tapping a chip populates the text field with that chip's text; the chip highlights as selected
+- Tapping the selected chip again un-picks it (undo): restores the text field to what the user had manually typed before picking — but only if the previous state was hand-typed; if the user switched from another chip, the field clears instead (chip-set states are not worth restoring)
+- Switching directly from one chip to another does not preserve any undo state — the field simply takes the new chip's text
+- Editing the text field after picking a chip immediately deselects the chip (the text is now diverging from the preset)
+- After picking a chip, the text field remains editable; the chip stays highlighted as the starting point
+- A note is auto-saved to the user's library only when submitted with no chip selected (i.e. hand-typed or modified after picking); submitting an unmodified chip never triggers a save
 
 **Recipient selection**
 - Checkbox list of all friends
@@ -455,9 +459,9 @@ Accessible from the Home screen (e.g. avatar/name in header).
 
 - Fetched on page load (Door Closed view)
 - Contextual inputs: time of day, day of week, weekday/weekend, season, locale
-- Up to 7 chips total shown (AI suggestions first, then user-saved notes)
-- User-saved notes are hidden (not deleted) when user taps hide; stored in backend
-- Custom note typed by user is auto-saved to their note library on use
+- Suggestion chips (row 1) and saved note chips (row 2) are shown in separate scrollable rows
+- Saved notes show an × button; tapping it hides the note (soft-delete, not permanently deleted)
+- A note that is not one of the built-in suggestions is auto-saved to the user's note library on use
 
 ### "Going ✅"
 

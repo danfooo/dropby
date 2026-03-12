@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { authApi, nudgesApi } from '../api';
 import { useAuthStore } from '../stores/auth';
+import Avatar from '../components/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
 
@@ -39,7 +40,7 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
   };
 
   const addNudge = useMutation({
-    mutationFn: () => nudgesApi.add(day, hour),
+    mutationFn: ({ d, h }: { d: string; h: number }) => nudgesApi.add(d, h),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['nudges'] }); onClose(); },
   });
 
@@ -91,14 +92,14 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
             })()}
           </p>
           <button
-            onClick={() => { setDay(suggestion.day); setHour(suggestion.hour); }}
+            onClick={() => addNudge.mutate({ d: suggestion.day, h: suggestion.hour })}
             className="text-xs text-emerald-600 mt-1 underline"
           >
             {t('profile.useSuggestion')}
           </button>
         </div>
         <button
-          onClick={() => addNudge.mutate()}
+          onClick={() => addNudge.mutate({ d: day, h: hour })}
           disabled={addNudge.isPending}
           className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-semibold disabled:opacity-50"
         >
@@ -155,6 +156,7 @@ export default function Profile() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </Link>
+        <Avatar name={user?.display_name ?? ''} size="md" />
         <h1 className="text-2xl font-bold">{t('profile.title')}</h1>
       </div>
 
@@ -205,31 +207,21 @@ export default function Profile() {
         </div>
 
         {/* Language */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-3">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             {t('profile.language')}
           </label>
-          <div className="grid grid-cols-1 gap-1.5">
-            {([
-              { code: 'en-US', label: 'English (US)' },
-              { code: 'en-GB', label: 'English (UK)' },
-              { code: 'de',    label: 'Deutsch' },
-              { code: 'es',    label: 'Español' },
-              { code: 'fr',    label: 'Français' },
-            ] as const).map(lang => (
-              <button
-                key={lang.code}
-                onClick={() => i18n.changeLanguage(lang.code)}
-                className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${
-                  i18n.language === lang.code
-                    ? 'bg-emerald-50 text-emerald-700 font-semibold'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {lang.label}
-              </button>
-            ))}
-          </div>
+          <select
+            value={i18n.language}
+            onChange={e => i18n.changeLanguage(e.target.value)}
+            className="text-sm text-gray-900 bg-transparent border-none outline-none cursor-pointer"
+          >
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+          </select>
         </div>
 
         {/* Nudge reminders */}

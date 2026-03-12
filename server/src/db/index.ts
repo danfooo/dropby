@@ -19,6 +19,7 @@ db.exec(`
     google_id TEXT UNIQUE,
     timezone TEXT,
     auto_nudge_enabled INTEGER NOT NULL DEFAULT 1,
+    avatar_seed INTEGER NOT NULL DEFAULT 0,
     email_verified INTEGER NOT NULL DEFAULT 0,
     email_verification_token TEXT,
     email_verification_expires_at INTEGER,
@@ -126,5 +127,14 @@ db.exec(`
     sent_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
 `);
+
+// Migrations for existing databases
+const cols = db.pragma('table_info(users)') as { name: string }[];
+if (!cols.find(c => c.name === 'avatar_seed')) {
+  db.exec('ALTER TABLE users ADD COLUMN avatar_seed INTEGER NOT NULL DEFAULT 0');
+}
+if (!cols.find(c => c.name === 'locale')) {
+  db.exec('ALTER TABLE users ADD COLUMN locale TEXT');
+}
 
 export default db;

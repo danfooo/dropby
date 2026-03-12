@@ -14,6 +14,7 @@ export interface AuthRequest extends Request {
     display_name: string;
     timezone: string | null;
     auto_nudge_enabled: number;
+    avatar_seed: number;
     email_verified: number;
   };
 }

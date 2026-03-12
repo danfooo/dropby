@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/auth';
-import { statusApi, notesApi, invitesApi, goingApi } from '../api';
+import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
 import { getSuggestions } from '../i18n/suggestions';
@@ -105,8 +105,9 @@ export default function Home() {
   const { user } = useAuthStore();
   const qc = useQueryClient();
   const [view, setView] = useState<HomeView>('closed');
-  const [selectedNote, setSelectedNote] = useState('');
-  const [customNote, setCustomNote] = useState('');
+  const [note, setNote] = useState('');
+  const [selectedChip, setSelectedChip] = useState('');
+  const [previousNote, setPreviousNote] = useState<string | null>(null);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [editNote, setEditNote] = useState('');
   const [editRecipients, setEditRecipients] = useState<string[]>([]);
@@ -131,10 +132,7 @@ export default function Home() {
 
   const { data: friends = [] } = useQuery({
     queryKey: ['friends'],
-    queryFn: async () => {
-      const { friendsApi } = await import('../api');
-      return friendsApi.list();
-    },
+    queryFn: friendsApi.list,
   });
 
   const { data: savedNotes = [] } = useQuery({
@@ -147,10 +145,7 @@ export default function Home() {
 
   // Compute chip list: suggestions first, then non-hidden saved notes, max 7
   const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden);
-  const chips = [
-    ...suggestions.slice(0, 7),
-    ...visibleSaved.map((n: any) => n.text),
-  ].slice(0, 7);
+  const chips = suggestions.slice(0, 7);
 
   // Initialize recipient selection from server
   useEffect(() => {
@@ -194,6 +189,11 @@ export default function Home() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setView('open'); },
   });
 
+  const hideNote = useMutation({
+    mutationFn: (id: string) => notesApi.setHidden(id, true),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
+  });
+
   const closeStatus = useMutation({
     mutationFn: statusApi.close,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setView('closed'); },
@@ -220,12 +220,12 @@ export default function Home() {
   };
 
   const handleOpen = async () => {
-    const note = customNote.trim() || selectedNote || undefined;
-    if (customNote.trim()) {
-      await notesApi.save(customNote.trim());
+    const trimmedNote = note.trim() || undefined;
+    if (trimmedNote && !selectedChip) {
+      await notesApi.save(trimmedNote);
       qc.invalidateQueries({ queryKey: ['notes'] });
     }
-    createStatus.mutate({ note, recipient_ids: selectedRecipients });
+    createStatus.mutate({ note: trimmedNote, recipient_ids: selectedRecipients });
   };
 
   const handleSaveEdit = () => {
@@ -270,21 +270,31 @@ export default function Home() {
           <h1 className="text-2xl font-bold text-gray-900">
             {t('home.greeting', { name: firstName })}
           </h1>
-          <Link to="/profile" className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-semibold flex items-center justify-center text-sm">
-            {user?.display_name?.charAt(0).toUpperCase()}
+          <Link to="/profile">
+            <Avatar name={user?.display_name ?? ''} size="sm" />
           </Link>
         </div>
 
-        {/* Note chips */}
+        {/* Suggestion chips */}
         {chips.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-2">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {chips.map((chip: string) => (
                 <button
                   key={chip}
-                  onClick={() => { setSelectedNote(chip); setCustomNote(''); }}
+                  onClick={() => {
+                    if (selectedChip === chip) {
+                      setNote(previousNote ?? '');
+                      setSelectedChip('');
+                      setPreviousNote(null);
+                    } else {
+                      setPreviousNote(selectedChip === '' ? note : null);
+                      setNote(chip);
+                      setSelectedChip(chip);
+                    }
+                  }}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
-                    selectedNote === chip && !customNote
+                    selectedChip === chip
                       ? 'bg-emerald-500 text-white border-emerald-500'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300'
                   }`}
@@ -296,17 +306,72 @@ export default function Home() {
           </div>
         )}
 
-        {/* Custom note input */}
-        <div className="mb-6">
+        {/* Saved note chips */}
+        {visibleSaved.length > 0 && (
+          <div className="mb-4">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {visibleSaved.map((n: any) => (
+                <div
+                  key={n.id}
+                  className={`flex-shrink-0 flex items-center gap-1 pl-4 pr-2 py-2 rounded-full text-sm font-medium border transition-colors ${
+                    selectedChip === n.text
+                      ? 'bg-emerald-500 text-white border-emerald-500'
+                      : 'bg-white text-gray-700 border-gray-200'
+                  }`}
+                >
+                  <button
+                    onClick={() => {
+                      if (selectedChip === n.text) {
+                        setNote(previousNote ?? '');
+                        setSelectedChip('');
+                        setPreviousNote(null);
+                      } else {
+                        setPreviousNote(selectedChip === '' ? note : null);
+                        setNote(n.text);
+                        setSelectedChip(n.text);
+                      }
+                    }}
+                  >
+                    {n.text}
+                  </button>
+                  <button
+                    onClick={() => hideNote.mutate(n.id)}
+                    className={`ml-1 rounded-full p-0.5 transition-colors ${
+                      selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100'
+                    }`}
+                    aria-label="Remove"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Note input */}
+        <div className="mb-6 relative">
           <input
             type="text"
             placeholder={t('home.customNotePlaceholder')}
             maxLength={60}
-            value={customNote}
-            onChange={e => { setCustomNote(e.target.value); if (e.target.value) setSelectedNote(''); }}
+            value={note}
+            onChange={e => {
+              setNote(e.target.value);
+              if (selectedChip && e.target.value !== selectedChip) {
+                setSelectedChip('');
+                setPreviousNote(null);
+              }
+            }}
             className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
-          {customNote && <p className="text-xs text-gray-400 mt-1 text-right">{customNote.length}/60</p>}
+          {note.length >= 45 && (
+            <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 55 ? 'text-red-400' : 'text-gray-400'}`}>
+              {60 - note.length}
+            </span>
+          )}
         </div>
 
         {/* Recipient selection */}
@@ -451,6 +516,16 @@ export default function Home() {
   // --- DOOR OPEN VIEW ---
   return (
     <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">
+          {t('home.greeting', { name: firstName })}
+        </h1>
+        <Link to="/profile">
+          <Avatar name={user?.display_name ?? ''} size="sm" />
+        </Link>
+      </div>
+
       {/* Friend doors also open */}
       {(friendStatuses as any[]).length > 0 && (
         <div className="mb-6">
@@ -471,7 +546,12 @@ export default function Home() {
           {t('home.youreOpen')}
         </div>
         {myStatus?.note && (
-          <p className="text-lg font-medium text-gray-900">"{myStatus.note}"</p>
+          <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-700 mt-1 mb-1">
+            <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            {myStatus.note}
+          </div>
         )}
         <p className="text-sm text-gray-500 mt-2">
           {minutesLeft > 0 ? t('home.closesIn', { minutes: minutesLeft }) : t('home.closingSoon')}
