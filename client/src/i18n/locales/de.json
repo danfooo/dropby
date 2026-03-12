@@ -108,6 +108,7 @@
   },
   "profile": {
     "title": "Profil",
+    "language": "Sprache",
     "displayName": "Anzeigename",
     "edit": "Bearbeiten",
     "save": "Speichern",

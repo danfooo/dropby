@@ -108,6 +108,7 @@
   },
   "profile": {
     "title": "Profile",
+    "language": "Language",
     "displayName": "Display name",
     "edit": "Edit",
     "save": "Save",

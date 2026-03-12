@@ -206,6 +206,34 @@ export default function Profile() {
           <p className="text-gray-900">{user?.email}</p>
         </div>
 
+        {/* Language */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-3">
+            {t('profile.language')}
+          </label>
+          <div className="grid grid-cols-1 gap-1.5">
+            {([
+              { code: 'en-US', label: 'English (US)' },
+              { code: 'en-GB', label: 'English (UK)' },
+              { code: 'de',    label: 'Deutsch' },
+              { code: 'es',    label: 'Español' },
+              { code: 'fr',    label: 'Français' },
+            ] as const).map(lang => (
+              <button
+                key={lang.code}
+                onClick={() => i18n.changeLanguage(lang.code)}
+                className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${
+                  i18n.language === lang.code
+                    ? 'bg-emerald-50 text-emerald-700 font-semibold'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Nudge reminders */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-1">
