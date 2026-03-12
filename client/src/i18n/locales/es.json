@@ -42,6 +42,8 @@
     "nudgeQuestion": "¿Te avisamos de vez en cuando?",
     "nudgeSuggestion": "¿Qué tal {{day}} a las {{time}}?",
     "nudgeAccept": "Sí, avísame",
+    "nudgeConfirmed": "¡Recordatorio guardado! Puedes cambiarlo en tu",
+    "nudgeConfirmedLink": "Perfil",
     "nudgePickOther": "Elegir otra hora",
     "reminders": "Recordatorios: {{summary}}",
     "editReminders": "Editar",

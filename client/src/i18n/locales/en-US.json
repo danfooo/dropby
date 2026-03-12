@@ -42,6 +42,8 @@
     "nudgeQuestion": "Mind if we nudge you?",
     "nudgeSuggestion": "How about {{day}} at {{time}}?",
     "nudgeAccept": "Remind me then",
+    "nudgeConfirmed": "Reminder set! You can change it in your",
+    "nudgeConfirmedLink": "Profile",
     "nudgePickOther": "Pick another time",
     "reminders": "Reminders: {{summary}}",
     "editReminders": "Edit",

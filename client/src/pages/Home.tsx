@@ -636,16 +636,26 @@ export default function Home() {
 function NudgeCard() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const [confirmed, setConfirmed] = useState(false);
   const { data: nudges = [] } = useQuery({ queryKey: ['nudges'], queryFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.list(); } });
 
   const addNudge = useMutation({
     mutationFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.add('sat', 11); },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['nudges'] }),
+    onSuccess: () => { setConfirmed(true); qc.invalidateQueries({ queryKey: ['nudges'] }); },
   });
 
   const use24h = ['de', 'es', 'fr'].includes(i18n.language.split('-')[0]);
   const timeLabel = use24h ? '11:00' : '11am';
   const dayLabel = t('profile.days.sat');
+
+  if (confirmed) {
+    return (
+      <p className="mt-4 text-sm text-gray-500">
+        {t('home.nudgeConfirmed')}{' '}
+        <Link to="/profile" className="text-emerald-600 font-medium">{t('home.nudgeConfirmedLink')}</Link>.
+      </p>
+    );
+  }
 
   if ((nudges as any[]).length > 0) {
     const summary = (nudges as any[]).slice(0, 3).map((n: any) => {

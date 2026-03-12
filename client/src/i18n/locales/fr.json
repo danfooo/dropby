@@ -42,6 +42,8 @@
     "nudgeQuestion": "On peut te faire un petit rappel ?",
     "nudgeSuggestion": "Que dirais-tu du {{day}} à {{time}} ?",
     "nudgeAccept": "Oui, rappelle-moi",
+    "nudgeConfirmed": "Rappel enregistré ! Tu peux le modifier dans ton",
+    "nudgeConfirmedLink": "Profil",
     "nudgePickOther": "Choisir un autre moment",
     "reminders": "Rappels : {{summary}}",
     "editReminders": "Modifier",

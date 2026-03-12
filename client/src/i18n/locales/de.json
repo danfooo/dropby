@@ -42,6 +42,8 @@
     "nudgeQuestion": "Dürfen wir dich erinnern?",
     "nudgeSuggestion": "Wie wär's {{day}} um {{time}}?",
     "nudgeAccept": "Ja, erinnere mich",
+    "nudgeConfirmed": "Erinnerung gespeichert! Du kannst sie in deinem",
+    "nudgeConfirmedLink": "Profil",
     "nudgePickOther": "Andere Zeit wählen",
     "reminders": "Erinnerungen: {{summary}}",
     "editReminders": "Bearbeiten",
