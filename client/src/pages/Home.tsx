@@ -595,7 +595,7 @@ function NudgeCard() {
         >
           {t('home.nudgeAccept')}
         </button>
-        <Link to="/profile" className="text-sm text-gray-500 hover:text-gray-700">
+        <Link to="/profile?addReminder=1" className="text-sm text-gray-500 hover:text-gray-700">
           {t('home.nudgePickOther')}
         </Link>
       </div>

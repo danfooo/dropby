@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { authApi, nudgesApi } from '../api';
@@ -113,11 +113,12 @@ export default function Profile() {
   const { t, i18n } = useTranslation();
   const { user, setUser, clearAuth } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const qc = useQueryClient();
   const [editName, setEditName] = useState(false);
   const [newName, setNewName] = useState(user?.display_name || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showAddNudge, setShowAddNudge] = useState(false);
+  const [showAddNudge, setShowAddNudge] = useState(() => searchParams.get('addReminder') === '1');
 
   const use24h = ['de', 'es', 'fr'].includes(i18n.language.split('-')[0]);
 
