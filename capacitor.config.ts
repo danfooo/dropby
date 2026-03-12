@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.dropby.app',
+  appId: 'cc.dropby.app',
   appName: 'Drop By',
   webDir: 'client/dist',
   server: {
