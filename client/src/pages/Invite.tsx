@@ -145,9 +145,20 @@ export default function Invite() {
       <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white">
         <p className="text-5xl mb-4">🎉</p>
         <h1 className="text-xl font-bold mb-2">{t('invite.friendsNowTitle')}</h1>
-        <p className="text-gray-500 mb-8">{t('invite.friendsNowDesc', { name: acceptedName })}</p>
+        <p className="text-gray-500 mb-6">{t('invite.friendsNowDesc', { name: acceptedName })}</p>
+        {info.status && (
+          <div className="w-full max-w-xs bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mb-6 text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-sm font-semibold text-emerald-800">{t('invite.doorOpen', { name: acceptedName })}</span>
+            </div>
+            {info.status.note && (
+              <p className="text-sm text-emerald-700 ml-4">{info.status.note}</p>
+            )}
+          </div>
+        )}
         <Link to="/home" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
-          {t('invite.goHome')}
+          {info.status ? t('invite.seeStatus') : t('invite.goHome')}
         </Link>
       </div>
     );

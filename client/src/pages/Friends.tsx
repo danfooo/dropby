@@ -14,8 +14,10 @@ export default function Friends() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addInput, setAddInput] = useState('');
   const [addMsg, setAddMsg] = useState('');
+  const [error, setError] = useState('');
 
   const { data: friends = [], isLoading } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
+  const { data: pendingInvites = [] } = useQuery({ queryKey: ['pending-invites'], queryFn: invitesApi.listPending });
 
   const removeFriend = useMutation({
     mutationFn: (id: string) => friendsApi.remove(id),
@@ -30,6 +32,23 @@ export default function Friends() {
   const unmuteFriend = useMutation({
     mutationFn: (id: string) => friendsApi.unmute(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['friends'] }),
+  });
+
+  const cancelInvite = useMutation({
+    mutationFn: (token: string) => invitesApi.revoke(token),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['pending-invites'] }),
+  });
+
+  const sendEmailInvite = useMutation({
+    mutationFn: (email: string) => invitesApi.sendByEmail(email),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pending-invites'] });
+      setAddMsg(t('friends.inviteSentSuccess'));
+    },
+    onError: (err: any) => {
+      setAddMsg('');
+      setError(err.response?.data?.error || t('friends.inviteError'));
+    },
   });
 
   const filtered = (friends as any[]).filter((f: any) =>
@@ -50,10 +69,7 @@ export default function Friends() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now: generate a link to share. Full email/SMS delivery is deferred.
-    const data = await invitesApi.generate();
-    setAddMsg(`Share this link with ${addInput}: ${data.url}`);
-    console.log(`[INVITE] Sending invite to ${addInput}: ${data.url}`);
+    sendEmailInvite.mutate(addInput.trim());
   };
 
   if (isLoading) {
@@ -162,6 +178,36 @@ export default function Friends() {
             )}
           </>
         )}
+
+        {/* Pending email invites */}
+        {(pendingInvites as any[]).length > 0 && (
+          <>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4">
+              {t('friends.pendingTitle')}
+            </h2>
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-4">
+              {(pendingInvites as any[]).map((p: any, i: number) => (
+                <div key={p.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-sm text-gray-500">{p.invited_email}</span>
+                  <button
+                    onClick={() => cancelInvite.mutate(p.token)}
+                    className="text-gray-400 hover:text-red-500 p-1"
+                    title={t('friends.cancelInvite')}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <ConfirmDialog
@@ -176,26 +222,37 @@ export default function Friends() {
 
       <Modal
         open={showAddModal}
-        onClose={() => { setShowAddModal(false); setAddMsg(''); setAddInput(''); }}
+        onClose={() => { setShowAddModal(false); setAddMsg(''); setAddInput(''); setError(''); }}
         title={t('friends.addFriendTitle')}
       >
         {addMsg ? (
-          <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3 mb-4 break-all">{addMsg}</div>
+          <div className="text-center py-4">
+            <p className="text-2xl mb-2">✉️</p>
+            <p className="text-sm text-emerald-700 font-medium">{addMsg}</p>
+            <button
+              onClick={() => { setAddMsg(''); setAddInput(''); }}
+              className="mt-4 text-sm text-gray-500 underline"
+            >
+              {t('friends.inviteAnother')}
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleAdd} className="space-y-3">
+            {error && <p className="text-red-600 text-sm">{error}</p>}
             <input
-              type="text"
-              placeholder={t('friends.emailOrPhone')}
+              type="email"
+              placeholder={t('friends.emailPlaceholder')}
               value={addInput}
-              onChange={e => setAddInput(e.target.value)}
+              onChange={e => { setAddInput(e.target.value); setError(''); }}
               required
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
             <button
               type="submit"
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-semibold"
+              disabled={sendEmailInvite.isPending}
+              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold"
             >
-              {t('friends.sendInvite')}
+              {sendEmailInvite.isPending ? t('friends.sending') : t('friends.sendInvite')}
             </button>
           </form>
         )}

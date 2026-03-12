@@ -55,7 +55,7 @@ export default function Auth() {
     setError(''); setMessage(''); setLoading(true);
     try {
       if (tab === 'signup') {
-        await authApi.signup(email, password, displayName, i18n.language);
+        await authApi.signup(email, password, displayName, i18n.language, redirect !== '/home' ? redirect : undefined);
         setMessage(t('auth.verifyEmailSent'));
         setTab('login');
       } else {

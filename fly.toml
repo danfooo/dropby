@@ -2,6 +2,8 @@ app = 'drop-by'
 primary_region = 'fra'
 
 [build]
+  [build.args]
+    VITE_GOOGLE_CLIENT_ID = ""
 
 [env]
   NODE_ENV = "production"

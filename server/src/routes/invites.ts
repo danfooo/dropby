@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.js';
 import { areFriends } from './friends.js';
+import { sendInviteEmail } from '../services/email.js';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { status_id } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
-  const expiresAt = nowUnix + 3600;
+  const expiresAt = nowUnix + 86400; // 24 hours
 
   let resolvedStatusId: string | null = null;
   if (status_id) {
@@ -103,6 +104,45 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
 
   const inviter = db.prepare('SELECT display_name FROM users WHERE id = ?').get(inviterId) as any;
   res.json({ ok: true, alreadyFriends: false, inviterName: inviter.display_name });
+});
+
+// POST /api/invites/email — send an email invite (30-day link)
+router.post('/email', requireAuth, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const { email } = req.body;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Valid email required' });
+  }
+
+  const emailLower = (email as string).toLowerCase().trim();
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const expiresAt = nowUnix + 30 * 24 * 3600; // 30 days
+
+  const inviter = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+
+  const token = generateToken();
+  const id = randomUUID();
+  db.prepare(
+    'INSERT INTO invite_links (id, token, created_by, invited_email, expires_at) VALUES (?, ?, ?, ?, ?)'
+  ).run(id, token, userId, emailLower, expiresAt);
+
+  const appUrl = process.env.APP_URL || 'http://localhost:5173';
+  await sendInviteEmail(emailLower, inviter.display_name, `${appUrl}/invite/${token}`);
+
+  res.status(201).json({ ok: true, token });
+});
+
+// GET /api/invites/pending — list pending email invites sent by the current user
+router.get('/pending', requireAuth, (req: AuthRequest, res) => {
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const pending = db.prepare(`
+    SELECT token, invited_email, created_at, expires_at
+    FROM invite_links
+    WHERE created_by = ? AND invited_email IS NOT NULL AND revoked = 0 AND expires_at > ?
+    ORDER BY created_at DESC
+  `).all(req.userId, nowUnix) as Array<{ token: string; invited_email: string; created_at: number; expires_at: number }>;
+  res.json(pending);
 });
 
 // POST /api/invites/:token/revoke

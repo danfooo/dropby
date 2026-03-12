@@ -1,24 +1,45 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
+import { join, extname } from 'path';
+import { mkdirSync } from 'fs';
+import multer from 'multer';
 import { db } from '../db/index.js';
 import { requireAuth, signJwt, AuthRequest } from '../middleware/auth.js';
 import { sendVerificationEmail } from '../services/email.js';
 
+const avatarsDir = join(process.cwd(), 'data', 'avatars');
+mkdirSync(avatarsDir, { recursive: true });
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: avatarsDir,
+    filename: (_req, file, cb) => cb(null, `${randomUUID()}${extname(file.originalname)}`),
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    cb(null, file.mimetype.startsWith('image/'));
+  },
+});
+
 const router = Router();
 
-// GET /api/auth/me
-router.get('/me', requireAuth, (req: AuthRequest, res) => {
-  const u = req.user!;
-  res.json({
+function userResponse(u: any) {
+  return {
     id: u.id,
     email: u.email,
     display_name: u.display_name,
     timezone: u.timezone,
     auto_nudge_enabled: Boolean(u.auto_nudge_enabled),
     avatar_seed: u.avatar_seed ?? 0,
+    avatar_url: u.avatar_url ?? null,
     email_verified: Boolean(u.email_verified),
-  });
+  };
+}
+
+// GET /api/auth/me
+router.get('/me', requireAuth, (req: AuthRequest, res) => {
+  res.json(userResponse(req.user!));
 });
 
 // PUT /api/auth/me
@@ -48,14 +69,15 @@ router.put('/me', requireAuth, (req: AuthRequest, res) => {
   values.push(req.userId);
   db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId) as any;
-  res.json({
-    id: user.id,
-    email: user.email,
-    display_name: user.display_name,
-    timezone: user.timezone,
-    auto_nudge_enabled: Boolean(user.auto_nudge_enabled),
-    avatar_seed: user.avatar_seed ?? 0,
-  });
+  res.json(userResponse(user));
+});
+
+// PUT /api/auth/avatar
+router.put('/avatar', requireAuth, upload.single('avatar'), (req: AuthRequest, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const avatarUrl = `/avatars/${req.file.filename}`;
+  db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatarUrl, req.userId);
+  res.json({ avatar_url: avatarUrl });
 });
 
 // DELETE /api/auth/me
@@ -66,7 +88,7 @@ router.delete('/me', requireAuth, (req: AuthRequest, res) => {
 
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
-  const { email, password, display_name, locale } = req.body;
+  const { email, password, display_name, locale, redirect_url } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   if (!display_name?.trim()) return res.status(400).json({ error: 'Display name required' });
 
@@ -86,7 +108,7 @@ router.post('/signup', async (req, res) => {
     VALUES (?, ?, ?, ?, 0, ?, ?, ?)
   `).run(id, emailLower, name, hash, verificationToken, verificationExpires, locale ?? null);
 
-  sendVerificationEmail(emailLower, name, verificationToken, locale);
+  sendVerificationEmail(emailLower, name, verificationToken, locale, redirect_url);
 
   res.status(201).json({ message: 'Check your email to verify your account' });
 });
@@ -111,7 +133,11 @@ router.get('/verify-email/:token', (req, res) => {
     WHERE id = ?
   `).run(user.id);
 
-  res.redirect(`${process.env.APP_URL || 'http://localhost:5173'}/auth?verified=true`);
+  const redirectAfter = (req.query.redirect as string) || '';
+  const safeRedirect = redirectAfter.startsWith('/') ? redirectAfter : '';
+  const params = new URLSearchParams({ verified: 'true' });
+  if (safeRedirect) params.set('redirect', safeRedirect);
+  res.redirect(`${process.env.APP_URL || 'http://localhost:5173'}/auth?${params}`);
 });
 
 // POST /api/auth/resend-verification
@@ -146,16 +172,7 @@ router.post('/login', async (req, res) => {
   }
 
   const token = await signJwt(user.id);
-  res.json({
-    token,
-    user: {
-      id: user.id,
-      email: user.email,
-      display_name: user.display_name,
-      timezone: user.timezone,
-      auto_nudge_enabled: Boolean(user.auto_nudge_enabled),
-    },
-  });
+  res.json({ token, user: userResponse(user) });
 });
 
 // POST /api/auth/google
@@ -173,7 +190,7 @@ router.post('/google', async (req, res) => {
     const payload = ticket.getPayload();
     if (!payload || !payload.email) throw new Error('Invalid Google token');
 
-    const { sub: googleId, email, name } = payload;
+    const { sub: googleId, email, name, picture } = payload;
     const emailLower = email.toLowerCase();
 
     let user = db.prepare('SELECT * FROM users WHERE google_id = ? OR email = ?').get(googleId, emailLower) as any;
@@ -182,25 +199,23 @@ router.post('/google', async (req, res) => {
       const id = randomUUID();
       const displayName = name || emailLower.split('@')[0];
       db.prepare(`
-        INSERT INTO users (id, email, display_name, google_id, email_verified)
-        VALUES (?, ?, ?, ?, 1)
-      `).run(id, emailLower, displayName, googleId);
+        INSERT INTO users (id, email, display_name, google_id, avatar_url, email_verified)
+        VALUES (?, ?, ?, ?, ?, 1)
+      `).run(id, emailLower, displayName, googleId, picture ?? null);
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
-    } else if (!user.google_id) {
-      db.prepare('UPDATE users SET google_id = ?, email_verified = 1 WHERE id = ?').run(googleId, user.id);
+    } else {
+      const updates: string[] = ['email_verified = 1'];
+      const values: unknown[] = [];
+      if (!user.google_id) { updates.push('google_id = ?'); values.push(googleId); }
+      // Only set Google picture if user has no custom avatar yet
+      if (!user.avatar_url && picture) { updates.push('avatar_url = ?'); values.push(picture); }
+      values.push(user.id);
+      db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+      user = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
     }
 
     const token = await signJwt(user.id);
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        display_name: user.display_name,
-        timezone: user.timezone,
-        auto_nudge_enabled: Boolean(user.auto_nudge_enabled),
-      },
-    });
+    res.json({ token, user: userResponse(user) });
   } catch (err: any) {
     console.error('Google auth error:', err.message);
     res.status(401).json({ error: 'Invalid Google token' });

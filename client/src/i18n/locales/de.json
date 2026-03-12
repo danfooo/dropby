@@ -80,7 +80,14 @@
     "removeConfirm": "Entfernen",
     "addFriendTitle": "Freund hinzufügen",
     "emailOrPhone": "E-Mail oder Telefon",
-    "sendInvite": "Einladung senden"
+    "emailPlaceholder": "E-Mail-Adresse",
+    "sendInvite": "Einladung senden",
+    "sending": "Wird gesendet…",
+    "inviteSentSuccess": "Einladung gesendet!",
+    "inviteError": "Einladung konnte nicht gesendet werden",
+    "inviteAnother": "Jemand anderen einladen",
+    "pendingTitle": "Ausstehend",
+    "cancelInvite": "Einladung zurückziehen"
   },
   "invite": {
     "loading": "",

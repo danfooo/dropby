@@ -1,5 +1,7 @@
 # ── Build: client ──────────────────────────────────────────────
 FROM node:20-alpine AS client-build
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci

@@ -4,6 +4,7 @@ import * as shapes from '@dicebear/shapes';
 
 interface Props {
   name: string;
+  url?: string | null;
   seed?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -15,22 +16,23 @@ const sizeMap = {
   lg: 'w-14 h-14',
 };
 
-export default function Avatar({ name, seed, size = 'md', className = '' }: Props) {
+export default function Avatar({ name, url, seed, size = 'md', className = '' }: Props) {
   const svg = useMemo(() => {
+    if (url) return null;
     return createAvatar(shapes, {
       seed: seed ?? name,
       size: 128,
       backgroundColor: ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'ffdfbf'],
     }).toString();
-  }, [name, seed]);
+  }, [name, seed, url]);
 
-  const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  const src = url || `data:image/svg+xml;utf8,${encodeURIComponent(svg!)}`;
 
   return (
     <img
-      src={dataUri}
+      src={src}
       alt={name}
-      className={`${sizeMap[size]} rounded-full flex-shrink-0 ${className}`}
+      className={`${sizeMap[size]} rounded-full flex-shrink-0 object-cover ${className}`}
     />
   );
 }

@@ -26,8 +26,8 @@ api.interceptors.response.use(
 // Auth
 export const authApi = {
   me: () => api.get('/auth/me').then(r => r.data),
-  signup: (email: string, password: string, display_name?: string, locale?: string) =>
-    api.post('/auth/signup', { email, password, display_name, locale }).then(r => r.data),
+  signup: (email: string, password: string, display_name?: string, locale?: string, redirect_url?: string) =>
+    api.post('/auth/signup', { email, password, display_name, locale, redirect_url }).then(r => r.data),
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }).then(r => r.data),
   google: (credential: string) => api.post('/auth/google', { credential }).then(r => r.data),
@@ -37,6 +37,11 @@ export const authApi = {
   deleteMe: () => api.delete('/auth/me').then(r => r.data),
   registerPushToken: (token: string, platform: 'ios' | 'android') =>
     api.post('/auth/push-token', { token, platform }).then(r => r.data),
+  uploadAvatar: (blob: Blob) => {
+    const form = new FormData();
+    form.append('avatar', blob, 'avatar.jpg');
+    return api.put('/auth/avatar', form, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
+  },
 };
 
 // Friends
@@ -67,6 +72,8 @@ export const invitesApi = {
   get: (token: string) => api.get(`/invites/${token}`).then(r => r.data),
   accept: (token: string) => api.post(`/invites/${token}/accept`).then(r => r.data),
   revoke: (token: string) => api.post(`/invites/${token}/revoke`).then(r => r.data),
+  sendByEmail: (email: string) => api.post('/invites/email', { email }).then(r => r.data),
+  listPending: () => api.get('/invites/pending').then(r => r.data),
 };
 
 // Going

@@ -137,4 +137,13 @@ if (!cols.find(c => c.name === 'locale')) {
   db.exec('ALTER TABLE users ADD COLUMN locale TEXT');
 }
 
+if (!cols.find(c => c.name === 'avatar_url')) {
+  db.exec('ALTER TABLE users ADD COLUMN avatar_url TEXT');
+}
+
+const inviteCols = db.pragma('table_info(invite_links)') as { name: string }[];
+if (!inviteCols.find(c => c.name === 'invited_email')) {
+  db.exec('ALTER TABLE invite_links ADD COLUMN invited_email TEXT');
+}
+
 export default db;

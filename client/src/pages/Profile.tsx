@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import Cropper from 'react-easy-crop';
 import { authApi, nudgesApi } from '../api';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
@@ -110,6 +111,116 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
   );
 }
 
+async function getCroppedBlob(imageSrc: string, crop: { x: number; y: number; width: number; height: number }): Promise<Blob> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = imageSrc;
+  });
+  const canvas = document.createElement('canvas');
+  const size = 400;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const scaleX = img.naturalWidth / img.width;
+  const scaleY = img.naturalHeight / img.height;
+  ctx.drawImage(img, crop.x * scaleX, crop.y * scaleY, crop.width * scaleX, crop.height * scaleY, 0, 0, size, size);
+  return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/jpeg', 0.9));
+}
+
+function AvatarCropModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (blob: Blob) => void }) {
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+    setCroppedArea(croppedAreaPixels);
+  }, []);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setImageSrc(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async () => {
+    if (!imageSrc || !croppedArea) return;
+    setSaving(true);
+    const blob = await getCroppedBlob(imageSrc, croppedArea);
+    onSave(blob);
+    setSaving(false);
+  };
+
+  const handleClose = () => {
+    setImageSrc(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    onClose();
+  };
+
+  return (
+    <Modal open={open} onClose={handleClose} title="Change photo">
+      {!imageSrc ? (
+        <div className="text-center py-6">
+          <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+          >
+            Choose photo
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="relative w-full" style={{ height: 280 }}>
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={3}
+            step={0.01}
+            value={zoom}
+            onChange={e => setZoom(Number(e.target.value))}
+            className="w-full accent-emerald-500"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setImageSrc(null); setZoom(1); }}
+              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600"
+            >
+              Change photo
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const { user, setUser, clearAuth } = useAuthStore();
@@ -120,6 +231,7 @@ export default function Profile() {
   const [newName, setNewName] = useState(user?.display_name || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAddNudge, setShowAddNudge] = useState(() => searchParams.get('addReminder') === '1');
+  const [showAvatarCrop, setShowAvatarCrop] = useState(false);
 
   const use24h = ['de', 'es', 'fr'].includes(i18n.language.split('-')[0]);
 
@@ -147,6 +259,14 @@ export default function Profile() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['nudges'] }),
   });
 
+  const uploadAvatar = useMutation({
+    mutationFn: (blob: Blob) => authApi.uploadAvatar(blob),
+    onSuccess: (data) => {
+      setUser({ ...user!, avatar_url: data.avatar_url });
+      setShowAvatarCrop(false);
+    },
+  });
+
   return (
     <div className="min-h-full bg-gray-50 pb-24">
       {/* Header */}
@@ -156,7 +276,15 @@ export default function Profile() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </Link>
-        <Avatar name={user?.display_name ?? ''} size="md" />
+        <button onClick={() => setShowAvatarCrop(true)} className="relative group flex-shrink-0">
+          <Avatar name={user?.display_name ?? ''} url={user?.avatar_url} size="md" />
+          <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+        </button>
         <h1 className="text-2xl font-bold">{t('profile.title')}</h1>
       </div>
 
@@ -292,6 +420,12 @@ export default function Profile() {
       />
 
       <AddNudgeModal open={showAddNudge} onClose={() => setShowAddNudge(false)} existing={nudges as any[]} />
+
+      <AvatarCropModal
+        open={showAvatarCrop}
+        onClose={() => setShowAvatarCrop(false)}
+        onSave={blob => uploadAvatar.mutate(blob)}
+      />
     </div>
   );
 }

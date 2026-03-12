@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { join } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 
 import authRouter from './routes/auth.js';
 import friendsRouter from './routes/friends.js';
@@ -19,12 +19,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV !== 'production';
 
+const avatarsDir = join(process.cwd(), 'data', 'avatars');
+mkdirSync(avatarsDir, { recursive: true });
+
 app.use(cors({
   origin: isDev ? ['http://localhost:5173', 'http://localhost:4173'] : true,
   credentials: true,
 }));
 
 app.use(express.json());
+
+// Serve uploaded avatars
+app.use('/avatars', express.static(avatarsDir));
 
 // API routes
 app.use('/api/auth', authRouter);
