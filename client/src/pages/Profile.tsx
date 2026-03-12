@@ -259,6 +259,11 @@ export default function Profile() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['nudges'] }),
   });
 
+  const addNudgeInline = useMutation({
+    mutationFn: ({ d, h }: { d: string; h: number }) => nudgesApi.add(d, h),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['nudges'] }),
+  });
+
   const uploadAvatar = useMutation({
     mutationFn: (blob: Blob) => authApi.uploadAvatar(blob),
     onSuccess: (data) => {
@@ -363,7 +368,18 @@ export default function Profile() {
           <p className="text-xs text-gray-500 mb-4">{t('profile.remindersDesc')}</p>
 
           {(nudges as any[]).length === 0 ? (
-            <p className="text-sm text-gray-500 italic">{t('profile.noReminders')}</p>
+            <div className="flex items-center justify-between py-1">
+              <span className="text-sm text-gray-500">
+                {t(`profile.days.${suggestNextNudge([]).day}`)} {formatHour(suggestNextNudge([]).hour)}
+              </span>
+              <button
+                onClick={() => addNudgeInline.mutate({ d: suggestNextNudge([]).day, h: suggestNextNudge([]).hour })}
+                disabled={addNudgeInline.isPending}
+                className="text-sm text-emerald-600 font-medium px-3 py-1 bg-emerald-50 rounded-lg disabled:opacity-50"
+              >
+                {t('profile.addReminder')}
+              </button>
+            </div>
           ) : (
             <div className="space-y-2">
               {(nudges as any[]).map((n: any) => (
