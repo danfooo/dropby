@@ -62,9 +62,10 @@ router.delete('/me', requireAuth, (req: AuthRequest, res) => {
 router.post('/signup', async (req, res) => {
   const { email, password, display_name } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  if (!display_name?.trim()) return res.status(400).json({ error: 'Display name required' });
 
   const emailLower = email.toLowerCase().trim();
-  const name = display_name?.trim() || emailLower.split('@')[0];
+  const name = display_name.trim();
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(emailLower);
   if (existing) return res.status(409).json({ error: 'Email already registered' });

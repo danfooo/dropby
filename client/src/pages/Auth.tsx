@@ -36,7 +36,7 @@ export default function Auth() {
     setError(''); setMessage(''); setLoading(true);
     try {
       if (tab === 'signup') {
-        await authApi.signup(email, password, displayName || undefined);
+        await authApi.signup(email, password, displayName);
         setMessage('Check your email to verify your account before logging in.');
         setTab('login');
       } else {
@@ -126,7 +126,8 @@ export default function Auth() {
           {tab === 'signup' && (
             <input
               type="text"
-              placeholder="Display name (optional)"
+              placeholder="Display name"
+              required
               value={displayName}
               onChange={e => setDisplayName(e.target.value)}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"

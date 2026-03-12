@@ -21,7 +21,7 @@ Drop By is a presence signal app. One tap tells your friends you're open to a sp
 |---|---|---|
 | id | uuid PK | |
 | email | string unique | |
-| display_name | string | Defaults to email prefix on signup |
+| display_name | string | Required on signup |
 | avatar_initial | string | Derived from display_name at render time, not stored |
 | timezone | string nullable | IANA timezone string e.g. "Europe/London"; set on first authenticated request, updated automatically if the value sent by the client differs from the stored value |
 | auto_nudge_enabled | boolean | Default true; controls the repeat-behaviour auto-nudge |
@@ -158,7 +158,7 @@ Multiple devices per user are supported.
 - Google OAuth
 - Apple OAuth
 - Email + password
-  - Signup requires: email, password, display name (defaults to email prefix)
+  - Signup requires: email, password, display name (required)
   - Email verification is required before first login
   - Login is blocked until email is verified; a resend verification link is shown
 - Supports a `?redirect=` query param so invite links can return the user after auth
@@ -485,7 +485,7 @@ Accessible from the Home screen (e.g. avatar/name in header).
 - Email/password with mandatory email verification (login blocked until verified)
 - Google OAuth
 - Apple OAuth
-- Display name set at signup, always editable thereafter
+- Display name required at signup, always editable thereafter
 - Profile auto-created on signup
 - `?redirect=` param supported on `/auth` for post-login routing
 
