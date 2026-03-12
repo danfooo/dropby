@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../api';
 import { useAuthStore } from '../stores/auth';
 
 type Tab = 'login' | 'signup';
 
 export default function Auth() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,9 +24,9 @@ export default function Auth() {
 
   useEffect(() => {
     const verified = searchParams.get('verified');
-    if (verified === 'true') setMessage('Email verified! You can now log in.');
-    if (verified === 'invalid') setError('Verification link is invalid or expired.');
-  }, [searchParams]);
+    if (verified === 'true') setMessage(t('auth.emailVerified'));
+    if (verified === 'invalid') setError(t('auth.verificationInvalid'));
+  }, [searchParams, t]);
 
   const handleSuccess = (data: { user: any; token: string }) => {
     setAuth(data.user, data.token);
@@ -37,7 +39,7 @@ export default function Auth() {
     try {
       if (tab === 'signup') {
         await authApi.signup(email, password, displayName);
-        setMessage('Check your email to verify your account before logging in.');
+        setMessage(t('auth.verifyEmailSent'));
         setTab('login');
       } else {
         const data = await authApi.login(email, password);
@@ -93,15 +95,15 @@ export default function Auth() {
 
         {/* Tabs */}
         <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
-          {(['login', 'signup'] as Tab[]).map(t => (
+          {(['login', 'signup'] as Tab[]).map(tabKey => (
             <button
-              key={t}
-              onClick={() => { setTab(t); setError(''); setMessage(''); setShowResend(false); }}
+              key={tabKey}
+              onClick={() => { setTab(tabKey); setError(''); setMessage(''); setShowResend(false); }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-                tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                tab === tabKey ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
               }`}
             >
-              {t === 'login' ? 'Log in' : 'Sign up'}
+              {tabKey === 'login' ? t('auth.login') : t('auth.signup')}
             </button>
           ))}
         </div>
@@ -111,7 +113,7 @@ export default function Auth() {
             {error}
             {showResend && (
               <button onClick={handleResend} className="block mt-1 underline font-medium">
-                Resend verification email
+                {t('auth.resendVerification')}
               </button>
             )}
           </div>
@@ -126,7 +128,7 @@ export default function Auth() {
           {tab === 'signup' && (
             <input
               type="text"
-              placeholder="Display name"
+              placeholder={t('auth.displayName')}
               required
               value={displayName}
               onChange={e => setDisplayName(e.target.value)}
@@ -135,7 +137,7 @@ export default function Auth() {
           )}
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t('auth.email')}
             required
             value={email}
             onChange={e => setEmail(e.target.value)}
@@ -143,7 +145,7 @@ export default function Auth() {
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder={t('auth.password')}
             required
             value={password}
             onChange={e => setPassword(e.target.value)}
@@ -154,7 +156,7 @@ export default function Auth() {
             disabled={loading}
             className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-colors"
           >
-            {loading ? 'Please wait…' : tab === 'login' ? 'Log in' : 'Create account'}
+            {loading ? t('auth.pleaseWait') : tab === 'login' ? t('auth.login') : t('auth.createAccount')}
           </button>
         </form>
 
@@ -162,7 +164,7 @@ export default function Auth() {
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200" />
           </div>
-          <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">or</div>
+          <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">{t('auth.or')}</div>
         </div>
 
         <div className="flex justify-center">

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { friendsApi, invitesApi } from '../api';
 import Avatar from '../components/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
 
 export default function Friends() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [confirmRemove, setConfirmRemove] = useState<{ id: string; name: string } | null>(null);
@@ -40,9 +42,9 @@ export default function Friends() {
     try {
       const data = await invitesApi.generate();
       await navigator.clipboard.writeText(data.url);
-      alert('Invite link copied!');
+      alert(t('home.inviteLinkCopied'));
     } catch {
-      alert('Could not copy link');
+      alert(t('home.couldNotCopy'));
     }
   };
 
@@ -63,26 +65,26 @@ export default function Friends() {
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 pt-10 pb-4 safe-top">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Friends</h1>
+          <h1 className="text-2xl font-bold">{t('friends.title')}</h1>
           <div className="flex gap-2">
             <button
               onClick={handleInvite}
               className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium"
             >
-              Invite
+              {t('friends.invite')}
             </button>
             <button
               onClick={() => setShowAddModal(true)}
               className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium"
             >
-              Add
+              {t('friends.add')}
             </button>
           </div>
         </div>
         {(friends as any[]).length > 0 && (
           <input
             type="text"
-            placeholder="Search friends…"
+            placeholder={t('friends.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full px-3 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none"
@@ -94,14 +96,14 @@ export default function Friends() {
         {(friends as any[]).length === 0 ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-4">👋</p>
-            <p className="font-semibold text-gray-900 mb-2">No friends yet</p>
-            <p className="text-sm text-gray-500 mb-6">Invite people or add them by email.</p>
+            <p className="font-semibold text-gray-900 mb-2">{t('friends.noFriendsTitle')}</p>
+            <p className="text-sm text-gray-500 mb-6">{t('friends.noFriendsDesc')}</p>
             <div className="flex gap-3 justify-center">
               <button onClick={handleInvite} className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium">
-                Copy invite link
+                {t('friends.copyInviteLink')}
               </button>
               <button onClick={() => setShowAddModal(true)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium">
-                Add by email
+                {t('friends.addByEmail')}
               </button>
             </div>
           </div>
@@ -131,7 +133,9 @@ export default function Friends() {
             {/* Muted friends */}
             {mutedFriends.length > 0 && (
               <>
-                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Muted</h2>
+                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  {t('friends.muted')}
+                </h2>
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-4">
                   {mutedFriends.map((f: any, i: number) => (
                     <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
@@ -141,7 +145,7 @@ export default function Friends() {
                         onClick={() => unmuteFriend.mutate(f.id)}
                         className="text-emerald-600 text-xs font-medium px-2"
                       >
-                        Unmute
+                        {t('friends.unmute')}
                       </button>
                       <button
                         onClick={() => setConfirmRemove({ id: f.id, name: f.display_name })}
@@ -164,20 +168,24 @@ export default function Friends() {
         open={!!confirmRemove}
         onClose={() => setConfirmRemove(null)}
         onConfirm={() => removeFriend.mutate(confirmRemove!.id)}
-        title="Remove friend"
-        message={`Remove ${confirmRemove?.name} as a friend? This cannot be undone.`}
-        confirmLabel="Remove"
+        title={t('friends.removeTitle')}
+        message={t('friends.removeMessage', { name: confirmRemove?.name })}
+        confirmLabel={t('friends.removeConfirm')}
         danger
       />
 
-      <Modal open={showAddModal} onClose={() => { setShowAddModal(false); setAddMsg(''); setAddInput(''); }} title="Add friend">
+      <Modal
+        open={showAddModal}
+        onClose={() => { setShowAddModal(false); setAddMsg(''); setAddInput(''); }}
+        title={t('friends.addFriendTitle')}
+      >
         {addMsg ? (
           <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3 mb-4 break-all">{addMsg}</div>
         ) : (
           <form onSubmit={handleAdd} className="space-y-3">
             <input
               type="text"
-              placeholder="Email or phone"
+              placeholder={t('friends.emailOrPhone')}
               value={addInput}
               onChange={e => setAddInput(e.target.value)}
               required
@@ -187,7 +195,7 @@ export default function Friends() {
               type="submit"
               className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-semibold"
             >
-              Send invite
+              {t('friends.sendInvite')}
             </button>
           </form>
         )}
