@@ -1,27 +1,73 @@
-// Email service — stubs console output until a delivery provider is integrated
+import { Resend } from "resend";
 
-export function sendVerificationEmail(to: string, displayName: string, token: string) {
-  const appUrl = process.env.APP_URL || 'http://localhost:5173';
-  const link = `${appUrl}/api/auth/verify-email/${token}`;
-  console.log(`[EMAIL] Verification email to ${to}`);
-  console.log(`[EMAIL] Hi ${displayName}, verify your email: ${link}`);
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+const FROM = process.env.EMAIL_FROM || "Drop By <noreply@drop-by.app>";
+const APP_URL = () => process.env.APP_URL || "http://localhost:5173";
+
+async function send(to: string, subject: string, html: string) {
+  if (!resend) {
+    console.log(`[EMAIL] To: ${to} | Subject: ${subject}`);
+    console.log(`[EMAIL] ${html.replace(/<[^>]+>/g, " ")}`);
+    return;
+  }
+  await resend.emails.send({ from: FROM, to, subject, html });
 }
 
-export function sendInviteEmail(to: string, fromName: string, inviteUrl: string) {
-  console.log(`[EMAIL] Invite from ${fromName} to ${to}`);
-  console.log(`[EMAIL] Join Drop By: ${inviteUrl}`);
+export async function sendVerificationEmail(
+  to: string,
+  displayName: string,
+  token: string
+) {
+  const link = `${APP_URL()}/api/auth/verify-email/${token}`;
+  await send(
+    to,
+    "Welcome to Drop By — please verify your email",
+    `
+    <p>Hey ${displayName},</p>
+    <p>Really happy you're joining! Just one step left — click below to verify your email and you're in:</p>
+    <p><a href="${link}">Verify my email</a></p>
+    <p>This link will expire in 24 hours.</p>
+  `
+  );
 }
 
-export function sendInviteSMS(to: string, fromName: string, inviteUrl: string) {
+export async function sendInviteEmail(
+  to: string,
+  fromName: string,
+  inviteUrl: string
+) {
+  await send(
+    to,
+    `${fromName} invited you to Drop By`,
+    `
+    <p>${fromName} wants to connect with you on Drop By.</p>
+    <p><a href="${inviteUrl}">Accept invite</a></p>
+  `
+  );
+}
+
+export async function sendInviteSMS(
+  to: string,
+  fromName: string,
+  inviteUrl: string
+) {
   console.log(`[SMS] Invite from ${fromName} to ${to}: ${inviteUrl}`);
 }
 
-export function sendWelcomeMessage(contact: string, downloadUrl: string) {
-  const isPhone = /^\+?[\d\s\-()]+$/.test(contact) && !contact.includes('@');
+export async function sendWelcomeMessage(contact: string, downloadUrl: string) {
+  const isPhone = /^\+?[\d\s\-()]+$/.test(contact) && !contact.includes("@");
   if (isPhone) {
     console.log(`[SMS] Welcome to Drop By! Download the app: ${downloadUrl}`);
   } else {
-    console.log(`[EMAIL] Welcome to Drop By! to: ${contact}`);
-    console.log(`[EMAIL] Download the app: ${downloadUrl}`);
+    await send(
+      contact,
+      "Welcome to Drop By",
+      `
+      <p>You're on Drop By! Download the app:</p>
+      <p><a href="${downloadUrl}">${downloadUrl}</a></p>
+    `
+    );
   }
 }
