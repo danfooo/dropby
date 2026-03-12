@@ -86,7 +86,6 @@ export const goingApi = {
 // Notes
 export const notesApi = {
   list: () => api.get('/notes').then(r => r.data),
-  suggestions: () => api.get('/notes/suggestions').then(r => r.data),
   save: (text: string) => api.post('/notes', { text }).then(r => r.data),
   setHidden: (id: string, hidden: boolean) => api.put(`/notes/${id}`, { hidden }).then(r => r.data),
   delete: (id: string) => api.delete(`/notes/${id}`).then(r => r.data),

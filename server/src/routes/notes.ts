@@ -2,16 +2,8 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
-import { getContextualSuggestions } from '../services/suggestions.js';
 
 const router = Router();
-
-// GET /api/notes/suggestions
-router.get('/suggestions', requireAuth, (req: AuthRequest, res) => {
-  const timezone = req.user?.timezone || null;
-  const suggestions = getContextualSuggestions(timezone, 4);
-  res.json(suggestions);
-});
 
 // GET /api/notes
 router.get('/', requireAuth, (req: AuthRequest, res) => {
