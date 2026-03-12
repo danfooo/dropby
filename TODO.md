@@ -1,8 +1,5 @@
 # Drop By — TODOs
 
-## Google OAuth
-- [ ] Change support email on OAuth consent screen to a proper address (currently set to personal email)
-
 ## Apple / APNs
 - [ ] Finish Apple Developer enrollment (pending approval)
 - [ ] Create App ID `cc.dropby.app` in Apple Developer portal
@@ -11,4 +8,7 @@
 ## Infrastructure
 - [ ] Set up GitHub Actions deploy-on-push
 
-## Other
+## Email
+- [ ] Set up `hello@dropby.cc` mailbox (contact/support address)
+- [ ] Update `rua` in DMARC record once `hello@` or a dedicated address is receiving mail (or remove `rua` if reports aren't needed)
+- [ ] Update Google OAuth consent screen support email to `hello@dropby.cc`
