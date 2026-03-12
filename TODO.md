@@ -8,6 +8,9 @@
 ## Infrastructure
 - [ ] Set up GitHub Actions deploy-on-push
 
+## Google OAuth
+- [ ] Change support email on OAuth consent screen to a proper address (currently set to personal email)
+
 ## Email
 - [ ] Set up `hello@dropby.cc` mailbox (contact/support address)
 - [ ] Update `rua` in DMARC record once `hello@` or a dedicated address is receiving mail (or remove `rua` if reports aren't needed)
