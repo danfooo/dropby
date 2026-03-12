@@ -5,6 +5,7 @@ import { authApi } from './api';
 import { useSSE } from './hooks/useSSE';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
+import VerifyEmail from './pages/VerifyEmail';
 import Home from './pages/Home';
 import Friends from './pages/Friends';
 import Invite from './pages/Invite';
@@ -43,6 +44,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={user ? <Navigate to="/home" /> : <Landing />} />
       <Route path="/auth" element={user ? <Navigate to="/home" /> : <Auth />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/invite/:token" element={<Invite />} />
       <Route element={user ? <Layout /> : <Navigate to="/auth" />}>
         <Route path="/home" element={<Home />} />

@@ -62,8 +62,9 @@ export async function sendVerificationEmail(
 ) {
   const lang = locale?.split('-')[0] ?? 'en';
   const copy = verificationCopy[lang] ?? defaultVerificationCopy;
-  const params = redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : '';
-  const link = `${APP_URL()}/api/auth/verify-email/${token}${params}`;
+  const params = new URLSearchParams({ token });
+  if (redirectUrl) params.set('redirect', redirectUrl);
+  const link = `${APP_URL()}/verify-email?${params}`;
   await send(to, copy.subject, `
     <p>${copy.greeting(displayName)}</p>
     <p>${copy.body}</p>

@@ -31,6 +31,7 @@ export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }).then(r => r.data),
   google: (credential: string) => api.post('/auth/google', { credential }).then(r => r.data),
+  verifyEmail: (token: string) => api.post('/auth/verify-email', { token }).then(r => r.data),
   resendVerification: (email: string) => api.post('/auth/resend-verification', { email }).then(r => r.data),
   updateMe: (data: { display_name?: string; auto_nudge_enabled?: boolean }) =>
     api.put('/auth/me', data).then(r => r.data),

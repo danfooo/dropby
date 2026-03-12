@@ -113,31 +113,36 @@ router.post('/signup', async (req, res) => {
   res.status(201).json({ message: 'Check your email to verify your account' });
 });
 
-// GET /api/auth/verify-email/:token
+// GET /api/auth/verify-email/:token — legacy redirect for old email links
 router.get('/verify-email/:token', (req, res) => {
   const { token } = req.params;
+  const params = new URLSearchParams({ token });
+  const redirectAfter = (req.query.redirect as string) || '';
+  if (redirectAfter.startsWith('/')) params.set('redirect', redirectAfter);
+  res.redirect(`${process.env.APP_URL || 'http://localhost:5173'}/verify-email?${params}`);
+});
+
+// POST /api/auth/verify-email — verify token, return JWT for auto-login
+router.post('/verify-email', async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token required' });
+
   const now = Math.floor(Date.now() / 1000);
-
   const user = db.prepare(`
-    SELECT id FROM users
+    SELECT * FROM users
     WHERE email_verification_token = ? AND email_verification_expires_at > ? AND email_verified = 0
-  `).get(token, now) as { id: string } | undefined;
+  `).get(token, now) as any;
 
-  if (!user) {
-    // Redirect to auth with error if not API call
-    return res.redirect(`${process.env.APP_URL || 'http://localhost:5173'}/auth?verified=invalid`);
-  }
+  if (!user) return res.status(400).json({ error: 'INVALID_OR_EXPIRED' });
 
   db.prepare(`
     UPDATE users SET email_verified = 1, email_verification_token = NULL, email_verification_expires_at = NULL
     WHERE id = ?
   `).run(user.id);
 
-  const redirectAfter = (req.query.redirect as string) || '';
-  const safeRedirect = redirectAfter.startsWith('/') ? redirectAfter : '';
-  const params = new URLSearchParams({ verified: 'true' });
-  if (safeRedirect) params.set('redirect', safeRedirect);
-  res.redirect(`${process.env.APP_URL || 'http://localhost:5173'}/auth?${params}`);
+  const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
+  const jwt = await signJwt(user.id);
+  res.json({ token: jwt, user: userResponse(updatedUser) });
 });
 
 // POST /api/auth/resend-verification

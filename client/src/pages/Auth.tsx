@@ -39,12 +39,6 @@ export default function Auth() {
       .catch(() => {});
   }, [inviteToken]);
 
-  useEffect(() => {
-    const verified = searchParams.get('verified');
-    if (verified === 'true') setMessage(t('auth.emailVerified'));
-    if (verified === 'invalid') setError(t('auth.verificationInvalid'));
-  }, [searchParams, t]);
-
   const handleSuccess = (data: { user: any; token: string }) => {
     setAuth(data.user, data.token);
     navigate(redirect);
