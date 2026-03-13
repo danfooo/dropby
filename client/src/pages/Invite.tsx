@@ -129,7 +129,7 @@ export default function Invite() {
                   : t('invite.doorOpen', { name: info.inviter.display_name })}
               </p>
               <Link to="/home" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
-                {t('invite.seeStatus')}
+                {t('invite.doorOpenCta')}
               </Link>
             </>
           ) : (
@@ -158,7 +158,7 @@ export default function Invite() {
           </div>
         )}
         <Link to="/home" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
-          {info.status ? t('invite.seeStatus') : t('invite.goHome')}
+          {info.status ? t('invite.doorOpenCta') : t('invite.hurray')}
         </Link>
       </div>
     );

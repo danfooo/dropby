@@ -117,6 +117,8 @@
     "doorOpen": "{{name}} tiene la puerta abierta",
     "doorOpenWithNote": "{{name}} tiene la puerta abierta: \"{{note}}\"",
     "seeStatus": "Ver su estado",
+    "doorOpenCta": "Su puerta está abierta 🚪",
+    "hurray": "¡Yupi!",
     "friendsNowTitle": "¡Ya son amigos!",
     "friendsNowDesc": "Tú y {{name}} ahora son amigos en Drop By.",
     "hasTheirDoorOpen": "tiene la puerta abierta",

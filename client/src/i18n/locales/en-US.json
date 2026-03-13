@@ -117,6 +117,8 @@
     "doorOpen": "{{name}} has their door open",
     "doorOpenWithNote": "{{name}} has their door open: \"{{note}}\"",
     "seeStatus": "See their status",
+    "doorOpenCta": "Their door is open 🚪",
+    "hurray": "Hurray",
     "friendsNowTitle": "You're now friends!",
     "friendsNowDesc": "You and {{name}} are now friends on Drop By.",
     "hasTheirDoorOpen": "has their door open",
