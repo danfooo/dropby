@@ -222,8 +222,9 @@ Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side
 
 ### Home — Door Closed (`/home`, default state)
 
-**Greeting**
-- "Hey, [display_name] 👋"
+**Header**
+- Top-right: `UserMenu` — avatar + first name, tappable, navigates to `/profile`
+- No text greeting; the UserMenu serves as the identity anchor
 
 **Note selection**
 - Two separate horizontally scrollable chip rows:
@@ -272,7 +273,8 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 ### Home — Door Open (`/home`, active state)
 
 **Header**
-- "You're open!" with the active note below (if any)
+- Top-right: `UserMenu` — same as Door Closed view
+- "You're open!" status indicator with the active note below (if any)
 - Countdown: "Closes in X min"
 - "Keep it open +30 min" button — appears when ≤ 20 minutes remain; extends `closes_at` by 30 minutes; unlimited prolongs
 
