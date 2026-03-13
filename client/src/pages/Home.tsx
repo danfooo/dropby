@@ -272,10 +272,11 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-xl font-semibold text-gray-800">{getGreeting(t)}</p>
+        <div className="flex items-center justify-between mb-1">
+          <img src="/logo.svg" alt="Drop By" className="h-8" />
           <UserMenu />
         </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6 mt-5">{getGreeting(t)}</h1>
 
         {/* Suggestion chips */}
         {chips.length > 0 && (
@@ -430,6 +431,7 @@ export default function Home() {
         >
           {createStatus.isPending ? t('home.opening') : t('home.openDoor')}
         </button>
+        <p className="text-xs text-gray-400 text-center mt-2">{t('home.openDoorDesc')}</p>
 
         <TipsSection />
       </div>
@@ -500,7 +502,7 @@ export default function Home() {
     <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-xl font-semibold text-gray-800">{getGreeting(t)}</p>
+        <img src="/logo.svg" alt="Drop By" className="h-8" />
         <UserMenu />
       </div>
 
