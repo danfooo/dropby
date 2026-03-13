@@ -98,3 +98,9 @@ export const nudgesApi = {
   add: (day_of_week: string, hour: number) => api.post('/nudges', { day_of_week, hour }).then(r => r.data),
   remove: (id: string) => api.delete(`/nudges/${id}`).then(r => r.data),
 };
+
+// Feedback
+export const feedbackApi = {
+  submit: (data: { type: string; message: string; reply_email?: string }) =>
+    api.post('/feedback', data).then(r => r.data),
+};

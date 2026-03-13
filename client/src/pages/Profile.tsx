@@ -8,6 +8,7 @@ import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
+import FeedbackModal from '../components/FeedbackModal';
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 type DayKey = typeof DAY_KEYS[number];
@@ -232,6 +233,7 @@ export default function Profile() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAddNudge, setShowAddNudge] = useState(() => searchParams.get('addReminder') === '1');
   const [showAvatarCrop, setShowAvatarCrop] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const use24h = ['de', 'es', 'fr'].includes(i18n.language.split('-')[0]);
 
@@ -413,8 +415,16 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Feedback */}
+        <button
+          onClick={() => setShowFeedback(true)}
+          className="w-full py-3 text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
+        >
+          Share feedback
+        </button>
+
         {/* Logout + Delete */}
-        <div className="pt-4 space-y-2">
+        <div className="pt-2 space-y-2">
           <button
             onClick={() => { clearAuth(); navigate('/'); }}
             className="w-full py-3 text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
@@ -441,6 +451,7 @@ export default function Profile() {
       />
 
       <AddNudgeModal open={showAddNudge} onClose={() => setShowAddNudge(false)} existing={nudges as any[]} />
+      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
 
       <AvatarCropModal
         open={showAvatarCrop}

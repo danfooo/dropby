@@ -8,6 +8,7 @@ import Avatar from '../components/Avatar';
 import UserMenu from '../components/UserMenu';
 import Modal from '../components/Modal';
 import Toast from '../components/Toast';
+import FeedbackModal from '../components/FeedbackModal';
 import { getSuggestions } from '../i18n/suggestions';
 
 type HomeView = 'closed' | 'open' | 'edit';
@@ -612,6 +613,8 @@ function TipsSection() {
   const qc = useQueryClient();
   const [nudgeDismissed, dismissNudge] = usePermanentDismiss('tip_nudge_dismissed');
   const [inviteDismissed, dismissInvite] = usePermanentDismiss('tip_invite_dismissed');
+  const [feedbackDismissed, dismissFeedback] = usePermanentDismiss('tip_feedback_dismissed');
+  const [showFeedback, setShowFeedback] = useState(false);
   const [toast, setToast] = useState<{ message: string; linkText: string; linkTo: string } | null>(null);
 
   const { data: nudges = [] } = useQuery({ queryKey: ['nudges'], queryFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.list(); } });
@@ -630,6 +633,7 @@ function TipsSection() {
 
   const showNudgeTip = !nudgeDismissed && (nudges as any[]).length === 0;
   const showInviteTip = !inviteDismissed && !showNudgeTip;
+  const showFeedbackTip = !feedbackDismissed && !showInviteTip && !showNudgeTip;
 
   return (
     <>
@@ -683,7 +687,27 @@ function TipsSection() {
         </div>
       )}
 
+      {showFeedbackTip && (
+        <div className="mt-4 bg-white rounded-2xl p-4 border border-dashed border-gray-200">
+          <div className="flex items-start justify-between mb-2">
+            <p className="text-sm text-gray-600 flex-1">Enjoying Drop By? Your feedback shapes what gets built next.</p>
+            <button onClick={dismissFeedback} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="text-sm font-semibold text-emerald-600"
+          >
+            Share thoughts →
+          </button>
+        </div>
+      )}
+
       {toast && <Toast message={toast.message} linkText={toast.linkText || undefined} linkTo={toast.linkTo || undefined} onDismiss={() => setToast(null)} />}
+      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
   );
 }

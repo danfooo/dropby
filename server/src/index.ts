@@ -11,6 +11,7 @@ import goingRouter from './routes/going.js';
 import notesRouter from './routes/notes.js';
 import nudgesRouter from './routes/nudges.js';
 import eventsRouter from './routes/events.js';
+import feedbackRouter from './routes/feedback.js';
 
 // Start cron jobs
 import './cron.js';
@@ -41,6 +42,7 @@ app.use('/api/going', goingRouter);
 app.use('/api/notes', notesRouter);
 app.use('/api/nudges', nudgesRouter);
 app.use('/api/events', eventsRouter);
+app.use('/api/feedback', feedbackRouter);
 
 // Serve static client in production
 if (!isDev) {

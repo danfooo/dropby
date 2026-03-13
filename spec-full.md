@@ -653,7 +653,38 @@ No polling; the Home screen reflects friend state changes immediately.
 
 ---
 
-## 9. Known Gaps / Deferred
+## 9. Feedback Tool
+
+### Purpose
+Lets users share thoughts on whether Drop By is helping make real moments happen, and report bugs or oddities. Designed to feel inviting, not clinical.
+
+### Entry Points
+1. **Home tip card** — dismissible card in TipsSection (localStorage key `tip_feedback_dismissed`), shown after nudge and invite tip cards are resolved. Copy: "Enjoying Drop By? Your feedback shapes what gets built next." with a "Share thoughts →" button.
+2. **Profile page** — "Share feedback" button above Logout, always visible.
+
+### FeedbackModal
+- **Type selector**: two pill buttons — "How it's going" / "Report a bug"
+- **Textarea**: inviting placeholder (changes per type), max 1000 chars
+- **Opt-in checkbox**: "You can reach me for follow-up" — unchecked by default
+- **Email field**: shown only when opt-in is checked; pre-filled with logged-in user's email, editable
+- **Submit** → success screen with thank-you message
+
+### Data Model — `feedback` table
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid FK nullable | References `users(id) ON DELETE SET NULL` — feedback preserved if user deletes account |
+| type | text | `'thought'` or `'bug'` |
+| message | text | 1–1000 chars |
+| reply_email | text nullable | Only stored when user opts in |
+| created_at | integer | Unix epoch |
+
+### API
+`POST /api/feedback` — requires auth. Body: `{ type, message, reply_email? }`. Returns `201 { id }`.
+
+---
+
+## 10. Known Gaps / Deferred
 
 - **Apple OAuth**: specced, not implemented
 - **APNs**: pending Apple Developer enrollment; FCM is active
