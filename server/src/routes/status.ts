@@ -130,11 +130,12 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, rid);
   }
 
-  // Save last selection
+  // Save last selection (unselected = all friends minus those who were picked)
+  const unselectedOnCreate = friendIds.filter((id: string) => !validRecipients.includes(id));
   db.prepare(`
-    INSERT INTO recipient_sessions (user_id, selected_ids, updated_at) VALUES (?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, updated_at = excluded.updated_at
-  `).run(userId, JSON.stringify(validRecipients), nowUnix);
+    INSERT INTO recipient_sessions (user_id, selected_ids, unselected_ids, updated_at) VALUES (?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
+  `).run(userId, JSON.stringify(validRecipients), JSON.stringify(unselectedOnCreate), nowUnix);
 
   // Send push notifications (exclude muted)
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
@@ -187,10 +188,11 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
       db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), status.id, rid);
     }
 
+    const unselectedOnUpdate = friendIds.filter((id: string) => !valid.includes(id));
     db.prepare(`
-      INSERT INTO recipient_sessions (user_id, selected_ids, updated_at) VALUES (?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, updated_at = excluded.updated_at
-    `).run(userId, JSON.stringify(valid), Math.floor(Date.now() / 1000));
+      INSERT INTO recipient_sessions (user_id, selected_ids, unselected_ids, updated_at) VALUES (?, ?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
+    `).run(userId, JSON.stringify(valid), JSON.stringify(unselectedOnUpdate), Math.floor(Date.now() / 1000));
   }
 
   const updated = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(status.id), userId);
@@ -239,11 +241,9 @@ router.delete('/recipients/:recipientId', requireAuth, (req: AuthRequest, res) =
 
 // GET /api/status/last-selection
 router.get('/last-selection', requireAuth, (req: AuthRequest, res) => {
-  const row = db.prepare('SELECT selected_ids FROM recipient_sessions WHERE user_id = ?').get(req.userId) as { selected_ids: string } | undefined;
-  const hasEverOpened = !!(db.prepare('SELECT id FROM statuses WHERE user_id = ? LIMIT 1').get(req.userId));
+  const row = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(req.userId) as { unselected_ids: string } | undefined;
   res.json({
-    selected_ids: row ? JSON.parse(row.selected_ids) : null,
-    first_time: !hasEverOpened,
+    unselected_ids: row ? JSON.parse(row.unselected_ids) : [],
   });
 });
 

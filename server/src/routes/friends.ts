@@ -15,14 +15,15 @@ function areFriends(userA: string, userB: string): boolean {
 function getFriendsOf(userId: string) {
   return db.prepare(`
     SELECT u.id, u.display_name, u.email,
-      CASE WHEN fm.id IS NOT NULL THEN 1 ELSE 0 END AS muted
+      CASE WHEN fm.id IS NOT NULL THEN 1 ELSE 0 END AS muted,
+      f.created_at AS friendship_created_at
     FROM friendships f
     JOIN users u ON u.id = CASE WHEN f.user_a_id = ? THEN f.user_b_id ELSE f.user_a_id END
     LEFT JOIN friend_mutes fm ON fm.user_id = ? AND fm.muted_user_id = u.id
     WHERE f.user_a_id = ? OR f.user_b_id = ?
     ORDER BY u.display_name
   `).all(userId, userId, userId, userId) as Array<{
-    id: string; display_name: string; email: string; muted: number;
+    id: string; display_name: string; email: string; muted: number; friendship_created_at: number;
   }>;
 }
 
@@ -69,6 +70,17 @@ router.post('/:friendId/mute', requireAuth, (req: AuthRequest, res) => {
   db.prepare(`
     INSERT OR IGNORE INTO friend_mutes (id, user_id, muted_user_id) VALUES (?, ?, ?)
   `).run(randomUUID(), userId, friendId);
+
+  // Also mark as unselected in recipient sessions
+  const sessionRow = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(userId) as { unselected_ids: string } | undefined;
+  const unselected: string[] = sessionRow ? JSON.parse(sessionRow.unselected_ids) : [];
+  if (!unselected.includes(friendId)) {
+    unselected.push(friendId);
+    db.prepare(`
+      INSERT INTO recipient_sessions (user_id, unselected_ids, updated_at) VALUES (?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
+    `).run(userId, JSON.stringify(unselected), Math.floor(Date.now() / 1000));
+  }
 
   res.json({ ok: true });
 });

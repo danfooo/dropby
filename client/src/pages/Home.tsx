@@ -159,19 +159,13 @@ export default function Home() {
   // Initialize recipient selection from server
   useEffect(() => {
     if (!lastSelection || !friends.length) return;
-    const friendIds = (friends as any[]).map((f: any) => f.id);
+    const unselected: string[] = lastSelection.unselected_ids ?? [];
     const mutedIds = (friends as any[]).filter((f: any) => f.muted).map((f: any) => f.id);
-
-    if (lastSelection.first_time || !lastSelection.selected_ids) {
-      // First time: all non-muted
-      setSelectedRecipients(friendIds.filter((id: string) => !mutedIds.includes(id)));
-    } else {
-      // Restore previous, exclude removed friends, uncheck muted
-      const prev: string[] = lastSelection.selected_ids;
-      setSelectedRecipients(
-        prev.filter((id: string) => friendIds.includes(id) && !mutedIds.includes(id))
-      );
-    }
+    setSelectedRecipients(
+      (friends as any[])
+        .map((f: any) => f.id)
+        .filter((id: string) => !unselected.includes(id) && !mutedIds.includes(id))
+    );
   }, [lastSelection, friends]);
 
   // Sync view with status
@@ -252,8 +246,21 @@ export default function Home() {
   };
 
   const hasFriends = (friends as any[]).length > 0;
-  const activeFriends = (friends as any[]).filter((f: any) => !f.muted);
-  const mutedFriends = (friends as any[]).filter((f: any) => f.muted);
+  const activeFriends = useMemo(() => {
+    return (friends as any[])
+      .filter((f: any) => !f.muted)
+      .sort((a: any, b: any) => {
+        const aChecked = selectedRecipients.includes(a.id);
+        const bChecked = selectedRecipients.includes(b.id);
+        if (aChecked !== bChecked) return aChecked ? -1 : 1;
+        return (b.friendship_created_at ?? 0) - (a.friendship_created_at ?? 0);
+      });
+  }, [friends, selectedRecipients]);
+  const mutedFriends = useMemo(() => {
+    return (friends as any[])
+      .filter((f: any) => f.muted)
+      .sort((a: any, b: any) => (b.friendship_created_at ?? 0) - (a.friendship_created_at ?? 0));
+  }, [friends]);
 
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {

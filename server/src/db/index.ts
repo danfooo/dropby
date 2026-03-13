@@ -160,4 +160,9 @@ if (!cols.find(c => c.name === 'password_reset_token')) {
   db.exec('ALTER TABLE users ADD COLUMN password_reset_expires_at INTEGER');
 }
 
+const sessionCols = db.pragma('table_info(recipient_sessions)') as { name: string }[];
+if (!sessionCols.find(c => c.name === 'unselected_ids')) {
+  db.exec("ALTER TABLE recipient_sessions ADD COLUMN unselected_ids TEXT NOT NULL DEFAULT '[]'");
+}
+
 export default db;
