@@ -102,6 +102,13 @@ function RecipientRow({ recipient, onRemove }: { recipient: any; onRemove: () =>
   );
 }
 
+function getGreeting(t: (key: string) => string): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return t('home.greetingMorning');
+  if (hour >= 12 && hour < 18) return t('home.greetingAfternoon');
+  return t('home.greetingEvening');
+}
+
 export default function Home() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
@@ -265,7 +272,8 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex items-center justify-end mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-xl font-semibold text-gray-800">{getGreeting(t)}</p>
           <UserMenu />
         </div>
 
@@ -491,7 +499,8 @@ export default function Home() {
   return (
     <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-end mb-6">
+      <div className="flex items-center justify-between mb-6">
+        <p className="text-xl font-semibold text-gray-800">{getGreeting(t)}</p>
         <UserMenu />
       </div>
 

@@ -28,6 +28,9 @@
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",
+    "greetingMorning": "Guten Morgen",
+    "greetingAfternoon": "Guten Tag",
+    "greetingEvening": "Guten Abend",
     "friendsAvailable": "Freunde verfügbar",
     "openFor": "Offen noch {{minutes}} Min.",
     "closingSoon": "Schließt bald",
