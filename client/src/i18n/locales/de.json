@@ -77,6 +77,8 @@
     "recipients": "Empfänger",
     "saveChanges": "Änderungen speichern",
     "undo": "Rückgängig ({{seconds}}s)",
+    "coffeeTipText": "Jemand ist vorbeigekommen. Wenn Drop By dir einen echten Moment geschenkt hat, kauf uns gerne einen Kaffee ☕",
+    "coffeeTipLink": "buymeacoffee.com/dropby →",
     "inviteLinkCopied": "Einladungslink kopiert!",
     "couldNotCopy": "Link konnte nicht kopiert werden"
   },

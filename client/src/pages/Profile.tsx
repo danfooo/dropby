@@ -423,6 +423,16 @@ export default function Profile() {
           Share feedback
         </button>
 
+        {/* Buy me a coffee */}
+        <a
+          href="https://www.buymeacoffee.com/dropby"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full py-3 text-center text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
+        >
+          ☕ buymeacoffee.com/dropby
+        </a>
+
         {/* Logout + Delete */}
         <div className="pt-2 space-y-2">
           <button

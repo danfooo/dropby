@@ -77,6 +77,8 @@
     "recipients": "Recipients",
     "saveChanges": "Save changes",
     "undo": "Undo ({{seconds}}s)",
+    "coffeeTipText": "Someone dropped by. If Drop By brought you a real moment, consider buying us a coffee ☕",
+    "coffeeTipLink": "buymeacoffee.com/dropby →",
     "inviteLinkCopied": "Invite link copied!",
     "couldNotCopy": "Could not copy link"
   },

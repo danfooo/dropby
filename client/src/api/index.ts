@@ -82,6 +82,7 @@ export const invitesApi = {
 
 // Going
 export const goingApi = {
+  everReceived: () => api.get('/going/ever-received').then(r => r.data),
   send: (statusId: string) => api.post(`/going/${statusId}`).then(r => r.data),
   sendGuest: (statusId: string, data: { name: string; contact?: string; marketing_consent?: boolean }) =>
     api.post(`/going/${statusId}/guest`, data).then(r => r.data),

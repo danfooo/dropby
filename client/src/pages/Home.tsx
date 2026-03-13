@@ -623,10 +623,12 @@ function TipsSection() {
   const [nudgeDismissed, dismissNudge] = usePermanentDismiss('tip_nudge_dismissed');
   const [inviteDismissed, dismissInvite] = usePermanentDismiss('tip_invite_dismissed');
   const [feedbackDismissed, dismissFeedback] = usePermanentDismiss('tip_feedback_dismissed');
+  const [coffeeDismissed, dismissCoffee] = usePermanentDismiss('tip_coffee_dismissed');
   const [showFeedback, setShowFeedback] = useState(false);
   const [toast, setToast] = useState<{ message: string; linkText: string; linkTo: string } | null>(null);
 
   const { data: nudges = [] } = useQuery({ queryKey: ['nudges'], queryFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.list(); } });
+  const { data: everReceived } = useQuery({ queryKey: ['everReceived'], queryFn: async () => { const { goingApi } = await import('../api'); return goingApi.everReceived(); } });
 
   const addNudge = useMutation({
     mutationFn: async () => { const { nudgesApi } = await import('../api'); return nudgesApi.add('sat', 11); },
@@ -712,6 +714,22 @@ function TipsSection() {
           >
             Share thoughts →
           </button>
+        </div>
+      )}
+
+      {!coffeeDismissed && everReceived?.received && (
+        <div className="mt-4 bg-white rounded-2xl p-4 border border-dashed border-gray-200">
+          <div className="flex items-start justify-between mb-2">
+            <p className="text-sm text-gray-600 flex-1">{t('home.coffeeTipText')}</p>
+            <button onClick={dismissCoffee} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <a href="https://www.buymeacoffee.com/dropby" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-emerald-600">
+            {t('home.coffeeTipLink')}
+          </a>
         </div>
       )}
 

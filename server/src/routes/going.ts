@@ -7,6 +7,16 @@ import { sendWelcomeMessage } from '../services/email.js';
 
 const router = Router();
 
+// GET /api/going/ever-received — has this user ever had a going signal on any of their statuses?
+router.get('/ever-received', requireAuth, (req: AuthRequest, res) => {
+  const row = db.prepare(`
+    SELECT COUNT(*) as n FROM going_signals gs
+    JOIN statuses s ON s.id = gs.status_id
+    WHERE s.user_id = ?
+  `).get(req.userId) as { n: number };
+  res.json({ received: row.n > 0 });
+});
+
 // POST /api/going/:statusId — logged-in going signal
 router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
   const { statusId } = req.params;
