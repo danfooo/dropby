@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '../stores/auth';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
 import Avatar from '../components/Avatar';
+import UserMenu from '../components/UserMenu';
 import Modal from '../components/Modal';
 import Toast from '../components/Toast';
 import { getSuggestions } from '../i18n/suggestions';
@@ -103,7 +103,6 @@ function RecipientRow({ recipient, onRemove }: { recipient: any; onRemove: () =>
 
 export default function Home() {
   const { t, i18n } = useTranslation();
-  const { user } = useAuthStore();
   const qc = useQueryClient();
   const [view, setView] = useState<HomeView>('closed');
   const [note, setNote] = useState('');
@@ -247,8 +246,6 @@ export default function Home() {
   const activeFriends = (friends as any[]).filter((f: any) => !f.muted);
   const mutedFriends = (friends as any[]).filter((f: any) => f.muted);
 
-  const firstName = user?.display_name?.split(' ')[0];
-
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {
     return (
@@ -267,13 +264,8 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {t('home.greeting', { name: firstName })}
-          </h1>
-          <Link to="/profile">
-            <Avatar name={user?.display_name ?? ''} size="sm" />
-          </Link>
+        <div className="flex items-center justify-end mb-6">
+          <UserMenu />
         </div>
 
         {/* Suggestion chips */}
@@ -498,13 +490,8 @@ export default function Home() {
   return (
     <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {t('home.greeting', { name: firstName })}
-        </h1>
-        <Link to="/profile">
-          <Avatar name={user?.display_name ?? ''} size="sm" />
-        </Link>
+      <div className="flex items-center justify-end mb-6">
+        <UserMenu />
       </div>
 
       {/* Friend doors also open */}
