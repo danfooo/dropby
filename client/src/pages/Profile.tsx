@@ -413,8 +413,14 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Delete account */}
-        <div className="pt-4">
+        {/* Logout + Delete */}
+        <div className="pt-4 space-y-2">
+          <button
+            onClick={() => { clearAuth(); navigate('/'); }}
+            className="w-full py-3 text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
+          >
+            {t('profile.logout')}
+          </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="w-full py-3 text-red-500 text-sm font-medium border border-red-100 rounded-2xl hover:bg-red-50"

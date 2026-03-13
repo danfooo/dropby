@@ -127,6 +127,7 @@
     "remindersDesc": "Wir schicken dir eine Benachrichtigung, damit du deine Tür öffnest.",
     "noReminders": "Keine Erinnerungen gesetzt.",
     "autoNudgeTitle": "Erinnere mich, wenn ich vor einer Woche um diese Zeit meine Tür geöffnet hatte",
+    "logout": "Abmelden",
     "deleteAccount": "Konto löschen",
     "deleteTitle": "Konto löschen",
     "deleteMessage": "Dadurch werden dein Konto, Freunde und alle Daten dauerhaft gelöscht. Das kann nicht rückgängig gemacht werden.",

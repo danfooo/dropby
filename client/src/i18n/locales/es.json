@@ -127,6 +127,7 @@
     "remindersDesc": "Te enviaremos una notificación para que abras tu puerta.",
     "noReminders": "Sin recordatorios.",
     "autoNudgeTitle": "Recuérdame cuando abrí mi puerta a esta hora la semana pasada",
+    "logout": "Cerrar sesión",
     "deleteAccount": "Eliminar cuenta",
     "deleteTitle": "Eliminar cuenta",
     "deleteMessage": "Esto eliminará permanentemente tu cuenta, amigos y todos tus datos. No se puede deshacer.",
