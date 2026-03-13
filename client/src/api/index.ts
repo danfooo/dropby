@@ -15,7 +15,8 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   r => r,
   err => {
-    if (err.response?.status === 401) {
+    const url: string = err.config?.url ?? '';
+    if (err.response?.status === 401 && !url.startsWith('/auth')) {
       localStorage.removeItem('token');
       window.location.href = '/auth';
     }
