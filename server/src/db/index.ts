@@ -155,4 +155,9 @@ if (!inviteCols.find(c => c.name === 'invited_email')) {
   db.exec('ALTER TABLE invite_links ADD COLUMN invited_email TEXT');
 }
 
+if (!cols.find(c => c.name === 'password_reset_token')) {
+  db.exec('ALTER TABLE users ADD COLUMN password_reset_token TEXT');
+  db.exec('ALTER TABLE users ADD COLUMN password_reset_expires_at INTEGER');
+}
+
 export default db;

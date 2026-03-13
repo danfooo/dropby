@@ -24,7 +24,20 @@
     "resendVerification": "Renvoyer l'e-mail de vérification",
     "emailVerified": "E-mail vérifié ! Tu peux maintenant te connecter.",
     "verificationInvalid": "Le lien de vérification est invalide ou expiré.",
-    "connectWithName": "Inscris-toi pour te connecter avec {{name}}"
+    "connectWithName": "Inscris-toi pour te connecter avec {{name}}",
+    "forgotPassword": "Mot de passe oublié ?",
+    "forgotPasswordDesc": "Entre ton e-mail et nous t'enverrons un lien de réinitialisation.",
+    "sendResetLink": "Envoyer le lien",
+    "resetLinkSent": "Consulte ta boîte mail. Si cette adresse est enregistrée, un lien est en route.",
+    "resetLinkExpired": "Ce lien est invalide ou a expiré.",
+    "setNewPassword": "Définir un nouveau mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+    "passwordUpdated": "Mot de passe mis à jour. Connexion en cours…",
+    "backToLogin": "Retour à la connexion",
+    "somethingWentWrong": "Quelque chose s'est mal passé. Réessaie."
   },
   "home": {
     "greeting": "Salut, {{name}} 👋",

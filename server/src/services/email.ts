@@ -96,6 +96,61 @@ export async function sendInviteSMS(
   console.log(`[SMS] Invite from ${fromName} to ${to}: ${inviteUrl}`);
 }
 
+const resetCopy: Record<string, {
+  subject: string;
+  greeting: (name: string) => string;
+  body: string;
+  linkText: string;
+  expiry: string;
+}> = {
+  de: {
+    subject: 'Drop By — Passwort zurücksetzen',
+    greeting: name => `Hey ${name},`,
+    body: 'Du hast eine Anfrage zum Zurücksetzen deines Passworts gestellt. Klick unten, um ein neues zu setzen:',
+    linkText: 'Passwort zurücksetzen',
+    expiry: 'Dieser Link läuft in 1 Stunde ab.',
+  },
+  es: {
+    subject: 'Drop By — Restablece tu contraseña',
+    greeting: name => `Hola ${name},`,
+    body: 'Recibimos una solicitud para restablecer tu contraseña. Haz clic abajo para crear una nueva:',
+    linkText: 'Restablecer contraseña',
+    expiry: 'Este enlace expirará en 1 hora.',
+  },
+  fr: {
+    subject: 'Drop By — Réinitialise ton mot de passe',
+    greeting: name => `Salut ${name},`,
+    body: 'Nous avons reçu une demande de réinitialisation de ton mot de passe. Clique ci-dessous pour en créer un nouveau :',
+    linkText: 'Réinitialiser mon mot de passe',
+    expiry: 'Ce lien expirera dans 1 heure.',
+  },
+};
+
+const defaultResetCopy = {
+  subject: 'Drop By — Reset your password',
+  greeting: (name: string) => `Hey ${name},`,
+  body: "We received a request to reset your password. Click below to set a new one:",
+  linkText: 'Reset my password',
+  expiry: 'This link will expire in 1 hour.',
+};
+
+export async function sendPasswordResetEmail(
+  to: string,
+  displayName: string,
+  token: string,
+  locale?: string
+) {
+  const lang = locale?.split('-')[0] ?? 'en';
+  const copy = resetCopy[lang] ?? defaultResetCopy;
+  const link = `${APP_URL()}/reset-password?token=${token}`;
+  await send(to, copy.subject, `
+    <p>${copy.greeting(displayName)}</p>
+    <p>${copy.body}</p>
+    <p><a href="${link}">${copy.linkText}</a></p>
+    <p>${copy.expiry}</p>
+  `);
+}
+
 export async function sendWelcomeMessage(contact: string, downloadUrl: string) {
   const isPhone = /^\+?[\d\s\-()]+$/.test(contact) && !contact.includes("@");
   if (isPhone) {

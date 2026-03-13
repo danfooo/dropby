@@ -34,6 +34,8 @@ export const authApi = {
   google: (credential: string) => api.post('/auth/google', { credential }).then(r => r.data),
   verifyEmail: (token: string) => api.post('/auth/verify-email', { token }).then(r => r.data),
   resendVerification: (email: string) => api.post('/auth/resend-verification', { email }).then(r => r.data),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }).then(r => r.data),
+  resetPassword: (token: string, password: string) => api.post('/auth/reset-password', { token, password }).then(r => r.data),
   updateMe: (data: { display_name?: string; auto_nudge_enabled?: boolean }) =>
     api.put('/auth/me', data).then(r => r.data),
   deleteMe: () => api.delete('/auth/me').then(r => r.data),

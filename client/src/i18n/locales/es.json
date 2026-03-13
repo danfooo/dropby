@@ -24,7 +24,20 @@
     "resendVerification": "Reenviar correo de verificación",
     "emailVerified": "¡Correo verificado! Ya puedes iniciar sesión.",
     "verificationInvalid": "El enlace de verificación no es válido o ha expirado.",
-    "connectWithName": "Regístrate para conectar con {{name}}"
+    "connectWithName": "Regístrate para conectar con {{name}}",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "forgotPasswordDesc": "Introduce tu correo y te enviaremos un enlace para restablecerla.",
+    "sendResetLink": "Enviar enlace",
+    "resetLinkSent": "Revisa tu correo. Si esa dirección está registrada, el enlace está en camino.",
+    "resetLinkExpired": "Este enlace no es válido o ha caducado.",
+    "setNewPassword": "Establecer nueva contraseña",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+    "passwordUpdated": "Contraseña actualizada. Iniciando sesión…",
+    "backToLogin": "Volver al inicio de sesión",
+    "somethingWentWrong": "Algo salió mal. Por favor, inténtalo de nuevo."
   },
   "home": {
     "greeting": "¡Hola, {{name}} 👋",

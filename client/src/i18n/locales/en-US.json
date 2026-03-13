@@ -24,7 +24,20 @@
     "resendVerification": "Resend verification email",
     "emailVerified": "Email verified! You can now log in.",
     "verificationInvalid": "Verification link is invalid or expired.",
-    "connectWithName": "Sign up to connect with {{name}}"
+    "connectWithName": "Sign up to connect with {{name}}",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordDesc": "Enter your email and we'll send you a reset link.",
+    "sendResetLink": "Send reset link",
+    "resetLinkSent": "Check your email. If that address is registered, a reset link is on its way.",
+    "resetLinkExpired": "This reset link is invalid or has expired.",
+    "setNewPassword": "Set new password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords don't match.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "passwordUpdated": "Password updated. Taking you in…",
+    "backToLogin": "Back to login",
+    "somethingWentWrong": "Something went wrong. Please try again."
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",

@@ -227,6 +227,51 @@ router.post('/google', async (req, res) => {
   }
 });
 
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase()) as any;
+  // Always respond success to prevent email enumeration
+  if (!user || !user.password_hash) {
+    return res.json({ message: 'If that email exists, a reset link was sent' });
+  }
+
+  const token = randomUUID().replace(/-/g, '');
+  const expires = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+  db.prepare('UPDATE users SET password_reset_token = ?, password_reset_expires_at = ? WHERE id = ?')
+    .run(token, expires, user.id);
+
+  const { sendPasswordResetEmail } = await import('../services/email.js');
+  sendPasswordResetEmail(user.email, user.display_name, token, user.locale);
+
+  res.json({ message: 'If that email exists, a reset link was sent' });
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Token and password required' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+
+  const now = Math.floor(Date.now() / 1000);
+  const user = db.prepare(
+    'SELECT * FROM users WHERE password_reset_token = ? AND password_reset_expires_at > ?'
+  ).get(token, now) as any;
+
+  if (!user) return res.status(400).json({ error: 'INVALID_OR_EXPIRED' });
+
+  const hash = await bcrypt.hash(password, 10);
+  db.prepare(
+    'UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires_at = NULL, email_verified = 1 WHERE id = ?'
+  ).run(hash, user.id);
+
+  const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
+  const jwt = await signJwt(user.id);
+  res.json({ token: jwt, user: userResponse(updatedUser) });
+});
+
 // POST /api/auth/push-token
 router.post('/push-token', requireAuth, (req: AuthRequest, res) => {
   const { token, platform } = req.body;
