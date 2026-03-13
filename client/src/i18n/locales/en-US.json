@@ -52,7 +52,7 @@
     "notifyFriends": "Open your door to",
     "muted": "Muted",
     "openDoor": "Open your door",
-    "openDoorDesc": "Visible to your selected friends. Closes after 30 minutes.",
+    "openDoorDesc": "Visible to your selected friends. Closes after 30 minutes, or whenever you decide.",
     "opening": "Opening…",
     "inviteFriendsText": "Invite friends — they'll see when your door is open.",
     "copyInviteLink": "Copy invite link →",
