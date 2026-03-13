@@ -682,15 +682,3 @@ Lets users share thoughts on whether Drop By is helping make real moments happen
 ### API
 `POST /api/feedback` — requires auth. Body: `{ type, message, reply_email? }`. Returns `201 { id }`.
 
----
-
-## 10. Known Gaps / Deferred
-
-- **Apple OAuth**: specced, not implemented
-- **APNs**: pending Apple Developer enrollment; FCM is active
-- **GitHub Actions CI/CD**: deploy-on-push not yet configured
-- **`hello@dropby.cc` mailbox**: not yet set up; DMARC `rua` should be updated once it is
-- **Google OAuth consent screen**: support email should be updated to `hello@dropby.cc`
-- **Rate limiting**: none in v1
-- **User-saved note limit**: no cap in v1
-- **SMS delivery**: Add Friend by SMS logs to console; only email delivery is implemented

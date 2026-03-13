@@ -1,5 +1,8 @@
 # Drop By — TODOs
 
+## Auth
+- [ ] Apple OAuth: specced, not implemented
+
 ## Apple / APNs
 - [ ] Finish Apple Developer enrollment (pending approval)
 - [ ] Create App ID `cc.dropby.app` in Apple Developer portal
@@ -15,3 +18,8 @@
 - [ ] Set up `hello@dropby.cc` mailbox (contact/support address)
 - [ ] Update `rua` in DMARC record once `hello@` or a dedicated address is receiving mail (or remove `rua` if reports aren't needed)
 - [ ] Update Google OAuth consent screen support email to `hello@dropby.cc`
+- [ ] SMS delivery for Add Friend: currently logs to console, only email delivery is implemented
+
+## Limits & Safety
+- [ ] Rate limiting (none in v1)
+- [ ] User-saved note cap (no limit in v1)

@@ -2,9 +2,15 @@
 
 ## Spec
 
-`/spec-full.md` is the source of truth for the product. Keep it in sync with every change:
+`/spec-full.md` is the source of truth for what the product **does**. Keep it in sync with every change:
 - If a screen, flow, data model field, or behaviour changes, update the spec in the same commit
-- If something is deferred or removed, move it to the "Known Gaps / Deferred" section rather than deleting it
+- The spec describes only implemented, live behaviour — not intentions or future work
+
+## TODO
+
+`/TODO.md` tracks what is **not yet done**: deferred features, known gaps, infrastructure tasks.
+- If something is removed or deferred during a change, move it to TODO.md (not the spec)
+- If a TODO item gets built, remove it from TODO.md and add it to the spec
 
 ## Commits
 
