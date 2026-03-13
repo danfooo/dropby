@@ -52,7 +52,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
           <div className="text-4xl mb-3">💌</div>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Thanks for sharing</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Your feedback goes straight to the person building Drop By. It matters.
+            Your feedback goes straight to the people building Drop By. It matters.
           </p>
           <button
             onClick={handleClose}

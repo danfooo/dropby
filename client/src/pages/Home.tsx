@@ -701,7 +701,7 @@ function TipsSection() {
       {showFeedbackTip && (
         <div className="mt-4 bg-white rounded-2xl p-4 border border-dashed border-gray-200">
           <div className="flex items-start justify-between mb-2">
-            <p className="text-sm text-gray-600 flex-1">Enjoying Drop By? Your feedback shapes what gets built next.</p>
+            <p className="text-sm text-gray-600 flex-1">Enjoying Drop By? Your feedback shapes what we build next.</p>
             <button onClick={dismissFeedback} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
