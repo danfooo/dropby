@@ -4,6 +4,7 @@ import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { notifyFriendDoorOpen } from '../services/notifications.js';
 import { broadcastSSE } from '../services/sse.js';
+import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 
 const router = Router();
 
@@ -92,11 +93,16 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/status — create
-router.post('/', requireAuth, (req: AuthRequest, res) => {
+router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
-  const { note, recipient_ids = [] } = req.body;
+  const { recipient_ids = [] } = req.body;
 
-  if (note && note.length > 60) return res.status(400).json({ error: 'Note max 60 chars' });
+  let note: string | undefined = req.body.note;
+  if (note) {
+    note = sanitizeNote(note);
+    if (note.length > 60) return res.status(400).json({ error: 'Note max 60 chars' });
+    if (!(await isNoteAllowed(note))) note = undefined;
+  }
 
   // Close any existing active status
   const existing = getActiveStatus(userId);
@@ -153,15 +159,19 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
 });
 
 // PUT /api/status — update note + recipients
-router.put('/', requireAuth, (req: AuthRequest, res) => {
+router.put('/', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
-  const { note, recipient_ids } = req.body;
+  let { note, recipient_ids } = req.body;
 
   const status = getActiveStatus(userId);
   if (!status) return res.status(404).json({ error: 'No active status' });
 
   if (note !== undefined) {
-    if (note && note.length > 60) return res.status(400).json({ error: 'Note max 60 chars' });
+    if (note) {
+      note = sanitizeNote(note);
+      if (note.length > 60) return res.status(400).json({ error: 'Note max 60 chars' });
+      if (!(await isNoteAllowed(note))) note = null;
+    }
     db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, status.id);
   }
 
