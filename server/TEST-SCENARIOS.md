@@ -8,7 +8,8 @@ These should eventually become automated integration tests against a real in-mem
 
 - [ ] Valid signup → 201, verification email sent
 - [ ] Valid signup with `redirect_url` (from invite link) → verification email link includes redirect
-- [ ] Duplicate email → 409
+- [ ] Duplicate email, already verified → 409
+- [ ] Duplicate email, unverified → 409 `EMAIL_EXISTS_UNVERIFIED` so client can show resend button
 - [ ] Missing display name → 400
 - [ ] Missing email or password → 400
 
