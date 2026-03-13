@@ -95,8 +95,11 @@ router.post('/signup', async (req, res) => {
   const emailLower = email.toLowerCase().trim();
   const name = display_name.trim();
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(emailLower);
-  if (existing) return res.status(409).json({ error: 'Email already registered' });
+  const existing = db.prepare('SELECT id, email_verified FROM users WHERE email = ?').get(emailLower) as any;
+  if (existing) {
+    if (!existing.email_verified) return res.status(409).json({ error: 'EMAIL_EXISTS_UNVERIFIED' });
+    return res.status(409).json({ error: 'Email already registered' });
+  }
 
   const hash = await bcrypt.hash(password, 10);
   const id = randomUUID();

@@ -61,8 +61,8 @@ export default function Auth() {
       }
     } catch (err: any) {
       const code = err.response?.data?.error;
-      if (code === 'EMAIL_NOT_VERIFIED') {
-        setError('Please verify your email before logging in.');
+      if (code === 'EMAIL_NOT_VERIFIED' || code === 'EMAIL_EXISTS_UNVERIFIED') {
+        setError(t('auth.verifyEmailSent'));
         setShowResend(true);
       } else {
         setError(err.response?.data?.error || 'Something went wrong');
