@@ -7,6 +7,7 @@ export default function Layout() {
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+      <div id="tip-portal" />
       <TabBar />
     </div>
   );

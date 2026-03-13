@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInMinutes, differenceInSeconds } from 'date-fns';
@@ -648,93 +649,87 @@ function TipsSection() {
   const showInviteTip = !inviteDismissed && !showNudgeTip;
   const showFeedbackTip = !feedbackDismissed && !showInviteTip && !showNudgeTip;
 
+  const tipContent = showNudgeTip ? (
+    <div className="bg-white border-t border-gray-100 px-4 py-4">
+      <div className="flex items-start justify-between mb-1">
+        <p className="text-sm font-semibold text-gray-900">{t('home.nudgeQuestion')}</p>
+        <button onClick={dismissNudge} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <p className="text-sm text-gray-500 mb-4">{t('home.nudgeSuggestion', { day: dayLabel, time: timeLabel })}</p>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => addNudge.mutate()}
+          disabled={addNudge.isPending}
+          className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
+        >
+          {t('home.nudgeAccept')}
+        </button>
+        <Link to="/profile?addReminder=1" className="text-sm text-gray-500 hover:text-gray-700">
+          {t('home.nudgePickOther')}
+        </Link>
+      </div>
+    </div>
+  ) : showInviteTip ? (
+    <div className="bg-white border-t border-gray-100 px-4 py-4">
+      <div className="flex items-start justify-between mb-2">
+        <p className="text-sm text-gray-600 flex-1">{t('home.inviteFriendsText')}</p>
+        <button onClick={dismissInvite} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <button
+        onClick={async () => {
+          const { invitesApi } = await import('../api');
+          const data = await invitesApi.generate();
+          await navigator.clipboard.writeText(data.url);
+          setToast({ message: t('home.inviteLinkCopied'), linkText: '', linkTo: '' });
+        }}
+        className="text-sm font-semibold text-emerald-600"
+      >
+        {t('home.copyInviteLink')}
+      </button>
+    </div>
+  ) : showFeedbackTip ? (
+    <div className="bg-white border-t border-gray-100 px-4 py-4">
+      <div className="flex items-start justify-between mb-2">
+        <p className="text-sm text-gray-600 flex-1">Enjoying Drop By? Your feedback shapes what we build next.</p>
+        <button onClick={() => { dismissFeedback(); setToast({ message: 'You can always share feedback from your', linkText: 'Profile', linkTo: '/profile' }); }} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <button onClick={() => setShowFeedback(true)} className="text-sm font-semibold text-emerald-600">
+        Share thoughts →
+      </button>
+    </div>
+  ) : !coffeeDismissed && everReceived?.received ? (
+    <div className="bg-white border-t border-gray-100 px-4 py-4">
+      <div className="flex items-start justify-between mb-2">
+        <p className="text-sm text-gray-600 flex-1">{t('home.coffeeTipText')}</p>
+        <button onClick={dismissCoffee} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <a href="https://www.buymeacoffee.com/dropby" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-emerald-600">
+        {t('home.coffeeTipLink')}
+      </a>
+    </div>
+  ) : null;
+
+  const portal = document.getElementById('tip-portal');
+
   return (
     <>
-      {showNudgeTip && (
-        <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100">
-          <div className="flex items-start justify-between mb-1">
-            <p className="text-sm font-semibold text-gray-900">{t('home.nudgeQuestion')}</p>
-            <button onClick={dismissNudge} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <p className="text-sm text-gray-500 mb-4">{t('home.nudgeSuggestion', { day: dayLabel, time: timeLabel })}</p>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => addNudge.mutate()}
-              disabled={addNudge.isPending}
-              className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
-            >
-              {t('home.nudgeAccept')}
-            </button>
-            <Link to="/profile?addReminder=1" className="text-sm text-gray-500 hover:text-gray-700">
-              {t('home.nudgePickOther')}
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {showInviteTip && (
-        <div className="mt-4 bg-white rounded-2xl p-4 border border-dashed border-gray-200">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-sm text-gray-600 flex-1">{t('home.inviteFriendsText')}</p>
-            <button onClick={dismissInvite} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <button
-            onClick={async () => {
-              const { invitesApi } = await import('../api');
-              const data = await invitesApi.generate();
-              await navigator.clipboard.writeText(data.url);
-              setToast({ message: t('home.inviteLinkCopied'), linkText: '', linkTo: '' });
-            }}
-            className="text-sm font-semibold text-emerald-600"
-          >
-            {t('home.copyInviteLink')}
-          </button>
-        </div>
-      )}
-
-      {showFeedbackTip && (
-        <div className="mt-4 bg-white rounded-2xl p-4 border border-dashed border-gray-200">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-sm text-gray-600 flex-1">Enjoying Drop By? Your feedback shapes what we build next.</p>
-            <button onClick={() => { dismissFeedback(); setToast({ message: 'You can always share feedback from your', linkText: 'Profile', linkTo: '/profile' }); }} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <button
-            onClick={() => setShowFeedback(true)}
-            className="text-sm font-semibold text-emerald-600"
-          >
-            Share thoughts →
-          </button>
-        </div>
-      )}
-
-      {!coffeeDismissed && everReceived?.received && (
-        <div className="mt-4 bg-white rounded-2xl p-4 border border-dashed border-gray-200">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-sm text-gray-600 flex-1">{t('home.coffeeTipText')}</p>
-            <button onClick={dismissCoffee} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <a href="https://www.buymeacoffee.com/dropby" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-emerald-600">
-            {t('home.coffeeTipLink')}
-          </a>
-        </div>
-      )}
-
+      {portal && tipContent && createPortal(tipContent, portal)}
       {toast && <Toast message={toast.message} linkText={toast.linkText || undefined} linkTo={toast.linkTo || undefined} onDismiss={() => setToast(null)} />}
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
