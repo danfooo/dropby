@@ -74,7 +74,7 @@ export default function Auth() {
 
   const handleResend = async () => {
     try {
-      await authApi.resendVerification(email);
+      await authApi.resendVerification(email, redirect !== '/home' ? redirect : undefined);
       setMessage('Verification email resent. Check your inbox.');
       setShowResend(false);
     } catch {

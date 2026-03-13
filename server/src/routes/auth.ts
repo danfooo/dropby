@@ -147,7 +147,7 @@ router.post('/verify-email', async (req, res) => {
 
 // POST /api/auth/resend-verification
 router.post('/resend-verification', (req, res) => {
-  const { email } = req.body;
+  const { email, redirect_url } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
 
   const user = db.prepare('SELECT * FROM users WHERE email = ? AND email_verified = 0').get(email.toLowerCase()) as any;
@@ -156,7 +156,7 @@ router.post('/resend-verification', (req, res) => {
   const token = randomUUID().replace(/-/g, '');
   const expires = Math.floor(Date.now() / 1000) + 24 * 3600;
   db.prepare('UPDATE users SET email_verification_token = ?, email_verification_expires_at = ? WHERE id = ?').run(token, expires, user.id);
-  sendVerificationEmail(user.email, user.display_name, token, user.locale);
+  sendVerificationEmail(user.email, user.display_name, token, user.locale, redirect_url);
 
   res.json({ message: 'If that email exists, a verification link was sent' });
 });
