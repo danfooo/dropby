@@ -379,10 +379,10 @@ export default function Home() {
         {/* Recipient selection */}
         {hasFriends && (
           <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">{t('home.notifyFriends')}</h2>
-            <div className="space-y-1">
+            <h2 className="text-sm font-semibold text-gray-900 mb-2">{t('home.notifyFriends')}</h2>
+            <div className="divide-y divide-gray-50">
               {activeFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer">
+                <label key={f.id} className="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-50 -mx-4 px-4 transition-colors">
                   <input
                     type="checkbox"
                     checked={selectedRecipients.includes(f.id)}
@@ -391,17 +391,17 @@ export default function Home() {
                         e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id)
                       );
                     }}
-                    className="w-4 h-4 accent-emerald-500"
+                    className="w-5 h-5 accent-emerald-500 flex-shrink-0"
                   />
-                  <Avatar name={f.display_name} size="sm" />
-                  <span className="text-sm text-gray-900">{f.display_name}</span>
+                  <Avatar name={f.display_name} size="md" />
+                  <span className="text-base font-medium text-gray-900">{f.display_name}</span>
                 </label>
               ))}
               {mutedFriends.length > 0 && (
                 <>
-                  <p className="text-xs text-gray-400 pt-2 pb-1 font-medium">{t('home.muted')}</p>
+                  <p className="text-xs text-gray-400 pt-3 pb-1 font-medium">{t('home.muted')}</p>
                   {mutedFriends.map((f: any) => (
-                    <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer opacity-60">
+                    <label key={f.id} className="flex items-center gap-3 py-3 cursor-pointer opacity-50 hover:bg-gray-50 -mx-4 px-4 transition-colors">
                       <input
                         type="checkbox"
                         checked={selectedRecipients.includes(f.id)}
@@ -410,10 +410,10 @@ export default function Home() {
                             e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id)
                           );
                         }}
-                        className="w-4 h-4 accent-emerald-500"
+                        className="w-5 h-5 accent-emerald-500 flex-shrink-0"
                       />
-                      <Avatar name={f.display_name} size="sm" />
-                      <span className="text-sm text-gray-700">{f.display_name}</span>
+                      <Avatar name={f.display_name} size="md" />
+                      <span className="text-base font-medium text-gray-700">{f.display_name}</span>
                     </label>
                   ))}
                 </>
