@@ -358,7 +358,7 @@ export default function Home() {
           <input
             type="text"
             placeholder={t('home.customNotePlaceholder')}
-            maxLength={60}
+            maxLength={100}
             value={note}
             onChange={e => {
               setNote(e.target.value);
@@ -369,9 +369,9 @@ export default function Home() {
             }}
             className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
-          {note.length >= 45 && (
-            <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 55 ? 'text-red-400' : 'text-gray-400'}`}>
-              {60 - note.length}
+          {note.length >= 80 && (
+            <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 90 ? 'text-red-400' : 'text-gray-400'}`}>
+              {100 - note.length}
             </span>
           )}
         </div>
@@ -457,7 +457,7 @@ export default function Home() {
           <input
             type="text"
             placeholder={t('home.notePlaceholder')}
-            maxLength={60}
+            maxLength={100}
             defaultValue={initNote}
             onChange={e => setEditNote(e.target.value)}
             className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"

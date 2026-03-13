@@ -1,9 +1,11 @@
-/** Strip HTML tags, control characters, and zero-width Unicode from a note. */
+/** Strip HTML tags, control characters, and zero-width Unicode from a note.
+ *  Whitespace sequences (including newlines) are collapsed to a single space. */
 export function sanitizeNote(text: string): string {
   return text
     .replace(/<[^>]+>/g, '')                          // HTML tags
-    .replace(/[\u0000-\u001F\u007F]/g, '')             // ASCII control chars
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')            // ASCII control chars → space
     .replace(/[\u200B-\u200D\u2028\u2029\uFEFF]/g, '') // zero-width + line/para separators + BOM
+    .replace(/\s+/g, ' ')                             // collapse whitespace sequences
     .trim();
 }
 
