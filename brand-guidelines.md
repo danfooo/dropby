@@ -2,11 +2,21 @@
 
 ## What this is
 
-These guidelines are intended as a brief for creating a brand kit: logo, wordmark, color palette, typography, and visual language. The goal is a look that is immediately recognizable, feels human and warm, and is distinct from both productivity tools and large social platforms.
+These guidelines describe what Drop By is, what it stands for, and the feeling it should evoke. They are a brief for building the brand identity — not a specification of visual decisions. Specific colors, typefaces, and design choices will be developed separately.
 
 ---
 
-## 1. Brand essence
+## 1. The idea
+
+There was a time when dropping by was normal. You rang a neighbor's doorbell. You stopped by a friend's place on your way somewhere. A family member showed up unannounced and it was fine — expected, even welcome. That culture of casual, unplanned presence was a real part of how people stayed close.
+
+It's largely gone now. A visit requires a calendar invite. Showing up without warning feels intrusive. The friction of coordinating has become so high that most people default to not trying at all — and quietly feel the absence of it.
+
+Drop By is a tool for bringing that back. Not as nostalgia, and not as a productivity feature. Just: a way to say "I'm here, door's open" to the handful of people you actually want to see.
+
+---
+
+## 2. Brand essence
 
 **One sentence:** Drop By is the feeling of a porch light left on — a quiet, open signal that says "I'm here, no plans needed."
 
@@ -26,7 +36,17 @@ These guidelines are intended as a brief for creating a brand kit: logo, wordmar
 
 ---
 
-## 2. Core metaphor
+## 3. Who it resonates with
+
+The people who immediately get it are the ones who already feel the loss. They remember when visiting was easy. They're not lonely in a clinical sense — they have people they care about — but they've drifted into a pattern of seeing those people far less than they'd like, because nobody wants to be the one to make it a whole thing.
+
+When you describe Drop By to these people, they don't need to be convinced. They recognize something they've already wanted. The brand should speak directly to that recognition — not explain the loneliness epidemic, not sell them on a feature, but name a feeling they already have.
+
+That said, the tone is never heavy or problem-forward. The problem is real, but the product is light. It's not therapy. It's a porch light.
+
+---
+
+## 4. Core metaphor
 
 The open door is the central symbol of the product. Everything should feel like it extends from this:
 
@@ -39,98 +59,47 @@ The door is already in the product copy ("open your door", "your door is open").
 
 ---
 
-## 3. Color
+## 5. Visual direction
 
-### Primary
-The current emerald green (#10b981) is the right territory — it reads as "open", "available", "go". Consider refining it slightly toward a warmer, slightly more saturated green that feels less like a dashboard status indicator and more like new leaves or a lit window.
+The visual identity should feel like the product: warm, unhurried, human. It should be immediately distinct from productivity tools (which feel clinical and efficient) and from large social platforms (which feel loud and performative).
 
-**Direction:** A green that feels alive and present, not clinical. Avoid neon. Avoid the exact same green as WhatsApp or any other messaging app.
+**The overall feeling to aim for:**
+- A warm room, not a dashboard
+- Aged paper and incandescent light, not white plastic and LED
+- Something you'd find in a neighborhood, not in an office
 
-### Background
-Move away from pure white (#ffffff) and pure gray (#f9fafb). A very slight warm tint — almost imperceptible — makes surfaces feel less like software and more like a physical space. Think aged paper, warm plaster, a room with incandescent light.
+**Shape:** Round. Softness is a signature of this product. Hard corners and sharp angles belong to a different category of app.
 
-### Accent
-One warm secondary color for active, going, "in motion" states. Consider:
-- A soft amber or golden yellow — evokes a lit window, warmth, arrival
-- Used sparingly: "On their way ✅", going signals, the moment of connection
+**Illustration and iconography (if used):** Flat, minimal, warm. Single-color. Generous and slightly imperfect — human-drawn feel, not mechanical. Think: something sketched on a napkin, refined just enough to work at small sizes.
 
-### Text
-Avoid pure black (#000000). A very dark warm charcoal (e.g. #1a1a18) reads more human than software. Mid-tones should lean warm, not cool gray.
+**Photography (for marketing):** Real moments, not stock. A lit window at dusk. A half-open door. Two people arriving somewhere, not posing. Warm light, natural settings. No phones in hand, no screens shown.
 
-### Don'ts
-- No blue (reads as corporate or messaging)
-- No red except for destructive actions
-- No gradients for UI elements — flat is cleaner at this scale
+**Motion:** Gentle, not bouncy. The "door open" moment should feel like something expanding or opening outward — not a loading animation.
 
 ---
 
-## 4. Typography
+## 6. Typography direction
 
-The app currently uses system fonts. A custom typeface would immediately increase recognizability.
-
-### Direction
 A **humanist sans-serif** — geometric enough to feel modern and clean, but with enough irregularity to feel warm and human. Not a tech font. Not a fashion font. Somewhere between a book and a signage typeface.
 
-**Reference typefaces to explore:** DM Sans, Plus Jakarta Sans, Nunito, Jost, Instrument Sans. Each has warmth without being playful or childish.
-
-### Hierarchy
-- **Display / wordmark:** A slightly heavier weight, optically balanced, works well at small sizes (app icon, lock screen)
-- **Body:** Regular weight, comfortable line-height, legible at 14–16px
-- **Labels / metadata:** The same typeface at small size, medium weight — not a separate typeface
-
-### What to avoid
-- Slab serifs (too editorial)
-- Condensed faces (too intense)
-- Rounded corners on letterforms (too soft, reads as children's app)
-- Multiple typefaces — one family, multiple weights only
+One family, multiple weights. No slab serifs (too editorial), no condensed faces (too intense), no heavily rounded letterforms (reads as a children's app).
 
 ---
 
-## 5. Logo & wordmark
+## 7. Logo & wordmark
 
-### Wordmark
-"Drop By" — two words, lowercase preferred. The space between the two words should feel deliberate, like a brief pause before arrival.
+**Wordmark:** "Drop By" — two words, lowercase preferred. The space between the words should feel deliberate, like a brief pause before arrival.
 
-### Symbol / icon
-Optional, but if explored: something that abstracts the open door without being a literal door icon. Consider:
+**Symbol / icon:** If explored, something that abstracts the open door without being a literal door icon:
 - A threshold or frame (two vertical elements with an opening)
-- A soft light shape — a warmth emanating outward
+- A soft light shape — warmth emanating outward
 - An arc or wave suggesting "come in"
 
-The symbol should work at 16×16px (favicon) and 512×512px (app icon) without losing legibility.
-
-### App icon
-The current emerald background with a door SVG is functional. A refined version should:
-- Use the refined primary color
-- Feature the wordmark or a custom symbol, not a stock icon
-- Have enough contrast and weight to read on both light and dark home screens
-- Feel distinct in a dock full of other apps — recognize it at a glance
+The symbol should work at very small sizes (favicon, notification icon) and large sizes (app icon, splash) without losing legibility.
 
 ---
 
-## 6. Visual language
-
-### Shape
-Round. The app uses rounded corners throughout (16px radius is the baseline). This is right — it softens what would otherwise feel like a dashboard. The brand kit should reinforce roundness as a signature trait.
-
-### Illustration style (if used)
-Flat, minimal, warm. No 3D, no gradients, no detailed illustration. If icons or spot illustrations are needed: single-color, generous stroke weight, slightly imperfect (human-drawn feel, not mechanical). Think: the kind of thing you might sketch on a napkin, refined just enough.
-
-### Photography / imagery direction
-Not applicable to the app UI itself, but if used in marketing:
-- Real moments, not stock: a lit window at dusk, a half-open door, two people arriving somewhere
-- Warm light, natural settings
-- No phones in hand, no screens shown
-- No posed group photos — candid, incidental, real
-
-### Motion (micro-interactions)
-- Gentle, not bouncy
-- The "door open" animation should feel like something expanding or opening outward, not a loading spinner
-- The pulsing dot on the open-door banner is already on-brand — small, alive, not alarming
-
----
-
-## 7. Voice & copy
+## 8. Voice & copy
 
 Short. Casual. Direct. The app speaks to you like a friend, not a product.
 
@@ -155,13 +124,8 @@ Short. Casual. Direct. The app speaks to you like a friend, not a product.
 
 ---
 
-## 8. What makes it recognizable
+## 9. What makes it recognizable
 
-The combination of these things should be immediately identifiable as Drop By:
-- The warm, specific green
-- The rounded, humanist typeface
-- The warmth of the background tones
-- The voice — short, direct, never salesy
-- The door metaphor, subtly present everywhere but never overdone
+The identity should feel like it belongs to a place you'd actually want to visit. The specific combination of warmth, restraint, roundness, and directness — in both visuals and voice — should be immediately identifiable as Drop By.
 
-The identity should feel like it belongs to a place you'd actually want to visit.
+The door metaphor should be present everywhere and overdone nowhere.
