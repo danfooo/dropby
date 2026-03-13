@@ -20,6 +20,9 @@
 - [ ] Update Google OAuth consent screen support email to `hello@dropby.cc`
 - [ ] SMS delivery for Add Friend: currently logs to console, only email delivery is implemented
 
+## Maybe
+- [ ] Don't show the feedback card on Home if the user has submitted feedback within the last month
+
 ## Limits & Safety
 - [ ] Rate limiting (none in v1)
 - [ ] User-saved note cap (no limit in v1)
