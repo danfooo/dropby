@@ -8,9 +8,10 @@ Drop By is a presence signal app. One tap tells your friends you're open to a sp
 
 ## 2. Platform
 
-- Web app wrapped in a native shell (Capacitor) for iOS and Android
-- Distributed via App Store and Google Play
+- Web app (React + Vite) wrapped in a native shell (Capacitor) for iOS and Android distribution
+- Also installable as a PWA (Progressive Web App) from the browser — iOS requires Share → Add to Home Screen; Android shows an install prompt automatically
 - Push notifications delivered via APNs (iOS) and FCM (Android)
+- Authentication: email/password and Google OAuth. Apple OAuth is deferred.
 
 ---
 
@@ -20,22 +21,29 @@ Drop By is a presence signal app. One tap tells your friends you're open to a sp
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| email | string unique | |
+| email | string unique | Lowercased on storage |
 | display_name | string | Required on signup |
-| avatar_initial | string | Derived from display_name at render time, not stored |
-| timezone | string nullable | IANA timezone string e.g. "Europe/London"; set on first authenticated request, updated automatically if the value sent by the client differs from the stored value |
+| password_hash | string nullable | Null for Google-only accounts |
+| google_id | string unique nullable | Set when account is created or linked via Google OAuth |
+| avatar_url | string nullable | Either a Google profile picture URL (set at Google signup) or a local path (`/avatars/<uuid>.jpg`) from a custom upload. Custom upload takes precedence — Google picture is only saved if no avatar_url exists yet |
+| locale | string nullable | IETF language tag (e.g. `en-US`, `de`) sent by client at signup; used to localise transactional emails |
+| timezone | string nullable | IANA timezone string e.g. `Europe/London`; sent by client on every authenticated request via `x-timezone` header; stored and updated automatically if the value changes |
 | auto_nudge_enabled | boolean | Default true; controls the repeat-behaviour auto-nudge |
-| created_at | timestamp | |
+| avatar_seed | integer | Default 0; legacy field for seeded DiceBear avatar (superseded by avatar_url) |
+| email_verified | boolean | Default false; must be true before password login is allowed |
+| email_verification_token | string nullable | Cleared after successful verification |
+| email_verification_expires_at | unix timestamp nullable | Cleared after successful verification |
+| created_at | unix timestamp | |
 
 ### Friendships
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| user_a_id | uuid FK → users | |
-| user_b_id | uuid FK → users | |
-| created_at | timestamp | |
+| user_a_id | uuid FK → users | Lower of the two UUIDs (canonical ordering) |
+| user_b_id | uuid FK → users | Higher of the two UUIDs |
+| created_at | unix timestamp | |
 
-Stored as a single bidirectional row. Queries check both directions. When a friendship is deleted, the friend is immediately removed from all active status recipient lists.
+Stored as a single bidirectional row with a `UNIQUE(user_a_id, user_b_id)` constraint. Canonical order (lower UUID first) is enforced at insert time using `[a, b].sort()`. Queries must check both directions or use `OR`. When a friendship is deleted, the friend is immediately removed from all active status recipient lists for both users.
 
 ### Friend Mutes
 | Field | Type | Notes |
@@ -43,9 +51,9 @@ Stored as a single bidirectional row. Queries check both directions. When a frie
 | id | uuid PK | |
 | user_id | uuid FK → users | The user doing the muting |
 | muted_user_id | uuid FK → users | The friend being muted |
-| created_at | timestamp | |
+| created_at | unix timestamp | |
 
-Muting is one-way. A muted friend still receives notifications when the muting user opens their door. Muted friends are excluded from the default recipient selection when opening the door.
+Muting is one-way. A muted friend still receives notifications when the muting user opens their door. Muted friends are excluded from the default recipient selection when opening the door. The muting user does not receive push notifications when the muted friend opens their door.
 
 ### Statuses
 | Field | Type | Notes |
@@ -53,9 +61,10 @@ Muting is one-way. A muted friend still receives notifications when the muting u
 | id | uuid PK | |
 | user_id | uuid FK → users | |
 | note | string nullable | Max 60 chars |
-| closes_at | timestamp | Creation time + 30 min; updated on each prolong (+30 min) |
-| closed_at | timestamp nullable | Set when manually closed; null = still active |
-| created_at | timestamp | |
+| closes_at | unix timestamp | Creation time + 1800 seconds; updated on each prolong (+1800 seconds) |
+| closed_at | unix timestamp nullable | Set when manually closed; null = still active |
+| closing_notification_sent | boolean | Default false; set to true after the 10-min-before-close push is sent |
+| created_at | unix timestamp | |
 
 A user may have at most one active status at a time. A status is considered active when `closed_at IS NULL AND closes_at > now()`.
 
@@ -64,11 +73,11 @@ A user may have at most one active status at a time. A status is considered acti
 |---|---|---|
 | id | uuid PK | |
 | status_id | uuid FK → statuses | |
-| user_id | uuid FK → users nullable | Null for web (guest) Going signals |
-| guest_contact_id | uuid FK → guest_contacts nullable | Set for web guest Going signals |
-| created_at | timestamp | |
+| user_id | uuid FK → users nullable | Null for guest Going signals |
+| guest_contact_id | uuid FK → guest_contacts nullable | Set for guest Going signals when contact info was provided |
+| created_at | unix timestamp | |
 
-Unique constraint on `(status_id, user_id)` for logged-in users. One Going signal per user per status. The "Going ✅" button is hidden (or shown as already-tapped) after the user has sent a signal for that status.
+Unique constraint on `(status_id, user_id)` for logged-in users — one signal per user per status. No cap for guest signals.
 
 ### Status Recipients
 | Field | Type | Notes |
@@ -76,19 +85,32 @@ Unique constraint on `(status_id, user_id)` for logged-in users. One Going signa
 | id | uuid PK | |
 | status_id | uuid FK → statuses | |
 | user_id | uuid FK → users | |
-| added_at | timestamp | |
+| added_at | unix timestamp | |
+
+Unique constraint on `(status_id, user_id)`.
+
+### Recipient Sessions
+| Field | Type | Notes |
+|---|---|---|
+| user_id | uuid PK FK → users | One row per user |
+| selected_ids | JSON string | Array of friend user IDs selected in the most recent session |
+| updated_at | unix timestamp | |
+
+Persists the recipient selection across sessions. Read on door close, written on door open. Used to restore the previous selection as the default next time the user opens the door.
 
 ### Invite Links
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| token | string unique | |
+| token | string unique | 16-char hex string |
 | created_by | uuid FK → users | |
-| status_id | uuid FK → statuses nullable | Set if the link was generated from an active status context |
-| expires_at | timestamp | Created_at + 1 hour |
-| created_at | timestamp | |
+| status_id | uuid FK → statuses nullable | Set if link was generated from an active status context |
+| invited_email | string nullable | Set for email invites; the email address the invite was sent to |
+| revoked | boolean | Default false |
+| expires_at | unix timestamp | 24 hours for link-share invites; 30 days for email invites |
+| created_at | unix timestamp | |
 
-Invite links are a first-class friendship primitive — independent of any active status. They can be generated at any time: from the friends page, the Door Open view, or the Home screen. They are multi-use and expire after 1 hour. When accepted, they create a bidirectional friendship. If `status_id` is set and that status is still active, the new friend is automatically added as a recipient. Invite links can later be revoked independently of any status.
+Invite links are the sole mechanism for forming friendships. They are multi-use — multiple people can accept the same link. Each tap on "Copy invite link" generates a fresh link. Revoked or expired links return appropriate errors.
 
 ### User Notes (Saved)
 | Field | Type | Notes |
@@ -97,44 +119,54 @@ Invite links are a first-class friendship primitive — independent of any activ
 | user_id | uuid FK → users | |
 | text | string | Max 60 chars |
 | hidden | boolean | Default false; user can hide without deleting |
-| created_at | timestamp | |
+| created_at | unix timestamp | |
 
-Saved automatically when the user uses a custom note. Synced across devices via backend.
+Saved automatically when the user submits a custom (hand-typed) note. Synced via backend; visible as chips in the Home screen's saved-note row.
 
 ### Nudge Schedules
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid FK → users | |
-| day_of_week | enum: mon–sun | |
-| hour | integer | 0–23, user's local time |
-| created_at | timestamp | |
+| day_of_week | enum: mon, tue, wed, thu, fri, sat, sun | |
+| hour | integer | 0–23, in the user's local timezone |
+| last_sent_at | unix timestamp nullable | Updated each time a nudge fires for this slot |
+| created_at | unix timestamp | |
 
-One row per nudge slot. No cap. Notifications are sent server-side at the scheduled local time using the user's timezone (derived from locale/device at time of setting).
+One row per nudge slot. No cap. Notifications fire server-side at the scheduled local time using the stored `timezone`.
+
+### Auto Nudge Log
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid FK → users | |
+| sent_at | unix timestamp | |
+
+Used to enforce the 1-per-week cap on the auto-nudge (repeat behaviour). A new auto-nudge is only sent if no row for this user exists within the past 7 days.
 
 ### Guest Contacts
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| name | string | First name provided in web Going flow |
+| name | string | First name from web Going form |
 | contact | string nullable | Email or phone; null if not provided |
-| marketing_consent | boolean | Default false; only shown/relevant when contact is provided |
-| status_id | uuid FK → statuses | The status they responded to |
-| created_at | timestamp | |
+| marketing_consent | boolean | Default false |
+| status_id | uuid FK → statuses | |
+| created_at | unix timestamp | |
 
-Created when a non-logged-in user taps "Going ✅" on the web. If `contact` is null, the record is ephemeral (notification fires, no follow-up). If `contact` is provided and `marketing_consent` is true, a welcome message is sent with a link to download the app.
+Created when a non-logged-in user submits the web Going form with contact info. If `marketing_consent` is true, a welcome message is sent with an app download link.
 
 ### Push Tokens
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid FK → users | |
-| token | string | APNs or FCM token |
+| token | string | APNs device token or FCM registration token |
 | platform | enum: ios, android | |
-| created_at | timestamp | |
-| updated_at | timestamp | |
+| created_at | unix timestamp | |
+| updated_at | unix timestamp | |
 
-Multiple devices per user are supported.
+Unique constraint on `(user_id, token)`. Multiple devices per user are supported. Upserted on each app launch.
 
 ---
 
@@ -142,264 +174,305 @@ Multiple devices per user are supported.
 
 ### Landing Page (`/`)
 
-- Hero with tagline
+Shown to unauthenticated users visiting the root.
+
+- Tagline and sub-tagline communicating the core concept
 - "How it works" 3-step walkthrough:
-  1. Open your door — pick a vibe and tap open
+  1. Open your door — pick a vibe and tap open; door is open for 30 minutes
   2. Share the link — send it to whoever might want to swing by
   3. They drop by — no planning, no back and forth
-- Bottom CTA → `/auth`
+- "Get started" button → `/auth`
 - No navigation bar
 
 ---
 
 ### Auth Page (`/auth`)
 
-- Login / Sign up tabs
-- Google OAuth
-- Apple OAuth
-- Email + password
-  - Signup requires: email, password, display name (required)
-  - Email verification is required before first login
-  - Login is blocked until email is verified; a resend verification link is shown
-- Supports a `?redirect=` query param so invite links can return the user after auth
+- Login / Sign up tabs (defaults to Login; switches to Sign Up automatically when arriving via an invite link)
+- If arriving via an invite link (i.e. `?redirect=/invite/:token`), the inviter's avatar and name are shown above the form with the prompt "Sign up to connect with [name]"
+- Tabs: Login / Sign up
+- Google OAuth button ("Continue with Google")
+- Email + password form:
+  - Sign up fields: display name (required), email, password
+  - Login fields: email, password
+  - Sign up: creates account, sends verification email, shows "Check your email to confirm your account before logging in" message, switches to Login tab
+  - Login: blocked with "Please verify your email" error + resend link if email not verified
+- Supports `?redirect=` query param for post-auth routing
+
+**Email verification**
+- After signup, the user receives an email with a link to `/verify-email?token=<token>`
+- If the user signed up in the context of an invite link, the redirect is preserved: `/verify-email?token=<token>&redirect=/invite/:token`
+- See Verify Email Page for the verification flow
+
+---
+
+### Verify Email Page (`/verify-email`)
+
+Dedicated frontend page that handles email verification — never done via a direct API link, to avoid email scanner pre-fetching consuming the one-time token.
+
+- Reads `?token=` and optionally `?redirect=` from the URL
+- On mount, POSTs the token to `POST /api/auth/verify-email`
+- **Loading state**: spinner + "Verifying your email…"
+- **Success**: checkmark icon + "You're in!" + "Taking you to Drop By…" → auto-logged in (server returns JWT) → navigated to `redirect` param or `/home` after 1.5s
+- **Error** (token not found, expired, or already used): "Link expired or invalid" + "Back to sign in" button → `/auth`
+
+Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side to `/verify-email?token=:token` for backward compatibility.
 
 ---
 
 ### Home — Door Closed (`/home`, default state)
 
-**First-time state**
-- New users land here after signup with a welcoming, uncluttered view
-- The note chips and open button are immediately visible and usable — no friends required
-- No empty-state walls or setup steps; the UI itself teaches the flow by being ready to use
-
 **Greeting**
-- "Hey, [display_name]"
+- "Hey, [display_name] 👋"
 
 **Note selection**
 - Two separate horizontally scrollable chip rows:
   - **Suggestion chips** (row 1): up to 7 contextual suggestions, no delete button
   - **Saved notes** (row 2): user's saved notes, each with an × to hide; only shown when at least one saved note exists
-- AI suggestions are contextual: time of day, day of week, weekday vs. weekend, season, locale
-- Free-text input always visible below chips (max 60 chars); no "(optional)" label — it's implied
+- Suggestions are curated presets selected contextually by: time of day, day of week (weekday vs weekend), season, and locale. No server round-trip — selected client-side from a locale-specific pool.
+- Free-text input below chips (max 60 chars); placeholder "Or write your own note…"
 - Tapping a chip populates the text field with that chip's text; the chip highlights as selected
-- Tapping the selected chip again un-picks it (undo): restores the text field to what the user had manually typed before picking — but only if the previous state was hand-typed; if the user switched from another chip, the field clears instead (chip-set states are not worth restoring)
-- Switching directly from one chip to another does not preserve any undo state — the field simply takes the new chip's text
-- Editing the text field after picking a chip immediately deselects the chip (the text is now diverging from the preset)
-- After picking a chip, the text field remains editable; the chip stays highlighted as the starting point
+- Tapping the selected chip again deselects it and clears the field (restoring any hand-typed text that existed before the chip was selected)
+- Switching directly from one chip to another replaces the field text with the new chip's text; no undo state is preserved
+- Editing the text field after picking a chip immediately deselects the chip
 - A note is auto-saved to the user's library only when submitted with no chip selected (i.e. hand-typed or modified after picking); submitting an unmodified chip never triggers a save
 
 **Recipient selection**
 - Checkbox list of all friends
 - Default selection logic:
   - First time ever: all non-muted friends checked
-  - Subsequent sessions: restore the exact selection from the previous session, excluding anyone who has since been removed as a friend; muted friends are unchecked by default
-- Muted friends appear in a separate "Muted" section within the list and are unchecked by default
-- If the user has no friends, the recipient section is hidden entirely — the door can still be opened and the invite link shared from the Door Open view
+  - Subsequent opens: restore the exact selection from `recipient_sessions`, excluding anyone since removed as a friend; muted friends are unchecked by default
+- Muted friends shown in a separate "Muted" section, unchecked by default
+- If the user has no friends, the recipient section is hidden entirely
 
 **Open door button**
-- "Open for 30 min"
+- "Open 30 min 🚪"
 - On first tap ever: trigger OS notification permission prompt before proceeding (if not already granted)
 - Creates a status with the selected note and recipients
 - Navigates to Door Open view
 
-**Invite friends card** (below open door button, shown only if user has no friends yet)
-- Explains that they can share a link so friends can add them on Drop By — a concept familiar from other apps
-- Tap to generate and copy an invite link
-- Dismissed permanently once the user has at least one friend
+**Tips section** (below open door button)
 
-**Nudge schedule card** (below invite friends card if visible, otherwise below open door button)
-- Shown only if the user has not yet set any nudge reminders
-- Explains the feature: why setting a regular reminder helps, and what the nudge notification will do
-- Single CTA: "Set your reminder" → navigates to Profile page
-- Once the user sets at least one nudge, this card is permanently replaced by a quiet summary line: "Reminders: Sat 11am · Sun 7pm" with an "Edit" link → Profile page
+Two tips are shown, one at a time, in priority order. Each can be permanently dismissed with an × button. Dismissal is stored in `localStorage`. Setting a reminder from the nudge tip, or copying an invite link from the invite tip, shows a toast confirmation and hides that tip.
+
+1. **Nudge tip** — shown only if the user has no nudge reminders set AND has not permanently dismissed this tip
+   - Text explains the nudge reminder feature
+   - Suggests a specific day/time (e.g. "Saturday at 11am")
+   - "Yes, remind me" button: adds the suggested reminder immediately, hides the tip, shows toast: "Reminder saved! You can change it in your [Profile →]"
+   - "Choose another time" link → navigates to `/profile?addReminder=1`
+   - × button: permanently dismisses
+
+2. **Invite tip** — shown only if the nudge tip is not shown (or has been dismissed) AND has not been permanently dismissed
+   - Text: "Invite friends — they'll see when your door is open."
+   - Link: "Copy invite link →" — generates and copies a fresh link, shows toast: "Invite link copied!"
+   - × button: permanently dismisses
 
 ---
 
 ### Home — Door Open (`/home`, active state)
 
 **Header**
-- "You're open!" with the active note displayed below
-
-**Countdown**
-- Line showing when the door auto-closes: "Closes in X min"
-- Option to prolong appears when ≤ 20 minutes remain: "Keep it open" button adds 30 minutes (unlimited times)
+- "You're open!" with the active note below (if any)
+- Countdown: "Closes in X min"
+- "Keep it open +30 min" button — appears when ≤ 20 minutes remain; extends `closes_at` by 30 minutes; unlimited prolongs
 
 **Recipient list**
-- Each recipient shown with avatar initial and name
-- X button to remove:
-  - Recipient row shows strikethrough and "Undo" button for 3 seconds
-  - After 3 seconds, removal is persisted to the database
-  - Tapping "Undo" within 3 seconds cancels the removal
-  - The 3-second countdown is client-side only; the API call fires after the timer
+- Each recipient: avatar, display name
+- "Notified" label if they were sent a push notification when the door opened
+- "On their way ✅" label if they've sent a Going signal
+- × button to remove with 3-second undo pattern (see Core Behaviors)
 
 **Invite link row**
-- "Anyone with link" row — tap to generate and copy a 1-hour invite link to clipboard
-- Generating creates an `invite_links` record with `status_id` set to the current status
-- Each tap generates a fresh link; there is no reuse across taps
+- "Anyone with link" row — tap to copy a fresh 24-hour invite link with `status_id` attached
+
+**Going signals from non-friends** (guests)
+- Guest names shown in the going signals section when they submit the web Going form
 
 **Actions**
-- "Add more people / Edit" button → transitions to an edit view (see below)
-- "Close now" link → closes the status immediately, navigates back to Door Closed view
+- "Add more / Edit" button → Door Open Edit view
+- "Close now" link → immediately closes the status, returns to Door Closed view
 
 ---
 
 ### Home — Door Open Edit View
 
-Accessible via "Add more people / Edit" on the Door Open view.
+Accessible via "Add more / Edit".
 
-- Sticky banner at top: pulsing dot + "Your door is open" — tappable to return to Door Open view without saving
-- User can edit both the note and the recipient list
-- "Save changes" button persists updates and returns to Door Open view
+- Sticky banner: pulsing dot + "Your door is open — tap to go back" (tappable)
+- Editable note field (same chip UX as Door Closed view, pre-populated with current note)
+- Editable recipient list with same checkbox/muted logic
+- "Save changes" button → updates status, returns to Door Open view
 
 ---
 
 ### Home — Friend Has Door Open
 
-Visible on the Home screen when any friend has an active status that includes the current user as a recipient. This section updates in real time — when a friend opens or closes their door, the Home screen reflects it immediately without any user action.
+Shown at the top of the Home screen when one or more friends have an active status that includes the current user as a recipient. Updates in real time via SSE.
 
-- Sits at the top of the Home screen, visually prominent and distinct from the door-open/closed UI below
-- When a friend has their door open AND the user's own door is also open (or closed), both sections are visible simultaneously — the friend cards stack at the top, the user's own door UI stacks underneath
-- Shows a card per open friend: avatar initial, display name, note (if any)
-- **"Going ✅" button** on each card
-  - One tap, no confirmation, no text input
-  - Sends a push notification to the host: "{name} said, they are going!"
-  - On first tap ever (across the whole app): triggers OS notification permission prompt before sending
+- One card per open friend: avatar, display name, note (if any), time remaining
+- "I'm going ✅" button per card
+  - One tap, no confirmation
+  - Sends push notification to host: "[name] said, they are going!"
+  - On first tap ever (across the whole app): triggers OS notification permission prompt
+  - After tapping: button replaced with a non-interactive "On my way" confirmation state
+
+Both the friend's open door section and the user's own door UI are visible simultaneously when both are active.
 
 ---
 
 ### Friends Page (`/friends`)
 
 **Header actions**
-- "Invite" button: generates and copies a 1-hour invite link
+- "Invite" button: generates and copies a fresh 24-hour invite link; shows toast "Invite link copied!"
 - "Add" button: opens Add Friend modal
 
 **Search**
-- Client-side filter on loaded friend list
+- Client-side filter on the loaded friend list
 
 **Friend list**
 
-Active friends section:
-- Each row: avatar initial, display name, X button
-- Pressing X moves the friend to the Muted section (no confirmation)
+Active friends:
+- Each row: avatar, display name, mute button (🔇), remove button (×)
+- Mute: moves friend to Muted section
+- Remove: shows confirmation dialog
 
-Muted friends section (shown below active, only if non-empty):
-- Each row: avatar initial, display name, "Unmute" button, X (remove) button
-- Unmute: moves back to active friends section
-- X (remove): shows confirmation dialog before deleting the friendship
+Muted friends (below active, only if non-empty):
+- Each row: avatar, display name, "Unmute" button, remove button (×)
+- Unmute: moves back to active section
+- Remove: shows confirmation dialog
 
-**Remove confirmation dialog**
-- "Remove [name] as a friend? This cannot be undone."
-- Confirm / Cancel
+Remove confirmation: "Remove [name] as a friend? This cannot be undone." — Confirm / Cancel
 
-**Empty state** (no friends at all)
-- Invite link CTA + Add friend CTA
+Empty state (no friends): invite link CTA + Add Friend CTA
+
+**Pending invites section** (below friend list, only if non-empty)
+- Shows email addresses of pending email invites that haven't been accepted yet
+- Each row: email address, × to cancel (revokes the invite link)
+- Title: "Pending"
 
 **Add Friend modal**
-- Email or phone input
+- Email input (type="email")
 - "Send invite" button
-- Sends an invite link via email or SMS (implementation may log to console in early versions)
-
-**Notification permission**
-- No per-friend notification toggle
-- All users with OS permission granted receive all notifications
-- Permission is prompted at the moments described in the Home section
+- Sends a 30-day invite link to the email address via Resend transactional email
+- The email mentions who is inviting them ("[Name] wants to connect with you on Drop By")
+- Success state: "Invite sent!" with an "Invite someone else" link to reset the form
+- Error state: "Couldn't send invite" with ability to retry
+- Sending state: button shows "Sending…"
 
 ---
 
 ### Invite Page (`/invite/:token`)
 
-**Deep link behavior**
-- The invite URL is configured as a Universal Link (iOS) and App Link (Android)
-- If the app is installed, the OS intercepts the URL and opens the app directly to the invite screen
-- If the app is not installed, the URL loads normally in the browser and the web experience is shown
-- No "open in app" button is needed; the handoff is automatic
-
-
 **Token valid, user not logged in, host door is open**
-- Show the host's open door: avatar initial, display name, note (if any)
-- **"Going ✅" button** — tapping opens the web Going form (see below)
-- Secondary action: "Sign up / Log in" to fully join Drop By
-- No forced redirect to auth
+- Host avatar, display name, and note shown
+- "I'm going 🏃" button → opens web Going modal
+- "Sign up / Log in to join Drop By" link → `/auth?redirect=/invite/:token`
 
 **Token valid, user not logged in, host door is closed**
 - Redirect to `/auth?redirect=/invite/:token`
 
 **Token valid, user logged in, not yet friends**
-- Show loading → auto-accept via backend → show success state
-- Success state: "You and [name] are now friends!" with a button to go home
-- If the inviter has an active status at the time of acceptance, the new friend is automatically added as a recipient (silently, no notification to inviter)
+- Auto-accepts: creates friendship
+- If inviter's door is still open: new friend is silently added as a recipient; success screen shows "You're now friends!" + host's open door card with "Going ✅" button
+- If inviter's door is closed: success screen shows "You and [name] are now friends on Drop By" + "Go home" button
 
 **Token valid, user logged in, already friends**
-- Skip friendship creation
-- Show the inviter's current status if their door is open, or a "Go home" button if not
+- No new friendship
+- If host's door is open: show the open door card
+- If host's door is closed: show "You're already friends" + "Go home"
+
+**Token valid, own link**
+- "That's your own link! Share it with friends to join Drop By."
 
 **Token expired**
-- Show: "This invite expired [relative time] ago" — relative time always rounds down (e.g. 1h 45min → "1 hour ago")
+- "This invite expired [relative time] ago" — relative time rounds down (e.g. 1h 45min → "1 hour ago")
 - "Go home" button
 
-**Token not found / invalid**
-- Show generic error: "This invite link is invalid"
+**Token not found / revoked**
+- "This invite link is invalid."
 - "Go home" button
 
 ---
 
-### Web Going Form (modal, within `/invite/:token`)
+### Web Going Modal (within `/invite/:token`)
 
-Shown to non-logged-in users who tap "Going ✅" on the invite page.
+Shown when a non-logged-in user taps "Going ✅" on an open door.
 
-- **First name** (required)
-- **Email or phone** (optional)
-- If email or phone is entered: checkbox appears — "Send me a link to the app" (default unchecked, user must opt in)
-- Submit button: "I'm on my way!"
+- First name (required)
+- Email or phone (optional); if provided, checkbox appears: "Send me a link to the app" (default unchecked)
+- Submit: "I'm on my way! 🏃" / loading: "Sending…"
 - On submit:
-  - Push notification sent to host: "{name} said, they are going!"
-  - If contact provided and consent given: welcome message sent with app download link and a guest record is created
-  - If name only (no contact): notification fires, no record created
-  - Success state shown: "They know you're coming!" with no further action required
+  - Push notification sent to host: "[name] said, they are going!"
+  - If contact + consent: welcome message sent, guest_contacts row created
+  - Success state: "They know you're coming! 🎉" — no further action needed
+- Validation: first name required, shown inline
 
 ---
 
 ### Profile Page (`/profile`)
 
-Accessible from the Home screen (e.g. avatar/name in header).
+Accessible via the back-arrow header of Home.
 
-- Display name: editable inline or via a form, saved on submit
-- Email: shown read-only
+**Header**
+- Avatar (tappable) — opens avatar crop modal
+- Page title "Profile"
+- Back arrow → `/home`
 
-**Nudge reminders**
-- Section explaining that nudges are a personal reminder to open the door — not sent to friends
-- Lists currently active nudge slots (day + time), each removable
-- "Add reminder" button adds a new slot:
-  - First suggestion: Saturday 11am
-  - Subsequent suggestions are contextually complementary (e.g. after Saturday morning → suggest Saturday afternoon; after a weekend slot → suggest a weekday evening at 7pm)
-  - User can accept the suggestion or pick any day + time manually
-  - No hard cap on number of slots
-- Nudge notification copy: "Hey, got a free [day]? Open your door"
-- Nudge is suppressed if the user already has an active status at the scheduled time
+**Avatar**
+- Default: DiceBear geometric shape (deterministic from user ID seed)
+- If `avatar_url` is set: shows the stored image (Google profile picture or custom upload)
+- Tapping opens the avatar crop modal:
+  - Step 1: "Choose photo" file picker (accepts image/*)
+  - Step 2: circular crop with pinch/slider zoom; "Change photo" to re-pick
+  - "Save" button: crops client-side on a 400×400 canvas, uploads as JPEG to `PUT /api/auth/avatar`, updates avatar immediately
 
-**Auto-nudge (repeat behaviour)**
-- On by default; can be disabled in Profile
-- Fires if the user opened their door within a ±2 hour window of the current time exactly one week ago, and has not yet opened it this week in that window
-- Copy: "You opened your door this time last week — open it again?"
-- Suppressed if door is already open
-- Suppressed if a configured nudge already fired earlier that same day
-- Capped at 1 auto-nudge per week (configured nudges have no cap beyond the door-already-open rule)
+**Display name**
+- Shown with an "Edit" button
+- Inline edit: text input + Save / Cancel
+- Saved via `PUT /api/auth/me`
+
+**Email**
+- Read-only
+
+**Language selector**
+- Dropdown: English (US), English (UK), Deutsch, Español, Français
+- Changes app language immediately (stored in i18next's localStorage persistence)
+
+**Reminders section**
+- Description: "We'll send you a notification to open your door."
+- "Add +" button top-right → opens Add Reminder modal
+- If no reminders set: shows the suggested time (Saturday 11am) with an inline "+ Add" button for one-tap add
+- If reminders exist: lists each (day + formatted time), each with an × to remove
+
+**Add Reminder modal**
+- Day picker (Mon–Sun grid)
+- Time picker (7am–10pm grid, shown in 12h or 24h format based on locale)
+- Suggested slot highlighted: first suggestion is Saturday 11am; subsequent suggestions are contextually derived (after Saturday morning → Saturday 3pm; after Saturday → Sunday 7pm; after a weekend slot → next weekday 7pm)
+- "Yes, this time" shortcut to accept suggestion
+- "Add reminder" button
 
 **Auto-nudge toggle**
-- "Remind me when I opened my door this time last week" — on by default
-- When disabled, the repeat behaviour auto-nudge is never sent
+- "Remind me when I opened my door this time last week"
+- On by default; toggle persisted via `PUT /api/auth/me { auto_nudge_enabled }`
 
-- **Delete account** button
-  - Confirmation dialog: "This will permanently delete your account, friends, and all data. This cannot be undone."
-  - On confirm: deletes all user data, closes any active status, signs the user out, redirects to landing page
+**Log out**
+- Button at the bottom: "Log out"
+- Clears auth state (JWT removed from localStorage, store cleared)
+- Redirects to `/`
+- No confirmation dialog
+
+**Delete account**
+- Below logout
+- Confirmation dialog: "This will permanently delete your account, friends, and all your data. This cannot be undone."
+- On confirm: deletes all user data server-side, clears auth, redirects to `/`
 
 ---
 
 ## 5. Navigation
 
-- **Unauthenticated**: Landing (`/`) and Auth (`/auth`) are standalone with no nav bar
-- **Authenticated**: Bottom tab bar with two tabs: **Home** and **Friends**
-- Profile is accessible from the Home tab (not a separate tab)
+- **Unauthenticated**: Landing (`/`) and Auth (`/auth`) are standalone with no nav bar. `/verify-email` and `/invite/:token` are also accessible without auth.
+- **Authenticated**: Bottom tab bar with two tabs — **Home** and **Friends**. Profile is reachable from Home's header, not a tab.
+- The `*` catch-all redirects to `/`.
 
 ---
 
@@ -408,141 +481,183 @@ Accessible from the Home screen (e.g. avatar/name in header).
 ### Opening the Door
 
 1. User selects a note (optional) and recipients
-2. Taps "Open for 30 min"
-3. If first time: OS notification permission prompt
-4. Status created with `closes_at = now() + 30 min`
-5. Push notifications sent to all recipients who have granted OS permission
+2. Taps "Open 30 min 🚪"
+3. If first time: OS notification permission prompt fires
+4. `POST /api/statuses` creates a status with `closes_at = now() + 1800`
+5. Push notifications sent to all selected recipients who have granted OS permission (muted friends excluded)
+6. Recipient selection is saved to `recipient_sessions` for next time
 
 ### Prolonging
 
-- "Keep it open" button appears when `closes_at - now() ≤ 20 min`
-- Tapping it sets `closes_at = closes_at + 30 min`
-- Unlimited prolongs allowed
-- User also receives a push notification 10 minutes before close:
+- "Keep it open +30 min" appears when `closes_at - now() ≤ 20 min`
+- Tapping sets `closes_at = closes_at + 30 min`
+- Unlimited prolongs
+- 10-minute-before-close push notification sent once per status (`closing_notification_sent` flag):
   - Copy: "Your door closes in 10 minutes"
-  - Actions: "Keep open" (prolongs +30 min without opening app), "Close now", default tap opens app to Door Open view
+  - Actions: "Keep open" (prolongs without opening app), "Close now", default tap → app Door Open view
 
 ### Closing the Door
 
 - Manual: "Close now" sets `closed_at = now()`
-- Automatic: status expires when `closes_at` passes (checked server-side)
-- Either way: invite token is invalidated for that session
+- Automatic: server-side job expires statuses where `closed_at IS NULL AND closes_at < now()`
 
 ### Recipient Removal (Undo Pattern)
 
-- Client starts a 3-second timer, shows strikethrough + Undo on the row
-- If not undone: API call fires to remove recipient from `status_recipients`
-- If undone: timer cancelled, no API call, row returns to normal
+- Tap × on a recipient → row shows strikethrough + "Undo (Xs)" countdown
+- After 3 seconds with no undo: API call removes recipient from `status_recipients`
+- Tapping "Undo" within 3 seconds cancels the timer and no API call is made
 
 ### Friend Removal
 
 - Deletes the `friendships` row
-- Immediately removes the removed friend from all active `status_recipients` rows for both users
+- Immediately removes the ex-friend from all active `status_recipients` rows for both users
 
 ### Muting a Friend
 
 - Creates a `friend_mutes` row
-- Muted friend receives no push notifications from the muting user's door opens
-- Muted friend is unchecked by default in the recipient selection UI
-- Muting does not affect the muted friend's ability to open their door to the muting user
+- Muted friend is unchecked by default in recipient selection
+- The muting user does not receive push notifications when the muted friend opens their door
+- Muted friend still receives notifications when the muting user opens their door (unless that friend also muted the opener)
 
-### Connection Patterns
+### Connection Patterns — Invite Links
 
-Friendships are formed exclusively via invite links. There is no search, no directory, no follow request. Every connection starts with one person sharing a link with another.
+Friendships are formed exclusively via invite links. There is no search, no directory, no follow request.
 
-#### Generating an invite link
+**Generating a link**
+- Any logged-in user can generate a link at any time from the Friends page, the Door Open view, or the Home tips section
+- Links are 24 hours, multi-use
+- If generated from the Door Open view or inline in Home, `status_id` is set — enables session-aware acceptance behaviour
+- Each tap generates a fresh link (no reuse)
 
-- Any logged-in user can generate a link at any time from the Friends page or the Door Open view
-- Links are valid for 1 hour and multi-use (multiple people can accept the same link)
-- If generated from the Door Open view, `status_id` is recorded on the link — this unlocks session-aware behaviour when the link is accepted
-- The link is copied to clipboard; sharing mechanism is up to the user (message, chat, wherever)
+**Sending by email**
+- From the Add Friend modal on the Friends page
+- Generates a 30-day link with `invited_email` set
+- Sends a Resend transactional email: "[Name] wants to connect with you on Drop By. [Accept invite link]"
+- The invite appears in the Pending section until accepted or cancelled
 
-#### Accepting a link — all cases
-
-The outcome depends on the recipient's auth state and whether the host's door is open at the time of acceptance.
+**Accepting a link — all cases**
 
 | Recipient state | Host door | Outcome |
 |---|---|---|
-| Logged in, not yet friends | Open | Friendship created; recipient auto-added as status recipient; success screen shows open door + note |
+| Logged in, not yet friends | Open | Friendship created; recipient silently added as status recipient; success screen shows open door |
 | Logged in, not yet friends | Closed | Friendship created; success screen confirms connection |
-| Logged in, already friends | Open | No new friendship; success screen shows open door |
-| Logged in, already friends | Closed | No new friendship; goes to home |
-| Logged in, own link | Either | No-op; shown a friendly message |
-| Not logged in | Open | Door card shown immediately (avatar, name, note); can signal Going as guest without an account; "Sign up to join" link below |
-| Not logged in | Closed | Redirected to auth with `?redirect=/invite/:token` preserved |
+| Logged in, already friends | Open | No new friendship; shows open door card |
+| Logged in, already friends | Closed | No new friendship; "Go home" |
+| Logged in, own link | Either | No-op; friendly message |
+| Not logged in | Open | Door card shown; can signal Going as guest; "Sign up / Log in" link below |
+| Not logged in | Closed | Redirected to `/auth?redirect=/invite/:token` |
 
-#### New user signup via invite link
+**New user signup via invite link**
 
-When a not-logged-in user arrives via an invite link and chooses to sign up, the redirect destination must survive the full signup + email verification flow:
+The redirect destination must survive signup → email verification → login:
 
-1. User arrives at `/invite/:token` — if door is closed, redirected to `/auth?redirect=/invite/:token`
-2. User fills in signup form; client sends `redirect_url` to server alongside email/password
-3. Server embeds `redirect_url` as a query param on the verification link: `/api/auth/verify-email/:token?redirect=/invite/:token`
-4. User clicks the verification email; server verifies, then redirects to `/auth?verified=true&redirect=/invite/:token`
-5. User logs in; client reads `redirect` param and navigates to `/invite/:token`
-6. Invite page auto-accepts the invite and shows the appropriate success state (with open door if still active)
+1. Arrive at `/invite/:token` (door closed) → redirected to `/auth?redirect=/invite/:token`
+2. Sign up; client sends `redirect_url=/invite/:token` alongside credentials
+3. Server embeds redirect in verification email link: `/verify-email?token=<token>&redirect=/invite/:token`
+4. User clicks link → `/verify-email` verifies and auto-logs in → navigates to `/invite/:token`
+5. Invite page auto-accepts and shows success state
 
-This ensures a user who signed up specifically because of an invite immediately lands in the context they came from — seeing the connection established and, if the door is still open, the host's current status.
+### Contextual Note Suggestions
 
-#### What the host sees
-
-- When a new friend accepts via a session link (door open): they are silently added to `status_recipients` — host does not need to do anything
-- If the new friend signals Going: host sees their name appear in the going signals section on the Door Open view
-- If the door has already closed by the time the link is accepted: friendship is still created, but the new friend is not added as a recipient (the session is over)
-
-#### Guest Going (no account required)
-
-A visitor who arrives at a session-linked invite while not logged in can signal they're going without creating an account:
-
-- Tap "Going ✅" on the door card → modal opens
-- Required: first name
-- Optional: email or phone number; if provided, an opt-in checkbox appears to receive an app download link
-- On submit: host sees the guest's name in going signals immediately
-- The guest receives no further UI — just a confirmation that the host knows they're coming
-
-### AI Note Suggestions
-
-- Fetched on page load (Door Closed view)
-- Contextual inputs: time of day, day of week, weekday/weekend, season, locale
-- Suggestion chips (row 1) and saved note chips (row 2) are shown in separate scrollable rows
-- Saved notes show an × button; tapping it hides the note (soft-delete, not permanently deleted)
-- A note that is not one of the built-in suggestions is auto-saved to the user's note library on use
+- Curated locale-specific presets, selected client-side from a pool per locale (en-US, en-GB, de, es, fr)
+- No server round-trip; no AI
+- Selection factors: hour of day (morning / afternoon / evening), season (spring / summer / autumn / winter), day type (weekday / weekend)
+- Up to 7 suggestions shown in the first chip row
+- Alcohol-free across all locales
 
 ### "Going ✅"
 
-- Available on each open friend's status card on the Home screen
-- One tap, no text, no confirmation
-- Limited to one signal per user per status — after tapping, the button is replaced with a confirmed state (e.g. "Going ✅") and cannot be tapped again
-- Sends push notification to host: "{name} said, they are going!"
+- Available on each open friend's card on the Home screen
+- One tap, no confirmation, one signal per user per status
+- After tapping: button replaced with non-interactive confirmed state
+- Sends push notification to host: "[name] said, they are going!"
 - Triggers OS notification permission prompt on first use (if not yet granted)
 
 ### Push Notifications
 
-- **Friend opens door**: sent to all recipients with OS permission granted (muted friends are excluded if the opener has muted them — but muting is one-directional, so the recipient's mute of the opener has no effect on whether they receive the opener's notification... clarify: the opener's mute of a recipient means that recipient is not notified. The recipient's mute of the opener has no product effect on notifications in v1 — muting only affects default selection and the muter's own notification receipt.)
+Sent via FCM (Android) and APNs (iOS).
 
-> **Muting user A means:**
-> - A is unchecked by default when you open your door (so A won't be notified by default)
-> - You do not receive push notifications when A opens their door
+| Event | Recipient | Copy |
+|---|---|---|
+| Friend opens door | All selected recipients with OS permission | "[Name]'s door is open" |
+| Going signal received | Door opener | "[Name] said, they are going!" |
+| 10 min before close | Door opener | "Your door closes in 10 minutes" |
+| Nudge reminder | User themselves | "Hey, got a free [day]? Open your door" |
+| Auto-nudge | User themselves | "You opened your door this time last week — open it again?" |
 
-- **Host receives "Going ✅"**: "{name} said, they are going!"
-- **10 min before close**: sent to the door opener only
+Muting user A suppresses:
+- A being notified when the muting user opens their door (A is unchecked by default)
+- The muting user receiving notifications when A opens their door
+
+### Nudge Reminders
+
+- Set per user on the Profile page (day + hour, stored in `nudge_schedules`)
+- Server checks every minute for due nudges based on each user's stored timezone
+- Suppressed if user already has an active status at the scheduled time
+- No cap on number of slots
+
+### Auto-Nudge (Repeat Behaviour)
+
+- Controlled by `auto_nudge_enabled` (default true)
+- Fires if: the user opened their door within ±2 hours of the current local time exactly 7 days ago, and has not yet opened their door this week in that window, and no auto-nudge has been sent in the last 7 days
+- Suppressed if door is already open
+- Suppressed if a scheduled nudge already fired earlier the same day
+- Capped at 1 per 7 days (tracked via `auto_nudge_log`)
+
+### Avatar
+
+- At signup via Google OAuth: the Google profile picture URL is saved as `avatar_url`
+- Custom upload (Profile page): image is cropped client-side to 400×400 JPEG, uploaded to server, stored at `data/avatars/<uuid>.jpg`, served as a static file at `/avatars/<uuid>.jpg`
+- Custom upload always takes precedence; Google picture is only saved if no `avatar_url` exists yet
+- Fallback: DiceBear geometric shape generated deterministically from the user's ID seed
+
+### Real-Time Updates (SSE)
+
+The app maintains a persistent SSE connection (`GET /api/sse`) for real-time Home screen updates. Events:
+- Friend opens or closes their door
+- Going signal received
+
+No polling; the Home screen reflects friend state changes immediately.
+
+### Email Verification
+
+- Token is a 32-char hex UUID (no dashes)
+- Expires 24 hours after generation
+- Sent via Resend transactional email, localised based on `locale`
+- Verification link points to `/verify-email?token=<token>` (frontend page), not the API directly
+- The server's `POST /api/auth/verify-email` verifies the token, sets `email_verified = 1`, clears the token fields, and returns a JWT for immediate auto-login
+- Tokens are single-use: once verified, the token fields are cleared and the link cannot be used again
 
 ---
 
-## 7. Authentication
+## 7. Authentication & Session
 
-- Email/password with mandatory email verification (login blocked until verified)
-- Google OAuth
-- Apple OAuth
-- Display name required at signup, always editable thereafter
-- Profile auto-created on signup
-- `?redirect=` param supported on `/auth` for post-login routing
+- JWT-based; token stored in localStorage
+- Sent on every request via `Authorization: Bearer <token>` header
+- No server-side session; logout is purely client-side (clear token + auth store, redirect to `/`)
+- Google OAuth: credential verified server-side via `google-auth-library`; account created on first use or linked to existing account by email
+- Email not verified for Google accounts (Google guarantees ownership)
 
 ---
 
-## 8. Known Gaps / Deferred
+## 8. Internationalisation
 
-- **Email/SMS delivery**: Add Friend sends invite via email/SMS — implementation logs to console until a delivery provider is integrated
-- **Push notification delivery**: Backend logic is specced; requires APNs/FCM credentials to activate
-- **Rate limiting**: No rate limits specced for v1
-- **User-saved note limit**: No cap specced for v1
+- 5 locales: `en-US`, `en-GB`, `de`, `es`, `fr`
+- Language stored in i18next's localStorage persistence
+- Language selector on the Profile page
+- Transactional emails (verification, invite) sent in the user's stored locale
+- Time display: 12h for en-US/en-GB, 24h for de/es/fr
+- Note suggestions are locale-specific pools (see Contextual Note Suggestions)
+
+---
+
+## 9. Known Gaps / Deferred
+
+- **Apple OAuth**: specced, not implemented
+- **APNs**: pending Apple Developer enrollment; FCM is active
+- **GitHub Actions CI/CD**: deploy-on-push not yet configured
+- **`hello@dropby.cc` mailbox**: not yet set up; DMARC `rua` should be updated once it is
+- **Google OAuth consent screen**: support email should be updated to `hello@dropby.cc`
+- **Rate limiting**: none in v1
+- **User-saved note limit**: no cap in v1
+- **SMS delivery**: Add Friend by SMS logs to console; only email delivery is implemented
