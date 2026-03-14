@@ -80,6 +80,13 @@ router.put('/avatar', requireAuth, upload.single('avatar'), (req: AuthRequest, r
   res.json({ avatar_url: avatarUrl });
 });
 
+// DELETE /api/auth/avatar
+router.delete('/avatar', requireAuth, (req: AuthRequest, res) => {
+  db.prepare('UPDATE users SET avatar_url = NULL WHERE id = ?').run(req.userId);
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId) as any;
+  res.json(userResponse(user));
+});
+
 // DELETE /api/auth/me
 router.delete('/me', requireAuth, (req: AuthRequest, res) => {
   db.prepare('DELETE FROM users WHERE id = ?').run(req.userId);

@@ -46,6 +46,7 @@ export const authApi = {
     form.append('avatar', blob, 'avatar.jpg');
     return api.put('/auth/avatar', form, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
   },
+  removeAvatar: () => api.delete('/auth/avatar').then(r => r.data),
 };
 
 // Friends

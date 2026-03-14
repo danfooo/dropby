@@ -130,7 +130,7 @@ async function getCroppedBlob(imageSrc: string, crop: { x: number; y: number; wi
   return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/jpeg', 0.9));
 }
 
-function AvatarCropModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (blob: Blob) => void }) {
+function AvatarCropModal({ open, onClose, onSave, onRemove, hasAvatar }: { open: boolean; onClose: () => void; onSave: (blob: Blob) => void; onRemove: () => void; hasAvatar: boolean }) {
   const { t } = useTranslation();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -177,6 +177,14 @@ function AvatarCropModal({ open, onClose, onSave }: { open: boolean; onClose: ()
           >
             {t('profile.choosePhoto')}
           </button>
+          {hasAvatar && (
+            <button
+              onClick={onRemove}
+              className="w-full py-2.5 text-sm text-red-500 hover:text-red-600 font-medium"
+            >
+              {t('profile.removePhoto')}
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -269,6 +277,14 @@ export default function Profile() {
 
   const uploadAvatar = useMutation({
     mutationFn: (blob: Blob) => authApi.uploadAvatar(blob),
+    onSuccess: (data) => {
+      setUser({ ...user!, avatar_url: data.avatar_url });
+      setShowAvatarCrop(false);
+    },
+  });
+
+  const removeAvatar = useMutation({
+    mutationFn: authApi.removeAvatar,
     onSuccess: (data) => {
       setUser({ ...user!, avatar_url: data.avatar_url });
       setShowAvatarCrop(false);
@@ -468,6 +484,8 @@ export default function Profile() {
         open={showAvatarCrop}
         onClose={() => setShowAvatarCrop(false)}
         onSave={blob => uploadAvatar.mutate(blob)}
+        onRemove={() => removeAvatar.mutate()}
+        hasAvatar={!!user?.avatar_url}
       />
     </div>
   );
