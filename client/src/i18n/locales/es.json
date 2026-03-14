@@ -21,9 +21,17 @@
     "pleaseWait": "Un momento…",
     "or": "o",
     "verifyEmailSent": "Revisa tu correo para verificar tu cuenta antes de entrar.",
+    "verificationResent": "Correo de verificación reenviado. Revisa tu bandeja.",
+    "couldNotResend": "No se pudo reenviar. Inténtalo de nuevo.",
     "resendVerification": "Reenviar correo de verificación",
     "emailVerified": "¡Correo verificado! Ya puedes iniciar sesión.",
     "verificationInvalid": "El enlace de verificación no es válido o ha expirado.",
+    "verifying": "Verificando tu correo…",
+    "youreIn": "¡Ya estás dentro!",
+    "takingYouIn": "Llevándote a Drop By…",
+    "linkExpiredTitle": "Enlace expirado o inválido",
+    "linkExpiredDesc": "Este enlace de verificación ya ha sido usado o ha expirado.",
+    "backToSignIn": "Volver al inicio de sesión",
     "connectWithName": "Regístrate para conectar con {{name}}",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "forgotPasswordDesc": "Introduce tu correo y te enviaremos un enlace para restablecerla.",
@@ -37,7 +45,15 @@
     "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
     "passwordUpdated": "Contraseña actualizada. Iniciando sesión…",
     "backToLogin": "Volver al inicio de sesión",
+    "googleFailed": "Error al iniciar sesión con Google",
     "somethingWentWrong": "Algo salió mal. Por favor, inténtalo de nuevo."
+  },
+  "nav": {
+    "home": "Inicio",
+    "friends": "Amigos"
+  },
+  "common": {
+    "cancel": "Cancelar"
   },
   "home": {
     "greeting": "¡Hola, {{name}} 👋",
@@ -52,6 +68,7 @@
     "openDoorTo": "Abre la puerta para",
     "muted": "Silenciado",
     "openDoor": "Abrir 30 min 🚪",
+    "openDoorDesc": "Visible para tus amigos seleccionados. Se cierra después de 30 minutos o cuando quieras.",
     "opening": "Abriendo…",
     "inviteFriendsText": "Invita a tus amigos — verán cuando tu puerta esté abierta.",
     "copyInviteLink": "Copiar enlace de invitación →",
@@ -77,8 +94,11 @@
     "recipients": "Destinatarios",
     "saveChanges": "Guardar cambios",
     "undo": "Deshacer ({{seconds}}s)",
-    "coffeeTipText": "Alguien pasó por ahí. Si Drop By te trajo un momento real, considera invitarnos a un café ☕",
-    "coffeeTipLink": "buymeacoffee.com/dropby →",
+    "feedbackTipText": "¿Te gusta Drop By? Tu opinión define lo que construimos a continuación.",
+    "feedbackTipDismissed": "Siempre puedes compartir tu opinión desde tu",
+    "feedbackTipLink": "Compartir →",
+    "coffeeTipText": "Alguien pasó por ahí. Si Drop By te trajo un momento real, considera apoyarnos ☕",
+    "coffeeTipLink": "Apoyar Drop By →",
     "inviteLinkCopied": "¡Enlace copiado!",
     "couldNotCopy": "No se pudo copiar el enlace"
   },
@@ -133,6 +153,20 @@
     "sending": "Enviando…",
     "nameRequired": "El nombre es obligatorio"
   },
+  "feedback": {
+    "title": "Compartir opinión",
+    "thanksTitle": "Gracias por compartir",
+    "thanksDesc": "Tu opinión llega directamente a las personas que construyen Drop By. Importa.",
+    "done": "Listo",
+    "thoughtType": "Cómo va",
+    "bugType": "Reportar un error",
+    "thoughtPlaceholder": "¿Te ayuda Drop By a quedar con gente? ¿Qué funciona, qué no?",
+    "bugPlaceholder": "¿Qué pasó? ¿Qué intentabas hacer?",
+    "wantsReply": "Podéis contactarme para seguimiento",
+    "emailPlaceholder": "tu@correo.com",
+    "sending": "Enviando…",
+    "send": "Enviar opinión"
+  },
   "profile": {
     "title": "Perfil",
     "language": "Idioma",
@@ -140,6 +174,11 @@
     "edit": "Editar",
     "save": "Guardar",
     "cancel": "Cancelar",
+    "saving": "Guardando…",
+    "changePhoto": "Cambiar foto",
+    "choosePhoto": "Elegir foto",
+    "shareFeedback": "Compartir opinión",
+    "buyMeCoffee": "Apoyar Drop By ☕",
     "email": "Correo",
     "remindersTitle": "Recordatorios",
     "addReminder": "+ Añadir",

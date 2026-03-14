@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from './Modal';
 import { feedbackApi } from '../api';
 import { useAuthStore } from '../stores/auth';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function FeedbackModal({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const [type, setType] = useState<'thought' | 'bug'>('thought');
   const [message, setMessage] = useState('');
@@ -50,20 +52,20 @@ export default function FeedbackModal({ open, onClose }: Props) {
       {submitted ? (
         <div className="text-center py-4">
           <div className="text-4xl mb-3">💌</div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Thanks for sharing</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('feedback.thanksTitle')}</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Your feedback goes straight to the people building Drop By. It matters.
+            {t('feedback.thanksDesc')}
           </p>
           <button
             onClick={handleClose}
             className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition-colors"
           >
-            Done
+            {t('feedback.done')}
           </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Share feedback</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('feedback.title')}</h2>
 
           {/* Type selector */}
           <div className="flex gap-2 mb-4">
@@ -76,7 +78,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              How it's going
+              {t('feedback.thoughtType')}
             </button>
             <button
               type="button"
@@ -87,7 +89,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Report a bug
+              {t('feedback.bugType')}
             </button>
           </div>
 
@@ -97,8 +99,8 @@ export default function FeedbackModal({ open, onClose }: Props) {
             onChange={e => setMessage(e.target.value)}
             placeholder={
               type === 'thought'
-                ? "Is Drop By helping you make plans with people? What's working, what isn't?"
-                : 'What happened? What were you trying to do?'
+                ? t('feedback.thoughtPlaceholder')
+                : t('feedback.bugPlaceholder')
             }
             rows={4}
             maxLength={1000}
@@ -117,7 +119,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
               }}
               className="mt-0.5 w-4 h-4 rounded accent-emerald-500"
             />
-            <span className="text-sm text-gray-600">You can reach me for follow-up</span>
+            <span className="text-sm text-gray-600">{t('feedback.wantsReply')}</span>
           </label>
 
           {wantsReply && (
@@ -125,7 +127,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
               type="email"
               value={replyEmail}
               onChange={e => setReplyEmail(e.target.value)}
-              placeholder="your@email.com"
+              placeholder={t('feedback.emailPlaceholder')}
               required
               className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
             />
@@ -136,7 +138,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
             disabled={loading || !message.trim()}
             className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors"
           >
-            {loading ? 'Sending…' : 'Send feedback'}
+            {loading ? t('feedback.sending') : t('feedback.send')}
           </button>
         </form>
       )}

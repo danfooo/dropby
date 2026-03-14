@@ -21,9 +21,17 @@
     "pleaseWait": "Please wait…",
     "or": "or",
     "verifyEmailSent": "Check your email to verify your account before logging in.",
+    "verificationResent": "Verification email resent. Check your inbox.",
+    "couldNotResend": "Could not resend. Please try again.",
     "resendVerification": "Resend verification email",
     "emailVerified": "Email verified! You can now log in.",
     "verificationInvalid": "Verification link is invalid or expired.",
+    "verifying": "Verifying your email…",
+    "youreIn": "You're in!",
+    "takingYouIn": "Taking you to Drop By…",
+    "linkExpiredTitle": "Link expired or invalid",
+    "linkExpiredDesc": "This verification link has already been used or has expired.",
+    "backToSignIn": "Back to sign in",
     "connectWithName": "Sign up to connect with {{name}}",
     "forgotPassword": "Forgot password?",
     "forgotPasswordDesc": "Enter your email and we'll send you a reset link.",
@@ -37,7 +45,15 @@
     "passwordTooShort": "Password must be at least 8 characters.",
     "passwordUpdated": "Password updated. Taking you in…",
     "backToLogin": "Back to login",
+    "googleFailed": "Google sign-in failed",
     "somethingWentWrong": "Something went wrong. Please try again."
+  },
+  "nav": {
+    "home": "Home",
+    "friends": "Friends"
+  },
+  "common": {
+    "cancel": "Cancel"
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",
@@ -52,6 +68,7 @@
     "openDoorTo": "Open your door to",
     "muted": "Muted",
     "openDoor": "Open for 30 min 🚪",
+    "openDoorDesc": "Visible to your selected friends. Closes after 30 minutes, or whenever you decide.",
     "opening": "Opening…",
     "inviteFriendsText": "Invite friends — they'll see when your door is open.",
     "copyInviteLink": "Copy invite link →",
@@ -77,8 +94,11 @@
     "recipients": "Recipients",
     "saveChanges": "Save changes",
     "undo": "Undo ({{seconds}}s)",
+    "feedbackTipText": "Enjoying Drop By? Your feedback shapes what we build next.",
+    "feedbackTipDismissed": "You can always share feedback from your",
+    "feedbackTipLink": "Share thoughts →",
     "coffeeTipText": "Someone dropped by. If Drop By brought you a real moment, consider buying us a coffee ☕",
-    "coffeeTipLink": "buymeacoffee.com/dropby →",
+    "coffeeTipLink": "Support Drop By →",
     "inviteLinkCopied": "Invite link copied!",
     "couldNotCopy": "Could not copy link"
   },
@@ -133,6 +153,20 @@
     "sending": "Sending…",
     "nameRequired": "Name is required"
   },
+  "feedback": {
+    "title": "Share feedback",
+    "thanksTitle": "Thanks for sharing",
+    "thanksDesc": "Your feedback goes straight to the people building Drop By. It matters.",
+    "done": "Done",
+    "thoughtType": "How it's going",
+    "bugType": "Report a bug",
+    "thoughtPlaceholder": "Is Drop By helping you make plans with people? What's working, what isn't?",
+    "bugPlaceholder": "What happened? What were you trying to do?",
+    "wantsReply": "You can reach me for follow-up",
+    "emailPlaceholder": "your@email.com",
+    "sending": "Sending…",
+    "send": "Send feedback"
+  },
   "profile": {
     "title": "Profile",
     "language": "Language",
@@ -140,6 +174,11 @@
     "edit": "Edit",
     "save": "Save",
     "cancel": "Cancel",
+    "saving": "Saving…",
+    "changePhoto": "Change photo",
+    "choosePhoto": "Choose photo",
+    "shareFeedback": "Share feedback",
+    "buyMeCoffee": "Support Drop By ☕",
     "email": "Email",
     "remindersTitle": "Reminders",
     "addReminder": "+ Add",

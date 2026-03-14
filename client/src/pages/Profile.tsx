@@ -131,6 +131,7 @@ async function getCroppedBlob(imageSrc: string, crop: { x: number; y: number; wi
 }
 
 function AvatarCropModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (blob: Blob) => void }) {
+  const { t } = useTranslation();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -166,7 +167,7 @@ function AvatarCropModal({ open, onClose, onSave }: { open: boolean; onClose: ()
   };
 
   return (
-    <Modal open={open} onClose={handleClose} title="Change photo">
+    <Modal open={open} onClose={handleClose} title={t('profile.changePhoto')}>
       {!imageSrc ? (
         <div className="text-center py-6">
           <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
@@ -174,7 +175,7 @@ function AvatarCropModal({ open, onClose, onSave }: { open: boolean; onClose: ()
             onClick={() => inputRef.current?.click()}
             className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
           >
-            Choose photo
+            {t('profile.choosePhoto')}
           </button>
         </div>
       ) : (
@@ -206,14 +207,14 @@ function AvatarCropModal({ open, onClose, onSave }: { open: boolean; onClose: ()
               onClick={() => { setImageSrc(null); setZoom(1); }}
               className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600"
             >
-              Change photo
+              {t('profile.changePhoto')}
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
               className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold disabled:opacity-50"
             >
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? t('profile.saving') : t('profile.save')}
             </button>
           </div>
         </div>
@@ -420,7 +421,7 @@ export default function Profile() {
           onClick={() => setShowFeedback(true)}
           className="w-full py-3 text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
         >
-          Share feedback
+          {t('profile.shareFeedback')}
         </button>
 
         {/* Buy me a coffee */}
@@ -430,7 +431,7 @@ export default function Profile() {
           rel="noopener noreferrer"
           className="block w-full py-3 text-center text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
         >
-          ☕ buymeacoffee.com/dropby
+          {t('profile.buyMeCoffee')}
         </a>
 
         {/* Logout + Delete */}

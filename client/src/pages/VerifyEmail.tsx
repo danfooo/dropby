@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../api';
 import { useAuthStore } from '../stores/auth';
 
 export default function VerifyEmail() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const redirect = searchParams.get('redirect') || '/home';
@@ -35,7 +37,7 @@ export default function VerifyEmail() {
         {status === 'verifying' && (
           <>
             <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-500">Verifying your email…</p>
+            <p className="text-gray-500">{t('auth.verifying')}</p>
           </>
         )}
 
@@ -46,22 +48,22 @@ export default function VerifyEmail() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">You're in!</h2>
-            <p className="text-gray-500 text-sm">Taking you to Drop By…</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('auth.youreIn')}</h2>
+            <p className="text-gray-500 text-sm">{t('auth.takingYouIn')}</p>
           </>
         )}
 
         {status === 'error' && (
           <>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Link expired or invalid</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('auth.linkExpiredTitle')}</h2>
             <p className="text-gray-500 text-sm mb-6">
-              This verification link has already been used or has expired.
+              {t('auth.linkExpiredDesc')}
             </p>
             <Link
               to="/auth"
               className="block w-full bg-emerald-500 text-white py-3 rounded-xl font-semibold text-center"
             >
-              Back to sign in
+              {t('auth.backToSignIn')}
             </Link>
           </>
         )}

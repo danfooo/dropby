@@ -75,21 +75,21 @@ export default function Auth() {
   const handleResend = async () => {
     try {
       await authApi.resendVerification(email, redirect !== '/home' ? redirect : undefined);
-      setMessage('Verification email resent. Check your inbox.');
+      setMessage(t('auth.verificationResent'));
       setShowResend(false);
     } catch {
-      setError('Could not resend. Please try again.');
+      setError(t('auth.couldNotResend'));
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
-    if (!credentialResponse.credential) { setError('Google sign-in failed'); return; }
+    if (!credentialResponse.credential) { setError(t('auth.googleFailed')); return; }
     setLoading(true);
     try {
       const data = await authApi.google(credentialResponse.credential);
       handleSuccess(data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Google sign-in failed');
+      setError(err.response?.data?.error || t('auth.googleFailed'));
     } finally {
       setLoading(false);
     }
@@ -246,7 +246,7 @@ export default function Auth() {
             <div className="flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => setError('Google sign-in failed')}
+                onError={() => setError(t('auth.googleFailed'))}
                 width={340}
                 shape="rectangular"
                 text="continue_with"

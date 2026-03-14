@@ -21,9 +21,17 @@
     "pleaseWait": "Einen Moment…",
     "or": "oder",
     "verifyEmailSent": "Schau in deine E-Mails, um dein Konto zu bestätigen.",
+    "verificationResent": "Bestätigungs-E-Mail erneut gesendet. Schau in dein Postfach.",
+    "couldNotResend": "Erneutes Senden nicht möglich. Bitte versuche es erneut.",
     "resendVerification": "Bestätigungs-E-Mail erneut senden",
     "emailVerified": "E-Mail bestätigt! Du kannst dich jetzt anmelden.",
     "verificationInvalid": "Der Bestätigungslink ist ungültig oder abgelaufen.",
+    "verifying": "E-Mail wird bestätigt…",
+    "youreIn": "Du bist dabei!",
+    "takingYouIn": "Du wirst zu Drop By weitergeleitet…",
+    "linkExpiredTitle": "Link abgelaufen oder ungültig",
+    "linkExpiredDesc": "Dieser Bestätigungslink wurde bereits verwendet oder ist abgelaufen.",
+    "backToSignIn": "Zurück zur Anmeldung",
     "connectWithName": "Registriere dich, um dich mit {{name}} zu verbinden",
     "forgotPassword": "Passwort vergessen?",
     "forgotPasswordDesc": "Gib deine E-Mail ein und wir schicken dir einen Link zum Zurücksetzen.",
@@ -37,7 +45,15 @@
     "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
     "passwordUpdated": "Passwort aktualisiert. Du wirst eingeloggt…",
     "backToLogin": "Zurück zur Anmeldung",
+    "googleFailed": "Google-Anmeldung fehlgeschlagen",
     "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuch es erneut."
+  },
+  "nav": {
+    "home": "Startseite",
+    "friends": "Freunde"
+  },
+  "common": {
+    "cancel": "Abbrechen"
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",
@@ -52,6 +68,7 @@
     "openDoorTo": "Tür auf für",
     "muted": "Stummgeschaltet",
     "openDoor": "30 Min. offen 🚪",
+    "openDoorDesc": "Sichtbar für deine ausgewählten Freunde. Schließt nach 30 Minuten oder wann immer du möchtest.",
     "opening": "Wird geöffnet…",
     "inviteFriendsText": "Lad Freunde ein — sie sehen, wenn deine Tür offen ist.",
     "copyInviteLink": "Einladungslink kopieren →",
@@ -77,8 +94,11 @@
     "recipients": "Empfänger",
     "saveChanges": "Änderungen speichern",
     "undo": "Rückgängig ({{seconds}}s)",
+    "feedbackTipText": "Gefällt dir Drop By? Dein Feedback bestimmt, was wir als nächstes bauen.",
+    "feedbackTipDismissed": "Du kannst jederzeit Feedback in deinem",
+    "feedbackTipLink": "Gedanken teilen →",
     "coffeeTipText": "Jemand ist vorbeigekommen. Wenn Drop By dir einen echten Moment geschenkt hat, kauf uns gerne einen Kaffee ☕",
-    "coffeeTipLink": "buymeacoffee.com/dropby →",
+    "coffeeTipLink": "Drop By unterstützen →",
     "inviteLinkCopied": "Einladungslink kopiert!",
     "couldNotCopy": "Link konnte nicht kopiert werden"
   },
@@ -133,6 +153,20 @@
     "sending": "Wird gesendet…",
     "nameRequired": "Name ist erforderlich"
   },
+  "feedback": {
+    "title": "Feedback teilen",
+    "thanksTitle": "Danke fürs Teilen",
+    "thanksDesc": "Dein Feedback geht direkt an die Menschen, die Drop By bauen. Es zählt.",
+    "done": "Fertig",
+    "thoughtType": "Wie läuft's",
+    "bugType": "Fehler melden",
+    "thoughtPlaceholder": "Hilft dir Drop By dabei, mit Leuten zu treffen? Was funktioniert, was nicht?",
+    "bugPlaceholder": "Was ist passiert? Was wolltest du tun?",
+    "wantsReply": "Ihr könnt mich für Rückfragen kontaktieren",
+    "emailPlaceholder": "deine@email.de",
+    "sending": "Wird gesendet…",
+    "send": "Feedback senden"
+  },
   "profile": {
     "title": "Profil",
     "language": "Sprache",
@@ -140,6 +174,11 @@
     "edit": "Bearbeiten",
     "save": "Speichern",
     "cancel": "Abbrechen",
+    "saving": "Wird gespeichert…",
+    "changePhoto": "Foto ändern",
+    "choosePhoto": "Foto auswählen",
+    "shareFeedback": "Feedback teilen",
+    "buyMeCoffee": "Drop By unterstützen ☕",
     "email": "E-Mail",
     "remindersTitle": "Erinnerungen",
     "addReminder": "+ Hinzufügen",

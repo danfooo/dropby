@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Modal from './Modal';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel = 'Confirm', danger = false }: Props) {
+  const { t } = useTranslation();
   return (
     <Modal open={open} onClose={onClose} title={title}>
       <p className="text-gray-600 mb-6">{message}</p>
@@ -19,7 +21,7 @@ export default function ConfirmDialog({ open, onClose, onConfirm, title, message
           onClick={onClose}
           className="flex-1 py-2.5 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
         <button
           onClick={() => { onConfirm(); onClose(); }}
