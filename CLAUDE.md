@@ -1,4 +1,4 @@
-# Drop By — Claude Instructions
+# dropby — Claude Instructions
 
 ## Spec
 

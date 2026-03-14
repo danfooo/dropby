@@ -1,4 +1,4 @@
-# Drop By — UI Spec
+# dropby — UI Spec
 
 One level below the product spec. Covers interaction models, states, edge cases, and persistence behaviour for each screen and significant component.
 

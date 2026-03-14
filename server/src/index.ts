@@ -54,7 +54,7 @@ if (!isDev) {
 }
 
 app.listen(PORT, () => {
-  console.log(`Drop By server running on http://localhost:${PORT}`);
+  console.log(`dropby server running on http://localhost:${PORT}`);
 });
 
 export default app;

@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon-192.png', 'icon-512.png', 'icon-maskable-512.png'],
       manifest: {
-        name: 'Drop By',
-        short_name: 'Drop By',
+        name: 'dropby',
+        short_name: 'dropby',
         description: 'One tap tells your friends you\'re open to a spontaneous visit.',
         theme_color: '#10b981',
         background_color: '#10b981',

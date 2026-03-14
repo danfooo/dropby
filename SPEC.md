@@ -1,8 +1,8 @@
-# Drop By — Product Spec
+# dropby — Product Spec
 
 ## 1. Product Overview
 
-Drop By is a presence signal app. One tap tells your friends you're available for a spontaneous visit. No group chats, no planning — just a simple "my door is open" signal.
+dropby is a presence signal app. One tap tells your friends you're available for a spontaneous visit. No group chats, no planning — just a simple "my door is open" signal.
 
 ---
 

@@ -3,7 +3,7 @@ import { Resend } from "resend";
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
-const FROM = process.env.EMAIL_FROM || "Drop By <noreply@drop-by.app>";
+const FROM = process.env.EMAIL_FROM || "dropby <noreply@drop-by.app>";
 const APP_URL = () => process.env.APP_URL || "http://localhost:5173";
 
 async function send(to: string, subject: string, html: string) {
@@ -23,21 +23,21 @@ const verificationCopy: Record<string, {
   expiry: string;
 }> = {
   de: {
-    subject: 'Willkommen bei Drop By — bitte bestätige deine E-Mail',
+    subject: 'Willkommen bei dropby — bitte bestätige deine E-Mail',
     greeting: name => `Hey ${name},`,
     body: 'Schön, dass du dabei bist! Nur noch ein Schritt — klick unten, um deine E-Mail zu bestätigen:',
     linkText: 'E-Mail bestätigen',
     expiry: 'Dieser Link läuft in 24 Stunden ab.',
   },
   es: {
-    subject: 'Bienvenido a Drop By — por favor verifica tu correo',
+    subject: 'Bienvenido a dropby — por favor verifica tu correo',
     greeting: name => `Hola ${name},`,
     body: '¡Qué bueno que te unes! Solo un paso más — haz clic abajo para verificar tu correo:',
     linkText: 'Verificar mi correo',
     expiry: 'Este enlace expirará en 24 horas.',
   },
   fr: {
-    subject: 'Bienvenue sur Drop By — merci de vérifier ton e-mail',
+    subject: 'Bienvenue sur dropby — merci de vérifier ton e-mail',
     greeting: name => `Salut ${name},`,
     body: "Vraiment content·e que tu nous rejoignes ! Une dernière étape — clique ci-dessous pour vérifier ton e-mail :",
     linkText: 'Vérifier mon e-mail',
@@ -46,7 +46,7 @@ const verificationCopy: Record<string, {
 };
 
 const defaultVerificationCopy = {
-  subject: 'Welcome to Drop By — please verify your email',
+  subject: 'Welcome to dropby — please verify your email',
   greeting: (name: string) => `Hey ${name},`,
   body: "Really happy you're joining! Just one step left — click below to verify your email and you're in:",
   linkText: 'Verify my email',
@@ -80,9 +80,9 @@ export async function sendInviteEmail(
 ) {
   await send(
     to,
-    `${fromName} invited you to Drop By`,
+    `${fromName} invited you to dropby`,
     `
-    <p>${fromName} wants to connect with you on Drop By.</p>
+    <p>${fromName} wants to connect with you on dropby.</p>
     <p><a href="${inviteUrl}">Accept invite</a></p>
   `
   );
@@ -104,21 +104,21 @@ const resetCopy: Record<string, {
   expiry: string;
 }> = {
   de: {
-    subject: 'Drop By — Passwort zurücksetzen',
+    subject: 'dropby — Passwort zurücksetzen',
     greeting: name => `Hey ${name},`,
     body: 'Du hast eine Anfrage zum Zurücksetzen deines Passworts gestellt. Klick unten, um ein neues zu setzen:',
     linkText: 'Passwort zurücksetzen',
     expiry: 'Dieser Link läuft in 1 Stunde ab.',
   },
   es: {
-    subject: 'Drop By — Restablece tu contraseña',
+    subject: 'dropby — Restablece tu contraseña',
     greeting: name => `Hola ${name},`,
     body: 'Recibimos una solicitud para restablecer tu contraseña. Haz clic abajo para crear una nueva:',
     linkText: 'Restablecer contraseña',
     expiry: 'Este enlace expirará en 1 hora.',
   },
   fr: {
-    subject: 'Drop By — Réinitialise ton mot de passe',
+    subject: 'dropby — Réinitialise ton mot de passe',
     greeting: name => `Salut ${name},`,
     body: 'Nous avons reçu une demande de réinitialisation de ton mot de passe. Clique ci-dessous pour en créer un nouveau :',
     linkText: 'Réinitialiser mon mot de passe',
@@ -127,7 +127,7 @@ const resetCopy: Record<string, {
 };
 
 const defaultResetCopy = {
-  subject: 'Drop By — Reset your password',
+  subject: 'dropby — Reset your password',
   greeting: (name: string) => `Hey ${name},`,
   body: "We received a request to reset your password. Click below to set a new one:",
   linkText: 'Reset my password',
@@ -154,13 +154,13 @@ export async function sendPasswordResetEmail(
 export async function sendWelcomeMessage(contact: string, downloadUrl: string) {
   const isPhone = /^\+?[\d\s\-()]+$/.test(contact) && !contact.includes("@");
   if (isPhone) {
-    console.log(`[SMS] Welcome to Drop By! Download the app: ${downloadUrl}`);
+    console.log(`[SMS] Welcome to dropby! Download the app: ${downloadUrl}`);
   } else {
     await send(
       contact,
-      "Welcome to Drop By",
+      "Welcome to dropby",
       `
-      <p>You're on Drop By! Download the app:</p>
+      <p>You're on dropby! Download the app:</p>
       <p><a href="${downloadUrl}">${downloadUrl}</a></p>
     `
     );

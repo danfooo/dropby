@@ -1,8 +1,8 @@
-# Drop By — Full Product Spec
+# dropby — Full Product Spec
 
 ## 1. Product Overview
 
-Drop By is a presence signal app. One tap tells your friends you're open to a spontaneous visit right now. No group chats, no planning — just a low-commitment "swing by if you're around" signal.
+dropby is a presence signal app. One tap tells your friends you're open to a spontaneous visit right now. No group chats, no planning — just a low-commitment "swing by if you're around" signal.
 
 ---
 
@@ -213,7 +213,7 @@ Dedicated frontend page that handles email verification — never done via a dir
 - Reads `?token=` and optionally `?redirect=` from the URL
 - On mount, POSTs the token to `POST /api/auth/verify-email`
 - **Loading state**: spinner + "Verifying your email…"
-- **Success**: checkmark icon + "You're in!" + "Taking you to Drop By…" → auto-logged in (server returns JWT) → navigated to `redirect` param or `/home` after 1.5s
+- **Success**: checkmark icon + "You're in!" + "Taking you to dropby…" → auto-logged in (server returns JWT) → navigated to `redirect` param or `/home` after 1.5s
 - **Error** (token not found, expired, or already used): "Link expired or invalid" + "Back to sign in" button → `/auth`
 
 Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side to `/verify-email?token=:token` for backward compatibility.
@@ -356,7 +356,7 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 - Email input (type="email")
 - "Send invite" button
 - Sends a 30-day invite link to the email address via Resend transactional email
-- The email mentions who is inviting them ("[Name] wants to connect with you on Drop By")
+- The email mentions who is inviting them ("[Name] wants to connect with you on dropby")
 - Success state: "Invite sent!" with an "Invite someone else" link to reset the form
 - Error state: "Couldn't send invite" with ability to retry
 - Sending state: button shows "Sending…"
@@ -368,7 +368,7 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 **Token valid, user not logged in, host door is open**
 - Host avatar, display name, and note shown
 - "I'm going 🏃" button → opens web Going modal
-- "Sign up / Log in to join Drop By" link → `/auth?redirect=/invite/:token`
+- "Sign up / Log in to join dropby" link → `/auth?redirect=/invite/:token`
 
 **Token valid, user not logged in, host door is closed**
 - Redirect to `/auth?redirect=/invite/:token`
@@ -376,7 +376,7 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 **Token valid, user logged in, not yet friends**
 - Auto-accepts: creates friendship
 - If inviter's door is still open: new friend is silently added as a recipient; success screen shows "You're now friends!" + host's open door card with "Going ✅" button
-- If inviter's door is closed: success screen shows "You and [name] are now friends on Drop By" + "Go home" button
+- If inviter's door is closed: success screen shows "You and [name] are now friends on dropby" + "Go home" button
 
 **Token valid, user logged in, already friends**
 - No new friendship
@@ -384,7 +384,7 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 - If host's door is closed: show "You're already friends" + "Go home"
 
 **Token valid, own link**
-- "That's your own link! Share it with friends to join Drop By."
+- "That's your own link! Share it with friends to join dropby."
 
 **Token expired**
 - "This invite expired [relative time] ago" — relative time rounds down (e.g. 1h 45min → "1 hour ago")
@@ -534,7 +534,7 @@ Friendships are formed exclusively via invite links. There is no search, no dire
 **Sending by email**
 - From the Add Friend modal on the Friends page
 - Generates a 30-day link with `invited_email` set
-- Sends a Resend transactional email: "[Name] wants to connect with you on Drop By. [Accept invite link]"
+- Sends a Resend transactional email: "[Name] wants to connect with you on dropby. [Accept invite link]"
 - The invite appears in the Pending section until accepted or cancelled
 
 **Accepting a link — all cases**
@@ -656,10 +656,10 @@ No polling; the Home screen reflects friend state changes immediately.
 ## 9. Feedback Tool
 
 ### Purpose
-Lets users share thoughts on whether Drop By is helping make real moments happen, and report bugs or oddities. Designed to feel inviting, not clinical.
+Lets users share thoughts on whether dropby is helping make real moments happen, and report bugs or oddities. Designed to feel inviting, not clinical.
 
 ### Entry Points
-1. **Home tip card** — dismissible card in TipsSection (localStorage key `tip_feedback_dismissed`), shown after nudge and invite tip cards are resolved. Copy: "Enjoying Drop By? Your feedback shapes what gets built next." with a "Share thoughts →" button.
+1. **Home tip card** — dismissible card in TipsSection (localStorage key `tip_feedback_dismissed`), shown after nudge and invite tip cards are resolved. Copy: "Enjoying dropby? Your feedback shapes what gets built next." with a "Share thoughts →" button.
 2. **Profile page** — "Share feedback" button above Logout, always visible.
 
 ### FeedbackModal

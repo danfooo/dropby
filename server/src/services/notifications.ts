@@ -140,7 +140,7 @@ export function notifyNudge(userId: string, dayName: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>
     sendPush(t.token, t.platform, {
-      title: 'Drop By',
+      title: 'dropby',
       body: `Hey, got a free ${dayName}? Open your door`,
       data: { type: 'nudge' },
     })
@@ -151,7 +151,7 @@ export function notifyAutoNudge(userId: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>
     sendPush(t.token, t.platform, {
-      title: 'Drop By',
+      title: 'dropby',
       body: 'You opened your door this time last week — open it again?',
       data: { type: 'auto_nudge' },
     })
