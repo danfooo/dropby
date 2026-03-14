@@ -64,6 +64,9 @@ export default function Auth() {
       if (code === 'EMAIL_NOT_VERIFIED' || code === 'EMAIL_EXISTS_UNVERIFIED') {
         setError(t('auth.verifyEmailSent'));
         setShowResend(true);
+      } else if (err.response?.status === 409) {
+        setTab('login');
+        setMessage('Looks like you already have an account — log in below.');
       } else {
         setError(err.response?.data?.error || 'Something went wrong');
       }
