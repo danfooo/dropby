@@ -238,7 +238,11 @@ export default function Home() {
   const copyInviteLink = async () => {
     try {
       const data = await invitesApi.generate(myStatus?.id);
-      await navigator.clipboard.writeText(data.url);
+      const note = myStatus?.note;
+      const text = note
+        ? `${t('home.doorOpenCopyText')} — "${note}"\n${data.url}`
+        : `${t('home.doorOpenCopyText')}\n${data.url}`;
+      await navigator.clipboard.writeText(text);
       alert(t('home.inviteLinkCopied'));
     } catch {
       alert(t('home.couldNotCopy'));
@@ -694,7 +698,7 @@ function TipsSection() {
         onClick={async () => {
           const { invitesApi } = await import('../api');
           const data = await invitesApi.generate();
-          await navigator.clipboard.writeText(data.url);
+          await navigator.clipboard.writeText(`${t('home.friendshipCopyText')}\n${data.url}`);
           setToast({ message: t('home.inviteLinkCopied'), linkText: '', linkTo: '' });
         }}
         className="text-sm font-semibold text-emerald-600"

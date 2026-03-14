@@ -60,7 +60,7 @@ export default function Friends() {
   const handleInvite = async () => {
     try {
       const data = await invitesApi.generate();
-      await navigator.clipboard.writeText(data.url);
+      await navigator.clipboard.writeText(`${t('home.friendshipCopyText')}\n${data.url}`);
       alert(t('home.inviteLinkCopied'));
     } catch {
       alert(t('home.couldNotCopy'));

@@ -99,6 +99,8 @@
     "feedbackTipLink": "Partager →",
     "coffeeTipText": "Quelqu'un est passé. Si Drop By t'a offert un vrai moment, pense à nous soutenir ☕",
     "coffeeTipLink": "Soutenir Drop By →",
+    "doorOpenCopyText": "J'ai ouvert ma porte pour toi sur Drop By",
+    "friendshipCopyText": "Passe quand ma porte est ouverte.",
     "inviteLinkCopied": "Lien d'invitation copié !",
     "couldNotCopy": "Impossible de copier le lien"
   },
