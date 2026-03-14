@@ -11,6 +11,7 @@ import Modal from '../components/Modal';
 import Toast from '../components/Toast';
 import FeedbackModal from '../components/FeedbackModal';
 import { getSuggestions } from '../i18n/suggestions';
+import { copyText } from '../utils/clipboard';
 
 type HomeView = 'closed' | 'open' | 'edit';
 
@@ -237,12 +238,14 @@ export default function Home() {
 
   const copyInviteLink = async () => {
     try {
-      const data = await invitesApi.generate(myStatus?.id);
       const note = myStatus?.note;
-      const text = note
-        ? `${t('home.doorOpenCopyText')} — "${note}"\n${data.url}`
-        : `${t('home.doorOpenCopyText')}\n${data.url}`;
-      await navigator.clipboard.writeText(text);
+      await copyText(
+        invitesApi.generate(myStatus?.id).then(data =>
+          note
+            ? `${t('home.doorOpenCopyText')} — "${note}"\n${data.url}`
+            : `${t('home.doorOpenCopyText')}\n${data.url}`
+        )
+      );
       alert(t('home.inviteLinkCopied'));
     } catch {
       alert(t('home.couldNotCopy'));
@@ -696,9 +699,7 @@ function TipsSection() {
       </div>
       <button
         onClick={async () => {
-          const { invitesApi } = await import('../api');
-          const data = await invitesApi.generate();
-          await navigator.clipboard.writeText(`${t('home.friendshipCopyText')}\n${data.url}`);
+          await copyText(invitesApi.generate().then(data => `${t('home.friendshipCopyText')}\n${data.url}`));
           setToast({ message: t('home.inviteLinkCopied'), linkText: '', linkTo: '' });
         }}
         className="text-sm font-semibold text-emerald-600"

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { copyText } from '../utils/clipboard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { friendsApi, invitesApi } from '../api';
