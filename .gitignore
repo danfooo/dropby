@@ -3,7 +3,7 @@ node_modules/
 dist/
 .env
 server/data/
-db-snapshot/
+db-snapshot-*/
 client/dist/
 ios/
 android/
