@@ -6,6 +6,8 @@ server/data/
 db-snapshot-*/
 client/dist/
 ios/
-android/
+android/app/google-services.json
+android/local.properties
+android/.gradle/
 .DS_Store
 *.log
