@@ -388,7 +388,7 @@ export default function Home() {
         {/* Recipient selection */}
         {hasFriends && (
           <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900 mb-2">{t('home.notifyFriends')}</h2>
+            <h2 className="text-sm font-semibold text-gray-900 mb-2">{t('home.openDoorTo')}</h2>
             <div className="divide-y divide-gray-50">
               {activeFriends.map((f: any) => (
                 <label key={f.id} className="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-50 -mx-4 px-4 transition-colors">
@@ -558,7 +558,7 @@ export default function Home() {
       {/* Recipients */}
       {myStatus?.recipients.length > 0 && (
         <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900 mb-2">{t('home.notified')}</h2>
+          <h2 className="text-sm font-semibold text-gray-900 mb-2">{t('home.invited')}</h2>
           {myStatus.recipients.map((r: any) => (
             <RecipientRow
               key={r.id}
