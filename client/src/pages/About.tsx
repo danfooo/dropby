@@ -32,10 +32,9 @@ export default function About() {
 
       <section>
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Privacy</h2>
-        <p className="text-sm text-gray-500">
-          Questions about your data? Write to{' '}
-          <a href="mailto:hello@dropby.cc" className="text-emerald-600 hover:underline">hello@dropby.cc</a>.
-        </p>
+        <Link to="/privacy" className="text-sm text-emerald-600 hover:underline">
+          Privacy Policy →
+        </Link>
       </section>
     </div>
   );
