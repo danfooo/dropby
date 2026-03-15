@@ -283,6 +283,8 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 - "Notified" label if they were sent a push notification when the door opened
 - "On their way ✅" label if they've sent a Going signal
 - × button to remove with 3-second undo pattern (see Core Behaviors)
+- Active invite links for this session shown below named recipients: link icon, "Anyone with link", creation time (e.g. "3h ago"), × to revoke (3-second undo)
+- The section renders if either named recipients or active invite links exist
 
 **Invite link row**
 - "Anyone with link" row — tap to copy a fresh 7-day invite link with `status_id` attached

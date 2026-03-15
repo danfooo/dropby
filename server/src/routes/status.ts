@@ -48,6 +48,13 @@ function formatStatus(status: any, userId: string) {
     ? db.prepare('SELECT id, rsvp FROM going_signals WHERE status_id = ? AND user_id = ?').get(status.id, userId) as any
     : null;
 
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const inviteLinks = db.prepare(`
+    SELECT token, created_at FROM invite_links
+    WHERE status_id = ? AND revoked = 0 AND expires_at > ?
+    ORDER BY created_at DESC
+  `).all(status.id, nowUnix) as Array<{ token: string; created_at: number }>;
+
   return {
     id: status.id,
     note: status.note,
@@ -57,6 +64,7 @@ function formatStatus(status: any, userId: string) {
     starts_at: status.starts_at || null,
     ends_at: status.ends_at || null,
     recipients,
+    invite_links: inviteLinks,
     going_signals: goingSignals.map(g => ({
       id: g.id,
       name: g.display_name || g.guest_name || 'Guest',
