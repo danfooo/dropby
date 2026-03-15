@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { db } from './db/index.js';
-import { notifyDoorClosingSoon, notifyNudge, notifyAutoNudge } from './services/notifications.js';
+import { notifyDoorClosingSoon, notifyNudge, notifyAutoNudge, notifyScheduledReminder } from './services/notifications.js';
 import { randomUUID } from 'crypto';
 
 const DAY_NAMES: Record<string, string> = {
@@ -29,6 +29,25 @@ cron.schedule('* * * * *', () => {
   for (const s of closingSoon) {
     notifyDoorClosingSoon(s.user_id, s.id);
     db.prepare('UPDATE statuses SET closing_notification_sent = 1 WHERE id = ?').run(s.id);
+  }
+});
+
+// Every minute: fire scheduled session reminders to host
+cron.schedule('* * * * *', () => {
+  const now = Math.floor(Date.now() / 1000);
+
+  const toRemind = db.prepare(`
+    SELECT id, user_id, starts_at, reminder_minutes FROM statuses
+    WHERE closed_at IS NULL
+      AND starts_at IS NOT NULL AND starts_at > ?
+      AND reminder_minutes IS NOT NULL
+      AND reminder_sent = 0
+      AND (starts_at - reminder_minutes * 60) <= ?
+  `).all(now, now) as Array<{ id: string; user_id: string; starts_at: number; reminder_minutes: number }>;
+
+  for (const s of toRemind) {
+    notifyScheduledReminder(s.user_id, s.starts_at);
+    db.prepare('UPDATE statuses SET reminder_sent = 1 WHERE id = ?').run(s.id);
   }
 });
 

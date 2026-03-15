@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
 import { useAuthStore } from '../stores/auth';
 import { invitesApi, goingApi } from '../api';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
 import { copyText } from '../utils/clipboard';
+
+function formatScheduledTime(startsAt: number, endsAt?: number | null): string {
+  const start = format(new Date(startsAt * 1000), 'EEE, MMM d · h:mm a');
+  if (endsAt) return `${start} – ${format(new Date(endsAt * 1000), 'h:mm a')}`;
+  return start;
+}
 
 export default function Invite() {
   const { t } = useTranslation();
@@ -61,7 +68,7 @@ export default function Invite() {
     }
   }, [info, user]);
 
-  // Redirect not-logged-in users when door is closed, or when invite is expired
+  // Redirect not-logged-in users only when there's no status at all (not even scheduled)
   useEffect(() => {
     if (!user && !loading && (error === 'EXPIRED' || (info && !info.status))) {
       navigate(`/auth?redirect=/invite/${token}`, { replace: true });
@@ -189,14 +196,21 @@ export default function Invite() {
     );
   }
 
-  // Not logged in, door open: show door card
+  // Not logged in, door open or scheduled: show door card
   if (!user && info.status) {
+    const isScheduled = info.status.starts_at && info.status.starts_at > Math.floor(Date.now() / 1000);
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-10">
         <div className="w-full max-w-sm text-center">
           <Avatar name={info.inviter.display_name} size="lg" className="mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900">{info.inviter.display_name}</h1>
-          <p className="text-gray-500 mb-1">{t('invite.hasTheirDoorOpen')}</p>
+          {isScheduled ? (
+            <p className="text-violet-600 font-semibold mb-1 mt-1">
+              🕐 {formatScheduledTime(info.status.starts_at, info.status.ends_at)}
+            </p>
+          ) : (
+            <p className="text-gray-500 mb-1">{t('invite.hasTheirDoorOpen')}</p>
+          )}
           {info.status.note && (
             <p className="text-lg font-medium text-gray-800 mb-4">"{info.status.note}"</p>
           )}
@@ -208,12 +222,21 @@ export default function Invite() {
               <p className="text-sm text-emerald-600 mt-1">{t('invite.weNotifiedThem', { name: info.inviter.display_name })}</p>
             </div>
           ) : (
-            <button
-              onClick={() => setShowGoingForm(true)}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-semibold text-lg mb-4"
-            >
-              {t('home.goingButton')}
-            </button>
+            <div className="flex gap-3 mb-4">
+              <button
+                onClick={() => setShowGoingForm(true)}
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-semibold text-base"
+              >
+                {t('invite.rsvpGoing')}
+              </button>
+              <button
+                onClick={() => setShowGoingForm(true)}
+                className="flex-1 bg-amber-400 hover:bg-amber-500 text-white py-4 rounded-2xl font-semibold text-base"
+                data-rsvp="maybe"
+              >
+                {t('invite.rsvpMaybe')}
+              </button>
+            </div>
           )}
 
           <Link to={`/auth?redirect=/invite/${token}`} className="text-sm text-gray-500 underline">
@@ -225,6 +248,7 @@ export default function Invite() {
           open={showGoingForm}
           onClose={() => setShowGoingForm(false)}
           statusId={info.status.id}
+          isScheduled={!!isScheduled}
           onSuccess={() => { setGoingDone(true); setShowGoingForm(false); }}
         />
       </div>
@@ -241,11 +265,12 @@ export default function Invite() {
   );
 }
 
-function GuestGoingModal({ open, onClose, statusId, onSuccess }: { open: boolean; onClose: () => void; statusId: string; onSuccess: () => void }) {
+function GuestGoingModal({ open, onClose, statusId, isScheduled, onSuccess }: { open: boolean; onClose: () => void; statusId: string; isScheduled: boolean; onSuccess: () => void }) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [consent, setConsent] = useState(false);
+  const [rsvp, setRsvp] = useState<'going' | 'maybe'>('going');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -258,6 +283,7 @@ function GuestGoingModal({ open, onClose, statusId, onSuccess }: { open: boolean
         name: name.trim(),
         contact: contact.trim() || undefined,
         marketing_consent: consent,
+        rsvp,
       });
       onSuccess();
     } catch (err: any) {
@@ -268,9 +294,31 @@ function GuestGoingModal({ open, onClose, statusId, onSuccess }: { open: boolean
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={t('invite.goingModalTitle')}>
+    <Modal open={open} onClose={onClose} title={isScheduled ? t('invite.rsvpModalTitle') : t('invite.goingModalTitle')}>
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-3">
+        {isScheduled && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setRsvp('going')}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                rsvp === 'going' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-gray-50 text-gray-700 border-gray-200'
+              }`}
+            >
+              {t('invite.rsvpGoing')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRsvp('maybe')}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                rsvp === 'maybe' ? 'bg-amber-400 text-white border-amber-400' : 'bg-gray-50 text-gray-700 border-gray-200'
+              }`}
+            >
+              {t('invite.rsvpMaybe')}
+            </button>
+          </div>
+        )}
         <input
           type="text"
           placeholder={t('invite.firstName')}

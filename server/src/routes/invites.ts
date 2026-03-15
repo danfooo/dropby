@@ -23,8 +23,13 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
     const status = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND closes_at > ?').get(status_id, userId, nowUnix);
     if (status) resolvedStatusId = status_id;
   } else {
-    // Check if user has active status, auto-attach
-    const active = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(userId, nowUnix) as any;
+    // Check if user has active or scheduled status, auto-attach
+    const active = db.prepare(`
+      SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL
+        AND (closes_at > ? OR starts_at > ?)
+      ORDER BY CASE WHEN starts_at IS NULL OR starts_at <= ? THEN 0 ELSE 1 END
+      LIMIT 1
+    `).get(userId, nowUnix, nowUnix, nowUnix) as any;
     if (active) resolvedStatusId = active.id;
   }
 
@@ -67,8 +72,11 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
   const inviter = db.prepare('SELECT id, display_name FROM users WHERE id = ?').get(invite.created_by) as any;
   let status = null;
   if (invite.status_id) {
-    const s = db.prepare('SELECT * FROM statuses WHERE id = ? AND closed_at IS NULL AND closes_at > ?').get(invite.status_id, nowUnix) as any;
-    if (s) status = { id: s.id, note: s.note, closes_at: s.closes_at };
+    const s = db.prepare(`
+      SELECT * FROM statuses WHERE id = ? AND closed_at IS NULL
+        AND (closes_at > ? OR starts_at > ?)
+    `).get(invite.status_id, nowUnix, nowUnix) as any;
+    if (s) status = { id: s.id, note: s.note, closes_at: s.closes_at, starts_at: s.starts_at || null, ends_at: s.ends_at || null };
   }
 
   let alreadyFriends = false;

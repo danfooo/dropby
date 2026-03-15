@@ -17,36 +17,47 @@ router.get('/ever-received', requireAuth, (req: AuthRequest, res) => {
   res.json({ received: row.n > 0 });
 });
 
-// POST /api/going/:statusId — logged-in going signal
+// POST /api/going/:statusId — logged-in RSVP (going or maybe), changeable
 router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
   const { statusId } = req.params;
   const userId = req.userId!;
+  const { rsvp = 'going' } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
 
-  const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND closed_at IS NULL AND closes_at > ?').get(statusId, nowUnix) as any;
+  // Accept active or scheduled statuses
+  const status = db.prepare(`
+    SELECT * FROM statuses WHERE id = ? AND closed_at IS NULL
+      AND (closes_at > ? OR starts_at > ?)
+  `).get(statusId, nowUnix, nowUnix) as any;
   if (!status) return res.status(404).json({ error: 'Status not found or expired' });
 
-  // Idempotent
-  const existing = db.prepare('SELECT id FROM going_signals WHERE status_id = ? AND user_id = ?').get(statusId, userId);
-  if (existing) return res.json({ ok: true, already: true });
+  const validRsvp = rsvp === 'maybe' ? 'maybe' : 'going';
 
-  db.prepare('INSERT INTO going_signals (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, userId);
+  // Upsert — allow changing RSVP
+  db.prepare(`
+    INSERT INTO going_signals (id, status_id, user_id, rsvp) VALUES (?, ?, ?, ?)
+    ON CONFLICT(status_id, user_id) DO UPDATE SET rsvp = excluded.rsvp
+  `).run(randomUUID(), statusId, userId, validRsvp);
 
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
-  notifyGoingSignal(status.user_id, user.display_name);
+  if (validRsvp === 'going') notifyGoingSignal(status.user_id, user.display_name);
 
   res.status(201).json({ ok: true });
 });
 
-// POST /api/going/:statusId/guest — web guest going signal
+// POST /api/going/:statusId/guest — web guest RSVP
 router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
   const { statusId } = req.params;
-  const { name, contact, marketing_consent } = req.body;
+  const { name, contact, marketing_consent, rsvp = 'going' } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
 
   if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
 
-  const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND closed_at IS NULL AND closes_at > ?').get(statusId, nowUnix) as any;
+  // Accept active or scheduled statuses
+  const status = db.prepare(`
+    SELECT * FROM statuses WHERE id = ? AND closed_at IS NULL
+      AND (closes_at > ? OR starts_at > ?)
+  `).get(statusId, nowUnix, nowUnix) as any;
   if (!status) return res.status(404).json({ error: 'Status not found or expired' });
 
   const guestContactId = randomUUID();
@@ -60,11 +71,13 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
     sendWelcomeMessage(contact.trim(), `${appUrl}/download`);
   }
 
-  db.prepare('INSERT INTO going_signals (id, status_id, user_id, guest_contact_id) VALUES (?, ?, NULL, ?)').run(
-    randomUUID(), statusId, guestContactId
+  const validRsvp = rsvp === 'maybe' ? 'maybe' : 'going';
+
+  db.prepare('INSERT INTO going_signals (id, status_id, user_id, guest_contact_id, rsvp) VALUES (?, ?, NULL, ?, ?)').run(
+    randomUUID(), statusId, guestContactId, validRsvp
   );
 
-  notifyGoingSignal(status.user_id, name.trim());
+  if (validRsvp === 'going') notifyGoingSignal(status.user_id, name.trim());
   res.status(201).json({ ok: true });
 });
 

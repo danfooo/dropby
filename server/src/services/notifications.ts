@@ -147,6 +147,32 @@ export function notifyNudge(userId: string, dayName: string) {
   );
 }
 
+export function notifyScheduledSession(recipientId: string, hostName: string, startsAt: number) {
+  const tokens = getPushTokens(recipientId);
+  const date = new Date(startsAt * 1000);
+  const dayTime = date.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true });
+  tokens.forEach(t =>
+    sendPush(t.token, t.platform, {
+      title: `${hostName} scheduled a session`,
+      body: `Opening ${dayTime}`,
+      data: { type: 'scheduled_session' },
+    })
+  );
+}
+
+export function notifyScheduledReminder(userId: string, startsAt: number) {
+  const tokens = getPushTokens(userId);
+  const date = new Date(startsAt * 1000);
+  const timeStr = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  tokens.forEach(t =>
+    sendPush(t.token, t.platform, {
+      title: 'dropby',
+      body: `Your door is scheduled to open at ${timeStr} — ready?`,
+      data: { type: 'scheduled_reminder' },
+    })
+  );
+}
+
 export function notifyAutoNudge(userId: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>

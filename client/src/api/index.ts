@@ -60,13 +60,16 @@ export const friendsApi = {
 // Status
 export const statusApi = {
   get: () => api.get('/status').then(r => r.data),
+  getScheduled: () => api.get('/status/scheduled').then(r => r.data),
   getFriends: () => api.get('/status/friends').then(r => r.data),
   getLastSelection: () => api.get('/status/last-selection').then(r => r.data),
-  create: (data: { note?: string; recipient_ids: string[] }) =>
+  create: (data: { note?: string; recipient_ids: string[]; starts_at?: number; ends_at?: number; reminder_minutes?: number }) =>
     api.post('/status', data).then(r => r.data),
-  update: (data: { note?: string; recipient_ids?: string[] }) =>
+  update: (data: { note?: string; recipient_ids?: string[]; ends_at?: number }) =>
     api.put('/status', data).then(r => r.data),
   close: () => api.delete('/status').then(r => r.data),
+  cancelScheduled: () => api.delete('/status/scheduled').then(r => r.data),
+  activate: (statusId: string) => api.post(`/status/${statusId}/activate`).then(r => r.data),
   prolong: () => api.post('/status/prolong').then(r => r.data),
   removeRecipient: (recipientId: string) => api.delete(`/status/recipients/${recipientId}`).then(r => r.data),
 };
@@ -84,8 +87,8 @@ export const invitesApi = {
 // Going
 export const goingApi = {
   everReceived: () => api.get('/going/ever-received').then(r => r.data),
-  send: (statusId: string) => api.post(`/going/${statusId}`).then(r => r.data),
-  sendGuest: (statusId: string, data: { name: string; contact?: string; marketing_consent?: boolean }) =>
+  send: (statusId: string, rsvp: 'going' | 'maybe' = 'going') => api.post(`/going/${statusId}`, { rsvp }).then(r => r.data),
+  sendGuest: (statusId: string, data: { name: string; contact?: string; marketing_consent?: boolean; rsvp?: 'going' | 'maybe' }) =>
     api.post(`/going/${statusId}/guest`, data).then(r => r.data),
 };
 

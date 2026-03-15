@@ -165,4 +165,23 @@ if (!sessionCols.find(c => c.name === 'unselected_ids')) {
   db.exec("ALTER TABLE recipient_sessions ADD COLUMN unselected_ids TEXT NOT NULL DEFAULT '[]'");
 }
 
+const statusCols = db.pragma('table_info(statuses)') as { name: string }[];
+if (!statusCols.find(c => c.name === 'starts_at')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN starts_at INTEGER');
+}
+if (!statusCols.find(c => c.name === 'ends_at')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN ends_at INTEGER');
+}
+if (!statusCols.find(c => c.name === 'reminder_minutes')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN reminder_minutes INTEGER');
+}
+if (!statusCols.find(c => c.name === 'reminder_sent')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0');
+}
+
+const goingCols = db.pragma('table_info(going_signals)') as { name: string }[];
+if (!goingCols.find(c => c.name === 'rsvp')) {
+  db.exec("ALTER TABLE going_signals ADD COLUMN rsvp TEXT NOT NULL DEFAULT 'going'");
+}
+
 export default db;

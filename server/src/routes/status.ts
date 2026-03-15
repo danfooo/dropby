@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
-import { notifyFriendDoorOpen } from '../services/notifications.js';
+import { notifyFriendDoorOpen, notifyScheduledSession, notifyScheduledReminder } from '../services/notifications.js';
 import { broadcastSSE } from '../services/sse.js';
 import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 
@@ -11,7 +11,17 @@ const router = Router();
 function getActiveStatus(userId: string) {
   const nowUnix = Math.floor(Date.now() / 1000);
   return db.prepare(`
-    SELECT * FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?
+    SELECT * FROM statuses
+    WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?
+      AND (starts_at IS NULL OR starts_at <= ?)
+  `).get(userId, nowUnix, nowUnix) as any | undefined;
+}
+
+function getScheduledStatus(userId: string) {
+  const nowUnix = Math.floor(Date.now() / 1000);
+  return db.prepare(`
+    SELECT * FROM statuses
+    WHERE user_id = ? AND closed_at IS NULL AND starts_at > ?
   `).get(userId, nowUnix) as any | undefined;
 }
 
@@ -24,7 +34,7 @@ function formatStatus(status: any, userId: string) {
   `).all(status.id) as Array<{ id: string; display_name: string }>;
 
   const goingSignals = db.prepare(`
-    SELECT gs.id, gs.created_at,
+    SELECT gs.id, gs.created_at, gs.rsvp,
       u.id as user_id, u.display_name,
       gc.name as guest_name
     FROM going_signals gs
@@ -35,7 +45,7 @@ function formatStatus(status: any, userId: string) {
   `).all(status.id) as any[];
 
   const myGoing = userId
-    ? db.prepare('SELECT id FROM going_signals WHERE status_id = ? AND user_id = ?').get(status.id, userId)
+    ? db.prepare('SELECT id, rsvp FROM going_signals WHERE status_id = ? AND user_id = ?').get(status.id, userId) as any
     : null;
 
   return {
@@ -44,23 +54,33 @@ function formatStatus(status: any, userId: string) {
     closes_at: status.closes_at,
     closed_at: status.closed_at,
     created_at: status.created_at,
+    starts_at: status.starts_at || null,
+    ends_at: status.ends_at || null,
     recipients,
     going_signals: goingSignals.map(g => ({
       id: g.id,
       name: g.display_name || g.guest_name || 'Guest',
+      rsvp: g.rsvp || 'going',
       created_at: g.created_at,
     })),
     my_going: Boolean(myGoing),
+    my_rsvp: myGoing?.rsvp || null,
   };
 }
 
-// GET /api/status
+// GET /api/status — active status
 router.get('/', requireAuth, (req: AuthRequest, res) => {
   const status = getActiveStatus(req.userId!);
   res.json(formatStatus(status, req.userId!));
 });
 
-// GET /api/status/friends — friends with active statuses visible to this user
+// GET /api/status/scheduled — pending scheduled status
+router.get('/scheduled', requireAuth, (req: AuthRequest, res) => {
+  const status = getScheduledStatus(req.userId!);
+  res.json(formatStatus(status, req.userId!));
+});
+
+// GET /api/status/friends — friends with active or upcoming statuses visible to this user
 router.get('/friends', requireAuth, (req: AuthRequest, res) => {
   const nowUnix = Math.floor(Date.now() / 1000);
   const userId = req.userId!;
@@ -73,14 +93,17 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
     JOIN friendships f ON
       (f.user_a_id = ? AND f.user_b_id = s.user_id) OR
       (f.user_b_id = ? AND f.user_a_id = s.user_id)
-    WHERE s.closed_at IS NULL AND s.closes_at > ?
-    ORDER BY s.created_at DESC
-  `).all(userId, userId, userId, nowUnix) as any[];
+    WHERE s.closed_at IS NULL AND (
+      ((s.starts_at IS NULL OR s.starts_at <= ?) AND s.closes_at > ?)
+      OR s.starts_at > ?
+    )
+    ORDER BY COALESCE(s.starts_at, s.created_at) ASC
+  `).all(userId, userId, userId, nowUnix, nowUnix, nowUnix) as any[];
 
-  const myGoing = db.prepare(`
-    SELECT status_id FROM going_signals WHERE user_id = ?
-  `).all(userId) as Array<{ status_id: string }>;
-  const goingSet = new Set(myGoing.map(g => g.status_id));
+  const myRsvps = db.prepare(`
+    SELECT status_id, rsvp FROM going_signals WHERE user_id = ?
+  `).all(userId) as Array<{ status_id: string; rsvp: string }>;
+  const rsvpMap = new Map(myRsvps.map(r => [r.status_id, r.rsvp]));
 
   res.json(friendStatuses.map(s => ({
     id: s.id,
@@ -88,14 +111,17 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
     owner_name: s.display_name,
     note: s.note,
     closes_at: s.closes_at,
-    my_going: goingSet.has(s.id),
+    starts_at: s.starts_at || null,
+    ends_at: s.ends_at || null,
+    my_going: rsvpMap.has(s.id),
+    my_rsvp: rsvpMap.get(s.id) || null,
   })));
 });
 
-// POST /api/status — create
+// POST /api/status — create (spontaneous or scheduled)
 router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
-  const { recipient_ids = [] } = req.body;
+  const { recipient_ids = [], starts_at: rawStartsAt, ends_at: rawEndsAt, reminder_minutes: rawReminderMinutes } = req.body;
 
   let note: string | undefined = req.body.note;
   if (note) {
@@ -104,19 +130,30 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     if (!(await isNoteAllowed(note))) note = undefined;
   }
 
-  // Close any existing active status
-  const existing = getActiveStatus(userId);
-  if (existing) {
-    db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(Math.floor(Date.now() / 1000), existing.id);
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const isScheduled = rawStartsAt && Number(rawStartsAt) > nowUnix;
+
+  if (isScheduled && !rawEndsAt) {
+    return res.status(400).json({ error: 'ends_at required for scheduled sessions' });
   }
 
-  const nowUnix = Math.floor(Date.now() / 1000);
-  const closesAt = nowUnix + 30 * 60;
+  const startsAt: number | null = isScheduled ? Number(rawStartsAt) : null;
+  const endsAt: number | null = rawEndsAt ? Number(rawEndsAt) : null;
+  const reminderMinutes: number | null = isScheduled ? (rawReminderMinutes ?? 30) : null;
+  const closesAt = isScheduled ? Number(rawEndsAt) : nowUnix + 30 * 60;
+
+  // Close any existing active status (not scheduled ones)
+  const existing = getActiveStatus(userId);
+  if (existing) {
+    db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, existing.id);
+  }
+
   const statusId = randomUUID();
 
   db.prepare(`
-    INSERT INTO statuses (id, user_id, note, closes_at) VALUES (?, ?, ?, ?)
-  `).run(statusId, userId, note || null, closesAt);
+    INSERT INTO statuses (id, user_id, note, closes_at, starts_at, ends_at, reminder_minutes)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(statusId, userId, note || null, closesAt, startsAt, endsAt, reminderMinutes);
 
   // Add recipients (only friends)
   const friendIds = (db.prepare(`
@@ -130,41 +167,91 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, rid);
   }
 
-  // Save last selection (unselected = all friends minus those who were picked)
+  // Save last selection
   const unselectedOnCreate = friendIds.filter((id: string) => !validRecipients.includes(id));
   db.prepare(`
     INSERT INTO recipient_sessions (user_id, selected_ids, unselected_ids, updated_at) VALUES (?, ?, ?, ?)
     ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
   `).run(userId, JSON.stringify(validRecipients), JSON.stringify(unselectedOnCreate), nowUnix);
 
-  // Send push notifications (exclude muted)
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
   const mutedByMe = db.prepare('SELECT muted_user_id FROM friend_mutes WHERE user_id = ?').all(userId).map((r: any) => r.muted_user_id);
 
-  for (const rid of validRecipients) {
-    if (mutedByMe.includes(rid)) continue;
-    notifyFriendDoorOpen(rid, user.display_name, note || null);
-  }
+  if (isScheduled) {
+    // Notify invitees about the upcoming scheduled session
+    for (const rid of validRecipients) {
+      if (mutedByMe.includes(rid)) continue;
+      notifyScheduledSession(rid, user.display_name, startsAt!);
+    }
+  } else {
+    // Notify invitees that door is open now
+    for (const rid of validRecipients) {
+      if (mutedByMe.includes(rid)) continue;
+      notifyFriendDoorOpen(rid, user.display_name, note || null);
+    }
 
-  // Broadcast SSE to all recipients
-  broadcastSSE(validRecipients, 'status:open', {
-    status_id: statusId,
-    owner_id: userId,
-    owner_name: user.display_name,
-    note: note || null,
-    closes_at: closesAt,
-  });
+    broadcastSSE(validRecipients, 'status:open', {
+      status_id: statusId,
+      owner_id: userId,
+      owner_name: user.display_name,
+      note: note || null,
+      closes_at: closesAt,
+    });
+  }
 
   const status = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
   res.status(201).json(status);
 });
 
-// PUT /api/status — update note + recipients
+// POST /api/status/:statusId/activate — open a scheduled session
+router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const { statusId } = req.params;
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  const scheduled = db.prepare(`
+    SELECT * FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND starts_at > ?
+  `).get(statusId, userId, nowUnix) as any;
+  if (!scheduled) return res.status(404).json({ error: 'No pending scheduled session found' });
+
+  // Close any currently active session
+  const existing = getActiveStatus(userId);
+  if (existing) {
+    db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, existing.id);
+  }
+
+  // Activate: clear starts_at (keep closes_at = ends_at)
+  db.prepare('UPDATE statuses SET starts_at = NULL WHERE id = ?').run(statusId);
+
+  // Notify recipients that door is now open
+  const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+  const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?').all(statusId).map((r: any) => r.user_id);
+  const mutedByMe = db.prepare('SELECT muted_user_id FROM friend_mutes WHERE user_id = ?').all(userId).map((r: any) => r.muted_user_id);
+
+  for (const rid of recipients) {
+    if (mutedByMe.includes(rid)) continue;
+    notifyFriendDoorOpen(rid, user.display_name, scheduled.note || null);
+  }
+
+  broadcastSSE(recipients, 'status:open', {
+    status_id: statusId,
+    owner_id: userId,
+    owner_name: user.display_name,
+    note: scheduled.note || null,
+    closes_at: scheduled.closes_at,
+  });
+
+  const status = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
+  res.json(status);
+});
+
+// PUT /api/status — update note + recipients (+ starts_at/ends_at for scheduled)
 router.put('/', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
-  let { note, recipient_ids } = req.body;
+  let { note, recipient_ids, ends_at } = req.body;
 
-  const status = getActiveStatus(userId);
+  // Try active first, then scheduled
+  const status = getActiveStatus(userId) || getScheduledStatus(userId);
   if (!status) return res.status(404).json({ error: 'No active status' });
 
   if (note !== undefined) {
@@ -174,6 +261,11 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
       if (!(await isNoteAllowed(note))) note = null;
     }
     db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, status.id);
+  }
+
+  if (ends_at !== undefined) {
+    const newEndsAt = ends_at ? Number(ends_at) : null;
+    db.prepare('UPDATE statuses SET ends_at = ?, closes_at = COALESCE(?, closes_at) WHERE id = ?').run(newEndsAt, newEndsAt, status.id);
   }
 
   if (recipient_ids !== undefined) {
@@ -199,7 +291,7 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
   res.json(updated);
 });
 
-// DELETE /api/status — close
+// DELETE /api/status — close active session
 router.delete('/', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
   const status = getActiveStatus(userId);
@@ -208,10 +300,20 @@ router.delete('/', requireAuth, (req: AuthRequest, res) => {
   const nowUnix = Math.floor(Date.now() / 1000);
   db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, status.id);
 
-  // Notify recipients via SSE
   const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?').all(status.id).map((r: any) => r.user_id);
   broadcastSSE(recipients, 'status:close', { status_id: status.id, owner_id: userId });
 
+  res.json({ ok: true });
+});
+
+// DELETE /api/status/scheduled — cancel pending scheduled session
+router.delete('/scheduled', requireAuth, (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const status = getScheduledStatus(userId);
+  if (!status) return res.status(404).json({ error: 'No scheduled session' });
+
+  const nowUnix = Math.floor(Date.now() / 1000);
+  db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, status.id);
   res.json({ ok: true });
 });
 

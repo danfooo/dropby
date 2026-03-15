@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { differenceInSeconds } from 'date-fns';
+import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
 import Avatar from '../components/Avatar';
@@ -15,40 +15,69 @@ import { copyText } from '../utils/clipboard';
 
 type HomeView = 'closed' | 'open' | 'edit';
 
-// Friend status card (door open)
-function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: string) => void }) {
+function formatTime(ts: number): string {
+  return format(new Date(ts * 1000), 'EEE h:mm a');
+}
+
+function formatTimeShort(ts: number): string {
+  return format(new Date(ts * 1000), 'h:mm a');
+}
+
+// Friend status card (door open or upcoming)
+function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: string, rsvp: 'going' | 'maybe') => void }) {
   const { t } = useTranslation();
-  const [going, setGoing] = useState(status.my_going);
-  const handleGoing = async () => {
-    if (going) return;
-    setGoing(true);
-    await onGoing(status.id);
+  const isScheduled = status.starts_at && status.starts_at > Math.floor(Date.now() / 1000);
+  const [myRsvp, setMyRsvp] = useState<'going' | 'maybe' | null>(status.my_rsvp || null);
+
+  const handleRsvp = async (rsvp: 'going' | 'maybe') => {
+    if (myRsvp === rsvp) return;
+    setMyRsvp(rsvp);
+    await onGoing(status.id, rsvp);
   };
+
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+    <div className={`rounded-2xl p-4 shadow-sm border ${isScheduled ? 'bg-white border-gray-200' : 'bg-white border-gray-100'}`}>
       <div className="flex items-center gap-3">
         <Avatar name={status.owner_name} size="md" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-900">{status.owner_name}</p>
           {status.note && <p className="text-sm text-gray-500 truncate">"{status.note}"</p>}
+          {isScheduled && (
+            <p className="text-xs text-violet-600 font-medium mt-0.5">
+              🕐 {t('home.opensAt', { time: formatTime(status.starts_at) })}
+            </p>
+          )}
+          {!isScheduled && status.ends_at && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              {t('home.freeUntil', { time: formatTimeShort(status.ends_at) })}
+            </p>
+          )}
         </div>
+      </div>
+
+      {/* RSVP buttons */}
+      <div className="flex gap-2 mt-3">
         <button
-          onClick={handleGoing}
-          disabled={going}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex-shrink-0 ${
-            going
-              ? 'bg-emerald-100 text-emerald-700 cursor-default'
-              : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+          onClick={() => handleRsvp('going')}
+          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
+            myRsvp === 'going'
+              ? 'bg-emerald-500 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-emerald-50'
           }`}
         >
-          {t('home.goingButton')}
+          {t('home.rsvpGoing')}
+        </button>
+        <button
+          onClick={() => handleRsvp('maybe')}
+          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
+            myRsvp === 'maybe'
+              ? 'bg-amber-400 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-amber-50'
+          }`}
+        >
+          {t('home.rsvpMaybe')}
         </button>
       </div>
-      {going && (
-        <p className="text-xs text-emerald-600 mt-2 text-right">
-          {t('invite.weNotifiedThem', { name: status.owner_name })}
-        </p>
-      )}
     </div>
   );
 }
@@ -110,6 +139,27 @@ function getGreeting(t: (key: string) => string): string {
   return t('home.greetingEvening');
 }
 
+// Default date/time helpers
+function todayStr() {
+  return format(new Date(), 'yyyy-MM-dd');
+}
+function defaultStartTime() {
+  const d = new Date();
+  d.setMinutes(0, 0, 0);
+  d.setHours(d.getHours() + 1);
+  return format(d, 'HH:mm');
+}
+function addHours(dateStr: string, timeStr: string, hours: number): string {
+  const d = new Date(`${dateStr}T${timeStr}`);
+  d.setHours(d.getHours() + hours);
+  return format(d, 'HH:mm');
+}
+function toUnix(dateStr: string, timeStr: string): number {
+  return Math.floor(new Date(`${dateStr}T${timeStr}`).getTime() / 1000);
+}
+
+const REMINDER_OPTIONS = [5, 15, 30, 60];
+
 export default function Home() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
@@ -122,9 +172,23 @@ export default function Home() {
   const [editRecipients, setEditRecipients] = useState<string[]>([]);
   const [showGoingModal, setShowGoingModal] = useState<string | null>(null);
 
+  // Schedule form state
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState(todayStr);
+  const [scheduleStart, setScheduleStart] = useState(defaultStartTime);
+  const [scheduleEnd, setScheduleEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
+  const [reminderMinutes, setReminderMinutes] = useState(30);
+  const [showReminderPicker, setShowReminderPicker] = useState(false);
+
   const { data: myStatus, isLoading: statusLoading } = useQuery({
     queryKey: ['myStatus'],
     queryFn: statusApi.get,
+    refetchInterval: 30000,
+  });
+
+  const { data: myScheduled } = useQuery({
+    queryKey: ['myScheduled'],
+    queryFn: statusApi.getScheduled,
     refetchInterval: 30000,
   });
 
@@ -175,6 +239,11 @@ export default function Home() {
     }
   }, [myStatus, statusLoading]);
 
+  // Update schedule end time when start changes
+  useEffect(() => {
+    setScheduleEnd(addHours(scheduleDate, scheduleStart, 2));
+  }, [scheduleDate, scheduleStart]);
+
   // Countdown timer
   const [secondsLeft, setSecondsLeft] = useState(0);
   useEffect(() => {
@@ -188,8 +257,16 @@ export default function Home() {
   const minutesLeft = Math.floor(secondsLeft / 60);
 
   const createStatus = useMutation({
-    mutationFn: (data: { note?: string; recipient_ids: string[] }) => statusApi.create(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setView('open'); },
+    mutationFn: (data: Parameters<typeof statusApi.create>[0]) => statusApi.create(data),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ['myStatus'] });
+      qc.invalidateQueries({ queryKey: ['myScheduled'] });
+      if (result?.starts_at) {
+        setScheduleEnabled(false);
+      } else {
+        setView('open');
+      }
+    },
   });
 
   const hideNote = useMutation({
@@ -208,7 +285,7 @@ export default function Home() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: (data: { note?: string; recipient_ids?: string[] }) => statusApi.update(data),
+    mutationFn: (data: Parameters<typeof statusApi.update>[0]) => statusApi.update(data),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setView('open'); },
   });
 
@@ -217,8 +294,22 @@ export default function Home() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
   });
 
-  const sendGoing = async (statusId: string) => {
-    await goingApi.send(statusId);
+  const activateScheduled = useMutation({
+    mutationFn: (id: string) => statusApi.activate(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['myStatus'] });
+      qc.invalidateQueries({ queryKey: ['myScheduled'] });
+      setView('open');
+    },
+  });
+
+  const cancelScheduled = useMutation({
+    mutationFn: statusApi.cancelScheduled,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['myScheduled'] }),
+  });
+
+  const sendGoing = async (statusId: string, rsvp: 'going' | 'maybe' = 'going') => {
+    await goingApi.send(statusId, rsvp);
     qc.invalidateQueries({ queryKey: ['friendStatuses'] });
   };
 
@@ -228,7 +319,20 @@ export default function Home() {
       await notesApi.save(trimmedNote);
       qc.invalidateQueries({ queryKey: ['notes'] });
     }
-    createStatus.mutate({ note: trimmedNote, recipient_ids: selectedRecipients });
+
+    if (scheduleEnabled) {
+      const startsAt = toUnix(scheduleDate, scheduleStart);
+      const endsAt = toUnix(scheduleDate, scheduleEnd);
+      createStatus.mutate({
+        note: trimmedNote,
+        recipient_ids: selectedRecipients,
+        starts_at: startsAt,
+        ends_at: endsAt,
+        reminder_minutes: reminderMinutes,
+      });
+    } else {
+      createStatus.mutate({ note: trimmedNote, recipient_ids: selectedRecipients });
+    }
   };
 
   const handleSaveEdit = () => {
@@ -270,6 +374,10 @@ export default function Home() {
 
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {
+    const scheduleButtonLabel = scheduleEnabled
+      ? t('home.openDoor') // "Open the door" label changes for scheduled too
+      : t('home.openDoor');
+
     return (
       <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
         <div className="flex items-center justify-between mb-1">
@@ -278,7 +386,7 @@ export default function Home() {
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-6 mt-5">{getGreeting(t)}</h1>
 
-        {/* Friend doors open */}
+        {/* Friend doors open / upcoming */}
         {(friendStatuses as any[]).length > 0 && (
           <div className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 border-y border-fuchsia-200/60">
             <h2 className="text-base font-bold text-fuchsia-900 mb-3">
@@ -369,7 +477,7 @@ export default function Home() {
         )}
 
         {/* Note input */}
-        <div className="mb-6 relative">
+        <div className="mb-4 relative">
           <input
             type="text"
             placeholder={t('home.customNotePlaceholder')}
@@ -388,6 +496,85 @@ export default function Home() {
             <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 90 ? 'text-red-400' : 'text-gray-400'}`}>
               {100 - note.length}
             </span>
+          )}
+        </div>
+
+        {/* Schedule toggle */}
+        <div className="mb-4">
+          <button
+            onClick={() => setScheduleEnabled(v => !v)}
+            className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${
+              scheduleEnabled
+                ? 'bg-violet-100 text-violet-700 border-violet-300'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            🗓 {t('home.scheduleToggle')}
+          </button>
+
+          {scheduleEnabled && (
+            <div className="mt-3 bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 block mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={scheduleDate}
+                    min={todayStr()}
+                    onChange={e => setScheduleDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
+                  <input
+                    type="time"
+                    value={scheduleStart}
+                    onChange={e => setScheduleStart(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
+                  <input
+                    type="time"
+                    value={scheduleEnd}
+                    onChange={e => setScheduleEnd(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-gray-400 flex-1">
+                  {t('home.scheduleReminderText', { minutes: reminderMinutes })}
+                </p>
+                <button
+                  onClick={() => setShowReminderPicker(v => !v)}
+                  className="text-xs text-violet-600 font-medium"
+                >
+                  {t('home.scheduleReminderChange')}
+                </button>
+              </div>
+              {showReminderPicker && (
+                <div className="flex gap-2 flex-wrap">
+                  {REMINDER_OPTIONS.map(m => (
+                    <button
+                      key={m}
+                      onClick={() => { setReminderMinutes(m); setShowReminderPicker(false); }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        reminderMinutes === m
+                          ? 'bg-violet-500 text-white border-violet-500'
+                          : 'bg-gray-50 text-gray-600 border-gray-200'
+                      }`}
+                    >
+                      {m === 60 ? '1h' : `${m} min`}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -443,9 +630,60 @@ export default function Home() {
           disabled={createStatus.isPending}
           className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-4 rounded-2xl font-semibold text-lg transition-colors shadow-md"
         >
-          {createStatus.isPending ? t('home.opening') : t('home.openDoor')}
+          {createStatus.isPending
+            ? t('home.opening')
+            : scheduleEnabled
+              ? `🗓 ${t('home.scheduleToggle')}`
+              : t('home.openDoor')}
         </button>
         <p className="text-xs text-gray-400 text-center mt-2">{t('home.openDoorDesc')}</p>
+
+        {/* Pending scheduled session card */}
+        {myScheduled && (
+          <div className="mt-6 bg-violet-50 border border-violet-200 rounded-2xl p-4">
+            <h2 className="text-sm font-bold text-violet-800 mb-1">{t('home.scheduledSessionTitle')}</h2>
+            <p className="text-sm text-violet-700 font-medium mb-1">
+              🕐 {formatTime(myScheduled.starts_at)} – {formatTimeShort(myScheduled.ends_at)}
+            </p>
+            {myScheduled.note && (
+              <p className="text-sm text-violet-600 mb-3">"{myScheduled.note}"</p>
+            )}
+            {myScheduled.going_signals?.length > 0 && (
+              <div className="mb-3">
+                {(() => {
+                  const going = myScheduled.going_signals.filter((g: any) => g.rsvp === 'going');
+                  const maybe = myScheduled.going_signals.filter((g: any) => g.rsvp === 'maybe');
+                  return (
+                    <p className="text-xs text-violet-600">
+                      {t('home.scheduledRsvpCount', { going: going.length, maybe: maybe.length })}
+                      {myScheduled.going_signals.map((g: any) => (
+                        <span key={g.id} className="ml-2 font-medium">
+                          {g.name} {g.rsvp === 'maybe' ? '🤔' : '✅'}
+                        </span>
+                      ))}
+                    </p>
+                  );
+                })()}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => activateScheduled.mutate(myScheduled.id)}
+                disabled={activateScheduled.isPending}
+                className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
+              >
+                {t('home.scheduleOpenNow')}
+              </button>
+              <button
+                onClick={() => cancelScheduled.mutate()}
+                disabled={cancelScheduled.isPending}
+                className="px-4 py-2.5 text-sm text-violet-600 hover:text-violet-800 font-medium"
+              >
+                {t('home.scheduleCancelSession')}
+              </button>
+            </div>
+          </div>
+        )}
 
         <TipsSection />
       </div>
@@ -520,7 +758,7 @@ export default function Home() {
         <UserMenu />
       </div>
 
-      {/* Friend doors also open */}
+      {/* Friend doors also open / upcoming */}
       {(friendStatuses as any[]).length > 0 && (
         <div className="mb-6">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
@@ -550,6 +788,11 @@ export default function Home() {
         <p className="text-sm text-gray-500 mt-2">
           {minutesLeft > 0 ? t('home.closesIn', { minutes: minutesLeft }) : t('home.closingSoon')}
         </p>
+        {myStatus?.ends_at && (
+          <p className="text-xs text-gray-400 mt-1">
+            {t('home.freeUntil', { time: formatTimeShort(myStatus.ends_at) })}
+          </p>
+        )}
         {minutesLeft <= 20 && (
           <button
             onClick={() => prolongStatus.mutate()}
@@ -581,8 +824,9 @@ export default function Home() {
           <h2 className="text-sm font-semibold text-emerald-800 mb-2">{t('home.onTheirWay')}</h2>
           {myStatus.going_signals.map((g: any) => (
             <div key={g.id} className="flex items-center gap-2 py-1">
-              <span className="text-base">✅</span>
+              <span className="text-base">{g.rsvp === 'maybe' ? '🤔' : '✅'}</span>
               <span className="text-sm text-emerald-900 font-medium">{g.name}</span>
+              {g.rsvp === 'maybe' && <span className="text-xs text-emerald-600">maybe</span>}
             </div>
           ))}
         </div>
