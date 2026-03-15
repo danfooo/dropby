@@ -50,6 +50,11 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
           {t('home.goingButton')}
         </button>
       </div>
+      {going && (
+        <p className="text-xs text-emerald-600 mt-2 text-right">
+          {t('invite.weNotifiedThem', { name: status.owner_name })}
+        </p>
+      )}
     </div>
   );
 }
@@ -288,7 +293,7 @@ export default function Home() {
         )}
 
         <div className="flex items-center justify-between mb-1">
-          <img src="/logo.svg" alt="dropby" className="h-8" />
+          <img src="/logo-icon.svg" alt="dropby" className="h-8" />
           <UserMenu />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-6 mt-5">{getGreeting(t)}</h1>

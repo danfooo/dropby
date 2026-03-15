@@ -205,6 +205,7 @@ export default function Invite() {
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 mb-6">
               <p className="text-2xl mb-2">✅</p>
               <p className="font-semibold text-emerald-800">{t('invite.theyKnowYoureComing')}</p>
+              <p className="text-sm text-emerald-600 mt-1">{t('invite.weNotifiedThem', { name: info.inviter.display_name })}</p>
             </div>
           ) : (
             <button

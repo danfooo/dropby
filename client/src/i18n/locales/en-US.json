@@ -131,7 +131,9 @@
   },
   "invite": {
     "expiredTitle": "Invite expired",
-    "expiredDesc": "This invite expired {{ago}}.","inviteBackCta": "Invite {{name}} back","inviteBackCopied": "Invite link copied!",
+    "expiredDesc": "This invite expired {{ago}}.",
+    "inviteBackCta": "Invite {{name}} back",
+    "inviteBackCopied": "Invite link copied!",
     "invalidTitle": "Invalid invite",
     "invalidDesc": "This invite link is invalid.",
     "goHome": "Go home",
@@ -153,7 +155,8 @@
     "sendMeAppLink": "Send me a link to the app",
     "onMyWay": "I'm on my way! 🏃",
     "sending": "Sending…",
-    "nameRequired": "Name is required"
+    "nameRequired": "Name is required",
+    "weNotifiedThem": "We sent {{name}} a notification that you're on your way."
   },
   "feedback": {
     "title": "Share feedback",

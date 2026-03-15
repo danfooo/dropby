@@ -131,7 +131,9 @@
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",
-    "expiredDesc": "Diese Einladung ist {{ago}} abgelaufen.","inviteBackCta": "{{name}} einladen","inviteBackCopied": "Einladungslink kopiert!",
+    "expiredDesc": "Diese Einladung ist {{ago}} abgelaufen.",
+    "inviteBackCta": "{{name}} einladen",
+    "inviteBackCopied": "Einladungslink kopiert!",
     "invalidTitle": "Ungültige Einladung",
     "invalidDesc": "Dieser Einladungslink ist ungültig.",
     "goHome": "Zur Startseite",
@@ -153,7 +155,8 @@
     "sendMeAppLink": "Schick mir einen Link zur App",
     "onMyWay": "Ich bin unterwegs! 🏃",
     "sending": "Wird gesendet…",
-    "nameRequired": "Name ist erforderlich"
+    "nameRequired": "Name ist erforderlich",
+    "weNotifiedThem": "Wir haben {{name}} benachrichtigt, dass du unterwegs bist."
   },
   "feedback": {
     "title": "Feedback teilen",

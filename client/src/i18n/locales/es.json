@@ -131,7 +131,9 @@
   },
   "invite": {
     "expiredTitle": "Invitación expirada",
-    "expiredDesc": "Esta invitación expiró {{ago}}.","inviteBackCta": "Invitar a {{name}}","inviteBackCopied": "¡Enlace de invitación copiado!",
+    "expiredDesc": "Esta invitación expiró {{ago}}.",
+    "inviteBackCta": "Invitar a {{name}}",
+    "inviteBackCopied": "¡Enlace de invitación copiado!",
     "invalidTitle": "Invitación no válida",
     "invalidDesc": "Este enlace de invitación no es válido.",
     "goHome": "Ir al inicio",
@@ -153,7 +155,8 @@
     "sendMeAppLink": "Envíame un enlace a la app",
     "onMyWay": "¡Voy para allá! 🏃",
     "sending": "Enviando…",
-    "nameRequired": "El nombre es obligatorio"
+    "nameRequired": "El nombre es obligatorio",
+    "weNotifiedThem": "Le avisamos a {{name}} que estás en camino."
   },
   "feedback": {
     "title": "Compartir opinión",
