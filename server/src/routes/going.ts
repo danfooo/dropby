@@ -49,19 +49,15 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
   const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND closed_at IS NULL AND closes_at > ?').get(statusId, nowUnix) as any;
   if (!status) return res.status(404).json({ error: 'Status not found or expired' });
 
-  let guestContactId: string | null = null;
+  const guestContactId = randomUUID();
+  db.prepare(`
+    INSERT INTO guest_contacts (id, name, contact, marketing_consent, status_id)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(guestContactId, name.trim(), contact?.trim() || null, marketing_consent ? 1 : 0, statusId);
 
-  if (contact) {
-    guestContactId = randomUUID();
-    db.prepare(`
-      INSERT INTO guest_contacts (id, name, contact, marketing_consent, status_id)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(guestContactId, name.trim(), contact.trim(), marketing_consent ? 1 : 0, statusId);
-
-    if (marketing_consent) {
-      const appUrl = process.env.APP_URL || 'http://localhost:5173';
-      sendWelcomeMessage(contact.trim(), `${appUrl}/download`);
-    }
+  if (contact?.trim() && marketing_consent) {
+    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+    sendWelcomeMessage(contact.trim(), `${appUrl}/download`);
   }
 
   db.prepare('INSERT INTO going_signals (id, status_id, user_id, guest_contact_id) VALUES (?, ?, NULL, ?)').run(
