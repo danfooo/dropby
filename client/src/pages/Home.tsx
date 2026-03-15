@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { differenceInMinutes, differenceInSeconds } from 'date-fns';
+import { differenceInSeconds } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
 import Avatar from '../components/Avatar';
@@ -24,7 +24,6 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
     setGoing(true);
     await onGoing(status.id);
   };
-  const closesIn = differenceInMinutes(new Date(status.closes_at * 1000), new Date());
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
       <div className="flex items-center gap-3">
@@ -32,11 +31,6 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-900">{status.owner_name}</p>
           {status.note && <p className="text-sm text-gray-500 truncate">"{status.note}"</p>}
-          <p className="text-xs text-gray-400 mt-0.5">
-            {closesIn > 0
-              ? t('home.openFor', { minutes: closesIn })
-              : t('home.closingSoon')}
-          </p>
         </div>
         <button
           onClick={handleGoing}
