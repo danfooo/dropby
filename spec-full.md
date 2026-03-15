@@ -457,8 +457,13 @@ Accessible via the back-arrow header of Home.
 - "Remind me when I opened my door this time last week"
 - On by default; toggle persisted via `PUT /api/auth/me { auto_nudge_enabled }`
 
+**Feedback & support group**
+- "Share feedback" button — accent-coloured (purple), opens FeedbackModal
+- "Support dropby ☕" link — opens buymeacoffee.com/dropby in a new tab
+- "Reset tips" button — clears all four `tip_*_dismissed` localStorage keys, causing dismissed home-screen tips to reappear
+
 **Log out**
-- Button at the bottom: "Log out"
+- Button below the feedback group: "Log out"
 - Clears auth state (JWT removed from localStorage, store cleared)
 - Redirects to `/`
 - No confirmation dialog

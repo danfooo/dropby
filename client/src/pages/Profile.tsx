@@ -432,23 +432,31 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Feedback */}
-        <button
-          onClick={() => setShowFeedback(true)}
-          className="w-full py-3 text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
-        >
-          {t('profile.shareFeedback')}
-        </button>
-
-        {/* Buy me a coffee */}
-        <a
-          href="https://www.buymeacoffee.com/dropby"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full py-3 text-center text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
-        >
-          {t('profile.buyMeCoffee')}
-        </a>
+        {/* Feedback + Support + Reset */}
+        <div className="pt-2 space-y-2">
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="w-full py-3 text-[#7C6AF6] text-sm font-medium border border-[#7C6AF6]/30 rounded-2xl hover:bg-[#7C6AF6]/5"
+          >
+            {t('profile.shareFeedback')}
+          </button>
+          <a
+            href="https://www.buymeacoffee.com/dropby"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full py-3 text-center text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
+          >
+            {t('profile.buyMeCoffee')}
+          </a>
+          <button
+            onClick={() => {
+              ['tip_nudge_dismissed', 'tip_invite_dismissed', 'tip_feedback_dismissed', 'tip_coffee_dismissed'].forEach(k => localStorage.removeItem(k));
+            }}
+            className="w-full py-3 text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
+          >
+            {t('profile.resetOnboarding')}
+          </button>
+        </div>
 
         {/* Logout + Delete */}
         <div className="pt-2 space-y-2">
