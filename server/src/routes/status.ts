@@ -314,7 +314,29 @@ router.delete('/', requireAuth, (req: AuthRequest, res) => {
   res.json({ ok: true });
 });
 
-// DELETE /api/status/scheduled — cancel pending scheduled session
+// GET /api/status/upcoming — all pending scheduled sessions
+router.get('/upcoming', requireAuth, (req: AuthRequest, res) => {
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const sessions = db.prepare(`
+    SELECT * FROM statuses
+    WHERE user_id = ? AND closed_at IS NULL AND starts_at > ?
+    ORDER BY starts_at ASC
+  `).all(req.userId!, nowUnix) as any[];
+  res.json(sessions.map(s => formatStatus(s, req.userId!)));
+});
+
+// DELETE /api/status/scheduled/:statusId — cancel a specific scheduled session
+router.delete('/scheduled/:statusId', requireAuth, (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const { statusId } = req.params;
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const status = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND starts_at > ?').get(statusId, userId, nowUnix) as any;
+  if (!status) return res.status(404).json({ error: 'Not found' });
+  db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, statusId);
+  res.json({ ok: true });
+});
+
+// DELETE /api/status/scheduled — cancel pending scheduled session (legacy, cancels first)
 router.delete('/scheduled', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
   const status = getScheduledStatus(userId);

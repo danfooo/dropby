@@ -194,6 +194,39 @@ function InviteLinkRow({ token, createdAt, onRevoke }: { token: string; createdA
   );
 }
 
+function ScheduledSessionCard({ session, onCancel, onOpen }: { session: any; onCancel: () => void; onOpen?: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4">
+      <p className="text-sm text-violet-700 font-medium mb-1">
+        🕐 {formatTime(session.starts_at)} – {formatTimeShort(session.ends_at)}
+      </p>
+      {session.note && <p className="text-sm text-violet-600 mb-2">"{session.note}"</p>}
+      {session.going_signals?.length > 0 && (
+        <p className="text-xs text-violet-500 mb-2">
+          {session.going_signals.map((g: any) => g.name).join(', ')} {session.going_signals.length === 1 ? 'is' : 'are'} coming
+        </p>
+      )}
+      <div className="flex gap-2">
+        {onOpen && (
+          <button
+            onClick={onOpen}
+            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2 rounded-xl text-sm font-semibold"
+          >
+            {t('home.scheduleOpenNow')}
+          </button>
+        )}
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 text-sm text-violet-600 hover:text-violet-800 font-medium"
+        >
+          {t('home.scheduleCancelSession')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function getGreeting(t: (key: string) => string): string {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 12) return t('home.greetingMorning');
@@ -233,6 +266,7 @@ export default function Home() {
   const [editNote, setEditNote] = useState('');
   const [editRecipients, setEditRecipients] = useState<string[]>([]);
   const [showGoingModal, setShowGoingModal] = useState<string | null>(null);
+  const [showScheduleMore, setShowScheduleMore] = useState(false);
 
   // Schedule form state
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -248,9 +282,9 @@ export default function Home() {
     refetchInterval: 30000,
   });
 
-  const { data: myScheduled } = useQuery({
-    queryKey: ['myScheduled'],
-    queryFn: statusApi.getScheduled,
+  const { data: upcomingSessions = [] } = useQuery({
+    queryKey: ['upcomingSessions'],
+    queryFn: statusApi.getUpcoming,
     refetchInterval: 30000,
   });
 
@@ -322,9 +356,10 @@ export default function Home() {
     mutationFn: (data: Parameters<typeof statusApi.create>[0]) => statusApi.create(data),
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: ['myStatus'] });
-      qc.invalidateQueries({ queryKey: ['myScheduled'] });
+      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
       if (result?.starts_at) {
         setScheduleEnabled(false);
+        setShowScheduleMore(false);
       } else {
         setView('open');
       }
@@ -365,14 +400,14 @@ export default function Home() {
     mutationFn: (id: string) => statusApi.activate(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['myStatus'] });
-      qc.invalidateQueries({ queryKey: ['myScheduled'] });
+      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
       setView('open');
     },
   });
 
   const cancelScheduled = useMutation({
-    mutationFn: statusApi.cancelScheduled,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['myScheduled'] }),
+    mutationFn: (id: string) => statusApi.cancelScheduledById(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['upcomingSessions'] }),
   });
 
   const sendGoing = async (statusId: string, rsvp: 'going' | 'maybe' = 'going') => {
@@ -705,50 +740,18 @@ export default function Home() {
         </button>
         <p className="text-xs text-gray-400 text-center mt-2">{t('home.openDoorDesc')}</p>
 
-        {/* Pending scheduled session card */}
-        {myScheduled && (
-          <div className="mt-6 bg-violet-50 border border-violet-200 rounded-2xl p-4">
-            <h2 className="text-sm font-bold text-violet-800 mb-1">{t('home.scheduledSessionTitle')}</h2>
-            <p className="text-sm text-violet-700 font-medium mb-1">
-              🕐 {formatTime(myScheduled.starts_at)} – {formatTimeShort(myScheduled.ends_at)}
-            </p>
-            {myScheduled.note && (
-              <p className="text-sm text-violet-600 mb-3">"{myScheduled.note}"</p>
-            )}
-            {myScheduled.going_signals?.length > 0 && (
-              <div className="mb-3">
-                {(() => {
-                  const going = myScheduled.going_signals.filter((g: any) => g.rsvp === 'going');
-                  const maybe = myScheduled.going_signals.filter((g: any) => g.rsvp === 'maybe');
-                  return (
-                    <p className="text-xs text-violet-600">
-                      {t('home.scheduledRsvpCount', { going: going.length, maybe: maybe.length })}
-                      {myScheduled.going_signals.map((g: any) => (
-                        <span key={g.id} className="ml-2 font-medium">
-                          {g.name} {g.rsvp === 'maybe' ? '🤔' : '✅'}
-                        </span>
-                      ))}
-                    </p>
-                  );
-                })()}
-              </div>
-            )}
-            <div className="flex gap-2">
-              <button
-                onClick={() => activateScheduled.mutate(myScheduled.id)}
-                disabled={activateScheduled.isPending}
-                className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-              >
-                {t('home.scheduleOpenNow')}
-              </button>
-              <button
-                onClick={() => cancelScheduled.mutate()}
-                disabled={cancelScheduled.isPending}
-                className="px-4 py-2.5 text-sm text-violet-600 hover:text-violet-800 font-medium"
-              >
-                {t('home.scheduleCancelSession')}
-              </button>
-            </div>
+        {/* Pending scheduled sessions */}
+        {(upcomingSessions as any[]).length > 0 && (
+          <div className="mt-6 space-y-3">
+            <h2 className="text-sm font-bold text-violet-800">{t('home.scheduledSessionTitle')}</h2>
+            {(upcomingSessions as any[]).map((session: any) => (
+              <ScheduledSessionCard
+                key={session.id}
+                session={session}
+                onOpen={() => activateScheduled.mutate(session.id)}
+                onCancel={() => cancelScheduled.mutate(session.id)}
+              />
+            ))}
           </div>
         )}
 
@@ -942,6 +945,117 @@ export default function Home() {
       >
         {t('home.closeNow')}
       </button>
+
+      {/* Upcoming scheduled sessions */}
+      {(upcomingSessions as any[]).length > 0 && (
+        <div className="mt-4 space-y-3">
+          <h2 className="text-sm font-bold text-violet-800">{t('home.scheduledSessionTitle')}</h2>
+          {(upcomingSessions as any[]).map((session: any) => (
+            <ScheduledSessionCard
+              key={session.id}
+              session={session}
+              onCancel={() => cancelScheduled.mutate(session.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Schedule another */}
+      {!showScheduleMore ? (
+        <button
+          onClick={() => setShowScheduleMore(true)}
+          className="mt-4 flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+        >
+          🗓 {t('home.scheduleAnother')}
+        </button>
+      ) : (
+        <div className="mt-4">
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3 mb-3">
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 block mb-1">Date</label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  min={todayStr()}
+                  onChange={e => setScheduleDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
+                <input
+                  type="time"
+                  value={scheduleStart}
+                  onChange={e => setScheduleStart(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
+                <input
+                  type="time"
+                  value={scheduleEnd}
+                  onChange={e => setScheduleEnd(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-gray-400 flex-1">
+                {t('home.scheduleReminderText', { minutes: reminderMinutes })}
+              </p>
+              <button
+                onClick={() => setShowReminderPicker(v => !v)}
+                className="text-xs text-violet-600 font-medium"
+              >
+                {t('home.scheduleReminderChange')}
+              </button>
+            </div>
+            {showReminderPicker && (
+              <div className="flex gap-2 flex-wrap">
+                {REMINDER_OPTIONS.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => { setReminderMinutes(m); setShowReminderPicker(false); }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      reminderMinutes === m
+                        ? 'bg-violet-500 text-white border-violet-500'
+                        : 'bg-gray-50 text-gray-600 border-gray-200'
+                    }`}
+                  >
+                    {m === 60 ? '1h' : `${m} min`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                createStatus.mutate({
+                  starts_at: toUnix(scheduleDate, scheduleStart),
+                  ends_at: toUnix(scheduleDate, scheduleEnd),
+                  recipient_ids: selectedRecipients,
+                  reminder_minutes: reminderMinutes,
+                });
+              }}
+              disabled={createStatus.isPending}
+              className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-2xl font-semibold text-sm disabled:opacity-50"
+            >
+              🗓 {t('home.scheduleToggle')}
+            </button>
+            <button
+              onClick={() => setShowScheduleMore(false)}
+              className="px-4 py-3 text-sm text-gray-500 hover:text-gray-700 font-medium"
+            >
+              {t('common.cancel')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

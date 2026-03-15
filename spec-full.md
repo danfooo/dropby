@@ -252,6 +252,12 @@ Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side
 - Creates a status with the selected note and recipients
 - Navigates to Door Open view
 
+**Schedule toggle** — "🗓 Schedule it" pill button; expands a date/time form (date, start time, end time, reminder); "Open the door" button becomes "🗓 Schedule it"
+
+**Upcoming sessions** (below open door button, above tips)
+- All of the user's pending scheduled sessions shown as cards; each shows time range, note, going signal names, "Open now" button, and "Cancel session" link
+- Supports multiple simultaneous scheduled sessions
+
 **Tips section** (below open door button)
 
 Two tips are shown, one at a time, in priority order. Each can be permanently dismissed with an × button. Dismissal is stored in `localStorage`. Setting a reminder from the nudge tip, or copying an invite link from the invite tip, shows a toast confirmation and hides that tip.
@@ -295,6 +301,16 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 **Actions**
 - "Add more / Edit" button → Door Open Edit view
 - "Close now" link → immediately closes the status, returns to Door Closed view
+
+**Upcoming sessions** (below close button)
+- Same card format as Door Closed view, but without "Open now" (can't open a second door while one is active)
+- Cancel button on each card
+
+**Schedule another** (below upcoming sessions)
+- Small "🗓 Schedule another" pill button — hidden by default, expands inline schedule form
+- Form: date, start time, end time, reminder — same as Door Closed schedule form; no note field (schedule without context)
+- "Cancel" collapses the form without saving
+- On submit: creates a new scheduled session, collapses form
 
 ---
 
