@@ -258,6 +258,9 @@ export default function Auth() {
           </>
         )}
       </div>
+      <p className="mt-10 text-xs text-gray-300">
+        <a href="/about" className="hover:text-gray-400">About</a>
+      </p>
     </div>
   );
 }

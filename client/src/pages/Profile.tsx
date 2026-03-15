@@ -465,6 +465,11 @@ export default function Profile() {
             {t('profile.deleteAccount')}
           </button>
         </div>
+
+        {/* Imprint */}
+        <div className="pt-4 pb-2 text-center">
+          <Link to="/about" className="text-xs text-gray-300 hover:text-gray-400">About</Link>
+        </div>
       </div>
 
       <ConfirmDialog

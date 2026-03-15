@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import Friends from './pages/Friends';
 import Invite from './pages/Invite';
 import Profile from './pages/Profile';
+import About from './pages/About';
 import Layout from './components/Layout';
 
 function AppRoutes() {
@@ -48,6 +49,7 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/invite/:token" element={<Invite />} />
+      <Route path="/about" element={<About />} />
       <Route element={user ? <Layout /> : <Navigate to="/auth" />}>
         <Route path="/home" element={<Home />} />
         <Route path="/friends" element={<Friends />} />

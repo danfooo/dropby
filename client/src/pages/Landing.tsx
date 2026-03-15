@@ -53,13 +53,18 @@ export default function Landing() {
       <div className="flex-1" />
 
       {/* CTA */}
-      <div className="px-6 pt-2 pb-12">
+      <div className="px-6 pt-2 pb-6">
         <Link
           to="/auth"
           className="block w-full bg-emerald-500 hover:bg-emerald-600 text-white text-center py-4 rounded-2xl font-semibold text-lg transition-colors"
         >
           {t('landing.getStarted')}
         </Link>
+      </div>
+
+      {/* Imprint */}
+      <div className="pb-8 text-center">
+        <Link to="/about" className="text-xs text-gray-300 hover:text-gray-400">About</Link>
       </div>
     </div>
   );
