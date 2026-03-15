@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/auth';
 import { invitesApi, goingApi } from '../api';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
+import { copyText } from '../utils/clipboard';
 
 export default function Invite() {
   const { t } = useTranslation();
@@ -15,6 +16,8 @@ export default function Invite() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<'INVALID' | 'EXPIRED' | null>(null);
   const [expiredAgo, setExpiredAgo] = useState(0);
+  const [expiredInviter, setExpiredInviter] = useState<{ display_name: string } | null>(null);
+  const [inviteBackCopied, setInviteBackCopied] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [acceptedName, setAcceptedName] = useState('');
   const [showGoingForm, setShowGoingForm] = useState(false);
@@ -30,6 +33,7 @@ export default function Invite() {
         if (code === 'EXPIRED') {
           setError('EXPIRED');
           setExpiredAgo(err.response.data.expired_ago_seconds || 0);
+          setExpiredInviter(err.response.data.inviter || null);
         } else {
           setError('INVALID');
         }
@@ -57,12 +61,12 @@ export default function Invite() {
     }
   }, [info, user]);
 
-  // Redirect not-logged-in users when door is closed
+  // Redirect not-logged-in users when door is closed, or when invite is expired
   useEffect(() => {
-    if (info && !user && !info.status) {
+    if (!user && !loading && (error === 'EXPIRED' || (info && !info.status))) {
       navigate(`/auth?redirect=/invite/${token}`, { replace: true });
     }
-  }, [info, user]);
+  }, [info, user, error, loading]);
 
   if (loading) {
     return (
@@ -73,15 +77,36 @@ export default function Invite() {
   }
 
   if (error === 'EXPIRED') {
+    // Not logged in: redirect to auth is pending, show spinner
+    if (!user) {
+      return (
+        <div className="flex h-full min-h-screen items-center justify-center">
+          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      );
+    }
+    // Logged in: show expired screen with invite-back CTA
     const agoText = expiredAgo >= 3600
       ? `${Math.floor(expiredAgo / 3600)} hour${Math.floor(expiredAgo / 3600) === 1 ? '' : 's'} ago`
       : `${Math.floor(expiredAgo / 60)} minutes ago`;
+    const inviterName = expiredInviter?.display_name || '';
+    const handleInviteBack = () => {
+      copyText(invitesApi.generate().then((data: any) => `${t('home.friendshipCopyText')}\n${data.url}`));
+      setInviteBackCopied(true);
+      setTimeout(() => setInviteBackCopied(false), 3000);
+    };
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white">
         <p className="text-5xl mb-4">⏰</p>
         <h1 className="text-xl font-bold mb-2">{t('invite.expiredTitle')}</h1>
         <p className="text-gray-500 mb-8">{t('invite.expiredDesc', { ago: agoText })}</p>
-        <Link to="/" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
+        <button
+          onClick={handleInviteBack}
+          className="w-full max-w-xs bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-2xl font-semibold mb-3"
+        >
+          {inviteBackCopied ? t('invite.inviteBackCopied') : t('invite.inviteBackCta', { name: inviterName })}
+        </button>
+        <Link to="/home" className="text-sm text-gray-500 hover:text-gray-700">
           {t('invite.goHome')}
         </Link>
       </div>

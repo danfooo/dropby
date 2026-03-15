@@ -131,7 +131,7 @@
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",
-    "expiredDesc": "Diese Einladung ist {{ago}} abgelaufen.",
+    "expiredDesc": "Diese Einladung ist {{ago}} abgelaufen.","inviteBackCta": "{{name}} einladen","inviteBackCopied": "Einladungslink kopiert!",
     "invalidTitle": "Ungültige Einladung",
     "invalidDesc": "Dieser Einladungslink ist ungültig.",
     "goHome": "Zur Startseite",

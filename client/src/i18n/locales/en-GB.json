@@ -131,7 +131,7 @@
   },
   "invite": {
     "expiredTitle": "Invite expired",
-    "expiredDesc": "This invite expired {{ago}}.",
+    "expiredDesc": "This invite expired {{ago}}.","inviteBackCta": "Invite {{name}} back","inviteBackCopied": "Invite link copied!",
     "invalidTitle": "Invalid invite",
     "invalidDesc": "This invite link is invalid.",
     "goHome": "Go home",
