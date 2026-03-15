@@ -319,7 +319,8 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 Accessible via "Add more / Edit".
 
 - Sticky banner: pulsing dot + "Your door is open — tap to go back" (tappable)
-- Editable note field (same chip UX as Door Closed view, pre-populated with current note)
+- Editable note field (pre-populated with current note)
+- **End time field** — shown only when the session has a fixed `ends_at` (i.e. scheduled sessions); pre-populated with the current end time; editing updates `closes_at` on save
 - Editable recipient list with same checkbox/muted logic
 - "Save changes" button → updates status, returns to Door Open view
 

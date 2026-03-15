@@ -265,6 +265,7 @@ export default function Home() {
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [editNote, setEditNote] = useState('');
   const [editRecipients, setEditRecipients] = useState<string[]>([]);
+  const [editEndsAt, setEditEndsAt] = useState('');
   const [showGoingModal, setShowGoingModal] = useState<string | null>(null);
   const [showScheduleMore, setShowScheduleMore] = useState(false);
 
@@ -438,7 +439,12 @@ export default function Home() {
   };
 
   const handleSaveEdit = () => {
-    updateStatus.mutate({ note: editNote || undefined, recipient_ids: editRecipients });
+    let ends_at: number | undefined;
+    if (editEndsAt && myStatus?.ends_at) {
+      const dateStr = format(new Date(myStatus.ends_at * 1000), 'yyyy-MM-dd');
+      ends_at = toUnix(dateStr, editEndsAt);
+    }
+    updateStatus.mutate({ note: editNote || undefined, recipient_ids: editRecipients, ends_at });
   };
 
   const copyInviteLink = async () => {
@@ -764,6 +770,7 @@ export default function Home() {
   if (view === 'edit') {
     const initNote = myStatus?.note || '';
     const initRecipients = myStatus?.recipients.map((r: any) => r.id) || [];
+    const initEndsAt = myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '';
 
     return (
       <div className="min-h-full bg-gray-50 pb-24">
@@ -786,6 +793,18 @@ export default function Home() {
             onChange={e => setEditNote(e.target.value)}
             className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
           />
+
+          {initEndsAt && (
+            <div className="mb-4">
+              <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
+              <input
+                type="time"
+                defaultValue={initEndsAt}
+                onChange={e => setEditEndsAt(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              />
+            </div>
+          )}
 
           <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
             <h2 className="text-sm font-semibold mb-3">{t('home.recipients')}</h2>
@@ -931,6 +950,7 @@ export default function Home() {
         onClick={() => {
           setEditNote(myStatus?.note || '');
           setEditRecipients(myStatus?.recipients.map((r: any) => r.id) || []);
+          setEditEndsAt(myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
           setView('edit');
         }}
         className="w-full bg-white border border-gray-200 text-gray-900 py-3 rounded-2xl font-medium text-sm mb-3 hover:bg-gray-50"
