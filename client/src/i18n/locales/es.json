@@ -172,6 +172,7 @@
     "sending": "Enviando…",
     "nameRequired": "El nombre es obligatorio",
     "weNotifiedThem": "Le avisamos a {{name}} que estás en camino.",
+    "yourRsvp": "Tu respuesta",
     "rsvpGoing": "Voy ✅",
     "rsvpMaybe": "Quizás 🤔",
     "rsvpChanged": "¡RSVP actualizado!"

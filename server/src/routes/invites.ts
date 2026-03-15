@@ -16,7 +16,7 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { status_id } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
-  const expiresAt = nowUnix + 86400; // 24 hours
+  const expiresAt = nowUnix + 7 * 86400; // 7 days
 
   let resolvedStatusId: string | null = null;
   if (status_id) {

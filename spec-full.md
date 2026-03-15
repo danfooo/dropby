@@ -107,7 +107,7 @@ Persists the recipient selection across sessions. Read on door close, written on
 | status_id | uuid FK → statuses nullable | Set if link was generated from an active status context |
 | invited_email | string nullable | Set for email invites; the email address the invite was sent to |
 | revoked | boolean | Default false |
-| expires_at | unix timestamp | 24 hours for link-share invites; 30 days for email invites |
+| expires_at | unix timestamp | 7 days for link-share invites; 30 days for email invites |
 | created_at | unix timestamp | |
 
 Invite links are the sole mechanism for forming friendships. They are multi-use — multiple people can accept the same link. Each tap on "Copy invite link" generates a fresh link. Revoked or expired links return appropriate errors.
@@ -285,7 +285,7 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 - × button to remove with 3-second undo pattern (see Core Behaviors)
 
 **Invite link row**
-- "Anyone with link" row — tap to copy a fresh 24-hour invite link with `status_id` attached
+- "Anyone with link" row — tap to copy a fresh 7-day invite link with `status_id` attached
 
 **Going signals from non-friends** (guests)
 - Guest names shown in the going signals section when they submit the web Going form
@@ -325,7 +325,7 @@ Both the friend's open door section and the user's own door UI are visible simul
 ### Friends Page (`/friends`)
 
 **Header actions**
-- "Invite" button: generates and copies a fresh 24-hour invite link; shows toast "Invite link copied!"
+- "Invite" button: generates and copies a fresh 7-day invite link; shows toast "Invite link copied!"
 - "Add" button: opens Add Friend modal
 
 **Search**
@@ -398,16 +398,28 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 
 ### Web Going Modal (within `/invite/:token`)
 
-Shown when a non-logged-in user taps "Going ✅" on an open door.
+Shown when a non-logged-in user taps "Going ✅" or "Maybe" on an open or scheduled door.
 
+- RSVP toggle (Going / Maybe) shown for scheduled sessions; defaults to whichever button was tapped
 - First name (required)
 - Email or phone (optional); if provided, checkbox appears: "Send me a link to the app" (default unchecked)
 - Submit: "I'm on my way! 🏃" / loading: "Sending…"
 - On submit:
+  - Server returns `signal_id` and `status_id`
+  - Client stores `dropby_guest_rsvp = { signalId, statusId, rsvp }` in localStorage
   - Push notification sent to host: "[name] said, they are going!"
   - If contact + consent: welcome message sent, guest_contacts row created
-  - Success state: "They know you're coming! 🎉" — no further action needed
+  - Success state: shows "Your RSVP" with Going / Maybe toggle buttons (current option highlighted)
 - Validation: first name required, shown inline
+
+**Guest RSVP persistence (localStorage)**
+- On any `/invite/:token` page load for a valid invite: `dropby_invite_token` is stored in localStorage
+- If localStorage contains a `dropby_guest_rsvp` matching the current status, the RSVP toggle is shown instead of the form — allowing the guest to change their RSVP
+- RSVP change: `PATCH /api/going/guest/:signalId` with new rsvp value; localStorage is updated
+- On login or signup completion: `associatePendingGuest()` runs silently:
+  1. If `dropby_invite_token` is set: `POST /api/invites/:token/accept` (creates friendship)
+  2. If `dropby_guest_rsvp` is set: `POST /api/going/claim { signal_id }` (migrates guest signal to user account)
+  3. Both keys are cleared from localStorage
 
 ---
 
@@ -532,7 +544,7 @@ Friendships are formed exclusively via invite links. There is no search, no dire
 
 **Generating a link**
 - Any logged-in user can generate a link at any time from the Friends page, the Door Open view, or the Home tips section
-- Links are 24 hours, multi-use
+- Links are 7 days, multi-use
 - If generated from the Door Open view or inline in Home, `status_id` is set — enables session-aware acceptance behaviour
 - Each tap generates a fresh link (no reuse)
 
@@ -551,7 +563,7 @@ Friendships are formed exclusively via invite links. There is no search, no dire
 | Logged in, already friends | Open | No new friendship; shows open door card |
 | Logged in, already friends | Closed | No new friendship; "Go home" |
 | Logged in, own link | Either | No-op; friendly message |
-| Not logged in | Open | Door card shown; can signal Going as guest; "Sign up / Log in" link below |
+| Not logged in | Open | Door card shown; can RSVP as guest (Going/Maybe); RSVP stored in localStorage for revisit/change; "Sign up / Log in" link below |
 | Not logged in | Closed | Redirected to `/auth?redirect=/invite/:token` |
 
 **New user signup via invite link**

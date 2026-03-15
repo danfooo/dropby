@@ -172,6 +172,7 @@
     "sending": "Envoi…",
     "nameRequired": "Le prénom est obligatoire",
     "weNotifiedThem": "On a envoyé une notification à {{name}} pour lui dire que tu arrives.",
+    "yourRsvp": "Votre réponse",
     "rsvpGoing": "J'y vais ✅",
     "rsvpMaybe": "Peut-être 🤔",
     "rsvpChanged": "RSVP mis à jour !"

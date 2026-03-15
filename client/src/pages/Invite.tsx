@@ -28,7 +28,8 @@ export default function Invite() {
   const [accepted, setAccepted] = useState(false);
   const [acceptedName, setAcceptedName] = useState('');
   const [showGoingForm, setShowGoingForm] = useState(false);
-  const [goingDone, setGoingDone] = useState(false);
+  const [pendingRsvp, setPendingRsvp] = useState<'going' | 'maybe'>('going');
+  const [guestRsvp, setGuestRsvp] = useState<{ signalId: string; rsvp: 'going' | 'maybe' } | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -46,6 +47,21 @@ export default function Invite() {
         }
       });
   }, [token]);
+
+  // Store invite token and restore guest RSVP from localStorage
+  useEffect(() => {
+    if (!token || !info) return;
+    localStorage.setItem('dropby_invite_token', token);
+    if (info.status) {
+      const raw = localStorage.getItem('dropby_guest_rsvp');
+      if (raw) {
+        try {
+          const stored = JSON.parse(raw);
+          if (stored.statusId === info.status.id) setGuestRsvp({ signalId: stored.signalId, rsvp: stored.rsvp });
+        } catch {}
+      }
+    }
+  }, [token, info]);
 
   // Auto-accept for logged-in users
   useEffect(() => {
@@ -199,6 +215,21 @@ export default function Invite() {
   // Not logged in, door open or scheduled: show door card
   if (!user && info.status) {
     const isScheduled = info.status.starts_at && info.status.starts_at > Math.floor(Date.now() / 1000);
+
+    const changeGuestRsvp = async (newRsvp: 'going' | 'maybe') => {
+      if (!guestRsvp) return;
+      try {
+        await goingApi.patchGuest(guestRsvp.signalId, newRsvp);
+        const updated = { ...guestRsvp, rsvp: newRsvp };
+        setGuestRsvp(updated);
+        const raw = localStorage.getItem('dropby_guest_rsvp');
+        if (raw) {
+          const stored = JSON.parse(raw);
+          localStorage.setItem('dropby_guest_rsvp', JSON.stringify({ ...stored, rsvp: newRsvp }));
+        }
+      } catch {}
+    };
+
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-10">
         <div className="w-full max-w-sm text-center">
@@ -215,24 +246,35 @@ export default function Invite() {
             <p className="text-lg font-medium text-gray-800 mb-4">"{info.status.note}"</p>
           )}
 
-          {goingDone ? (
-            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 mb-6">
-              <p className="text-2xl mb-2">✅</p>
-              <p className="font-semibold text-emerald-800">{t('invite.theyKnowYoureComing')}</p>
-              <p className="text-sm text-emerald-600 mt-1">{t('invite.weNotifiedThem', { name: info.inviter.display_name })}</p>
+          {guestRsvp ? (
+            <div className="mb-4">
+              <p className="text-xs text-gray-400 text-center mb-2">{t('invite.yourRsvp')}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => guestRsvp.rsvp !== 'going' && changeGuestRsvp('going')}
+                  className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-colors ${guestRsvp.rsvp === 'going' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                >
+                  {t('invite.rsvpGoing')}
+                </button>
+                <button
+                  onClick={() => guestRsvp.rsvp !== 'maybe' && changeGuestRsvp('maybe')}
+                  className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-colors ${guestRsvp.rsvp === 'maybe' ? 'bg-amber-400 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                >
+                  {t('invite.rsvpMaybe')}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex gap-3 mb-4">
               <button
-                onClick={() => setShowGoingForm(true)}
+                onClick={() => { setPendingRsvp('going'); setShowGoingForm(true); }}
                 className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-semibold text-base"
               >
                 {t('invite.rsvpGoing')}
               </button>
               <button
-                onClick={() => setShowGoingForm(true)}
+                onClick={() => { setPendingRsvp('maybe'); setShowGoingForm(true); }}
                 className="flex-1 bg-amber-400 hover:bg-amber-500 text-white py-4 rounded-2xl font-semibold text-base"
-                data-rsvp="maybe"
               >
                 {t('invite.rsvpMaybe')}
               </button>
@@ -249,7 +291,13 @@ export default function Invite() {
           onClose={() => setShowGoingForm(false)}
           statusId={info.status.id}
           isScheduled={!!isScheduled}
-          onSuccess={() => { setGoingDone(true); setShowGoingForm(false); }}
+          initialRsvp={pendingRsvp}
+          onSuccess={({ signalId, rsvp }) => {
+            const data = { signalId, statusId: info.status!.id, rsvp };
+            localStorage.setItem('dropby_guest_rsvp', JSON.stringify(data));
+            setGuestRsvp({ signalId, rsvp });
+            setShowGoingForm(false);
+          }}
         />
       </div>
     );
@@ -265,12 +313,14 @@ export default function Invite() {
   );
 }
 
-function GuestGoingModal({ open, onClose, statusId, isScheduled, onSuccess }: { open: boolean; onClose: () => void; statusId: string; isScheduled: boolean; onSuccess: () => void }) {
+function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = 'going', onSuccess }: { open: boolean; onClose: () => void; statusId: string; isScheduled: boolean; initialRsvp?: 'going' | 'maybe'; onSuccess: (data: { signalId: string; rsvp: 'going' | 'maybe' }) => void }) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [consent, setConsent] = useState(false);
-  const [rsvp, setRsvp] = useState<'going' | 'maybe'>('going');
+  const [rsvp, setRsvp] = useState<'going' | 'maybe'>(initialRsvp);
+
+  useEffect(() => { setRsvp(initialRsvp); }, [initialRsvp]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -279,13 +329,13 @@ function GuestGoingModal({ open, onClose, statusId, isScheduled, onSuccess }: { 
     if (!name.trim()) { setError(t('invite.nameRequired')); return; }
     setLoading(true);
     try {
-      await goingApi.sendGuest(statusId, {
+      const result = await goingApi.sendGuest(statusId, {
         name: name.trim(),
         contact: contact.trim() || undefined,
         marketing_consent: consent,
         rsvp,
       });
-      onSuccess();
+      onSuccess({ signalId: result.signal_id, rsvp });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Something went wrong');
     } finally {

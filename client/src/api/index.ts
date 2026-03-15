@@ -90,7 +90,22 @@ export const goingApi = {
   send: (statusId: string, rsvp: 'going' | 'maybe' = 'going') => api.post(`/going/${statusId}`, { rsvp }).then(r => r.data),
   sendGuest: (statusId: string, data: { name: string; contact?: string; marketing_consent?: boolean; rsvp?: 'going' | 'maybe' }) =>
     api.post(`/going/${statusId}/guest`, data).then(r => r.data),
+  patchGuest: (signalId: string, rsvp: 'going' | 'maybe') => api.patch(`/going/guest/${signalId}`, { rsvp }).then(r => r.data),
+  claim: (signalId: string) => api.post('/going/claim', { signal_id: signalId }).then(r => r.data),
 };
+
+export async function associatePendingGuest() {
+  const inviteToken = localStorage.getItem('dropby_invite_token');
+  if (inviteToken) {
+    try { await invitesApi.accept(inviteToken); } catch {}
+    localStorage.removeItem('dropby_invite_token');
+  }
+  const raw = localStorage.getItem('dropby_guest_rsvp');
+  if (raw) {
+    try { await goingApi.claim(JSON.parse(raw).signalId); } catch {}
+    localStorage.removeItem('dropby_guest_rsvp');
+  }
+}
 
 // Notes
 export const notesApi = {

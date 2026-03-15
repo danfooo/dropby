@@ -172,6 +172,7 @@
     "sending": "Sending…",
     "nameRequired": "Name is required",
     "weNotifiedThem": "We sent {{name}} a notification that you're on your way.",
+    "yourRsvp": "Your RSVP",
     "rsvpGoing": "Going ✅",
     "rsvpMaybe": "Maybe 🤔",
     "rsvpChanged": "RSVP updated!"

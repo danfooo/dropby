@@ -17,6 +17,25 @@ router.get('/ever-received', requireAuth, (req: AuthRequest, res) => {
   res.json({ received: row.n > 0 });
 });
 
+// POST /api/going/claim — claim a guest signal after login
+router.post('/claim', requireAuth, (req: AuthRequest, res) => {
+  const { signal_id } = req.body;
+  const userId = req.userId!;
+  if (!signal_id) return res.status(400).json({ error: 'signal_id required' });
+
+  const signal = db.prepare('SELECT * FROM going_signals WHERE id = ? AND user_id IS NULL').get(signal_id) as any;
+  if (!signal) return res.status(404).json({ error: 'Not found' });
+
+  const existing = db.prepare('SELECT id FROM going_signals WHERE status_id = ? AND user_id = ?').get(signal.status_id, userId) as any;
+  if (existing) {
+    db.prepare('DELETE FROM going_signals WHERE id = ?').run(signal_id);
+  } else {
+    db.prepare('UPDATE going_signals SET user_id = ?, guest_contact_id = NULL WHERE id = ?').run(userId, signal_id);
+  }
+
+  res.json({ ok: true });
+});
+
 // POST /api/going/:statusId — logged-in RSVP (going or maybe), changeable
 router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
   const { statusId } = req.params;
@@ -73,12 +92,25 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
 
   const validRsvp = rsvp === 'maybe' ? 'maybe' : 'going';
 
+  const signalId = randomUUID();
   db.prepare('INSERT INTO going_signals (id, status_id, user_id, guest_contact_id, rsvp) VALUES (?, ?, NULL, ?, ?)').run(
-    randomUUID(), statusId, guestContactId, validRsvp
+    signalId, statusId, guestContactId, validRsvp
   );
 
   if (validRsvp === 'going') notifyGoingSignal(status.user_id, name.trim());
-  res.status(201).json({ ok: true });
+  res.status(201).json({ ok: true, signal_id: signalId, status_id: statusId });
+});
+
+// PATCH /api/going/guest/:signalId — update guest RSVP
+router.patch('/guest/:signalId', (req, res) => {
+  const { signalId } = req.params;
+  const { rsvp } = req.body;
+  const validRsvp = rsvp === 'maybe' ? 'maybe' : 'going';
+
+  const result = db.prepare('UPDATE going_signals SET rsvp = ? WHERE id = ? AND user_id IS NULL').run(validRsvp, signalId);
+  if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
+
+  res.json({ ok: true });
 });
 
 export default router;

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import { authApi, invitesApi } from '../api';
+import { authApi, invitesApi, associatePendingGuest } from '../api';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 
@@ -42,8 +42,9 @@ export default function Auth() {
       .catch(() => {});
   }, [inviteToken]);
 
-  const handleSuccess = (data: { user: any; token: string }) => {
+  const handleSuccess = async (data: { user: any; token: string }) => {
     setAuth(data.user, data.token);
+    await associatePendingGuest();
     navigate(redirect);
   };
 

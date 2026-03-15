@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { authApi } from '../api';
+import { authApi, associatePendingGuest } from '../api';
 import { useAuthStore } from '../stores/auth';
 
 export default function VerifyEmail() {
@@ -17,8 +17,9 @@ export default function VerifyEmail() {
     if (!token) { setStatus('error'); return; }
 
     authApi.verifyEmail(token)
-      .then(({ token: jwt, user }) => {
+      .then(async ({ token: jwt, user }) => {
         setAuth(user, jwt);
+        await associatePendingGuest();
         setStatus('success');
         setTimeout(() => navigate(redirect), 1500);
       })
