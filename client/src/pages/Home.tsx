@@ -278,11 +278,17 @@ export default function Home() {
   if (view === 'closed') {
     return (
       <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
+        <div className="flex items-center justify-between mb-1">
+          <img src="/logo-icon.svg" alt="dropby" className="h-8" />
+          <UserMenu />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6 mt-5">{getGreeting(t)}</h1>
+
         {/* Friend doors open */}
         {(friendStatuses as any[]).length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              {t('home.friendsAvailable')}
+          <div className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 border-y border-fuchsia-200/60">
+            <h2 className="text-base font-bold text-fuchsia-900 mb-3">
+              {t('home.friendsAvailable')} ✨
             </h2>
             <div className="space-y-3">
               {(friendStatuses as any[]).map((s: any) => (
@@ -291,12 +297,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        <div className="flex items-center justify-between mb-1">
-          <img src="/logo-icon.svg" alt="dropby" className="h-8" />
-          <UserMenu />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 mt-5">{getGreeting(t)}</h1>
 
         {/* Suggestion chips */}
         {chips.length > 0 && (
