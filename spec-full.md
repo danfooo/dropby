@@ -264,7 +264,7 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
    - × button: permanently dismisses
 
 2. **Invite tip** — shown only if the nudge tip is not shown (or has been dismissed) AND has not been permanently dismissed
-   - Text: "Want to see your friends more? Add them to your Dropby."
+   - Text: "Want to see your friends more? Add them to your dropby."
    - Link: "Copy invite link →" — generates and copies a fresh link, shows toast: "Invite link copied!"
    - × button: permanently dismisses
 

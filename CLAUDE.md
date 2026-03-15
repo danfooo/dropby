@@ -32,6 +32,10 @@ Always ask before deploying — it requires confirmation.
 
 Use `zsh -c "..."` for shell commands (picks up nvm and Node 20).
 
+## Brand
+
+The product name is always **dropby** — all lowercase, including at the start of sentences.
+
 ## Stack
 
 - Client: React + Vite + Tailwind (`/client`) — dev at http://localhost:5173
