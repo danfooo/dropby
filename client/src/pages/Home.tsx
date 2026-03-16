@@ -875,14 +875,13 @@ export default function Home() {
           </div>
         )}
         <p className="text-sm text-gray-500 mt-2">
-          {minutesLeft > 0 ? t('home.closesIn', { minutes: minutesLeft }) : t('home.closingSoon')}
+          {myStatus?.ends_at
+            ? t('home.closesAt', { time: formatTimeShort(myStatus.ends_at) })
+            : minutesLeft > 0
+              ? t('home.closesIn', { minutes: minutesLeft })
+              : t('home.closingSoon')}
         </p>
-        {myStatus?.ends_at && (
-          <p className="text-xs text-gray-400 mt-1">
-            {t('home.freeUntil', { time: formatTimeShort(myStatus.ends_at) })}
-          </p>
-        )}
-        {minutesLeft <= 20 && (
+        {!myStatus?.ends_at && minutesLeft <= 20 && (
           <button
             onClick={() => prolongStatus.mutate()}
             disabled={prolongStatus.isPending}

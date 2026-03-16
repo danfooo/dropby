@@ -80,6 +80,7 @@
     "nudgePickOther": "Elegir otra hora",
     "youreOpen": "¡Estás abierto!",
     "closesIn": "Cierra en {{minutes}} min",
+    "closesAt": "Cierra a las {{time}}",
     "keepItOpen": "Mantener abierto +30 min",
     "invited": "Invitados",
     "onTheirWay": "En camino",
