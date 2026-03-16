@@ -194,12 +194,13 @@ function InviteLinkRow({ token, createdAt, onRevoke }: { token: string; createdA
   );
 }
 
-function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPending, onSubmit, onCancel }: {
+function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPending, onSubmit, onOpenNow, onCancel }: {
   friends: any[];
   defaultNote?: string;
   defaultRecipients?: string[];
   isPending?: boolean;
   onSubmit: (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at: number; reminder_minutes: number }) => void;
+  onOpenNow?: (data: { note?: string; recipient_ids: string[] }) => void;
   onCancel: () => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -208,6 +209,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
   const [selectedChip, setSelectedChip] = useState('');
   const [previousNote, setPreviousNote] = useState<string | null>(null);
   const [recipients, setRecipients] = useState<string[]>(defaultRecipients);
+  const [scheduleMode, setScheduleMode] = useState(false);
   const [date, setDate] = useState(todayStr);
   const [start, setStart] = useState(defaultStartTime);
   const [end, setEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
@@ -241,6 +243,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
 
   const activeFriends = friends.filter((f: any) => !f.muted);
   const mutedFriends = friends.filter((f: any) => f.muted);
+  const trimmedNote = note.trim() || undefined;
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
@@ -304,100 +307,94 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
         }}
         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
       />
-      <div>
-        <label className="text-xs text-gray-500 block mb-1">Date</label>
-        <input
-          type="date"
-          value={date}
-          min={todayStr()}
-          onChange={e => setDate(e.target.value)}
-          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-        />
-      </div>
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
-          <input
-            type="time"
-            value={start}
-            onChange={e => setStart(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-          />
-        </div>
-        <div className="flex-1">
-          <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
-          <input
-            type="time"
-            value={end}
-            onChange={e => setEnd(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-          />
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <p className="text-xs text-gray-400 flex-1">{t('home.scheduleReminderText', { minutes: reminder })}</p>
-        <button onClick={() => setShowReminder(v => !v)} className="text-xs text-violet-600 font-medium">
-          {t('home.scheduleReminderChange')}
-        </button>
-      </div>
-      {showReminder && (
-        <div className="flex gap-2 flex-wrap">
-          {REMINDER_OPTIONS.map(m => (
-            <button
-              key={m}
-              onClick={() => { setReminder(m); setShowReminder(false); }}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                reminder === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 text-gray-600 border-gray-200'
-              }`}
-            >
-              {m === 60 ? '1h' : `${m} min`}
+      {/* Schedule pickers — only when scheduleMode */}
+      {scheduleMode && (
+        <>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 block mb-1">Date</label>
+              <input type="date" value={date} min={todayStr()} onChange={e => setDate(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
+              <input type="time" value={start} onChange={e => setStart(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
+              <input type="time" value={end} onChange={e => setEnd(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-gray-400 flex-1">{t('home.scheduleReminderText', { minutes: reminder })}</p>
+            <button onClick={() => setShowReminder(v => !v)} className="text-xs text-violet-600 font-medium">
+              {t('home.scheduleReminderChange')}
             </button>
-          ))}
-        </div>
+          </div>
+          {showReminder && (
+            <div className="flex gap-2 flex-wrap">
+              {REMINDER_OPTIONS.map(m => (
+                <button key={m} onClick={() => { setReminder(m); setShowReminder(false); }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    reminder === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 text-gray-600 border-gray-200'
+                  }`}>
+                  {m === 60 ? '1h' : `${m} min`}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
       {friends.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 font-medium mb-2">{t('home.openDoorTo')}</p>
+          <p className="text-xs text-gray-500 font-medium mb-1">{t('home.openDoorTo')}</p>
           <div className="divide-y divide-gray-50">
             {activeFriends.map((f: any) => (
-              <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-4 px-4">
-                <input
-                  type="checkbox"
-                  checked={recipients.includes(f.id)}
+              <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 -mx-4 px-4">
+                <input type="checkbox" checked={recipients.includes(f.id)}
                   onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                  className="w-4 h-4 accent-emerald-500 flex-shrink-0"
-                />
-                <Avatar name={f.display_name} size="md" />
+                  className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                <Avatar name={f.display_name} size="sm" />
                 <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
               </label>
             ))}
             {mutedFriends.length > 0 && mutedFriends.map((f: any) => (
-              <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer opacity-50 hover:bg-gray-50 -mx-4 px-4">
-                <input
-                  type="checkbox"
-                  checked={recipients.includes(f.id)}
+              <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer opacity-50 hover:bg-gray-50 -mx-4 px-4">
+                <input type="checkbox" checked={recipients.includes(f.id)}
                   onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                  className="w-4 h-4 accent-emerald-500 flex-shrink-0"
-                />
-                <Avatar name={f.display_name} size="md" />
+                  className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                <Avatar name={f.display_name} size="sm" />
                 <span className="text-sm font-medium text-gray-700">{f.display_name}</span>
               </label>
             ))}
           </div>
         </div>
       )}
-      <div className="flex gap-2 pt-1">
+      <div className="flex gap-2">
         <button
-          onClick={() => onSubmit({ note: note.trim() || undefined, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: toUnix(date, end), reminder_minutes: reminder })}
+          onClick={() => scheduleMode
+            ? onSubmit({ note: trimmedNote, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: toUnix(date, end), reminder_minutes: reminder })
+            : onOpenNow?.({ note: trimmedNote, recipient_ids: recipients })
+          }
           disabled={isPending}
-          className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-2xl font-semibold text-sm disabled:opacity-50"
+          className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-2xl font-semibold text-sm disabled:opacity-50 transition-colors"
         >
-          🗓 {t('home.scheduleToggle')}
+          {scheduleMode ? `🗓 ${t('home.scheduleToggle')}` : t('home.openDoor')}
         </button>
-        <button onClick={onCancel} className="px-4 py-3 text-sm text-gray-500 hover:text-gray-700 font-medium">
-          {t('common.cancel')}
+        <button
+          onClick={() => setScheduleMode(v => !v)}
+          className={`px-4 py-2.5 rounded-2xl text-sm font-medium border transition-colors ${
+            scheduleMode ? 'bg-violet-100 text-violet-700 border-violet-300' : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-300'
+          }`}
+        >
+          🗓
         </button>
       </div>
+      <button onClick={onCancel} className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors">
+        {t('common.cancel')}
+      </button>
     </div>
   );
 }
@@ -805,8 +802,8 @@ export default function Home() {
 
         {/* Suggestion chips */}
         {chips.length > 0 && (
-          <div className="mb-2">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="mb-1.5">
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {chips.map((chip: string) => (
                 <button
                   key={chip}
@@ -821,10 +818,10 @@ export default function Home() {
                       setSelectedChip(chip);
                     }
                   }}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                     selectedChip === chip
                       ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'
                   }`}
                 >
                   {chip}
@@ -836,15 +833,15 @@ export default function Home() {
 
         {/* Saved note chips */}
         {visibleSaved.length > 0 && (
-          <div className="mb-4">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="mb-2">
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {visibleSaved.map((n: any) => (
                 <div
                   key={n.id}
-                  className={`flex-shrink-0 flex items-center gap-1 pl-4 pr-2 py-2 rounded-full text-sm font-medium border transition-colors ${
+                  className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                     selectedChip === n.text
                       ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white text-gray-700 border-gray-200'
+                      : 'bg-white text-gray-600 border-gray-200'
                   }`}
                 >
                   <button
@@ -880,7 +877,7 @@ export default function Home() {
         )}
 
         {/* Note input */}
-        <div className="mb-4 relative">
+        <div className="mb-3 relative">
           <input
             type="text"
             placeholder={t('home.customNotePlaceholder')}
@@ -893,7 +890,7 @@ export default function Home() {
                 setPreviousNote(null);
               }
             }}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
           {note.length >= 80 && (
             <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 90 ? 'text-red-400' : 'text-gray-400'}`}>
@@ -902,123 +899,71 @@ export default function Home() {
           )}
         </div>
 
-        {/* Schedule toggle */}
-        <div className="mb-4">
-          <button
-            onClick={() => setScheduleEnabled(v => !v)}
-            className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${
-              scheduleEnabled
-                ? 'bg-violet-100 text-violet-700 border-violet-300'
-                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            🗓 {t('home.scheduleToggle')}
-          </button>
-
-          {scheduleEnabled && (
-            <div className="mt-3 bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="text-xs text-gray-500 block mb-1">Date</label>
-                  <input
-                    type="date"
-                    value={scheduleDate}
-                    min={todayStr()}
-                    onChange={e => setScheduleDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                  />
-                </div>
+        {/* Schedule pickers — shown when scheduleEnabled */}
+        {scheduleEnabled && (
+          <div className="mb-3 space-y-2">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 block mb-1">Date</label>
+                <input type="date" value={scheduleDate} min={todayStr()} onChange={e => setScheduleDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
               </div>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
-                  <input
-                    type="time"
-                    value={scheduleStart}
-                    onChange={e => setScheduleStart(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
-                  <input
-                    type="time"
-                    value={scheduleEnd}
-                    onChange={e => setScheduleEnd(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                  />
-                </div>
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
+                <input type="time" value={scheduleStart} onChange={e => setScheduleStart(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
               </div>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-gray-400 flex-1">
-                  {t('home.scheduleReminderText', { minutes: reminderMinutes })}
-                </p>
-                <button
-                  onClick={() => setShowReminderPicker(v => !v)}
-                  className="text-xs text-violet-600 font-medium"
-                >
-                  {t('home.scheduleReminderChange')}
-                </button>
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
+                <input type="time" value={scheduleEnd} onChange={e => setScheduleEnd(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
               </div>
-              {showReminderPicker && (
-                <div className="flex gap-2 flex-wrap">
-                  {REMINDER_OPTIONS.map(m => (
-                    <button
-                      key={m}
-                      onClick={() => { setReminderMinutes(m); setShowReminderPicker(false); }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                        reminderMinutes === m
-                          ? 'bg-violet-500 text-white border-violet-500'
-                          : 'bg-gray-50 text-gray-600 border-gray-200'
-                      }`}
-                    >
-                      {m === 60 ? '1h' : `${m} min`}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
-          )}
-        </div>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-gray-400 flex-1">{t('home.scheduleReminderText', { minutes: reminderMinutes })}</p>
+              <button onClick={() => setShowReminderPicker(v => !v)} className="text-xs text-violet-600 font-medium">
+                {t('home.scheduleReminderChange')}
+              </button>
+            </div>
+            {showReminderPicker && (
+              <div className="flex gap-2 flex-wrap">
+                {REMINDER_OPTIONS.map(m => (
+                  <button key={m} onClick={() => { setReminderMinutes(m); setShowReminderPicker(false); }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      reminderMinutes === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 text-gray-600 border-gray-200'
+                    }`}>
+                    {m === 60 ? '1h' : `${m} min`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Recipient selection */}
         {hasFriends && (
-          <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900 mb-2">{t('home.openDoorTo')}</h2>
+          <div className="bg-white rounded-2xl p-3 mb-3 shadow-sm border border-gray-100">
+            <h2 className="text-xs font-semibold text-gray-500 mb-1">{t('home.openDoorTo')}</h2>
             <div className="divide-y divide-gray-50">
               {activeFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-50 -mx-4 px-4 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={selectedRecipients.includes(f.id)}
-                    onChange={e => {
-                      setSelectedRecipients(prev =>
-                        e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id)
-                      );
-                    }}
-                    className="w-5 h-5 accent-emerald-500 flex-shrink-0"
-                  />
-                  <Avatar name={f.display_name} size="md" />
-                  <span className="text-base font-medium text-gray-900">{f.display_name}</span>
+                <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-3 px-3 transition-colors">
+                  <input type="checkbox" checked={selectedRecipients.includes(f.id)}
+                    onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                    className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                  <Avatar name={f.display_name} size="sm" />
+                  <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
                 </label>
               ))}
               {mutedFriends.length > 0 && (
                 <>
-                  <p className="text-xs text-gray-400 pt-3 pb-1 font-medium">{t('home.muted')}</p>
+                  <p className="text-xs text-gray-400 pt-2 pb-1 font-medium">{t('home.muted')}</p>
                   {mutedFriends.map((f: any) => (
-                    <label key={f.id} className="flex items-center gap-3 py-3 cursor-pointer opacity-50 hover:bg-gray-50 -mx-4 px-4 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={selectedRecipients.includes(f.id)}
-                        onChange={e => {
-                          setSelectedRecipients(prev =>
-                            e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id)
-                          );
-                        }}
-                        className="w-5 h-5 accent-emerald-500 flex-shrink-0"
-                      />
-                      <Avatar name={f.display_name} size="md" />
-                      <span className="text-base font-medium text-gray-700">{f.display_name}</span>
+                    <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer opacity-50 hover:bg-gray-50 -mx-3 px-3 transition-colors">
+                      <input type="checkbox" checked={selectedRecipients.includes(f.id)}
+                        onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                        className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                      <Avatar name={f.display_name} size="sm" />
+                      <span className="text-sm font-medium text-gray-700">{f.display_name}</span>
                     </label>
                   ))}
                 </>
@@ -1027,19 +972,25 @@ export default function Home() {
           </div>
         )}
 
-        {/* Open button */}
-        <button
-          onClick={handleOpen}
-          disabled={createStatus.isPending}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-4 rounded-2xl font-semibold text-lg transition-colors shadow-md"
-        >
-          {createStatus.isPending
-            ? t('home.opening')
-            : scheduleEnabled
-              ? `🗓 ${t('home.scheduleToggle')}`
-              : t('home.openDoor')}
-        </button>
-        <p className="text-xs text-gray-400 text-center mt-2">{t('home.openDoorDesc')}</p>
+        {/* Open / Schedule button row */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleOpen}
+            disabled={createStatus.isPending}
+            className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
+          >
+            {createStatus.isPending ? t('home.opening') : scheduleEnabled ? `🗓 ${t('home.scheduleToggle')}` : t('home.openDoor')}
+          </button>
+          <button
+            onClick={() => setScheduleEnabled(v => !v)}
+            className={`px-4 py-3 rounded-2xl text-sm font-medium border transition-colors ${
+              scheduleEnabled ? 'bg-violet-100 text-violet-700 border-violet-300' : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-300'
+            }`}
+          >
+            🗓
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 text-center mt-1">{t('home.openDoorDesc')}</p>
 
         {/* Pending scheduled sessions */}
         {(upcomingSessions as any[]).length > 0 && (
@@ -1291,6 +1242,7 @@ export default function Home() {
             defaultRecipients={myStatus?.recipients.map((r: any) => r.id) ?? []}
             isPending={createStatus.isPending}
             onSubmit={data => createStatus.mutate(data)}
+            onOpenNow={data => createStatus.mutate(data)}
             onCancel={() => setShowScheduleMore(false)}
           />
         </div>
