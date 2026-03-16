@@ -118,7 +118,10 @@
     "opensAt": "Öffnet {{time}}",
     "rsvpGoing": "Ich komme ✅",
     "rsvpMaybe": "Vielleicht",
-    "scheduledRsvpCount": "{{going}} kommen, {{maybe}} vielleicht"
+    "scheduledRsvpCount": "{{going}} kommen, {{maybe}} vielleicht",
+    "addToCalendar": "Zum Kalender hinzufügen",
+    "updateCalendar": "Kalender aktualisieren",
+    "removeFromCalendar": "Aus Kalender entfernen"
   },
   "friends": {
     "title": "Freunde",
@@ -178,7 +181,8 @@
     "yourRsvp": "Deine Antwort",
     "rsvpGoing": "Ich komme ✅",
     "rsvpMaybe": "Vielleicht 🤔",
-    "rsvpChanged": "Rückmeldung aktualisiert!"
+    "rsvpChanged": "Rückmeldung aktualisiert!",
+    "addToCalendar": "Zum Kalender hinzufügen"
   },
   "feedback": {
     "title": "Feedback teilen",

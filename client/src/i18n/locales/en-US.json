@@ -118,7 +118,10 @@
     "opensAt": "Opens {{time}}",
     "rsvpGoing": "Going ✅",
     "rsvpMaybe": "Maybe",
-    "scheduledRsvpCount": "{{going}} going, {{maybe}} maybe"
+    "scheduledRsvpCount": "{{going}} going, {{maybe}} maybe",
+    "addToCalendar": "Add to Calendar",
+    "updateCalendar": "Update calendar",
+    "removeFromCalendar": "Remove from calendar"
   },
   "friends": {
     "title": "Friends",
@@ -178,7 +181,8 @@
     "yourRsvp": "Your RSVP",
     "rsvpGoing": "Going ✅",
     "rsvpMaybe": "Maybe 🤔",
-    "rsvpChanged": "RSVP updated!"
+    "rsvpChanged": "RSVP updated!",
+    "addToCalendar": "Add to Calendar"
   },
   "feedback": {
     "title": "Share feedback",

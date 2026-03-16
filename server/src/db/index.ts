@@ -135,6 +135,14 @@ db.exec(`
     reply_email TEXT,
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
+
+  CREATE TABLE IF NOT EXISTS status_ics_downloads (
+    status_id TEXT NOT NULL,
+    user_id   TEXT,
+    token     TEXT,
+    downloaded_at INTEGER NOT NULL,
+    PRIMARY KEY (status_id, COALESCE(user_id, token))
+  );
 `);
 
 // Migrations for existing databases
@@ -182,6 +190,10 @@ if (!statusCols.find(c => c.name === 'reminder_sent')) {
 const goingCols = db.pragma('table_info(going_signals)') as { name: string }[];
 if (!goingCols.find(c => c.name === 'rsvp')) {
   db.exec("ALTER TABLE going_signals ADD COLUMN rsvp TEXT NOT NULL DEFAULT 'going'");
+}
+
+if (!statusCols.find(c => c.name === 'ics_sequence')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN ics_sequence INTEGER NOT NULL DEFAULT 0');
 }
 
 export default db;

@@ -246,6 +246,16 @@ export default function Invite() {
             <p className="text-lg font-medium text-gray-800 mb-4">"{info.status.note}"</p>
           )}
 
+          {isScheduled && (
+            <a
+              href={`/api/invites/${token}/calendar.ics`}
+              download
+              className="block text-sm text-violet-600 hover:text-violet-800 font-medium mb-4"
+            >
+              {t('invite.addToCalendar')}
+            </a>
+          )}
+
           {guestRsvp ? (
             <div className="mb-4">
               <p className="text-xs text-gray-400 text-center mb-2">{t('invite.yourRsvp')}</p>

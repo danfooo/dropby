@@ -406,6 +406,7 @@ function ScheduledSessionCard({ session, onCancel, onOpen, onSave }: {
   onSave?: (data: { note?: string; starts_at?: number; ends_at?: number }) => void;
 }) {
   const { t } = useTranslation();
+  const icsKey = `dropby_ics_${session.id}`;
   const [editing, setEditing] = useState(false);
   const sessionDate = format(new Date(session.starts_at * 1000), 'yyyy-MM-dd');
   const [editDate, setEditDate] = useState(sessionDate);
@@ -487,6 +488,14 @@ function ScheduledSessionCard({ session, onCancel, onOpen, onSave }: {
           {session.going_signals.map((g: any) => g.name).join(', ')} {session.going_signals.length === 1 ? 'is' : 'are'} coming
         </p>
       )}
+      <a
+        href={`/api/status/${session.id}/calendar.ics`}
+        download
+        onClick={() => localStorage.setItem(icsKey, '1')}
+        className="inline-block text-xs text-violet-500 hover:text-violet-700 mb-3"
+      >
+        {t('home.addToCalendar')}
+      </a>
       <div className="flex gap-2">
         {onOpen && (
           <button
@@ -554,6 +563,7 @@ export default function Home() {
   const [editEndsAt, setEditEndsAt] = useState('');
   const [showGoingModal, setShowGoingModal] = useState<string | null>(null);
   const [showScheduleMore, setShowScheduleMore] = useState(false);
+  const [calendarToast, setCalendarToast] = useState<{ type: 'update' | 'remove'; sessionId: string } | null>(null);
 
   // Schedule form state
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -694,13 +704,23 @@ export default function Home() {
 
   const cancelScheduled = useMutation({
     mutationFn: (id: string) => statusApi.cancelScheduledById(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['upcomingSessions'] }),
+    onSuccess: (_data, id) => {
+      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
+      if (localStorage.getItem(`dropby_ics_${id}`)) {
+        setCalendarToast({ type: 'remove', sessionId: id });
+      }
+    },
   });
 
   const updateScheduled = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof statusApi.updateById>[1] }) =>
       statusApi.updateById(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['upcomingSessions'] }),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
+      if (localStorage.getItem(`dropby_ics_${id}`)) {
+        setCalendarToast({ type: 'update', sessionId: id });
+      }
+    },
   });
 
   const sendGoing = async (statusId: string, rsvp: 'going' | 'maybe' = 'going') => {
@@ -1009,6 +1029,29 @@ export default function Home() {
         )}
 
         <TipsSection />
+
+        {calendarToast && (
+          <div className="fixed bottom-4 left-4 right-4 z-50 bg-gray-900 text-white rounded-xl p-3 flex items-center gap-3 shadow-lg">
+            <span className="flex-1 text-sm">
+              {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
+            </span>
+            <a
+              href={calendarToast.type === 'update'
+                ? `/api/status/${calendarToast.sessionId}/calendar.ics`
+                : `/api/status/${calendarToast.sessionId}/calendar.ics?cancel=1`}
+              download
+              className="text-sm text-emerald-400 font-medium whitespace-nowrap"
+              onClick={() => setCalendarToast(null)}
+            >
+              {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
+            </a>
+            <button onClick={() => setCalendarToast(null)} className="text-gray-400 p-1 shrink-0">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -1245,6 +1288,29 @@ export default function Home() {
             onOpenNow={data => createStatus.mutate(data)}
             onCancel={() => setShowScheduleMore(false)}
           />
+        </div>
+      )}
+
+      {calendarToast && (
+        <div className="fixed bottom-4 left-4 right-4 z-50 bg-gray-900 text-white rounded-xl p-3 flex items-center gap-3 shadow-lg">
+          <span className="flex-1 text-sm">
+            {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
+          </span>
+          <a
+            href={calendarToast.type === 'update'
+              ? `/api/status/${calendarToast.sessionId}/calendar.ics`
+              : `/api/status/${calendarToast.sessionId}/calendar.ics?cancel=1`}
+            download
+            className="text-sm text-emerald-400 font-medium whitespace-nowrap"
+            onClick={() => setCalendarToast(null)}
+          >
+            {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
+          </a>
+          <button onClick={() => setCalendarToast(null)} className="text-gray-400 p-1 shrink-0">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
     </div>

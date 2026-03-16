@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
-import { notifyFriendDoorOpen, notifyScheduledSession, notifyScheduledReminder } from '../services/notifications.js';
+import { notifyFriendDoorOpen, notifyScheduledSession, notifyScheduledReminder, notifyCalendarUpdate, notifyCalendarCancel } from '../services/notifications.js';
 import { broadcastSSE } from '../services/sse.js';
 import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 
@@ -319,6 +319,8 @@ router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
     db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, statusId);
   }
 
+  const timesChanged = starts_at !== undefined || ends_at !== undefined;
+
   if (starts_at !== undefined) {
     db.prepare('UPDATE statuses SET starts_at = ? WHERE id = ?').run(starts_at ? Number(starts_at) : null, statusId);
   }
@@ -326,6 +328,17 @@ router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
   if (ends_at !== undefined) {
     const newEndsAt = ends_at ? Number(ends_at) : null;
     db.prepare('UPDATE statuses SET ends_at = ?, closes_at = COALESCE(?, closes_at) WHERE id = ?').run(newEndsAt, newEndsAt, statusId);
+  }
+
+  if (timesChanged) {
+    db.prepare('UPDATE statuses SET ics_sequence = ics_sequence + 1 WHERE id = ?').run(statusId);
+    const downloads = db.prepare('SELECT user_id, token FROM status_ics_downloads WHERE status_id = ?').all(statusId) as Array<{ user_id: string | null; token: string | null }>;
+    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+    for (const d of downloads) {
+      if (d.user_id && d.token) {
+        notifyCalendarUpdate(d.user_id, `${appUrl}/api/invites/${d.token}/calendar.ics`);
+      }
+    }
   }
 
   if (recipient_ids !== undefined) {
@@ -379,6 +392,15 @@ router.delete('/scheduled/:statusId', requireAuth, (req: AuthRequest, res) => {
   const status = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND starts_at > ?').get(statusId, userId, nowUnix) as any;
   if (!status) return res.status(404).json({ error: 'Not found' });
   db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, statusId);
+
+  const downloads = db.prepare('SELECT user_id, token FROM status_ics_downloads WHERE status_id = ?').all(statusId) as Array<{ user_id: string | null; token: string | null }>;
+  const appUrl = process.env.APP_URL || 'http://localhost:5173';
+  for (const d of downloads) {
+    if (d.user_id && d.token) {
+      notifyCalendarCancel(d.user_id, `${appUrl}/api/invites/${d.token}/calendar.ics`);
+    }
+  }
+
   res.json({ ok: true });
 });
 
@@ -423,6 +445,49 @@ router.get('/last-selection', requireAuth, (req: AuthRequest, res) => {
   res.json({
     unselected_ids: row ? JSON.parse(row.unselected_ids) : [],
   });
+});
+
+function formatIcsDate(date: Date): string {
+  return date.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
+}
+
+function generateIcs(status: any, hostName: string, method: 'REQUEST' | 'CANCEL'): string {
+  const now = new Date();
+  const summary = status.note ? `${hostName}'s drop-by: ${status.note}` : `${hostName}'s drop-by`;
+  const sequence = method === 'CANCEL' ? 99 : (status.ics_sequence || 0);
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Dropby//Dropby//EN',
+    `METHOD:${method}`,
+    'BEGIN:VEVENT',
+    `UID:dropby-${status.id}@dropby.app`,
+    `DTSTAMP:${formatIcsDate(now)}`,
+    `DTSTART:${formatIcsDate(new Date(status.starts_at * 1000))}`,
+    `DTEND:${formatIcsDate(new Date(status.ends_at * 1000))}`,
+    `SUMMARY:${summary}`,
+    `SEQUENCE:${sequence}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+}
+
+// GET /api/status/:statusId/calendar.ics — host calendar download
+router.get('/:statusId/calendar.ics', requireAuth, (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const { statusId } = req.params;
+  const cancel = req.query.cancel === '1';
+
+  const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND user_id = ?').get(statusId, userId) as any;
+  if (!status || !status.starts_at) return res.status(404).json({ error: 'Not found' });
+
+  const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+  const method = cancel && status.closed_at ? 'CANCEL' : 'REQUEST';
+  const ics = generateIcs(status, user.display_name, method);
+
+  res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="dropby-${statusId}.ics"`);
+  res.send(ics);
 });
 
 export default router;

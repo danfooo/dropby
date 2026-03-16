@@ -53,6 +53,56 @@ router.get('/pending', requireAuth, (req: AuthRequest, res) => {
   res.json(pending);
 });
 
+function formatIcsDate(date: Date): string {
+  return date.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
+}
+
+// GET /api/invites/:token/calendar.ics — invitee calendar download (no auth required)
+router.get('/:token/calendar.ics', optionalAuth, (req: AuthRequest, res) => {
+  const { token } = req.params;
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  const invite = db.prepare('SELECT * FROM invite_links WHERE token = ? AND revoked = 0').get(token) as any;
+  if (!invite) return res.status(404).send('Not found');
+
+  if (!invite.status_id) return res.status(404).send('No session attached');
+
+  const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND starts_at IS NOT NULL').get(invite.status_id) as any;
+  if (!status) return res.status(404).send('Session not found or not scheduled');
+
+  const host = db.prepare('SELECT display_name FROM users WHERE id = ?').get(invite.created_by) as any;
+  const method = status.closed_at ? 'CANCEL' : 'REQUEST';
+  const sequence = method === 'CANCEL' ? 99 : (status.ics_sequence || 0);
+  const summary = status.note ? `${host.display_name}'s drop-by: ${status.note}` : `${host.display_name}'s drop-by`;
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Dropby//Dropby//EN',
+    `METHOD:${method}`,
+    'BEGIN:VEVENT',
+    `UID:dropby-${status.id}@dropby.app`,
+    `DTSTAMP:${formatIcsDate(new Date())}`,
+    `DTSTART:${formatIcsDate(new Date(status.starts_at * 1000))}`,
+    `DTEND:${formatIcsDate(new Date(status.ends_at * 1000))}`,
+    `SUMMARY:${summary}`,
+    `SEQUENCE:${sequence}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+
+  // Record download for push notifications on edits/cancels
+  const userId = req.userId || null;
+  db.prepare(`
+    INSERT OR REPLACE INTO status_ics_downloads (status_id, user_id, token, downloaded_at)
+    VALUES (?, ?, ?, ?)
+  `).run(status.id, userId, token, nowUnix);
+
+  res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="dropby-${status.id}.ics"`);
+  res.send(ics);
+});
+
 // GET /api/invites/:token — get invite info (no auth required)
 router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
   const { token } = req.params;

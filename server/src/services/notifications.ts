@@ -183,3 +183,25 @@ export function notifyAutoNudge(userId: string) {
     })
   );
 }
+
+export function notifyCalendarUpdate(userId: string, icsUrl: string) {
+  const tokens = getPushTokens(userId);
+  tokens.forEach(t =>
+    sendPush(t.token, t.platform, {
+      title: 'dropby',
+      body: 'Time changed — tap to update your calendar',
+      data: { type: 'calendar_update', icsUrl },
+    })
+  );
+}
+
+export function notifyCalendarCancel(userId: string, icsUrl: string) {
+  const tokens = getPushTokens(userId);
+  tokens.forEach(t =>
+    sendPush(t.token, t.platform, {
+      title: 'Session cancelled',
+      body: 'Tap to remove from your calendar',
+      data: { type: 'calendar_cancel', icsUrl },
+    })
+  );
+}
