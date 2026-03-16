@@ -137,11 +137,11 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS status_ics_downloads (
-    status_id TEXT NOT NULL,
-    user_id   TEXT,
-    token     TEXT,
+    status_id     TEXT NOT NULL,
+    user_id       TEXT,
+    token         TEXT NOT NULL,
     downloaded_at INTEGER NOT NULL,
-    PRIMARY KEY (status_id, COALESCE(user_id, token))
+    PRIMARY KEY (status_id, token)
   );
 `);
 
