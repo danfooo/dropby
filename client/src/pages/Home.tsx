@@ -194,8 +194,83 @@ function InviteLinkRow({ token, createdAt, onRevoke }: { token: string; createdA
   );
 }
 
-function ScheduledSessionCard({ session, onCancel, onOpen }: { session: any; onCancel: () => void; onOpen?: () => void }) {
+function ScheduledSessionCard({ session, onCancel, onOpen, onSave }: {
+  session: any;
+  onCancel: () => void;
+  onOpen?: () => void;
+  onSave?: (data: { note?: string; starts_at?: number; ends_at?: number }) => void;
+}) {
   const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const sessionDate = format(new Date(session.starts_at * 1000), 'yyyy-MM-dd');
+  const [editDate, setEditDate] = useState(sessionDate);
+  const [editStart, setEditStart] = useState(format(new Date(session.starts_at * 1000), 'HH:mm'));
+  const [editEnd, setEditEnd] = useState(format(new Date(session.ends_at * 1000), 'HH:mm'));
+  const [editNote, setEditNote] = useState(session.note || '');
+
+  if (editing) {
+    return (
+      <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 space-y-3">
+        <input
+          type="date"
+          value={editDate}
+          min={format(new Date(), 'yyyy-MM-dd')}
+          onChange={e => setEditDate(e.target.value)}
+          className="w-full px-3 py-2 bg-white border border-violet-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <label className="text-xs text-violet-500 block mb-1">{t('home.scheduleStartTime')}</label>
+            <input
+              type="time"
+              value={editStart}
+              onChange={e => setEditStart(e.target.value)}
+              className="w-full px-3 py-2 bg-white border border-violet-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="text-xs text-violet-500 block mb-1">{t('home.scheduleEndTime')}</label>
+            <input
+              type="time"
+              value={editEnd}
+              onChange={e => setEditEnd(e.target.value)}
+              className="w-full px-3 py-2 bg-white border border-violet-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+            />
+          </div>
+        </div>
+        <input
+          type="text"
+          placeholder={t('home.notePlaceholder')}
+          value={editNote}
+          maxLength={100}
+          onChange={e => setEditNote(e.target.value)}
+          className="w-full px-3 py-2 bg-white border border-violet-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              onSave?.({
+                note: editNote || undefined,
+                starts_at: toUnix(editDate, editStart),
+                ends_at: toUnix(editDate, editEnd),
+              });
+              setEditing(false);
+            }}
+            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2 rounded-xl text-sm font-semibold"
+          >
+            {t('home.saveChanges')}
+          </button>
+          <button
+            onClick={() => setEditing(false)}
+            className="px-4 py-2 text-sm text-violet-600 hover:text-violet-800 font-medium"
+          >
+            {t('common.cancel')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4">
       <p className="text-sm text-violet-700 font-medium mb-1">
@@ -216,6 +291,12 @@ function ScheduledSessionCard({ session, onCancel, onOpen }: { session: any; onC
             {t('home.scheduleOpenNow')}
           </button>
         )}
+        <button
+          onClick={() => setEditing(true)}
+          className="px-4 py-2 text-sm text-violet-600 hover:text-violet-800 font-medium"
+        >
+          {t('home.edit')}
+        </button>
         <button
           onClick={onCancel}
           className="px-4 py-2 text-sm text-violet-600 hover:text-violet-800 font-medium"
@@ -408,6 +489,12 @@ export default function Home() {
 
   const cancelScheduled = useMutation({
     mutationFn: (id: string) => statusApi.cancelScheduledById(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['upcomingSessions'] }),
+  });
+
+  const updateScheduled = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof statusApi.updateById>[1] }) =>
+      statusApi.updateById(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['upcomingSessions'] }),
   });
 
@@ -756,6 +843,7 @@ export default function Home() {
                 session={session}
                 onOpen={() => activateScheduled.mutate(session.id)}
                 onCancel={() => cancelScheduled.mutate(session.id)}
+                onSave={data => updateScheduled.mutate({ id: session.id, data })}
               />
             ))}
           </div>
@@ -974,6 +1062,7 @@ export default function Home() {
               key={session.id}
               session={session}
               onCancel={() => cancelScheduled.mutate(session.id)}
+              onSave={data => updateScheduled.mutate({ id: session.id, data })}
             />
           ))}
         </div>

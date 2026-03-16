@@ -299,6 +299,50 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
   res.json(updated);
 });
 
+// PUT /api/status/:statusId — update a specific session by ID
+router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const { statusId } = req.params;
+  let { note, recipient_ids, starts_at, ends_at } = req.body;
+
+  const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL').get(statusId, userId) as any;
+  if (!status) return res.status(404).json({ error: 'Session not found' });
+
+  if (note !== undefined) {
+    if (note) {
+      note = sanitizeNote(note);
+      if (note.length > 100) return res.status(400).json({ error: 'Note max 100 chars' });
+      if (!(await isNoteAllowed(note))) note = null;
+    }
+    db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, statusId);
+  }
+
+  if (starts_at !== undefined) {
+    db.prepare('UPDATE statuses SET starts_at = ? WHERE id = ?').run(starts_at ? Number(starts_at) : null, statusId);
+  }
+
+  if (ends_at !== undefined) {
+    const newEndsAt = ends_at ? Number(ends_at) : null;
+    db.prepare('UPDATE statuses SET ends_at = ?, closes_at = COALESCE(?, closes_at) WHERE id = ?').run(newEndsAt, newEndsAt, statusId);
+  }
+
+  if (recipient_ids !== undefined) {
+    const friendIds = (db.prepare(`
+      SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
+      FROM friendships WHERE user_a_id = ? OR user_b_id = ?
+    `).all(userId, userId, userId) as Array<{ fid: string }>).map(r => r.fid);
+
+    const valid = (recipient_ids as string[]).filter(id => friendIds.includes(id));
+    db.prepare('DELETE FROM status_recipients WHERE status_id = ?').run(statusId);
+    for (const rid of valid) {
+      db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, rid);
+    }
+  }
+
+  const updated = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
+  res.json(updated);
+});
+
 // DELETE /api/status — close active session
 router.delete('/', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;

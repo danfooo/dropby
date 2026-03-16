@@ -67,6 +67,8 @@ export const statusApi = {
     api.post('/status', data).then(r => r.data),
   update: (data: { note?: string; recipient_ids?: string[]; ends_at?: number }) =>
     api.put('/status', data).then(r => r.data),
+  updateById: (id: string, data: { note?: string; recipient_ids?: string[]; starts_at?: number; ends_at?: number }) =>
+    api.put(`/status/${id}`, data).then(r => r.data),
   close: () => api.delete('/status').then(r => r.data),
   cancelScheduled: () => api.delete('/status/scheduled').then(r => r.data),
   cancelScheduledById: (id: string) => api.delete(`/status/scheduled/${id}`).then(r => r.data),
