@@ -150,10 +150,12 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const reminderMinutes: number | null = isScheduled ? (rawReminderMinutes ?? 30) : null;
   const closesAt = isScheduled ? Number(rawEndsAt) : nowUnix + 30 * 60;
 
-  // Close any existing active status (not scheduled ones)
-  const existing = getActiveStatus(userId);
-  if (existing) {
-    db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, existing.id);
+  // Close any existing active status — but only for spontaneous opens (scheduled sessions coexist)
+  if (!isScheduled) {
+    const existing = getActiveStatus(userId);
+    if (existing) {
+      db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, existing.id);
+    }
   }
 
   const statusId = randomUUID();
