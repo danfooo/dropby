@@ -1276,13 +1276,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* Schedule another */}
+      {/* Open another */}
       {!showScheduleMore ? (
         <button
           onClick={() => setShowScheduleMore(true)}
-          className="mt-4 flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+          className="mt-4 text-xs text-gray-400 hover:text-gray-600 transition-colors"
         >
-          🗓 {t('home.scheduleAnother')}
+          {t('home.openAnother')}
         </button>
       ) : (
         <div className="mt-4">

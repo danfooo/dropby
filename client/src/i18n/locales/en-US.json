@@ -110,7 +110,7 @@
     "scheduleReminderText": "We'll remind you {{minutes}} min before",
     "scheduleReminderChange": "Change",
     "scheduledSessionTitle": "Upcoming sessions",
-    "scheduleAnother": "Schedule another",
+    "openAnother": "Open another time...",
     "scheduleOpenNow": "Open now",
     "scheduleCancelSession": "Cancel session",
     "freeUntil": "Free until {{time}}",
