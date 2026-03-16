@@ -472,16 +472,15 @@ function generateIcs(status: any, hostName: string, method: 'REQUEST' | 'CANCEL'
   ].join('\r\n');
 }
 
-// GET /api/status/:statusId/calendar.ics — host calendar download
-router.get('/:statusId/calendar.ics', requireAuth, (req: AuthRequest, res) => {
-  const userId = req.userId!;
+// GET /api/status/:statusId/calendar.ics — host calendar download (public; UUID is unguessable)
+router.get('/:statusId/calendar.ics', (req, res) => {
   const { statusId } = req.params;
   const cancel = req.query.cancel === '1';
 
-  const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND user_id = ?').get(statusId, userId) as any;
-  if (!status || !status.starts_at) return res.status(404).json({ error: 'Not found' });
+  const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND starts_at IS NOT NULL').get(statusId) as any;
+  if (!status) return res.status(404).json({ error: 'Not found' });
 
-  const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+  const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(status.user_id) as any;
   const method = cancel && status.closed_at ? 'CANCEL' : 'REQUEST';
   const ics = generateIcs(status, user.display_name, method);
 
