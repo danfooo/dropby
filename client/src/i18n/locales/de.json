@@ -105,6 +105,7 @@
     "inviteLinkCopied": "Einladungslink kopiert!",
     "couldNotCopy": "Link konnte nicht kopiert werden",
     "scheduleToggle": "Planen",
+    "scheduleLater": "Später",
     "scheduleStartTime": "Startzeit",
     "scheduleEndTime": "Endzeit",
     "scheduleReminderText": "Wir erinnern dich {{minutes}} Min. vorher",

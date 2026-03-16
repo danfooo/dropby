@@ -381,15 +381,15 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
           disabled={isPending}
           className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-2xl font-semibold text-sm disabled:opacity-50 transition-colors"
         >
-          {scheduleMode ? `🗓 ${t('home.scheduleToggle')}` : t('home.openDoor')}
+          {scheduleMode ? t('home.scheduleToggle') : t('home.openDoor')}
         </button>
         <button
           onClick={() => setScheduleMode(v => !v)}
-          className={`px-4 py-2.5 rounded-2xl text-sm font-medium border transition-colors ${
-            scheduleMode ? 'bg-violet-100 text-violet-700 border-violet-300' : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-300'
+          className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition-colors ${
+            scheduleMode ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
           }`}
         >
-          🗓
+          {t('home.scheduleLater')}
         </button>
       </div>
       <button onClick={onCancel} className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors">
@@ -979,15 +979,15 @@ export default function Home() {
             disabled={createStatus.isPending}
             className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
           >
-            {createStatus.isPending ? t('home.opening') : scheduleEnabled ? `🗓 ${t('home.scheduleToggle')}` : t('home.openDoor')}
+            {createStatus.isPending ? t('home.opening') : scheduleEnabled ? t('home.scheduleToggle') : t('home.openDoor')}
           </button>
           <button
             onClick={() => setScheduleEnabled(v => !v)}
-            className={`px-4 py-3 rounded-2xl text-sm font-medium border transition-colors ${
-              scheduleEnabled ? 'bg-violet-100 text-violet-700 border-violet-300' : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-300'
+            className={`px-4 py-3 rounded-2xl text-sm font-medium transition-colors ${
+              scheduleEnabled ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
             }`}
           >
-            🗓
+            {t('home.scheduleLater')}
           </button>
         </div>
         <p className="text-xs text-gray-400 text-center mt-1">{t('home.openDoorDesc')}</p>
