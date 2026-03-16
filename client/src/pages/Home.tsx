@@ -202,14 +202,38 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
   onSubmit: (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at: number; reminder_minutes: number }) => void;
   onCancel: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
   const [note, setNote] = useState(defaultNote);
+  const [selectedChip, setSelectedChip] = useState('');
+  const [previousNote, setPreviousNote] = useState<string | null>(null);
   const [recipients, setRecipients] = useState<string[]>(defaultRecipients);
   const [date, setDate] = useState(todayStr);
   const [start, setStart] = useState(defaultStartTime);
   const [end, setEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
   const [reminder, setReminder] = useState(30);
   const [showReminder, setShowReminder] = useState(false);
+
+  const { data: savedNotes = [] } = useQuery({ queryKey: ['notes'], queryFn: notesApi.list });
+  const hideNote = useMutation({
+    mutationFn: (id: string) => notesApi.setHidden(id, true),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
+  });
+  const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
+  const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden);
+  const chips = suggestions.slice(0, 7);
+
+  const pickChip = (text: string) => {
+    if (selectedChip === text) {
+      setNote(previousNote ?? '');
+      setSelectedChip('');
+      setPreviousNote(null);
+    } else {
+      setPreviousNote(selectedChip === '' ? note : null);
+      setNote(text);
+      setSelectedChip(text);
+    }
+  };
 
   useEffect(() => {
     setEnd(addHours(date, start, 2));
@@ -220,12 +244,64 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
+      {/* Suggestion chips */}
+      {chips.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {chips.map((chip: string) => (
+            <button
+              key={chip}
+              onClick={() => pickChip(chip)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                selectedChip === chip
+                  ? 'bg-emerald-500 text-white border-emerald-500'
+                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300'
+              }`}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Saved note chips */}
+      {visibleSaved.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {visibleSaved.map((n: any) => (
+            <div
+              key={n.id}
+              className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                selectedChip === n.text
+                  ? 'bg-emerald-500 text-white border-emerald-500'
+                  : 'bg-gray-50 text-gray-600 border-gray-200'
+              }`}
+            >
+              <button onClick={() => pickChip(n.text)}>{n.text}</button>
+              <button
+                onClick={() => hideNote.mutate(n.id)}
+                className={`ml-1 rounded-full p-0.5 transition-colors ${
+                  selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100'
+                }`}
+                aria-label="Remove"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       <input
         type="text"
         placeholder={t('home.customNotePlaceholder')}
         value={note}
         maxLength={100}
-        onChange={e => setNote(e.target.value)}
+        onChange={e => {
+          setNote(e.target.value);
+          if (selectedChip && e.target.value !== selectedChip) {
+            setSelectedChip('');
+            setPreviousNote(null);
+          }
+        }}
         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
       />
       <div>
