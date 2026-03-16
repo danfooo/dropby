@@ -194,6 +194,138 @@ function InviteLinkRow({ token, createdAt, onRevoke }: { token: string; createdA
   );
 }
 
+function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPending, onSubmit, onCancel }: {
+  friends: any[];
+  defaultNote?: string;
+  defaultRecipients?: string[];
+  isPending?: boolean;
+  onSubmit: (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at: number; reminder_minutes: number }) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const [note, setNote] = useState(defaultNote);
+  const [recipients, setRecipients] = useState<string[]>(defaultRecipients);
+  const [date, setDate] = useState(todayStr);
+  const [start, setStart] = useState(defaultStartTime);
+  const [end, setEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
+  const [reminder, setReminder] = useState(30);
+  const [showReminder, setShowReminder] = useState(false);
+
+  useEffect(() => {
+    setEnd(addHours(date, start, 2));
+  }, [date, start]);
+
+  const activeFriends = friends.filter((f: any) => !f.muted);
+  const mutedFriends = friends.filter((f: any) => f.muted);
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
+      <input
+        type="text"
+        placeholder={t('home.customNotePlaceholder')}
+        value={note}
+        maxLength={100}
+        onChange={e => setNote(e.target.value)}
+        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+      />
+      <div>
+        <label className="text-xs text-gray-500 block mb-1">Date</label>
+        <input
+          type="date"
+          value={date}
+          min={todayStr()}
+          onChange={e => setDate(e.target.value)}
+          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+      </div>
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
+          <input
+            type="time"
+            value={start}
+            onChange={e => setStart(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
+          <input
+            type="time"
+            value={end}
+            onChange={e => setEnd(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <p className="text-xs text-gray-400 flex-1">{t('home.scheduleReminderText', { minutes: reminder })}</p>
+        <button onClick={() => setShowReminder(v => !v)} className="text-xs text-violet-600 font-medium">
+          {t('home.scheduleReminderChange')}
+        </button>
+      </div>
+      {showReminder && (
+        <div className="flex gap-2 flex-wrap">
+          {REMINDER_OPTIONS.map(m => (
+            <button
+              key={m}
+              onClick={() => { setReminder(m); setShowReminder(false); }}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                reminder === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 text-gray-600 border-gray-200'
+              }`}
+            >
+              {m === 60 ? '1h' : `${m} min`}
+            </button>
+          ))}
+        </div>
+      )}
+      {friends.length > 0 && (
+        <div>
+          <p className="text-xs text-gray-500 font-medium mb-2">{t('home.openDoorTo')}</p>
+          <div className="divide-y divide-gray-50">
+            {activeFriends.map((f: any) => (
+              <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-4 px-4">
+                <input
+                  type="checkbox"
+                  checked={recipients.includes(f.id)}
+                  onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                  className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                />
+                <Avatar name={f.display_name} size="md" />
+                <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
+              </label>
+            ))}
+            {mutedFriends.length > 0 && mutedFriends.map((f: any) => (
+              <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer opacity-50 hover:bg-gray-50 -mx-4 px-4">
+                <input
+                  type="checkbox"
+                  checked={recipients.includes(f.id)}
+                  onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                  className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                />
+                <Avatar name={f.display_name} size="md" />
+                <span className="text-sm font-medium text-gray-700">{f.display_name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={() => onSubmit({ note: note.trim() || undefined, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: toUnix(date, end), reminder_minutes: reminder })}
+          disabled={isPending}
+          className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-2xl font-semibold text-sm disabled:opacity-50"
+        >
+          🗓 {t('home.scheduleToggle')}
+        </button>
+        <button onClick={onCancel} className="px-4 py-3 text-sm text-gray-500 hover:text-gray-700 font-medium">
+          {t('common.cancel')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ScheduledSessionCard({ session, onCancel, onOpen, onSave }: {
   session: any;
   onCancel: () => void;
@@ -1078,90 +1210,13 @@ export default function Home() {
         </button>
       ) : (
         <div className="mt-4">
-          <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3 mb-3">
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-xs text-gray-500 block mb-1">Date</label>
-                <input
-                  type="date"
-                  value={scheduleDate}
-                  min={todayStr()}
-                  onChange={e => setScheduleDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                />
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
-                <input
-                  type="time"
-                  value={scheduleStart}
-                  onChange={e => setScheduleStart(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
-                <input
-                  type="time"
-                  value={scheduleEnd}
-                  onChange={e => setScheduleEnd(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-400 flex-1">
-                {t('home.scheduleReminderText', { minutes: reminderMinutes })}
-              </p>
-              <button
-                onClick={() => setShowReminderPicker(v => !v)}
-                className="text-xs text-violet-600 font-medium"
-              >
-                {t('home.scheduleReminderChange')}
-              </button>
-            </div>
-            {showReminderPicker && (
-              <div className="flex gap-2 flex-wrap">
-                {REMINDER_OPTIONS.map(m => (
-                  <button
-                    key={m}
-                    onClick={() => { setReminderMinutes(m); setShowReminderPicker(false); }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      reminderMinutes === m
-                        ? 'bg-violet-500 text-white border-violet-500'
-                        : 'bg-gray-50 text-gray-600 border-gray-200'
-                    }`}
-                  >
-                    {m === 60 ? '1h' : `${m} min`}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                createStatus.mutate({
-                  starts_at: toUnix(scheduleDate, scheduleStart),
-                  ends_at: toUnix(scheduleDate, scheduleEnd),
-                  recipient_ids: selectedRecipients,
-                  reminder_minutes: reminderMinutes,
-                });
-              }}
-              disabled={createStatus.isPending}
-              className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-2xl font-semibold text-sm disabled:opacity-50"
-            >
-              🗓 {t('home.scheduleToggle')}
-            </button>
-            <button
-              onClick={() => setShowScheduleMore(false)}
-              className="px-4 py-3 text-sm text-gray-500 hover:text-gray-700 font-medium"
-            >
-              {t('common.cancel')}
-            </button>
-          </div>
+          <ScheduleForm
+            friends={friends as any[]}
+            defaultRecipients={myStatus?.recipients.map((r: any) => r.id) ?? []}
+            isPending={createStatus.isPending}
+            onSubmit={data => createStatus.mutate(data)}
+            onCancel={() => setShowScheduleMore(false)}
+          />
         </div>
       )}
     </div>
