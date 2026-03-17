@@ -399,11 +399,12 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
   );
 }
 
-function ScheduledSessionCard({ session, onCancel, onOpen, onSave }: {
+function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave }: {
   session: any;
+  friends?: any[];
   onCancel: () => void;
   onOpen?: () => void;
-  onSave?: (data: { note?: string; starts_at?: number; ends_at?: number }) => void;
+  onSave?: (data: { note?: string; starts_at?: number; ends_at?: number; recipient_ids?: string[] }) => void;
 }) {
   const { t } = useTranslation();
   const icsKey = `dropby_ics_${session.id}`;
@@ -413,6 +414,10 @@ function ScheduledSessionCard({ session, onCancel, onOpen, onSave }: {
   const [editStart, setEditStart] = useState(format(new Date(session.starts_at * 1000), 'HH:mm'));
   const [editEnd, setEditEnd] = useState(format(new Date(session.ends_at * 1000), 'HH:mm'));
   const [editNote, setEditNote] = useState(session.note || '');
+  const [editRecipients, setEditRecipients] = useState<string[]>((session.recipients || []).map((r: any) => r.id));
+
+  const activeFriends = friends.filter((f: any) => !f.muted);
+  const mutedFriends = friends.filter((f: any) => f.muted);
 
   if (editing) {
     return (
@@ -452,6 +457,31 @@ function ScheduledSessionCard({ session, onCancel, onOpen, onSave }: {
           onChange={e => setEditNote(e.target.value)}
           className="w-full px-3 py-2 bg-white border border-violet-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
         />
+        {friends.length > 0 && (
+          <div>
+            <p className="text-xs text-violet-500 font-medium mb-1">{t('home.openDoorTo')}</p>
+            <div className="divide-y divide-violet-100">
+              {activeFriends.map((f: any) => (
+                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 -mx-4 px-4">
+                  <input type="checkbox" checked={editRecipients.includes(f.id)}
+                    onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                    className="w-4 h-4 accent-violet-600 flex-shrink-0" />
+                  <Avatar name={f.display_name} size="sm" />
+                  <span className="text-sm font-medium text-violet-900">{f.display_name}</span>
+                </label>
+              ))}
+              {mutedFriends.map((f: any) => (
+                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer opacity-50 hover:bg-violet-100 -mx-4 px-4">
+                  <input type="checkbox" checked={editRecipients.includes(f.id)}
+                    onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                    className="w-4 h-4 accent-violet-600 flex-shrink-0" />
+                  <Avatar name={f.display_name} size="sm" />
+                  <span className="text-sm font-medium text-violet-700">{f.display_name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="flex gap-2">
           <button
             onClick={() => {
@@ -459,6 +489,7 @@ function ScheduledSessionCard({ session, onCancel, onOpen, onSave }: {
                 note: editNote || undefined,
                 starts_at: toUnix(editDate, editStart),
                 ends_at: toUnix(editDate, editEnd),
+                recipient_ids: editRecipients,
               });
               setEditing(false);
             }}
@@ -1020,6 +1051,7 @@ export default function Home() {
               <ScheduledSessionCard
                 key={session.id}
                 session={session}
+                friends={friends as any[]}
                 onOpen={() => activateScheduled.mutate(session.id)}
                 onCancel={() => cancelScheduled.mutate(session.id)}
                 onSave={data => updateScheduled.mutate({ id: session.id, data })}
@@ -1263,6 +1295,7 @@ export default function Home() {
             <ScheduledSessionCard
               key={session.id}
               session={session}
+              friends={friends as any[]}
               onCancel={() => cancelScheduled.mutate(session.id)}
               onSave={data => updateScheduled.mutate({ id: session.id, data })}
             />
