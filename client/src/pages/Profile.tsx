@@ -476,7 +476,7 @@ export default function Profile() {
 
         {/* Imprint */}
         <div className="pt-4 pb-2 text-center">
-          <Link to="/about" className="text-xs text-gray-300 hover:text-gray-400">About</Link>
+          <Link to="/about" className="text-xs text-gray-500 hover:text-gray-700">About</Link>
         </div>
       </div>
 
