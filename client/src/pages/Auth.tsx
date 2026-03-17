@@ -133,7 +133,7 @@ export default function Auth() {
                     required
                     value={forgotEmail}
                     onChange={e => setForgotEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                   <button type="submit" disabled={loading} className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-colors">
                     {loading ? t('auth.pleaseWait') : t('auth.sendResetLink')}
@@ -200,7 +200,7 @@ export default function Auth() {
                   required
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 />
               )}
               <input
@@ -209,7 +209,7 @@ export default function Auth() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <input
                 type="password"
@@ -217,7 +217,7 @@ export default function Auth() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               {tab === 'login' && (
                 <div className="text-right -mt-1">
