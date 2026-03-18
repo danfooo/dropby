@@ -222,7 +222,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
   });
   const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
-  const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden);
+  const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden).slice(0, 2);
   const chips = suggestions.slice(0, 7);
 
   const pickChip = (text: string) => {
@@ -247,26 +247,8 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
-      {/* Suggestion chips */}
-      {chips.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {chips.map((chip: string) => (
-            <button
-              key={chip}
-              onClick={() => pickChip(chip)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                selectedChip === chip
-                  ? 'bg-emerald-500 text-white border-emerald-500'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300'
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-      )}
-      {/* Saved note chips */}
-      {visibleSaved.length > 0 && (
+      {/* Note chips: saved notes first (max 2), then suggestions */}
+      {(visibleSaved.length > 0 || chips.length > 0) && (
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {visibleSaved.map((n: any) => (
             <div
@@ -290,6 +272,19 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
                 </svg>
               </button>
             </div>
+          ))}
+          {chips.map((chip: string) => (
+            <button
+              key={chip}
+              onClick={() => pickChip(chip)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                selectedChip === chip
+                  ? 'bg-emerald-500 text-white border-emerald-500'
+                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300'
+              }`}
+            >
+              {chip}
+            </button>
           ))}
         </div>
       )}
@@ -640,8 +635,7 @@ export default function Home() {
   // Get locale-aware suggestions
   const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
 
-  // Compute chip list: suggestions first, then non-hidden saved notes, max 7
-  const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden);
+  const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden).slice(0, 2);
   const chips = suggestions.slice(0, 7);
 
   // Initialize recipient selection from server
@@ -851,39 +845,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* Suggestion chips */}
-        {chips.length > 0 && (
-          <div className="mb-1.5">
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-              {chips.map((chip: string) => (
-                <button
-                  key={chip}
-                  onClick={() => {
-                    if (selectedChip === chip) {
-                      setNote(previousNote ?? '');
-                      setSelectedChip('');
-                      setPreviousNote(null);
-                    } else {
-                      setPreviousNote(selectedChip === '' ? note : null);
-                      setNote(chip);
-                      setSelectedChip(chip);
-                    }
-                  }}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                    selectedChip === chip
-                      ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'
-                  }`}
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Saved note chips */}
-        {visibleSaved.length > 0 && (
+        {/* Note chips: saved notes first (max 2), then suggestions */}
+        {(visibleSaved.length > 0 || chips.length > 0) && (
           <div className="mb-2">
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {visibleSaved.map((n: any) => (
@@ -922,6 +885,29 @@ export default function Home() {
                     </svg>
                   </button>
                 </div>
+              ))}
+              {chips.map((chip: string) => (
+                <button
+                  key={chip}
+                  onClick={() => {
+                    if (selectedChip === chip) {
+                      setNote(previousNote ?? '');
+                      setSelectedChip('');
+                      setPreviousNote(null);
+                    } else {
+                      setPreviousNote(selectedChip === '' ? note : null);
+                      setNote(chip);
+                      setSelectedChip(chip);
+                    }
+                  }}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                    selectedChip === chip
+                      ? 'bg-emerald-500 text-white border-emerald-500'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'
+                  }`}
+                >
+                  {chip}
+                </button>
               ))}
             </div>
           </div>
