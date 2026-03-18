@@ -595,7 +595,6 @@ export default function Home() {
   const [showGoingModal, setShowGoingModal] = useState<string | null>(null);
   const [showScheduleMore, setShowScheduleMore] = useState(false);
   const [calendarToast, setCalendarToast] = useState<{ type: 'update' | 'remove'; sessionId: string } | null>(null);
-  const scheduleSectionRef = useRef<HTMLDivElement>(null);
 
   // Schedule form state
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -831,7 +830,7 @@ export default function Home() {
       : t('home.openDoor');
 
     return (
-      <div className="min-h-full bg-gray-50 px-4 pt-8 pb-40">
+      <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
         <div className="flex items-center justify-between mb-1">
           <img src="/logo-icon.svg" alt="dropby" className="h-8" />
           <UserMenu />
@@ -953,7 +952,7 @@ export default function Home() {
 
         {/* Schedule pickers — shown when scheduleEnabled */}
         {scheduleEnabled && (
-          <div ref={scheduleSectionRef} className="mb-3 space-y-2">
+          <div className="mb-3 space-y-2">
             <div className="flex gap-2">
               <div className="flex-1">
                 <label className="text-xs text-gray-500 block mb-1">Date</label>
@@ -1024,33 +1023,25 @@ export default function Home() {
           </div>
         )}
 
-        {/* Fixed CTA bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-100 px-4 pt-3 safe-bottom">
-          <div className="flex gap-2 mb-1">
-            <button
-              onClick={handleOpen}
-              disabled={createStatus.isPending}
-              className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
-            >
-              {createStatus.isPending ? t('home.opening') : scheduleEnabled ? t('home.scheduleToggle') : t('home.openDoor')}
-            </button>
-            <button
-              onClick={() => {
-                const next = !scheduleEnabled;
-                setScheduleEnabled(next);
-                if (next) {
-                  setTimeout(() => scheduleSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-                }
-              }}
-              className={`px-4 py-3 rounded-2xl text-sm font-medium transition-colors ${
-                scheduleEnabled ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-              }`}
-            >
-              {t('home.scheduleLater')}
-            </button>
-          </div>
-          <p className="text-xs text-gray-400 text-center mb-2">{t('home.openDoorDesc')}</p>
+        {/* Open / Schedule button row */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleOpen}
+            disabled={createStatus.isPending}
+            className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
+          >
+            {createStatus.isPending ? t('home.opening') : scheduleEnabled ? t('home.scheduleToggle') : t('home.openDoor')}
+          </button>
+          <button
+            onClick={() => setScheduleEnabled(v => !v)}
+            className={`px-4 py-3 rounded-2xl text-sm font-medium transition-colors ${
+              scheduleEnabled ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            {t('home.scheduleLater')}
+          </button>
         </div>
+        <p className="text-xs text-gray-400 text-center mt-1">{t('home.openDoorDesc')}</p>
 
         {/* Pending scheduled sessions */}
         {(upcomingSessions as any[]).length > 0 && (
