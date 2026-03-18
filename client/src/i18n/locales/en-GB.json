@@ -146,7 +146,9 @@
     "inviteError": "Could not send invite",
     "inviteAnother": "Invite someone else",
     "pendingTitle": "Pending",
-    "cancelInvite": "Cancel invite"
+    "cancelInvite": "Cancel invite",
+    "muteHint": "× hides their updates from you — easily undone",
+    "removeHint": "× removes the friendship permanently"
   },
   "invite": {
     "expiredTitle": "Invite expired",

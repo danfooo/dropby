@@ -146,7 +146,9 @@
     "inviteError": "Einladung konnte nicht gesendet werden",
     "inviteAnother": "Jemand anderen einladen",
     "pendingTitle": "Ausstehend",
-    "cancelInvite": "Einladung zurückziehen"
+    "cancelInvite": "Einladung zurückziehen",
+    "muteHint": "× blendet ihre Aktivität aus — jederzeit rückgängig machbar",
+    "removeHint": "× entfernt die Freundschaft dauerhaft"
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",

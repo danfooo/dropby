@@ -146,7 +146,9 @@
     "inviteError": "Impossible d'envoyer l'invitation",
     "inviteAnother": "Inviter quelqu'un d'autre",
     "pendingTitle": "En attente",
-    "cancelInvite": "Annuler l'invitation"
+    "cancelInvite": "Annuler l'invitation",
+    "muteHint": "× masque leurs activités — facilement annulable",
+    "removeHint": "× supprime l'amitié définitivement"
   },
   "invite": {
     "expiredTitle": "Invitation expirée",

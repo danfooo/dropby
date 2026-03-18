@@ -128,23 +128,26 @@ export default function Friends() {
           <>
             {/* Active friends */}
             {activeFriends.length > 0 && (
-              <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-4">
-                {activeFriends.map((f: any, i: number) => (
-                  <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
-                    <Avatar name={f.display_name} size="sm" />
-                    <span className="flex-1 text-sm font-medium text-gray-900">{f.display_name}</span>
-                    <button
-                      onClick={() => muteFriend.mutate(f.id)}
-                      className="text-gray-400 hover:text-gray-600 p-1 ml-1"
-                      title="Mute"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-1">
+                  {activeFriends.map((f: any, i: number) => (
+                    <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+                      <Avatar name={f.display_name} size="sm" />
+                      <span className="flex-1 text-sm font-medium text-gray-900">{f.display_name}</span>
+                      <button
+                        onClick={() => muteFriend.mutate(f.id)}
+                        className="text-gray-400 hover:text-gray-600 p-1 ml-1"
+                        title="Mute"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 px-1 mb-4">{t('friends.muteHint')}</p>
+              </>
             )}
 
             {/* Muted friends */}
@@ -153,7 +156,7 @@ export default function Friends() {
                 <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                   {t('friends.muted')}
                 </h2>
-                <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-4">
+                <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-1">
                   {mutedFriends.map((f: any, i: number) => (
                     <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
                       <Avatar name={f.display_name} size="sm" className="opacity-60" />
@@ -175,6 +178,7 @@ export default function Friends() {
                     </div>
                   ))}
                 </div>
+                <p className="text-xs text-gray-400 px-1 mb-4">{t('friends.removeHint')}</p>
               </>
             )}
           </>

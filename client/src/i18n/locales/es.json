@@ -146,7 +146,9 @@
     "inviteError": "No se pudo enviar la invitación",
     "inviteAnother": "Invitar a otra persona",
     "pendingTitle": "Pendiente",
-    "cancelInvite": "Cancelar invitación"
+    "cancelInvite": "Cancelar invitación",
+    "muteHint": "× oculta sus actualizaciones — fácilmente reversible",
+    "removeHint": "× elimina la amistad de forma permanente"
   },
   "invite": {
     "expiredTitle": "Invitación expirada",
