@@ -3,7 +3,7 @@ import { Resend } from "resend";
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
-const FROM = process.env.EMAIL_FROM || "dropby <noreply@drop-by.app>";
+const FROM = process.env.EMAIL_FROM || "dropby <hi@dropby.cc>";
 const APP_URL = () => process.env.APP_URL || "http://localhost:5173";
 
 async function send(to: string, subject: string, html: string) {

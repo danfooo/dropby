@@ -18,9 +18,9 @@
 - [ ] Replace imprint address with a proxy/forwarding address (currently home address in `client/src/pages/About.tsx`)
 
 ## Email
-- [ ] Set up `hello@dropby.cc` mailbox — email access for dropby.cc domain not yet configured (needed for imprint contact + support)
+- [ ] Set up `hi@dropby.cc` mailbox — email access for dropby.cc domain not yet configured (needed for imprint contact + support)
 - [ ] Update `rua` in DMARC record once `hello@` or a dedicated address is receiving mail (or remove `rua` if reports aren't needed)
-- [ ] Update Google OAuth consent screen support email to `hello@dropby.cc`
+- [ ] Update Google OAuth consent screen support email to `hi@dropby.cc`
 - [ ] SMS delivery for Add Friend: currently logs to console, only email delivery is implemented
 
 ## Maybe

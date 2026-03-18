@@ -25,7 +25,7 @@ export default function About() {
         <div className="mt-4 text-sm text-gray-700">
           <p>
             <span className="text-gray-500">E-Mail: </span>
-            <a href="mailto:hello@dropby.cc" className="text-emerald-600 hover:underline">hello@dropby.cc</a>
+            <a href="mailto:hi@dropby.cc" className="text-emerald-600 hover:underline">hi@dropby.cc</a>
           </p>
         </div>
       </section>

@@ -20,7 +20,7 @@ export default function Privacy() {
           <h2 className="font-semibold text-gray-900 mb-2">Who is responsible</h2>
           <p>
             dropby is operated by Daniel Herzog, Parkstr. 5, 42697 Solingen, Germany
-            (<a href="mailto:hello@dropby.cc" className="text-emerald-600 hover:underline">hello@dropby.cc</a>).
+            (<a href="mailto:hi@dropby.cc" className="text-emerald-600 hover:underline">hi@dropby.cc</a>).
             He is the data controller under GDPR.
           </p>
         </section>
@@ -100,7 +100,7 @@ export default function Privacy() {
           </ul>
           <p className="text-gray-600 mt-3">
             To exercise any of these rights, email{' '}
-            <a href="mailto:hello@dropby.cc" className="text-emerald-600 hover:underline">hello@dropby.cc</a>.
+            <a href="mailto:hi@dropby.cc" className="text-emerald-600 hover:underline">hi@dropby.cc</a>.
             We'll respond within 30 days.
           </p>
         </section>
@@ -119,7 +119,7 @@ export default function Privacy() {
           <h2 className="font-semibold text-gray-900 mb-2">Contact</h2>
           <p className="text-gray-600">
             Questions? Email{' '}
-            <a href="mailto:hello@dropby.cc" className="text-emerald-600 hover:underline">hello@dropby.cc</a>.
+            <a href="mailto:hi@dropby.cc" className="text-emerald-600 hover:underline">hi@dropby.cc</a>.
           </p>
         </section>
 
