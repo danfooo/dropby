@@ -111,51 +111,71 @@ cron.schedule('* * * * *', () => {
   }
 });
 
-// Every hour: auto-nudge check
-cron.schedule('0 * * * *', () => {
-  if (!process.env.AUTO_NUDGE_ENABLED && process.env.NODE_ENV === 'test') return;
+// Every minute: auto-nudge check (fires on the hour)
+// For each user with auto_nudge_enabled, if they previously opened their door at
+// this local hour (within last 7 days, but not today), and haven't opened today, nudge them.
+cron.schedule('* * * * *', () => {
+  const now = new Date();
+  if (now.getMinutes() !== 0) return;
 
-  const nowUnix = Math.floor(Date.now() / 1000);
-  const oneWeekAgo = nowUnix - 7 * 24 * 3600;
-  const twoHours = 2 * 3600;
+  const nowUnix = Math.floor(now.getTime() / 1000);
 
-  const users = db.prepare('SELECT id, auto_nudge_enabled FROM users WHERE auto_nudge_enabled = 1').all() as Array<{ id: string; auto_nudge_enabled: number }>;
+  const users = db.prepare('SELECT id, timezone, auto_nudge_enabled FROM users WHERE auto_nudge_enabled = 1').all() as Array<{
+    id: string; timezone: string | null; auto_nudge_enabled: number;
+  }>;
 
   for (const user of users) {
+    const tz = user.timezone || 'UTC';
+
+    // Get current local hour and date string for this user
+    let localHour: number;
+    let localDateStr: string;
+    try {
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hour: 'numeric', year: 'numeric', month: '2-digit', day: '2-digit', hour12: false,
+      });
+      const parts = fmt.formatToParts(now);
+      localHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+      localDateStr = `${parts.find(p => p.type === 'year')?.value}-${parts.find(p => p.type === 'month')?.value}-${parts.find(p => p.type === 'day')?.value}`;
+    } catch {
+      localHour = now.getHours();
+      localDateStr = now.toISOString().slice(0, 10);
+    }
+
     // Door already open?
     const active = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(user.id, nowUnix);
     if (active) continue;
 
-    // Did a scheduled nudge fire today?
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const scheduledNudgeToday = db.prepare(`
-      SELECT id FROM nudge_schedules WHERE user_id = ? AND last_sent_at >= ?
-    `).get(user.id, Math.floor(startOfDay.getTime() / 1000));
+    // Scheduled nudge already fired today?
+    const startOfDayUnix = Math.floor(new Date(now).setHours(0, 0, 0, 0) / 1000);
+    const scheduledNudgeToday = db.prepare('SELECT id FROM nudge_schedules WHERE user_id = ? AND last_sent_at >= ?').get(user.id, startOfDayUnix);
     if (scheduledNudgeToday) continue;
 
-    // Auto-nudge already sent this week?
-    const weekStart = nowUnix - 7 * 24 * 3600;
-    const alreadySentThisWeek = db.prepare(`
-      SELECT id FROM auto_nudge_log WHERE user_id = ? AND sent_at >= ?
-    `).get(user.id, weekStart);
-    if (alreadySentThisWeek) continue;
+    // Auto-nudge already sent in last 20 hours?
+    const alreadySent = db.prepare('SELECT id FROM auto_nudge_log WHERE user_id = ? AND sent_at >= ?').get(user.id, nowUnix - 20 * 3600);
+    if (alreadySent) continue;
 
-    // Did they open in ±2hr window one week ago?
-    const openedLastWeek = db.prepare(`
-      SELECT id FROM statuses
-      WHERE user_id = ? AND created_at >= ? AND created_at <= ?
-    `).get(user.id, oneWeekAgo - twoHours, oneWeekAgo + twoHours);
+    // Find a previous open at this local hour (within last 7 days, not today)
+    const recentStatuses = db.prepare(
+      'SELECT created_at FROM statuses WHERE user_id = ? AND created_at >= ? ORDER BY created_at DESC'
+    ).all(user.id, nowUnix - 7 * 24 * 3600) as Array<{ created_at: number }>;
 
-    if (!openedLastWeek) continue;
+    const matchesPreviousOpen = recentStatuses.some(s => {
+      try {
+        const openDate = new Date(s.created_at * 1000);
+        const fmt = new Intl.DateTimeFormat('en-US', {
+          timeZone: tz, hour: 'numeric', year: 'numeric', month: '2-digit', day: '2-digit', hour12: false,
+        });
+        const parts = fmt.formatToParts(openDate);
+        const openHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+        const openDateStr = `${parts.find(p => p.type === 'year')?.value}-${parts.find(p => p.type === 'month')?.value}-${parts.find(p => p.type === 'day')?.value}`;
+        return openHour === localHour && openDateStr !== localDateStr;
+      } catch {
+        return false;
+      }
+    });
 
-    // Has opened this week in that window?
-    const openedThisWeek = db.prepare(`
-      SELECT id FROM statuses
-      WHERE user_id = ? AND created_at >= ? AND created_at <= ?
-    `).get(user.id, nowUnix - twoHours, nowUnix + twoHours);
-
-    if (openedThisWeek) continue;
+    if (!matchesPreviousOpen) continue;
 
     notifyAutoNudge(user.id);
     db.prepare('INSERT INTO auto_nudge_log (id, user_id) VALUES (?, ?)').run(randomUUID(), user.id);

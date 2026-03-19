@@ -178,7 +178,7 @@ export function notifyAutoNudge(userId: string) {
   tokens.forEach(t =>
     sendPush(t.token, t.platform, {
       title: 'dropby',
-      body: 'You opened your door this time last week — open it again?',
+      body: 'Open your door again? Change nudge timing anytime in Profile.',
       data: { type: 'auto_nudge' },
     })
   );
