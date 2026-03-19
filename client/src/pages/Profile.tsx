@@ -32,7 +32,7 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
   const [day, setDay] = useState(suggestion.day);
   const [hour, setHour] = useState(suggestion.hour);
 
-  const use24h = ['de', 'es', 'fr'].includes(i18n.language.split('-')[0]);
+  const use24h = ['de', 'es', 'fr'].includes((i18n.language ?? '').split('-')[0]);
 
   const formatHour = (h: number) => {
     if (use24h) return `${h}:00`;
@@ -244,7 +244,7 @@ export default function Profile() {
   const [showAvatarCrop, setShowAvatarCrop] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  const use24h = ['de', 'es', 'fr'].includes(i18n.language.split('-')[0]);
+  const use24h = ['de', 'es', 'fr'].includes((i18n.language ?? '').split('-')[0]);
 
   const formatHour = (h: number) => {
     if (use24h) return `${h}:00`;

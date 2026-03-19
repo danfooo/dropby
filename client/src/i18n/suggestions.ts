@@ -195,7 +195,7 @@ export function getSuggestions(locale: string): string[] {
   const currentDayType = getDayType(dayOfWeek);
 
   let pool: Suggestion[];
-  const lang = locale.split('-')[0];
+  const lang = (locale ?? '').split('-')[0];
 
   if (locale === 'en-GB') {
     pool = en_GB_suggestions;

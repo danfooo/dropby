@@ -43,7 +43,7 @@ const langMap: Record<string, string> = {
   fr: 'fr',
 };
 
-const mapped = langMap[detected] ?? langMap[detected?.split('-')[0]] ?? 'en-US';
+const mapped = langMap[detected] ?? langMap[detected?.split('-')?.[0] ?? ''] ?? 'en-US';
 if (mapped !== detected) {
   i18n.changeLanguage(mapped);
 }
