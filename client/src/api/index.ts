@@ -1,7 +1,7 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 
-const isNative = typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNative;
-const baseURL = isNative ? 'https://drop-by.fly.dev/api' : '/api';
+const baseURL = Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev/api' : '/api';
 
 export const api = axios.create({ baseURL });
 
