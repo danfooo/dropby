@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-export const api = axios.create({
-  baseURL: '/api',
-});
+const isNative = typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNative;
+const baseURL = isNative ? 'https://drop-by.fly.dev/api' : '/api';
+
+export const api = axios.create({ baseURL });
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
