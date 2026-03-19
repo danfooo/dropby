@@ -1,6 +1,9 @@
 import { useMemo } from 'react';
 import { createAvatar } from '@dicebear/core';
 import * as shapes from '@dicebear/shapes';
+import { Capacitor } from '@capacitor/core';
+
+const SERVER = 'https://drop-by.fly.dev';
 
 interface Props {
   name: string;
@@ -26,7 +29,10 @@ export default function Avatar({ name, url, seed, size = 'md', className = '' }:
     }).toString();
   }, [name, seed, url]);
 
-  const src = url || `data:image/svg+xml;utf8,${encodeURIComponent(svg!)}`;
+  const resolvedUrl = url && url.startsWith('/') && Capacitor.isNativePlatform()
+    ? `${SERVER}${url}`
+    : url;
+  const src = resolvedUrl || `data:image/svg+xml;utf8,${encodeURIComponent(svg!)}`;
 
   return (
     <img
