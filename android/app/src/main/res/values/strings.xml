@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">dropby</string>
+    <string name="title_activity_main">dropby</string>
+    <string name="package_name">cc.dropby.app</string>
+    <string name="custom_url_scheme">cc.dropby.app</string>
+</resources>

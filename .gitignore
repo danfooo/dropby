@@ -6,6 +6,5 @@ server/data/
 db-snapshot-*/
 client/dist/
 ios/
-android/
 .DS_Store
 *.log
