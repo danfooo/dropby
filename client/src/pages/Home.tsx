@@ -344,26 +344,35 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
       )}
       {friends.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 font-medium mb-1">{t('home.openDoorTo')}</p>
-          <div className="divide-y divide-gray-50">
-            {activeFriends.map((f: any) => (
-              <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 -mx-4 px-4">
-                <input type="checkbox" checked={recipients.includes(f.id)}
-                  onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                  className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                <Avatar name={f.display_name} size="sm" />
-                <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
-              </label>
-            ))}
-            {mutedFriends.length > 0 && mutedFriends.map((f: any) => (
-              <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer opacity-50 hover:bg-gray-50 -mx-4 px-4">
-                <input type="checkbox" checked={recipients.includes(f.id)}
-                  onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                  className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                <Avatar name={f.display_name} size="sm" />
-                <span className="text-sm font-medium text-gray-700">{f.display_name}</span>
-              </label>
-            ))}
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-gray-500 font-medium">{t('home.openDoorTo')}</p>
+            {friends.length >= 4 && (
+              <span className="text-xs text-gray-400">
+                {friends.filter((f: any) => recipients.includes(f.id)).length} / {friends.length}
+              </span>
+            )}
+          </div>
+          <div className={`-mx-4${friends.length >= 4 ? ' max-h-[145px] overflow-y-auto' : ''}`}>
+            <div className="divide-y divide-gray-50">
+              {activeFriends.map((f: any) => (
+                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 px-4">
+                  <input type="checkbox" checked={recipients.includes(f.id)}
+                    onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                    className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                  <Avatar name={f.display_name} size="sm" />
+                  <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
+                </label>
+              ))}
+              {mutedFriends.length > 0 && mutedFriends.map((f: any) => (
+                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer opacity-50 hover:bg-gray-50 px-4">
+                  <input type="checkbox" checked={recipients.includes(f.id)}
+                    onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                    className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                  <Avatar name={f.display_name} size="sm" />
+                  <span className="text-sm font-medium text-gray-700">{f.display_name}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -454,26 +463,35 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
         />
         {friends.length > 0 && (
           <div>
-            <p className="text-xs text-violet-500 font-medium mb-1">{t('home.openDoorTo')}</p>
-            <div className="divide-y divide-violet-100">
-              {activeFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 -mx-4 px-4">
-                  <input type="checkbox" checked={editRecipients.includes(f.id)}
-                    onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                    className="w-4 h-4 accent-violet-600 flex-shrink-0" />
-                  <Avatar name={f.display_name} size="sm" />
-                  <span className="text-sm font-medium text-violet-900">{f.display_name}</span>
-                </label>
-              ))}
-              {mutedFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer opacity-50 hover:bg-violet-100 -mx-4 px-4">
-                  <input type="checkbox" checked={editRecipients.includes(f.id)}
-                    onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                    className="w-4 h-4 accent-violet-600 flex-shrink-0" />
-                  <Avatar name={f.display_name} size="sm" />
-                  <span className="text-sm font-medium text-violet-700">{f.display_name}</span>
-                </label>
-              ))}
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-violet-500 font-medium">{t('home.openDoorTo')}</p>
+              {friends.length >= 4 && (
+                <span className="text-xs text-violet-400">
+                  {friends.filter((f: any) => editRecipients.includes(f.id)).length} / {friends.length}
+                </span>
+              )}
+            </div>
+            <div className={`-mx-4${friends.length >= 4 ? ' max-h-[145px] overflow-y-auto' : ''}`}>
+              <div className="divide-y divide-violet-100">
+                {activeFriends.map((f: any) => (
+                  <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 px-4">
+                    <input type="checkbox" checked={editRecipients.includes(f.id)}
+                      onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                      className="w-4 h-4 accent-violet-600 flex-shrink-0" />
+                    <Avatar name={f.display_name} size="sm" />
+                    <span className="text-sm font-medium text-violet-900">{f.display_name}</span>
+                  </label>
+                ))}
+                {mutedFriends.map((f: any) => (
+                  <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer opacity-50 hover:bg-violet-100 px-4">
+                    <input type="checkbox" checked={editRecipients.includes(f.id)}
+                      onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                      className="w-4 h-4 accent-violet-600 flex-shrink-0" />
+                    <Avatar name={f.display_name} size="sm" />
+                    <span className="text-sm font-medium text-violet-700">{f.display_name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
         )}
