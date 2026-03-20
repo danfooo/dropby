@@ -12,7 +12,7 @@ export default function About() {
       </Link>
 
       <h1 className="text-2xl font-bold text-gray-900 mb-1">dropby</h1>
-      <p className="text-gray-500 text-sm mb-10">Swing by whenever my door's open.</p>
+      <p className="text-gray-500 text-sm mb-10">Spend more time with friends.</p>
 
       <section className="mb-8">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Imprint / Impressum</h2>
