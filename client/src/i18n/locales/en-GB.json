@@ -76,7 +76,7 @@
     "closesIn": "Closes in {{minutes}} min",
     "closesAt": "Closes at {{time}}",
     "keepItOpen": "Keep it open +30 min",
-    "invited": "Invited",
+    "invited": "Visible to",
     "onTheirWay": "On their way",
     "anyoneWithLink": "Anyone with link",
     "tapToCopyLink": "Tap to copy invite link",
