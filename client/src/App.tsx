@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/auth';
 import { authApi } from './api';
 import { useSSE } from './hooks/useSSE';
+import { usePushNotifications } from './hooks/usePushNotifications';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import VerifyEmail from './pages/VerifyEmail';
@@ -18,6 +19,7 @@ import Layout from './components/Layout';
 function AppRoutes() {
   const { user, token, isLoading, setAuth, clearAuth, setLoading } = useAuthStore();
   useSSE();
+  usePushNotifications(!!user);
 
   useEffect(() => {
     if (!token) {
