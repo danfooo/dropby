@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
+import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 import UserMenu from '../components/UserMenu';
 import Modal from '../components/Modal';
@@ -587,6 +588,7 @@ const REMINDER_OPTIONS = [5, 15, 30, 60];
 export default function Home() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const { user } = useAuthStore();
   const [view, setView] = useState<HomeView>('closed');
   const [note, setNote] = useState('');
   const [selectedChip, setSelectedChip] = useState('');
@@ -1295,17 +1297,23 @@ export default function Home() {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3 mb-1">
+          <p className="text-sm font-semibold text-gray-900">{t('home.changeDurationTitle')}</p>
           <div className="flex gap-2">
             {([30, 60, 120, 240] as const).map(min => {
               const wouldClosesAt = (myStatus?.created_at ?? 0) + min * 60;
               const nowSec = Math.floor(Date.now() / 1000);
               const disabled = wouldClosesAt < nowSec + 60;
+              const isActive = (user?.default_door_minutes ?? 60) === min;
               return (
                 <button
                   key={min}
                   onClick={() => setDuration.mutate(min)}
                   disabled={disabled || setDuration.isPending}
-                  className="flex-1 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isActive
+                      ? 'bg-emerald-500 border-emerald-500 text-white'
+                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
                   {min === 30 ? '30 min' : `${min / 60}h`}
                 </button>

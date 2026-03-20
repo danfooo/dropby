@@ -83,6 +83,7 @@
     "addMoreEdit": "Ajouter des amis / Modifier",
     "closeNow": "Fermer maintenant",
     "changeDuration": "Modifier",
+    "changeDurationTitle": "Fermeture automatique",
     "doorDurationExplainer": "Les invités ne voient pas d'heure de fermeture — cela contrôle simplement quand ta porte disparaît pour tes amis.",
     "alsoAvailable": "Aussi disponibles",
     "yourDoorIsOpen": "Ta porte est ouverte — appuie pour revenir",

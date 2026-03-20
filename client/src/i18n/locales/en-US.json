@@ -83,6 +83,7 @@
     "addMoreEdit": "Add friends / Edit",
     "closeNow": "Close now",
     "changeDuration": "Change",
+    "changeDurationTitle": "Auto-close time",
     "doorDurationExplainer": "Guests don't see a closing time — this just controls when your door disappears for your friends.",
     "alsoAvailable": "Also available",
     "yourDoorIsOpen": "Your door is open — tap to return",
