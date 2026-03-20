@@ -1098,7 +1098,7 @@ export default function Home() {
       <div className="min-h-full bg-gray-50 pb-24">
         {/* Sticky banner */}
         <button
-          onClick={() => setView('open')}
+          onClick={handleSaveEdit}
           className="w-full bg-emerald-500 text-white py-3 px-4 flex items-center gap-2 sticky top-0 z-10"
         >
           <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
@@ -1113,7 +1113,7 @@ export default function Home() {
             maxLength={100}
             defaultValue={initNote}
             onChange={e => setEditNote(e.target.value)}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
+            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
           />
 
           {initEndsAt && (
@@ -1189,7 +1189,17 @@ export default function Home() {
           {t('home.youreOpen')}
         </div>
         {myStatus?.note && (
-          <p className="text-sm text-gray-500 mt-2">{myStatus.note}</p>
+          <button
+            onClick={() => {
+              setEditNote(myStatus.note || '');
+              setEditRecipients(myStatus.recipients.map((r: any) => r.id) || []);
+              setEditEndsAt(myStatus.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
+              setView('edit');
+            }}
+            className="text-sm text-gray-500 mt-2 block w-full"
+          >
+            {myStatus.note}
+          </button>
         )}
       </div>
 
