@@ -999,7 +999,7 @@ export default function Home() {
         {hasFriends && (
           <div className="bg-white rounded-2xl p-3 mb-3 shadow-sm border border-gray-100">
             <h2 className="text-xs font-semibold text-gray-500 mb-1">{t('home.openDoorTo')}</h2>
-            <div className="divide-y divide-gray-50">
+            <div className={`divide-y divide-gray-50${(friends as any[]).length >= 4 ? ' max-h-[136px] overflow-y-auto' : ''}`}>
               {activeFriends.map((f: any) => (
                 <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-3 px-3 transition-colors">
                   <input type="checkbox" checked={selectedRecipients.includes(f.id)}
