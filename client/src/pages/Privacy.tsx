@@ -30,7 +30,7 @@ export default function Privacy() {
           <div className="space-y-4">
             <div>
               <p className="font-medium text-gray-800">Account data</p>
-              <p className="text-gray-600">Your email address, display name, and (if you sign in with Google) your Google account ID. Used to identify you and let your friends find you. Kept for as long as your account exists.</p>
+              <p className="text-gray-600">Your email address, display name, and (if you sign in with Google) your Google account ID and profile picture URL. Used to identify you and let your friends find you. Kept for as long as your account exists.</p>
             </div>
             <div>
               <p className="font-medium text-gray-800">Activity data</p>
@@ -77,7 +77,7 @@ export default function Privacy() {
           <h2 className="font-semibold text-gray-900 mb-2">Third parties</h2>
           <div className="space-y-3 text-gray-600">
             <p><span className="font-medium text-gray-800">Fly.io</span> — our hosting provider. Your data is stored on their servers. <a href="https://fly.io/legal/privacy-policy/" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Their privacy policy</a>.</p>
-            <p><span className="font-medium text-gray-800">Google</span> — if you sign in with Google, Google processes your sign-in. We only receive your email, name, and a Google account ID. <a href="https://policies.google.com/privacy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</p>
+            <p><span className="font-medium text-gray-800">Google</span> — if you sign in with Google, Google processes your sign-in. We only receive your email, name, Google account ID, and profile picture URL. <a href="https://policies.google.com/privacy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</p>
             <p><span className="font-medium text-gray-800">Apple / Google (push notifications)</span> — push notifications are delivered via Apple APNs or Google Firebase, which process your device token.</p>
           </div>
         </section>

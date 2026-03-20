@@ -296,6 +296,10 @@ export default function Invite() {
           </Link>
         </div>
 
+        <div className="pt-6 text-center">
+          <Link to="/about" className="text-xs text-gray-500 hover:text-gray-700">About</Link>
+        </div>
+
         <GuestGoingModal
           open={showGoingForm}
           onClose={() => setShowGoingForm(false)}

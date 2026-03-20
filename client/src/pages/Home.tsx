@@ -1005,7 +1005,7 @@ export default function Home() {
                   <input type="checkbox" checked={selectedRecipients.includes(f.id)}
                     onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
                     className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                  <Avatar name={f.display_name} size="sm" />
+                  <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                   <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
                 </label>
               ))}
@@ -1017,7 +1017,7 @@ export default function Home() {
                       <input type="checkbox" checked={selectedRecipients.includes(f.id)}
                         onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
                         className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                      <Avatar name={f.display_name} size="sm" />
+                      <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                       <span className="text-sm font-medium text-gray-700">{f.display_name}</span>
                     </label>
                   ))}
@@ -1146,7 +1146,7 @@ export default function Home() {
                   }}
                   className="w-4 h-4 accent-emerald-500"
                 />
-                <Avatar name={f.display_name} size="sm" />
+                <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                 <span className="text-sm">{f.display_name}</span>
               </label>
             ))}
