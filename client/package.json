@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/push-notifications": "^8.0.2",
     "@dicebear/core": "^9.4.0",
     "@dicebear/shapes": "^9.4.0",
     "@react-oauth/google": "^0.12.1",
