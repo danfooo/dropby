@@ -305,12 +305,12 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
       {/* Schedule pickers — only when scheduleMode */}
       {scheduleMode && (
         <>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">Date</label>
+            <input type="date" value={date} min={todayStr()} onChange={e => setDate(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
+          </div>
           <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-xs text-gray-500 block mb-1">Date</label>
-              <input type="date" value={date} min={todayStr()} onChange={e => setDate(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
-            </div>
             <div className="flex-1">
               <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
               <input type="time" value={start} onChange={e => setStart(e.target.value)}
@@ -957,12 +957,12 @@ export default function Home() {
         {/* Schedule pickers — shown when scheduleEnabled */}
         {scheduleEnabled && (
           <div className="mb-3 space-y-2">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Date</label>
+              <input type="date" value={scheduleDate} min={todayStr()} onChange={e => setScheduleDate(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
+            </div>
             <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="text-xs text-gray-500 block mb-1">Date</label>
-                <input type="date" value={scheduleDate} min={todayStr()} onChange={e => setScheduleDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" />
-              </div>
               <div className="flex-1">
                 <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleStartTime')}</label>
                 <input type="time" value={scheduleStart} onChange={e => setScheduleStart(e.target.value)}
