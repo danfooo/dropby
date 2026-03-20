@@ -14,7 +14,7 @@ function areFriends(userA: string, userB: string): boolean {
 
 function getFriendsOf(userId: string) {
   return db.prepare(`
-    SELECT u.id, u.display_name, u.email,
+    SELECT u.id, u.display_name, u.email, u.avatar_url,
       CASE WHEN fm.id IS NOT NULL THEN 1 ELSE 0 END AS muted,
       f.created_at AS friendship_created_at
     FROM friendships f
@@ -23,7 +23,7 @@ function getFriendsOf(userId: string) {
     WHERE f.user_a_id = ? OR f.user_b_id = ?
     ORDER BY u.display_name
   `).all(userId, userId, userId, userId) as Array<{
-    id: string; display_name: string; email: string; muted: number; friendship_created_at: number;
+    id: string; display_name: string; email: string; avatar_url: string | null; muted: number; friendship_created_at: number;
   }>;
 }
 

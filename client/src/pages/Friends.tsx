@@ -132,7 +132,7 @@ export default function Friends() {
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-1">
                   {activeFriends.map((f: any, i: number) => (
                     <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
-                      <Avatar name={f.display_name} size="sm" />
+                      <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                       <span className="flex-1 text-sm font-medium text-gray-900">{f.display_name}</span>
                       <button
                         onClick={() => muteFriend.mutate(f.id)}
@@ -159,7 +159,7 @@ export default function Friends() {
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-1">
                   {mutedFriends.map((f: any, i: number) => (
                     <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
-                      <Avatar name={f.display_name} size="sm" className="opacity-60" />
+                      <Avatar name={f.display_name} url={f.avatar_url} size="sm" className="opacity-60" />
                       <span className="flex-1 text-sm font-medium text-gray-500">{f.display_name}</span>
                       <button
                         onClick={() => unmuteFriend.mutate(f.id)}
