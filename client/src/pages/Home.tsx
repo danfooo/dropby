@@ -597,6 +597,7 @@ export default function Home() {
   const [editEndsAt, setEditEndsAt] = useState('');
   const [showGoingModal, setShowGoingModal] = useState<string | null>(null);
   const [showScheduleMore, setShowScheduleMore] = useState(false);
+  const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [calendarToast, setCalendarToast] = useState<{ type: 'update' | 'remove'; sessionId: string } | null>(null);
 
   // Schedule form state
@@ -709,6 +710,11 @@ export default function Home() {
   const prolongStatus = useMutation({
     mutationFn: statusApi.prolong,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
+  });
+
+  const setDuration = useMutation({
+    mutationFn: (minutes: number) => statusApi.setDuration(minutes),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setShowDurationPicker(false); },
   });
 
   const updateStatus = useMutation({
@@ -1190,22 +1196,6 @@ export default function Home() {
             {myStatus.note}
           </div>
         )}
-        <p className="text-sm text-gray-500 mt-2">
-          {myStatus?.ends_at
-            ? t('home.closesAt', { time: formatTimeShort(myStatus.ends_at) })
-            : minutesLeft > 0
-              ? t('home.closesIn', { minutes: minutesLeft })
-              : t('home.closingSoon')}
-        </p>
-        {!myStatus?.ends_at && minutesLeft <= 20 && (
-          <button
-            onClick={() => prolongStatus.mutate()}
-            disabled={prolongStatus.isPending}
-            className="mt-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50"
-          >
-            {t('home.keepItOpen')}
-          </button>
-        )}
       </div>
 
       {/* Recipients + invite links */}
@@ -1273,13 +1263,68 @@ export default function Home() {
         {t('home.addMoreEdit')}
       </button>
 
-      <button
-        onClick={() => closeStatus.mutate()}
-        disabled={closeStatus.isPending}
-        className="w-full text-gray-500 py-2 text-sm hover:text-gray-700 disabled:opacity-50"
-      >
-        {t('home.closeNow')}
-      </button>
+      {/* Duration picker */}
+      {!showDurationPicker ? (
+        <div className="flex items-center justify-between px-1 mb-1">
+          <span className="text-sm text-gray-500">
+            {myStatus?.ends_at
+              ? t('home.closesAt', { time: formatTimeShort(myStatus.ends_at) })
+              : minutesLeft > 0
+                ? t('home.closesIn', { minutes: minutesLeft })
+                : t('home.closingSoon')}
+            {' · '}
+            <button
+              onClick={() => setShowDurationPicker(true)}
+              className="text-gray-700 font-medium hover:underline underline-offset-2"
+            >
+              {t('home.changeDuration')}
+            </button>
+          </span>
+          <button
+            onClick={() => closeStatus.mutate()}
+            disabled={closeStatus.isPending}
+            className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
+          >
+            {t('home.closeNow')}
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3 mb-1">
+          <div className="flex gap-2">
+            {([30, 60, 120, 240] as const).map(min => {
+              const wouldClosesAt = (myStatus?.created_at ?? 0) + min * 60;
+              const nowSec = Math.floor(Date.now() / 1000);
+              const disabled = wouldClosesAt < nowSec + 60;
+              return (
+                <button
+                  key={min}
+                  onClick={() => setDuration.mutate(min)}
+                  disabled={disabled || setDuration.isPending}
+                  className="flex-1 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {min === 30 ? '30 min' : `${min / 60}h`}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-gray-400">{t('home.doorDurationExplainer')}</p>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setShowDurationPicker(false)}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              onClick={() => closeStatus.mutate()}
+              disabled={closeStatus.isPending}
+              className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
+            >
+              {t('home.closeNow')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Upcoming scheduled sessions */}
       {(upcomingSessions as any[]).length > 0 && (

@@ -158,6 +158,10 @@ if (!cols.find(c => c.name === 'avatar_url')) {
   db.exec('ALTER TABLE users ADD COLUMN avatar_url TEXT');
 }
 
+if (!cols.find(c => c.name === 'default_door_minutes')) {
+  db.exec('ALTER TABLE users ADD COLUMN default_door_minutes INTEGER NOT NULL DEFAULT 60');
+}
+
 const inviteCols = db.pragma('table_info(invite_links)') as { name: string }[];
 if (!inviteCols.find(c => c.name === 'invited_email')) {
   db.exec('ALTER TABLE invite_links ADD COLUMN invited_email TEXT');

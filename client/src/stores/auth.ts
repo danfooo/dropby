@@ -7,6 +7,7 @@ export interface User {
   timezone: string | null;
   auto_nudge_enabled: boolean;
   avatar_url: string | null;
+  default_door_minutes: number;
 }
 
 interface AuthState {

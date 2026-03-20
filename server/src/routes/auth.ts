@@ -34,6 +34,7 @@ function userResponse(u: any) {
     avatar_seed: u.avatar_seed ?? 0,
     avatar_url: u.avatar_url ?? null,
     email_verified: Boolean(u.email_verified),
+    default_door_minutes: u.default_door_minutes ?? 60,
   };
 }
 

@@ -148,7 +148,9 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const startsAt: number | null = isScheduled ? Number(rawStartsAt) : null;
   const endsAt: number | null = rawEndsAt ? Number(rawEndsAt) : null;
   const reminderMinutes: number | null = isScheduled ? (rawReminderMinutes ?? 30) : null;
-  const closesAt = isScheduled ? Number(rawEndsAt) : nowUnix + 30 * 60;
+  const user = db.prepare('SELECT default_door_minutes FROM users WHERE id = ?').get(userId) as any;
+  const doorMinutes = user?.default_door_minutes ?? 60;
+  const closesAt = isScheduled ? Number(rawEndsAt) : nowUnix + doorMinutes * 60;
 
   // Close any existing active status — but only for spontaneous opens (scheduled sessions coexist)
   if (!isScheduled) {
@@ -184,26 +186,26 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
   `).run(userId, JSON.stringify(validRecipients), JSON.stringify(unselectedOnCreate), nowUnix);
 
-  const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+  const userFull = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
   const mutedByMe = db.prepare('SELECT muted_user_id FROM friend_mutes WHERE user_id = ?').all(userId).map((r: any) => r.muted_user_id);
 
   if (isScheduled) {
     // Notify invitees about the upcoming scheduled session
     for (const rid of validRecipients) {
       if (mutedByMe.includes(rid)) continue;
-      notifyScheduledSession(rid, user.display_name, startsAt!);
+      notifyScheduledSession(rid, userFull.display_name, startsAt!);
     }
   } else {
     // Notify invitees that door is open now
     for (const rid of validRecipients) {
       if (mutedByMe.includes(rid)) continue;
-      notifyFriendDoorOpen(rid, user.display_name, note || null);
+      notifyFriendDoorOpen(rid, userFull.display_name, note || null);
     }
 
     broadcastSSE(validRecipients, 'status:open', {
       status_id: statusId,
       owner_id: userId,
-      owner_name: user.display_name,
+      owner_name: userFull.display_name,
       note: note || null,
       closes_at: closesAt,
     });
@@ -356,6 +358,24 @@ router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
 
   const updated = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
   res.json(updated);
+});
+
+// POST /api/status/duration — update auto-close duration for active session + save as user preference
+router.post('/duration', requireAuth, (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const minutes = Number(req.body.minutes);
+  if (!minutes || minutes <= 0) return res.status(400).json({ error: 'Invalid minutes' });
+
+  const status = getActiveStatus(userId);
+  if (!status) return res.status(404).json({ error: 'No active status' });
+
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const newClosesAt = Math.max(status.created_at + minutes * 60, nowUnix + 60);
+
+  db.prepare('UPDATE statuses SET closes_at = ?, closing_notification_sent = 0 WHERE id = ?').run(newClosesAt, status.id);
+  db.prepare('UPDATE users SET default_door_minutes = ? WHERE id = ?').run(minutes, userId);
+
+  res.json({ closes_at: newClosesAt });
 });
 
 // DELETE /api/status — close active session
