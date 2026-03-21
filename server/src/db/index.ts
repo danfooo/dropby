@@ -143,6 +143,17 @@ db.exec(`
     downloaded_at INTEGER NOT NULL,
     PRIMARY KEY (status_id, token)
   );
+
+  CREATE TABLE IF NOT EXISTS event_log (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts      INTEGER NOT NULL DEFAULT (unixepoch()),
+    event   TEXT NOT NULL,
+    user_id TEXT,
+    data    TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_event_log_event ON event_log(event);
+  CREATE INDEX IF NOT EXISTS idx_event_log_user  ON event_log(user_id);
+  CREATE INDEX IF NOT EXISTS idx_event_log_ts    ON event_log(ts);
 `);
 
 // Migrations for existing databases

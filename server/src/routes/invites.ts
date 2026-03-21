@@ -4,6 +4,7 @@ import { db } from '../db/index.js';
 import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.js';
 import { areFriends } from './friends.js';
 import { sendInviteEmail } from '../services/email.js';
+import { log } from '../services/analytics.js';
 
 const router = Router();
 
@@ -136,6 +137,11 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
     alreadyFriends = !isSelf && areFriends(req.userId, invite.created_by);
   }
 
+  // Only log for genuine views (valid, non-expired, non-own links by non-friends)
+  if (!isSelf && !alreadyFriends) {
+    log('invite.viewed', req.userId ?? null, { has_active_door: !!status });
+  }
+
   res.json({ inviter, status, alreadyFriends, isSelf });
 });
 
@@ -164,6 +170,7 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
   // Create friendship (canonical: lower UUID first)
   const [a, b] = [userId, inviterId].sort();
   db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
+  log('invite.accepted', userId);
 
   // If inviter has active status, auto-add new friend as recipient (silently)
   if (invite.status_id) {

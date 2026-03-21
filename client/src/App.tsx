@@ -14,6 +14,7 @@ import Invite from './pages/Invite';
 import Profile from './pages/Profile';
 import About from './pages/About';
 import Privacy from './pages/Privacy';
+import Admin from './pages/Admin';
 import Layout from './components/Layout';
 
 function AppRoutes() {
@@ -58,6 +59,7 @@ function AppRoutes() {
         <Route path="/home" element={<Home />} />
         <Route path="/friends" element={<Friends />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<Admin />} />
       </Route>
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

@@ -5,6 +5,7 @@ import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { notifyFriendDoorOpen, notifyScheduledSession, notifyScheduledReminder, notifyCalendarUpdate, notifyCalendarCancel } from '../services/notifications.js';
 import { broadcastSSE } from '../services/sse.js';
 import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
+import { log } from '../services/analytics.js';
 
 const router = Router();
 
@@ -201,6 +202,8 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     }
   }
   // Spontaneous: notifications are sent after 90s by the cron job
+
+  log('door.open', userId, { recipients: validRecipients.length, has_note: !!note });
 
   const status = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
   res.status(201).json(status);

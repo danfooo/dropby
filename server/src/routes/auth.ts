@@ -7,6 +7,7 @@ import multer from 'multer';
 import { db } from '../db/index.js';
 import { requireAuth, signJwt, AuthRequest } from '../middleware/auth.js';
 import { sendVerificationEmail } from '../services/email.js';
+import { log } from '../services/analytics.js';
 
 const avatarsDir = join(process.cwd(), 'data', 'avatars');
 mkdirSync(avatarsDir, { recursive: true });
@@ -120,6 +121,7 @@ router.post('/signup', async (req, res) => {
   `).run(id, emailLower, name, hash, verificationToken, verificationExpires, locale ?? null);
 
   sendVerificationEmail(emailLower, name, verificationToken, locale, redirect_url);
+  log('user.signup', id, { method: 'email' });
 
   res.status(201).json({ message: 'Check your email to verify your account' });
 });
@@ -150,6 +152,7 @@ router.post('/verify-email', async (req, res) => {
     UPDATE users SET email_verified = 1, email_verification_token = NULL, email_verification_expires_at = NULL
     WHERE id = ?
   `).run(user.id);
+  log('user.verify', user.id);
 
   const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
   const jwt = await signJwt(user.id);
@@ -219,6 +222,7 @@ router.post('/google', async (req, res) => {
         VALUES (?, ?, ?, ?, ?, 1)
       `).run(id, emailLower, displayName, googleId, picture ?? null);
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+      log('user.signup', id, { method: 'google' });
     } else {
       const updates: string[] = ['email_verified = 1'];
       const values: unknown[] = [];

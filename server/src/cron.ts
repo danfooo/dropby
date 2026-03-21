@@ -3,6 +3,7 @@ import { db } from './db/index.js';
 import { notifyDoorClosingSoon, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen } from './services/notifications.js';
 import { broadcastSSE } from './services/sse.js';
 import { randomUUID } from 'crypto';
+import { log } from './services/analytics.js';
 
 const DAY_NAMES: Record<string, string> = {
   mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday',
@@ -108,6 +109,7 @@ cron.schedule('* * * * *', () => {
     for (const schedule of schedules) {
       notifyNudge(user.id, DAY_NAMES[schedule.day_of_week] || schedule.day_of_week);
       db.prepare('UPDATE nudge_schedules SET last_sent_at = ? WHERE id = ?').run(nowUnix, schedule.id);
+      log('nudge.sent', user.id, { type: 'scheduled' });
     }
   }
 });
@@ -180,6 +182,7 @@ cron.schedule('* * * * *', () => {
 
     notifyAutoNudge(user.id);
     db.prepare('INSERT INTO auto_nudge_log (id, user_id) VALUES (?, ?)').run(randomUUID(), user.id);
+    log('nudge.sent', user.id, { type: 'auto' });
   }
 });
 
