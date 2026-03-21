@@ -6,6 +6,7 @@ import enGB from './locales/en-GB.json';
 import de from './locales/de.json';
 import es from './locales/es.json';
 import fr from './locales/fr.json';
+import sv from './locales/sv.json';
 
 const langMap: Record<string, string> = {
   'en-US': 'en-US',
@@ -14,6 +15,7 @@ const langMap: Record<string, string> = {
   de: 'de',
   es: 'es',
   fr: 'fr',
+  sv: 'sv',
 };
 
 const navLang = navigator?.language || 'en-US';
@@ -29,6 +31,7 @@ i18n
       de: { translation: de },
       es: { translation: es },
       fr: { translation: fr },
+      sv: { translation: sv },
     },
     fallbackLng: 'en-US',
     interpolation: {

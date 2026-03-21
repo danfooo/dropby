@@ -167,6 +167,34 @@ export const fr_suggestions: Suggestion[] = [
   { text: 'Fainéantise assumée', timeOfDay: 'any', season: 'winter', dayType: 'weekend' },
 ];
 
+export const sv_suggestions: Suggestion[] = [
+  // Any time
+  { text: 'Sväng förbi 🫶', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: 'Dörren är öppen 🚪', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: 'Kom in 🏠', timeOfDay: 'any', season: 'any', dayType: 'any' },
+
+  // Morning
+  { text: 'Kaffe på ☕', timeOfDay: 'morning', season: 'any', dayType: 'any' },
+  { text: 'Jobbar hemifrån 💻', timeOfDay: 'morning', season: 'any', dayType: 'weekday' },
+
+  // Morning — weekend
+  { text: 'Lat söndagsmorgon', timeOfDay: 'morning', season: 'any', dayType: 'weekend' },
+
+  // Afternoon
+  { text: 'Fika? ☕', timeOfDay: 'afternoon', season: 'any', dayType: 'any' },
+  { text: 'Helgmys', timeOfDay: 'afternoon', season: 'any', dayType: 'weekend' },
+  { text: 'Matchen på tv ⚽', timeOfDay: 'afternoon', season: 'any', dayType: 'weekend' },
+  { text: 'Sitter ute ☀️', timeOfDay: 'afternoon', season: 'summer', dayType: 'any' },
+  { text: 'Grillat idag 🔥', timeOfDay: 'afternoon', season: 'summer', dayType: 'weekend' },
+  { text: 'Bakar 🍪', timeOfDay: 'afternoon', season: 'autumn', dayType: 'any' },
+
+  // Evening
+  { text: 'Fredagsmys 🎉', timeOfDay: 'evening', season: 'any', dayType: 'weekend' },
+  { text: 'Film hemma? 🎬', timeOfDay: 'evening', season: 'any', dayType: 'any' },
+  { text: 'Myskvällen 🛋️', timeOfDay: 'evening', season: 'winter', dayType: 'any' },
+  { text: 'Lagar mat 🍝', timeOfDay: 'evening', season: 'any', dayType: 'any' },
+];
+
 function getSeason(month: number): 'spring' | 'summer' | 'autumn' | 'winter' {
   if (month >= 3 && month <= 5) return 'spring';
   if (month >= 6 && month <= 8) return 'summer';
@@ -205,6 +233,8 @@ export function getSuggestions(locale: string): string[] {
     pool = es_suggestions;
   } else if (lang === 'fr') {
     pool = fr_suggestions;
+  } else if (lang === 'sv') {
+    pool = sv_suggestions;
   } else {
     pool = en_US_suggestions;
   }
