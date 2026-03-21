@@ -347,14 +347,14 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
         <div>
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs text-gray-500 font-medium">{t('home.openDoorTo')}</p>
-            {friends.length >= 4 && (
+            {activeFriends.length >= 4 && (
               <span className="text-xs text-gray-400">
-                {friends.filter((f: any) => recipients.includes(f.id)).length} / {friends.length}
+                {activeFriends.filter((f: any) => recipients.includes(f.id)).length} / {activeFriends.length}
               </span>
             )}
           </div>
-          <div className={`-mx-4${friends.length >= 4 ? ' max-h-[145px] overflow-y-auto' : ''}`}>
-            <div className="divide-y divide-gray-50">
+          <div className="relative -mx-4">
+            <div className={`divide-y divide-gray-50${activeFriends.length >= 4 ? ' h-[132px] overflow-y-auto' : ''}`}>
               {activeFriends.map((f: any) => (
                 <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 px-4">
                   <input type="checkbox" checked={recipients.includes(f.id)}
@@ -365,6 +365,9 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
                 </label>
               ))}
             </div>
+            {activeFriends.length >= 4 && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+            )}
           </div>
         </div>
       )}
@@ -447,14 +450,14 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
           <div>
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs text-violet-500 font-medium">{t('home.openDoorTo')}</p>
-              {friends.length >= 4 && (
+              {activeFriends.length >= 4 && (
                 <span className="text-xs text-violet-400">
-                  {friends.filter((f: any) => editRecipients.includes(f.id)).length} / {friends.length}
+                  {activeFriends.filter((f: any) => editRecipients.includes(f.id)).length} / {activeFriends.length}
                 </span>
               )}
             </div>
-            <div className={`-mx-4${friends.length >= 4 ? ' max-h-[145px] overflow-y-auto' : ''}`}>
-              <div className="divide-y divide-violet-100">
+            <div className="relative -mx-4">
+              <div className={`divide-y divide-violet-100${activeFriends.length >= 4 ? ' h-[132px] overflow-y-auto' : ''}`}>
                 {activeFriends.map((f: any) => (
                   <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 px-4">
                     <input type="checkbox" checked={editRecipients.includes(f.id)}
@@ -465,6 +468,9 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
                   </label>
                 ))}
               </div>
+              {activeFriends.length >= 4 && (
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-violet-50 to-transparent pointer-events-none" />
+              )}
             </div>
           </div>
         )}
@@ -981,20 +987,20 @@ export default function Home() {
           <div className="bg-white rounded-2xl p-3 mb-3 shadow-sm border border-gray-100">
             <h2 className="text-xs font-semibold text-gray-500 mb-1">{t('home.openDoorTo')}</h2>
             <div className="relative">
-            <div className={`divide-y divide-gray-50 overflow-x-hidden${(friends as any[]).length >= 4 ? ' max-h-[136px] overflow-y-auto' : ''}`}>
-              {activeFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-3 px-3 transition-colors">
-                  <input type="checkbox" checked={selectedRecipients.includes(f.id)}
-                    onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                    className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                  <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
-                  <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
-                </label>
-              ))}
-            </div>
-            {(friends as any[]).length >= 4 && (
-              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-xl" />
-            )}
+              <div className={`divide-y divide-gray-50 overflow-x-hidden${activeFriends.length >= 4 ? ' h-[144px] overflow-y-auto' : ''}`}>
+                {activeFriends.map((f: any) => (
+                  <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-3 px-3 transition-colors">
+                    <input type="checkbox" checked={selectedRecipients.includes(f.id)}
+                      onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                      className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                    <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
+                    <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
+                  </label>
+                ))}
+              </div>
+              {activeFriends.length >= 4 && (
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-xl" />
+              )}
             </div>
           </div>
         )}
