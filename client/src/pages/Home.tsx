@@ -1138,12 +1138,17 @@ export default function Home() {
                 <span className="text-sm">{f.display_name}</span>
               </label>
             ))}
-            {(friends as any[]).some((f: any) => f.muted) && (
+            {(friends as any[]).some((f: any) => f.muted) ? (
               <p className="text-xs text-gray-400 mt-2">
                 {t('home.mutedFriendsHidden')}{' '}
                 <Link to="/friends" className="underline text-gray-500">{t('home.mutedFriendsChange')}</Link>
               </p>
-            )}
+            ) : (friends as any[]).filter((f: any) => !f.muted).length >= 5 && (friends as any[]).filter((f: any) => !f.muted).some((f: any) => !editRecipients.includes(f.id)) ? (
+              <p className="text-xs text-gray-400 mt-2">
+                {t('home.muteFriendsHint')}{' '}
+                <Link to="/friends" className="underline text-gray-500">{t('home.mutedFriendsChange')}</Link>
+              </p>
+            ) : null}
           </div>
 
           <button
