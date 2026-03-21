@@ -370,7 +370,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
               ))}
             </div>
             {activeFriends.length >= 5 && !friendsAtBottom && (
-              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white to-transparent pointer-events-none" />
             )}
           </div>
         </div>
@@ -477,7 +477,7 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
                 ))}
               </div>
               {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-violet-50 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-violet-50 to-transparent pointer-events-none" />
               )}
             </div>
           </div>
@@ -1011,7 +1011,7 @@ export default function Home() {
                 ))}
               </div>
               {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-xl" />
+                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-xl" />
               )}
             </div>
           </div>
