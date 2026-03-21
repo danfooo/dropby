@@ -44,6 +44,13 @@ app.use('/api/nudges', nudgesRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/feedback', feedbackRouter);
 
+// Test-only routes — never mounted in production
+if (process.env.NODE_ENV === 'test') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const testRouter = require('./routes/test.js').default;
+  app.use('/api/test', testRouter);
+}
+
 // Serve static client in production
 if (!isDev) {
   const clientDist = join(process.cwd(), '..', 'client', 'dist');
