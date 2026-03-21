@@ -6,6 +6,12 @@ const router = Router();
 
 // POST /api/test/reset — deletes all test users (cascade deletes everything related)
 router.post('/reset', (_req, res) => {
+  // Clean event_log for test users before deleting users (no FK cascade on event_log)
+  const testUserIds = db.prepare("SELECT id FROM users WHERE email LIKE '%@dropby.test'")
+    .all() as Array<{ id: string }>;
+  for (const { id } of testUserIds) {
+    db.prepare('DELETE FROM event_log WHERE user_id = ?').run(id);
+  }
   db.prepare("DELETE FROM users WHERE email LIKE '%@dropby.test'").run();
   res.json({ ok: true });
 });
@@ -72,6 +78,23 @@ router.post('/make-friends', (req, res) => {
   db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
 
   res.json({ ok: true, userAId: userA.id, userBId: userB.id });
+});
+
+// GET /api/test/events/:userId — returns recent event_log rows for a user, newest first
+router.get('/events/:userId', (req, res) => {
+  const { userId } = req.params;
+  const since = req.query.since ? Number(req.query.since) : 0;
+  const rows = db.prepare(`
+    SELECT ts, event, data FROM event_log
+    WHERE user_id = ? AND ts >= ?
+    ORDER BY ts DESC LIMIT 100
+  `).all(userId, since) as Array<{ ts: number; event: string; data: string | null }>;
+
+  res.json(rows.map(r => ({
+    ts: r.ts,
+    event: r.event,
+    ...(r.data ? JSON.parse(r.data) : {}),
+  })));
 });
 
 export default router;

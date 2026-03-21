@@ -36,3 +36,10 @@ export async function makeFriends(emailA: string, emailB: string): Promise<{ use
   if (!res.ok) throw new Error(`makeFriends failed: ${res.status}`);
   return res.json();
 }
+
+export async function getEvents(userId: string, since = 0): Promise<Array<{ ts: number; event: string; [key: string]: unknown }>> {
+  const url = `${SERVER_URL}/api/test/events/${userId}?since=${since}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`getEvents failed for ${userId}: ${res.status}`);
+  return res.json();
+}
