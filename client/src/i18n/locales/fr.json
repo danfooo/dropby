@@ -149,7 +149,7 @@
     "inviteAnother": "Inviter quelqu'un d'autre",
     "pendingTitle": "En attente",
     "cancelInvite": "Annuler l'invitation",
-    "muteHint": "× masque leurs activités — facilement annulable",
+    "muteHint": "× masque les amis et coupe les notifications",
     "removeHint": "× supprime l'amitié définitivement"
   },
   "invite": {

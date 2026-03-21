@@ -146,7 +146,7 @@ export default function Friends() {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-gray-400 px-1 mb-4">{t('friends.muteHint')}</p>
+                <p className="text-xs text-gray-400 px-1 mb-4 text-right">{t('friends.muteHint')}</p>
               </>
             )}
 
@@ -178,7 +178,7 @@ export default function Friends() {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-gray-400 px-1 mb-4">{t('friends.removeHint')}</p>
+                <p className="text-xs text-gray-400 px-1 mb-4 text-right">{t('friends.removeHint')}</p>
               </>
             )}
           </>

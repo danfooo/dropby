@@ -149,7 +149,7 @@
     "inviteAnother": "Invite someone else",
     "pendingTitle": "Pending",
     "cancelInvite": "Cancel invite",
-    "muteHint": "× hides their updates from you — easily undone",
+    "muteHint": "× hides friends and mutes notifications",
     "removeHint": "× removes the friendship permanently"
   },
   "invite": {
