@@ -1,5 +1,44 @@
 # dropby — Claude Instructions
 
+## What dropby is
+
+dropby helps people spend more real time together. The app's job is to remove the friction between "I'd love to see you" and actually meeting up — spontaneously or planned. **Success means people are using the app less because they're out seeing each other more.**
+
+Two connected problems it solves:
+1. **Spontaneous visits have died** in most cultures. The coordination overhead — WhatsApp threads, voice messages, back-and-forth — kills the impulse before it becomes a meetup.
+2. **Friend-time doesn't get calendared.** Traditional calendar apps aren't used for coordinating with friends. Plans just don't happen.
+
+dropby sits between these: low-friction enough for the spontaneous case, structured enough for the planned case.
+
+## The door metaphor
+
+"Opening your door" is the core framing — it signals availability without the weight of a formal invitation. The home is the anchor.
+
+- Prefer **"door"** over "availability", **"visible to"** over "invited", **"on their way"** over "notified"
+- The home context is primary but doesn't exclude other settings — a bar, a park, a concert. Those are natural divergences from the frame, not contradictions.
+- Protect words that carry unwanted connotations. "Invite" implies a formal ask. "Schedule" implies work. Avoid them where the softer framing fits.
+
+## Copy principles
+
+- Short, warm, direct — no marketing language, no feature descriptions dressed up as benefits
+- Conversational first person: "I'm on my way 🏃" not "Notify host of arrival"
+- Never use words that make the app feel like a calendar, a group chat, or a social network
+- **dropby** is always lowercase, including at the start of sentences
+
+## What dropby is not
+
+- Not a social network (no feeds, likes, follower counts)
+- Not a group chat replacement
+- Not a traditional calendar app
+- Not exclusively spontaneous — planning is equally valid, just lower-friction than existing tools
+
+## Working together
+
+- If something looks like a deliberate product decision, try to understand the intent before questioning it
+- **But do push back** if something seems internally inconsistent, unclear to users, or in tension with the principles above — that's more useful than silently accepting it
+- Never reframe a design decision as a bug without checking first
+- Localization: when editing UI copy, always update **all 6 locale files** (en-US, en-GB, de, es, fr, sv)
+
 ## Spec
 
 `/spec-full.md` is the source of truth for what the product **does**. Keep it in sync with every change:
