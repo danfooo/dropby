@@ -32,6 +32,16 @@ dropby sits between these: low-friction enough for the spontaneous case, structu
 - Not a traditional calendar app
 - Not exclusively spontaneous — planning is equally valid, just lower-friction than existing tools
 
+## About the person I'm working with
+
+Strengths: product thinking, UX, copy, and frontend (React/Tailwind). This is where you can move fast and expect pushback on ideas.
+
+Go slow and explain clearly for: infrastructure, DevOps, and platform setup — things like push notification pipelines, APNs/FCM configuration, app store submission, DNS, email delivery setup, SSL, environment variables, and deployment configuration. For these topics:
+- Don't assume familiarity with the tools or consoles involved
+- Say which service/console to open and where to find the setting
+- Flag when a mistake here is hard to reverse or has cost/security implications
+- Prefer one step at a time over a wall of instructions
+
 ## Working together
 
 - If something looks like a deliberate product decision, try to understand the intent before questioning it
