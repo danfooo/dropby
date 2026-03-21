@@ -52,14 +52,14 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
     <Modal open={open} onClose={onClose} title={t('profile.addReminderTitle')}>
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">{t('profile.day')}</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">{t('profile.day')}</label>
           <div className="grid grid-cols-4 gap-1.5">
             {DAY_KEYS.map(d => (
               <button
                 key={d}
                 onClick={() => setDay(d)}
                 className={`py-2 rounded-lg text-xs font-medium transition-colors ${
-                  day === d ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  day === d ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >
                 {t(`profile.daysShort.${d}`)}
@@ -68,14 +68,14 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
           </div>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">{t('profile.time', { time: formatHour(hour) })}</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">{t('profile.time', { time: formatHour(hour) })}</label>
           <div className="grid grid-cols-4 gap-1.5">
             {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22].map(h => (
               <button
                 key={h}
                 onClick={() => setHour(h)}
                 className={`py-2 rounded-lg text-xs font-medium transition-colors ${
-                  hour === h ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  hour === h ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >
                 {formatHour(h)}
@@ -83,9 +83,9 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
             ))}
           </div>
         </div>
-        <div className="bg-emerald-50 rounded-xl p-3">
-          <p className="text-xs text-emerald-700 font-medium">{t('profile.suggested')}</p>
-          <p className="text-sm text-emerald-900">
+        <div className="bg-emerald-50 dark:bg-emerald-950 rounded-xl p-3">
+          <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">{t('profile.suggested')}</p>
+          <p className="text-sm text-emerald-900 dark:text-emerald-200">
             {suggestedDayLabel} {use24h ? `${suggestion.hour}:00` : (() => {
               const h = suggestion.hour;
               const ampm = h < 12 ? 'am' : 'pm';
@@ -95,7 +95,7 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
           </p>
           <button
             onClick={() => addNudge.mutate({ d: suggestion.day, h: suggestion.hour })}
-            className="text-xs text-emerald-600 mt-1 underline"
+            className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 underline"
           >
             {t('profile.useSuggestion')}
           </button>
@@ -173,7 +173,7 @@ function AvatarCropModal({ open, onClose, onSave, onRemove, hasAvatar }: { open:
           <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
           <button
             onClick={() => inputRef.current?.click()}
-            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+            className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
           >
             {t('profile.choosePhoto')}
           </button>
@@ -213,7 +213,7 @@ function AvatarCropModal({ open, onClose, onSave, onRemove, hasAvatar }: { open:
           <div className="flex gap-2">
             <button
               onClick={() => { setImageSrc(null); setZoom(1); }}
-              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600"
+              className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-400"
             >
               {t('profile.changePhoto')}
             </button>
@@ -292,11 +292,11 @@ export default function Profile() {
   });
 
   return (
-    <div className="min-h-full bg-gray-50 pb-24">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-950 pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 pt-10 pb-6 safe-top">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 pt-10 pb-6 safe-top">
         <div className="flex items-center mb-5">
-          <Link to="/home" className="text-gray-400 hover:text-gray-600">
+          <Link to="/home" className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -314,21 +314,21 @@ export default function Profile() {
               </svg>
             </div>
           </button>
-          <p className="text-sm font-medium text-gray-900">{user?.display_name}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{user?.display_name}</p>
         </div>
       </div>
 
       <div className="px-4 pt-6 space-y-4">
         {/* Display name */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               {t('profile.displayName')}
             </label>
             {!editName && (
               <button
                 onClick={() => { setEditName(true); setNewName(user?.display_name || ''); }}
-                className="text-sm text-emerald-600 font-medium"
+                className="text-sm text-emerald-600 dark:text-emerald-400 font-medium"
               >
                 {t('profile.edit')}
               </button>
@@ -341,27 +341,27 @@ export default function Profile() {
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 required
-                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 autoFocus
               />
               <button type="submit" disabled={updateMe.isPending} className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
                 {t('profile.save')}
               </button>
-              <button type="button" onClick={() => setEditName(false)} className="px-3 py-2 text-gray-500 text-sm">
+              <button type="button" onClick={() => setEditName(false)} className="px-3 py-2 text-gray-500 dark:text-gray-400 text-sm">
                 {t('profile.cancel')}
               </button>
             </form>
           ) : (
-            <p className="text-gray-900 font-medium">{user?.display_name}</p>
+            <p className="text-gray-900 dark:text-gray-50 font-medium">{user?.display_name}</p>
           )}
         </div>
 
         {/* Email */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
             {t('profile.email')}
           </label>
-          <p className="text-gray-900">{user?.email}</p>
+          <p className="text-gray-900 dark:text-gray-50">{user?.email}</p>
         </div>
 
         {/* Language */}
@@ -372,7 +372,7 @@ export default function Profile() {
           <select
             value={i18n.language}
             onChange={e => i18n.changeLanguage(e.target.value)}
-            className="text-sm text-gray-900 bg-transparent border-none outline-none cursor-pointer"
+            className="text-sm text-gray-900 dark:text-gray-50 bg-transparent border-none outline-none cursor-pointer"
           >
             <option value="en-US">English (US)</option>
             <option value="en-GB">English (UK)</option>
@@ -384,24 +384,24 @@ export default function Profile() {
         </div>
 
         {/* Nudge reminders */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="font-semibold text-gray-900">{t('profile.remindersTitle')}</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-50">{t('profile.remindersTitle')}</h2>
             <button onClick={() => setShowAddNudge(true)} className="text-sm text-emerald-600 font-medium">
               {t('profile.addReminder')}
             </button>
           </div>
-          <p className="text-xs text-gray-500 mb-4">{t('profile.remindersDesc')}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{t('profile.remindersDesc')}</p>
 
           {(nudges as any[]).length === 0 ? (
             <div className="flex items-center justify-between py-1">
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {t(`profile.days.${suggestNextNudge([]).day}`)} {formatHour(suggestNextNudge([]).hour)}
               </span>
               <button
                 onClick={() => addNudgeInline.mutate({ d: suggestNextNudge([]).day, h: suggestNextNudge([]).hour })}
                 disabled={addNudgeInline.isPending}
-                className="text-sm text-emerald-600 font-medium px-3 py-1 bg-emerald-50 rounded-lg disabled:opacity-50"
+                className="text-sm text-emerald-600 dark:text-emerald-400 font-medium px-3 py-1 bg-emerald-50 dark:bg-emerald-950 rounded-lg disabled:opacity-50"
               >
                 {t('profile.addReminder')}
               </button>
@@ -410,10 +410,10 @@ export default function Profile() {
             <div className="space-y-2">
               {(nudges as any[]).map((n: any) => (
                 <div key={n.id} className="flex items-center justify-between py-1">
-                  <span className="text-sm text-gray-900">
+                  <span className="text-sm text-gray-900 dark:text-gray-50">
                     {t(`profile.days.${n.day_of_week}`)} {formatHour(n.hour)}
                   </span>
-                  <button onClick={() => removeNudge.mutate(n.id)} className="text-gray-400 hover:text-red-500 p-1">
+                  <button onClick={() => removeNudge.mutate(n.id)} className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -425,14 +425,14 @@ export default function Profile() {
         </div>
 
         {/* Auto-nudge */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="font-medium text-gray-900 text-sm">{t('profile.autoNudgeTitle')}</p>
+              <p className="font-medium text-gray-900 dark:text-gray-50 text-sm">{t('profile.autoNudgeTitle')}</p>
             </div>
             <button
               onClick={() => updateMe.mutate({ auto_nudge_enabled: !user?.auto_nudge_enabled })}
-              className={`relative w-11 h-6 rounded-full transition-colors ${user?.auto_nudge_enabled ? 'bg-emerald-500' : 'bg-gray-200'}`}
+              className={`relative w-11 h-6 rounded-full transition-colors ${user?.auto_nudge_enabled ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}
             >
               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${user?.auto_nudge_enabled ? 'translate-x-5' : ''}`} />
             </button>
@@ -443,7 +443,7 @@ export default function Profile() {
         <div className="pt-2 space-y-2">
           <button
             onClick={() => setShowFeedback(true)}
-            className="w-full py-3 text-[#7C6AF6] text-sm font-medium border border-[#7C6AF6]/30 rounded-2xl hover:bg-[#7C6AF6]/5"
+            className="w-full py-3 text-[#7C6AF6] text-sm font-medium border border-[#7C6AF6]/30 dark:border-[#7C6AF6]/20 rounded-2xl hover:bg-[#7C6AF6]/5"
           >
             {t('profile.shareFeedback')}
           </button>
@@ -451,7 +451,7 @@ export default function Profile() {
             href="https://www.buymeacoffee.com/dropby"
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full py-3 text-center text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
+            className="block w-full py-3 text-center text-gray-600 dark:text-gray-400 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             {t('profile.buyMeCoffee')}
           </a>
@@ -459,7 +459,7 @@ export default function Profile() {
             onClick={() => {
               ['tip_nudge_dismissed', 'tip_invite_dismissed', 'tip_feedback_dismissed', 'tip_coffee_dismissed'].forEach(k => localStorage.removeItem(k));
             }}
-            className="w-full py-3 text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
+            className="w-full py-3 text-gray-600 dark:text-gray-400 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             {t('profile.resetOnboarding')}
           </button>
@@ -469,13 +469,13 @@ export default function Profile() {
         <div className="pt-2 space-y-2">
           <button
             onClick={() => { clearAuth(); navigate('/'); }}
-            className="w-full py-3 text-gray-600 text-sm font-medium border border-gray-200 rounded-2xl hover:bg-gray-50"
+            className="w-full py-3 text-gray-600 dark:text-gray-400 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             {t('profile.logout')}
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="w-full py-3 text-red-500 text-sm font-medium border border-red-100 rounded-2xl hover:bg-red-50"
+            className="w-full py-3 text-red-500 text-sm font-medium border border-red-100 dark:border-red-900 rounded-2xl hover:bg-red-50 dark:hover:bg-red-950"
           >
             {t('profile.deleteAccount')}
           </button>
@@ -483,7 +483,7 @@ export default function Profile() {
 
         {/* Imprint */}
         <div className="pt-4 pb-2 text-center">
-          <Link to="/about" className="text-xs text-gray-500 hover:text-gray-700">About</Link>
+          <Link to="/about" className="text-xs text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">About</Link>
         </div>
       </div>
 

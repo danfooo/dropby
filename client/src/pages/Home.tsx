@@ -37,19 +37,19 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
   };
 
   return (
-    <div className={`rounded-2xl p-4 shadow-sm border ${isScheduled ? 'bg-white border-gray-200' : 'bg-white border-gray-100'}`}>
+    <div className={`rounded-2xl p-4 shadow-sm border ${isScheduled ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700' : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800'}`}>
       <div className="flex items-center gap-3">
         <Avatar name={status.owner_name} size="md" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900">{status.owner_name}</p>
-          {status.note && <p className="text-sm text-gray-500 truncate">"{status.note}"</p>}
+          <p className="font-semibold text-gray-900 dark:text-gray-50">{status.owner_name}</p>
+          {status.note && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">"{status.note}"</p>}
           {isScheduled && (
-            <p className="text-xs text-violet-600 font-medium mt-0.5">
+            <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mt-0.5">
               🕐 {t('home.opensAt', { time: formatTime(status.starts_at) })}
             </p>
           )}
           {!isScheduled && status.ends_at && (
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
               {t('home.freeUntil', { time: formatTimeShort(status.ends_at) })}
             </p>
           )}
@@ -63,7 +63,7 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
           className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
             myRsvp === 'going'
               ? 'bg-emerald-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-emerald-50'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-950'
           }`}
         >
           {t('home.rsvpGoing')}
@@ -73,7 +73,7 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
           className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
             myRsvp === 'maybe'
               ? 'bg-amber-400 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-amber-50'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-950'
           }`}
         >
           {t('home.rsvpMaybe')}
@@ -115,7 +115,7 @@ function RecipientRow({ recipient, onRemove }: { recipient: any; onRemove: () =>
   return (
     <div className="flex items-center gap-3 py-2">
       <Avatar name={recipient.display_name} size="sm" />
-      <span className={`flex-1 text-sm ${removing ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+      <span className={`flex-1 text-sm ${removing ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-50'}`}>
         {recipient.display_name}
       </span>
       {removing ? (
@@ -123,7 +123,7 @@ function RecipientRow({ recipient, onRemove }: { recipient: any; onRemove: () =>
           {t('home.undo', { seconds: countdown })}
         </button>
       ) : (
-        <button onClick={startRemove} className="text-gray-400 hover:text-gray-600 p-1">
+        <button onClick={startRemove} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -171,21 +171,21 @@ function InviteLinkRow({ token, createdAt, onRevoke }: { token: string; createdA
 
   return (
     <div className="flex items-center gap-3 py-2">
-      <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-        <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="w-7 h-7 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center shrink-0">
+        <svg className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
       </div>
       <div className={`flex-1 ${removing ? 'opacity-40' : ''}`}>
-        <p className="text-sm text-gray-900">{t('home.anyoneWithLink')}</p>
-        <p className="text-xs text-gray-400">{relativeTime(createdAt)}</p>
+        <p className="text-sm text-gray-900 dark:text-gray-50">{t('home.anyoneWithLink')}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500">{relativeTime(createdAt)}</p>
       </div>
       {removing ? (
         <button onClick={undo} className="text-xs text-emerald-600 font-medium px-2">
           {t('home.undo', { seconds: countdown })}
         </button>
       ) : (
-        <button onClick={startRemove} className="text-gray-400 hover:text-gray-600 p-1">
+        <button onClick={startRemove} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -248,7 +248,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
   const trimmedNote = note.trim() || undefined;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 space-y-3">
       {/* Note chips: saved notes first (max 2), then suggestions */}
       {(visibleSaved.length > 0 || chips.length > 0) && (
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -258,14 +258,14 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
               className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                 selectedChip === n.text
                   ? 'bg-emerald-500 text-white border-emerald-500'
-                  : 'bg-gray-50 text-gray-600 border-gray-200'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
               }`}
             >
               <button onClick={() => pickChip(n.text)}>{n.text}</button>
               <button
                 onClick={() => hideNote.mutate(n.id)}
                 className={`ml-1 rounded-full p-0.5 transition-colors ${
-                  selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100'
+                  selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
                 aria-label="Remove"
               >
@@ -282,7 +282,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                 selectedChip === chip
                   ? 'bg-emerald-500 text-white border-emerald-500'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
               }`}
             >
               {chip}
@@ -302,30 +302,30 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
             setPreviousNote(null);
           }
         }}
-        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
       />
       {/* Schedule pickers — only when scheduleMode */}
       {scheduleMode && (
         <>
-          <div className="flex border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
-            <div className="flex-[2] px-3 py-2 border-r border-gray-200">
-              <label className="text-xs text-gray-400 block mb-0.5">Date</label>
+          <div className="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800">
+            <div className="flex-[2] px-3 py-2 border-r border-gray-200 dark:border-gray-700">
+              <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">Date</label>
               <input type="date" value={date} min={todayStr()} onChange={e => setDate(e.target.value)}
-                className="w-full text-sm bg-transparent outline-none" />
+                className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
             </div>
-            <div className="flex-1 px-3 py-2 border-r border-gray-200">
-              <label className="text-xs text-gray-400 block mb-0.5">{t('home.scheduleStartTime')}</label>
+            <div className="flex-1 px-3 py-2 border-r border-gray-200 dark:border-gray-700">
+              <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
               <input type="time" value={start} onChange={e => setStart(e.target.value)}
-                className="w-full text-sm bg-transparent outline-none" />
+                className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
             </div>
             <div className="flex-1 px-3 py-2">
-              <label className="text-xs text-gray-400 block mb-0.5">{t('home.scheduleEndTime')}</label>
+              <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
               <input type="time" value={end} onChange={e => setEnd(e.target.value)}
-                className="w-full text-sm bg-transparent outline-none" />
+                className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <p className="text-xs text-gray-400 flex-1">{t('home.scheduleReminderText', { minutes: reminder })}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 flex-1">{t('home.scheduleReminderText', { minutes: reminder })}</p>
             <button onClick={() => setShowReminder(v => !v)} className="text-xs text-violet-600 font-medium">
               {t('home.scheduleReminderChange')}
             </button>
@@ -335,7 +335,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
               {REMINDER_OPTIONS.map(m => (
                 <button key={m} onClick={() => { setReminder(m); setShowReminder(false); }}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    reminder === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 text-gray-600 border-gray-200'
+                    reminder === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
                   }`}>
                   {m === 60 ? '1h' : `${m} min`}
                 </button>
@@ -347,30 +347,30 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
       {friends.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-gray-500 font-medium">{t('home.openDoorTo')}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{t('home.openDoorTo')}</p>
             {activeFriends.length >= 5 && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400 dark:text-gray-500">
                 {activeFriends.filter((f: any) => recipients.includes(f.id)).length} / {activeFriends.length}
               </span>
             )}
           </div>
           <div className="relative -mx-4">
             <div
-              className={`divide-y divide-gray-50${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
+              className={`divide-y divide-gray-50 dark:divide-gray-800${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
               onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
             >
               {activeFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 px-4">
+                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-4">
                   <input type="checkbox" checked={recipients.includes(f.id)}
                     onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
                     className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
                   <Avatar name={f.display_name} size="sm" />
-                  <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
                 </label>
               ))}
             </div>
             {activeFriends.length >= 5 && !friendsAtBottom && (
-              <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none" />
             )}
           </div>
         </div>
@@ -389,13 +389,13 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
         <button
           onClick={() => setScheduleMode(v => !v)}
           className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition-colors ${
-            scheduleMode ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            scheduleMode ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
           }`}
         >
           {t('home.scheduleLater')}
         </button>
       </div>
-      <button onClick={onCancel} className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors">
+      <button onClick={onCancel} className="w-full text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors">
         {t('common.cancel')}
       </button>
     </div>
@@ -425,20 +425,20 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
 
   if (editing) {
     return (
-      <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 space-y-3">
-        <div className="flex border border-violet-200 rounded-xl overflow-hidden bg-white">
-          <div className="flex-[2] px-3 py-2 border-r border-violet-200">
-            <label className="text-xs text-violet-400 block mb-0.5">Date</label>
+      <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl p-4 space-y-3">
+        <div className="flex border border-violet-200 dark:border-violet-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900">
+          <div className="flex-[2] px-3 py-2 border-r border-violet-200 dark:border-violet-800">
+            <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">Date</label>
             <input type="date" value={editDate} min={format(new Date(), 'yyyy-MM-dd')} onChange={e => setEditDate(e.target.value)}
               className="w-full text-sm bg-transparent outline-none" />
           </div>
-          <div className="flex-1 px-3 py-2 border-r border-violet-200">
-            <label className="text-xs text-violet-400 block mb-0.5">{t('home.scheduleStartTime')}</label>
+          <div className="flex-1 px-3 py-2 border-r border-violet-200 dark:border-violet-800">
+            <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
             <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
-              className="w-full text-sm bg-transparent outline-none" />
+              className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
           </div>
           <div className="flex-1 px-3 py-2">
-            <label className="text-xs text-violet-400 block mb-0.5">{t('home.scheduleEndTime')}</label>
+            <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
             <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
               className="w-full text-sm bg-transparent outline-none" />
           </div>
@@ -449,35 +449,35 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
           value={editNote}
           maxLength={100}
           onChange={e => setEditNote(e.target.value)}
-          className="w-full px-3 py-2 bg-white border border-violet-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
         />
         {friends.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs text-violet-500 font-medium">{t('home.openDoorTo')}</p>
+              <p className="text-xs text-violet-500 dark:text-violet-400 font-medium">{t('home.openDoorTo')}</p>
               {activeFriends.length >= 5 && (
-                <span className="text-xs text-violet-400">
+                <span className="text-xs text-violet-400 dark:text-violet-500">
                   {activeFriends.filter((f: any) => editRecipients.includes(f.id)).length} / {activeFriends.length}
                 </span>
               )}
             </div>
             <div className="relative -mx-4">
               <div
-                className={`divide-y divide-violet-100${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
+                className={`divide-y divide-violet-100 dark:divide-violet-900${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
                 onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
               >
                 {activeFriends.map((f: any) => (
-                  <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 px-4">
+                  <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900 px-4">
                     <input type="checkbox" checked={editRecipients.includes(f.id)}
                       onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
                       className="w-4 h-4 accent-violet-600 flex-shrink-0" />
                     <Avatar name={f.display_name} size="sm" />
-                    <span className="text-sm font-medium text-violet-900">{f.display_name}</span>
+                    <span className="text-sm font-medium text-violet-900 dark:text-violet-100">{f.display_name}</span>
                   </label>
                 ))}
               </div>
               {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-violet-50 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-violet-50 dark:from-violet-950 to-transparent pointer-events-none" />
               )}
             </div>
           </div>
@@ -499,7 +499,7 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
           </button>
           <button
             onClick={() => setEditing(false)}
-            className="px-4 py-2 text-sm text-violet-600 hover:text-violet-800 font-medium"
+            className="px-4 py-2 text-sm text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 font-medium"
           >
             {t('common.cancel')}
           </button>
@@ -509,13 +509,13 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
   }
 
   return (
-    <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4">
-      <p className="text-sm text-violet-700 font-medium mb-1">
+    <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl p-4">
+      <p className="text-sm text-violet-700 dark:text-violet-300 font-medium mb-1">
         🕐 {formatTime(session.starts_at)} – {formatTimeShort(session.ends_at)}
       </p>
-      {session.note && <p className="text-sm text-violet-600 mb-2">"{session.note}"</p>}
+      {session.note && <p className="text-sm text-violet-600 dark:text-violet-400 mb-2">"{session.note}"</p>}
       {session.going_signals?.length > 0 && (
-        <p className="text-xs text-violet-500 mb-2">
+        <p className="text-xs text-violet-500 dark:text-violet-400 mb-2">
           {session.going_signals.map((g: any) => g.name).join(', ')} {session.going_signals.length === 1 ? 'is' : 'are'} coming
         </p>
       )}
@@ -523,7 +523,7 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
         href={`/api/status/${session.id}/calendar.ics`}
         download
         onClick={() => localStorage.setItem(icsKey, '1')}
-        className="inline-block text-xs text-violet-500 hover:text-violet-700 mb-3"
+        className="inline-block text-xs text-violet-500 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 mb-3"
       >
         {t('home.addToCalendar')}
       </a>
@@ -838,17 +838,17 @@ export default function Home() {
       : t('home.openDoor');
 
     return (
-      <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
+      <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
         <div className="flex items-center justify-between mb-1">
           <img src="/logo-icon.svg" alt="dropby" className="h-8" />
           <UserMenu />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 mt-5">{getGreeting(t)}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-6 mt-5">{getGreeting(t)}</h1>
 
         {/* Friend doors open / upcoming */}
         {(friendStatuses as any[]).length > 0 && (
-          <div className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 border-y border-fuchsia-200/60">
-            <h2 className="text-base font-bold text-fuchsia-900 mb-3">
+          <div className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-200/60 dark:border-fuchsia-900/60">
+            <h2 className="text-base font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
               {t('home.friendsAvailable')} ✨
             </h2>
             <div className="space-y-3">
@@ -869,7 +869,7 @@ export default function Home() {
                   className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                     selectedChip === n.text
                       ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white text-gray-600 border-gray-200'
+                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
                   }`}
                 >
                   <button
@@ -917,7 +917,7 @@ export default function Home() {
                   className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                     selectedChip === chip
                       ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'
+                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
                   }`}
                 >
                   {chip}
@@ -941,7 +941,7 @@ export default function Home() {
                 setPreviousNote(null);
               }
             }}
-            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
           {note.length >= 80 && (
             <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 90 ? 'text-red-400' : 'text-gray-400'}`}>
@@ -953,25 +953,25 @@ export default function Home() {
         {/* Schedule pickers — shown when scheduleEnabled */}
         {scheduleEnabled && (
           <div className="mb-3 space-y-2">
-            <div className="flex border border-gray-200 rounded-xl overflow-hidden bg-white">
-              <div className="flex-[2] px-3 py-2 border-r border-gray-200">
-                <label className="text-xs text-gray-400 block mb-0.5">Date</label>
+            <div className="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800">
+              <div className="flex-[2] px-3 py-2 border-r border-gray-200 dark:border-gray-700">
+                <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">Date</label>
                 <input type="date" value={scheduleDate} min={todayStr()} onChange={e => setScheduleDate(e.target.value)}
-                  className="w-full text-sm bg-transparent outline-none" />
+                  className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
               </div>
-              <div className="flex-1 px-3 py-2 border-r border-gray-200">
-                <label className="text-xs text-gray-400 block mb-0.5">{t('home.scheduleStartTime')}</label>
+              <div className="flex-1 px-3 py-2 border-r border-gray-200 dark:border-gray-700">
+                <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
                 <input type="time" value={scheduleStart} onChange={e => setScheduleStart(e.target.value)}
-                  className="w-full text-sm bg-transparent outline-none" />
+                  className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
               </div>
               <div className="flex-1 px-3 py-2">
-                <label className="text-xs text-gray-400 block mb-0.5">{t('home.scheduleEndTime')}</label>
+                <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
                 <input type="time" value={scheduleEnd} onChange={e => setScheduleEnd(e.target.value)}
-                  className="w-full text-sm bg-transparent outline-none" />
+                  className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-400 flex-1">{t('home.scheduleReminderText', { minutes: reminderMinutes })}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 flex-1">{t('home.scheduleReminderText', { minutes: reminderMinutes })}</p>
               <button onClick={() => setShowReminderPicker(v => !v)} className="text-xs text-violet-600 font-medium">
                 {t('home.scheduleReminderChange')}
               </button>
@@ -981,7 +981,7 @@ export default function Home() {
                 {REMINDER_OPTIONS.map(m => (
                   <button key={m} onClick={() => { setReminderMinutes(m); setShowReminderPicker(false); }}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      reminderMinutes === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 text-gray-600 border-gray-200'
+                      reminderMinutes === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
                     }`}>
                     {m === 60 ? '1h' : `${m} min`}
                   </button>
@@ -993,25 +993,25 @@ export default function Home() {
 
         {/* Recipient selection */}
         {hasFriends && (
-          <div className="bg-white rounded-2xl p-3 mb-3 shadow-sm border border-gray-100">
-            <h2 className="text-xs font-semibold text-gray-500 mb-1">{t('home.openDoorTo')}</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 mb-3 shadow-sm border border-gray-100 dark:border-gray-800">
+            <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('home.openDoorTo')}</h2>
             <div className="relative">
               <div
-                className={`divide-y divide-gray-50 overflow-x-hidden${activeFriends.length >= 5 ? ' h-[192px] overflow-y-auto' : ''}`}
+                className={`divide-y divide-gray-50 dark:divide-gray-800 overflow-x-hidden${activeFriends.length >= 5 ? ' h-[192px] overflow-y-auto' : ''}`}
                 onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
               >
                 {activeFriends.map((f: any) => (
-                  <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-3 px-3 transition-colors">
+                  <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 -mx-3 px-3 transition-colors">
                     <input type="checkbox" checked={selectedRecipients.includes(f.id)}
                       onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
                       className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
                     <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
-                    <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
                   </label>
                 ))}
               </div>
               {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-xl" />
+                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none rounded-b-xl" />
               )}
             </div>
           </div>
@@ -1029,7 +1029,7 @@ export default function Home() {
           <button
             onClick={() => setScheduleEnabled(v => !v)}
             className={`px-4 py-3 rounded-2xl text-sm font-medium transition-colors ${
-              scheduleEnabled ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              scheduleEnabled ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             {t('home.scheduleLater')}
@@ -1038,7 +1038,7 @@ export default function Home() {
         {/* Pending scheduled sessions */}
         {(upcomingSessions as any[]).length > 0 && (
           <div className="mt-6 space-y-3">
-            <h2 className="text-sm font-bold text-violet-800">{t('home.scheduledSessionTitle')}</h2>
+            <h2 className="text-sm font-bold text-violet-800 dark:text-violet-300">{t('home.scheduledSessionTitle')}</h2>
             {(upcomingSessions as any[]).map((session: any) => (
               <ScheduledSessionCard
                 key={session.id}
@@ -1055,7 +1055,7 @@ export default function Home() {
         <TipsSection />
 
         {calendarToast && (
-          <div className="fixed bottom-4 left-4 right-4 z-50 bg-gray-900 text-white rounded-xl p-3 flex items-center gap-3 shadow-lg">
+          <div className="fixed bottom-4 left-4 right-4 z-50 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl p-3 flex items-center gap-3 shadow-lg">
             <span className="flex-1 text-sm">
               {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
             </span>
@@ -1064,12 +1064,12 @@ export default function Home() {
                 ? `/api/status/${calendarToast.sessionId}/calendar.ics`
                 : `/api/status/${calendarToast.sessionId}/calendar.ics?cancel=1`}
               download
-              className="text-sm text-emerald-400 font-medium whitespace-nowrap"
+              className="text-sm text-emerald-400 dark:text-emerald-600 font-medium whitespace-nowrap"
               onClick={() => setCalendarToast(null)}
             >
               {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
             </a>
-            <button onClick={() => setCalendarToast(null)} className="text-gray-400 p-1 shrink-0">
+            <button onClick={() => setCalendarToast(null)} className="text-gray-400 dark:text-gray-500 p-1 shrink-0">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -1087,7 +1087,7 @@ export default function Home() {
     const initEndsAt = myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '';
 
     return (
-      <div className="min-h-full bg-gray-50 pb-24">
+      <div className="min-h-full bg-gray-50 dark:bg-gray-950 pb-24">
         {/* Sticky banner */}
         <button
           onClick={handleSaveEdit}
@@ -1105,22 +1105,22 @@ export default function Home() {
             maxLength={100}
             defaultValue={initNote}
             onChange={e => setEditNote(e.target.value)}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
+            className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
           />
 
           {initEndsAt && (
             <div className="mb-4">
-              <label className="text-xs text-gray-500 block mb-1">{t('home.scheduleEndTime')}</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">{t('home.scheduleEndTime')}</label>
               <input
                 type="time"
                 defaultValue={initEndsAt}
                 onChange={e => setEditEndsAt(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
             </div>
           )}
 
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 mb-4">
             <h2 className="text-sm font-semibold mb-3">{t('home.recipients')}</h2>
             {(friends as any[]).filter((f: any) => !f.muted).map((f: any) => (
               <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer">
@@ -1139,14 +1139,14 @@ export default function Home() {
               </label>
             ))}
             {(friends as any[]).some((f: any) => f.muted) ? (
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                 {t('home.mutedFriendsHidden')}{' '}
-                <Link to="/friends" className="underline text-gray-500">{t('home.mutedFriendsChange')}</Link>
+                <Link to="/friends" className="underline text-gray-500 dark:text-gray-400">{t('home.mutedFriendsChange')}</Link>
               </p>
             ) : (friends as any[]).filter((f: any) => !f.muted).length >= 5 && (friends as any[]).filter((f: any) => !f.muted).some((f: any) => !editRecipients.includes(f.id)) ? (
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                 {t('home.muteFriendsHint')}{' '}
-                <Link to="/friends" className="underline text-gray-500">{t('home.mutedFriendsChange')}</Link>
+                <Link to="/friends" className="underline text-gray-500 dark:text-gray-400">{t('home.mutedFriendsChange')}</Link>
               </p>
             ) : null}
           </div>
@@ -1165,7 +1165,7 @@ export default function Home() {
 
   // --- DOOR OPEN VIEW ---
   return (
-    <div className="min-h-full bg-gray-50 px-4 pt-8 pb-24">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <img src="/logo.svg" alt="dropby" className="h-8" />
@@ -1175,7 +1175,7 @@ export default function Home() {
       {/* Friend doors also open / upcoming */}
       {(friendStatuses as any[]).length > 0 && (
         <div className="mb-6">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
             {t('home.alsoAvailable')}
           </h2>
           <div className="space-y-3">
@@ -1187,7 +1187,7 @@ export default function Home() {
       )}
 
       <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-medium">
+        <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-4 py-1.5 rounded-full text-sm font-medium">
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
           {t('home.youreOpen')}
         </div>
@@ -1199,7 +1199,7 @@ export default function Home() {
               setEditEndsAt(myStatus.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
               setView('edit');
             }}
-            className="text-sm text-gray-500 mt-2 block w-full"
+            className="text-sm text-gray-500 dark:text-gray-400 mt-2 block w-full"
           >
             {myStatus.note}
           </button>
@@ -1208,8 +1208,8 @@ export default function Home() {
 
       {/* Recipients + invite links */}
       {(myStatus?.recipients.length > 0 || myStatus?.invite_links?.length > 0) && (
-        <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900 mb-2">{t('home.invited')}</h2>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 mb-4 shadow-sm border border-gray-100 dark:border-gray-800">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-2">{t('home.invited')}</h2>
           {myStatus.recipients.map((r: any) => (
             <RecipientRow
               key={r.id}
@@ -1230,13 +1230,13 @@ export default function Home() {
 
       {/* Going signals */}
       {myStatus?.going_signals?.length > 0 && (
-        <div className="bg-emerald-50 rounded-2xl p-4 mb-4 border border-emerald-100">
-          <h2 className="text-sm font-semibold text-emerald-800 mb-2">{t('home.onTheirWay')}</h2>
+        <div className="bg-emerald-50 dark:bg-emerald-950 rounded-2xl p-4 mb-4 border border-emerald-100 dark:border-emerald-800">
+          <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2">{t('home.onTheirWay')}</h2>
           {myStatus.going_signals.map((g: any) => (
             <div key={g.id} className="flex items-center gap-2 py-1">
               <span className="text-base">{g.rsvp === 'maybe' ? '🤔' : '✅'}</span>
-              <span className="text-sm text-emerald-900 font-medium">{g.name}</span>
-              {g.rsvp === 'maybe' && <span className="text-xs text-emerald-600">maybe</span>}
+              <span className="text-sm text-emerald-900 dark:text-emerald-200 font-medium">{g.name}</span>
+              {g.rsvp === 'maybe' && <span className="text-xs text-emerald-600 dark:text-emerald-400">maybe</span>}
             </div>
           ))}
         </div>
@@ -1245,16 +1245,16 @@ export default function Home() {
       {/* Invite link row */}
       <button
         onClick={copyInviteLink}
-        className="w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 mb-4 hover:bg-gray-50 transition-colors"
+        className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex items-center gap-3 mb-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
       >
-        <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center">
-          <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="w-9 h-9 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center">
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </div>
         <div className="text-left">
-          <p className="text-sm font-medium text-gray-900">{t('home.anyoneWithLink')}</p>
-          <p className="text-xs text-gray-500">{t('home.tapToCopyLink')}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{t('home.anyoneWithLink')}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t('home.tapToCopyLink')}</p>
         </div>
       </button>
 
@@ -1266,14 +1266,14 @@ export default function Home() {
           setEditEndsAt(myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
           setView('edit');
         }}
-        className="w-full bg-white border border-gray-200 text-gray-900 py-3 rounded-2xl font-medium text-sm mb-3 hover:bg-gray-50"
+        className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-50 py-3 rounded-2xl font-medium text-sm mb-3 hover:bg-gray-50 dark:hover:bg-gray-800"
       >
         {t('home.addMoreEdit')}
       </button>
 
       {/* Duration row */}
       <div className="flex items-center justify-between px-1 mb-1">
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {myStatus?.ends_at
             ? t('home.closesAt', { time: formatTimeShort(myStatus.ends_at) })
             : minutesLeft > 0
@@ -1285,7 +1285,7 @@ export default function Home() {
               setSelectedDurationMinutes(user?.default_door_minutes ?? 60);
               setShowDurationPicker(true);
             }}
-            className="text-gray-700 font-medium hover:underline underline-offset-2"
+            className="text-gray-700 dark:text-gray-300 font-medium hover:underline underline-offset-2"
           >
             {t('home.changeDuration')}
           </button>
@@ -1293,7 +1293,7 @@ export default function Home() {
         <button
           onClick={() => closeStatus.mutate()}
           disabled={closeStatus.isPending}
-          className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
+          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50"
         >
           {t('home.closeNow')}
         </button>
@@ -1319,7 +1319,7 @@ export default function Home() {
                   className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                     isActive
                       ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >
                   {min === 30 ? '30 min' : `${min / 60}h`}
@@ -1332,12 +1332,12 @@ export default function Home() {
             const closesAt = Math.max((myStatus?.created_at ?? nowSec) + selectedDurationMinutes * 60, nowSec + 60);
             const minsLeft = Math.ceil((closesAt - nowSec) / 60);
             return (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t('home.doorDurationClosePreview', { time: formatTimeShort(closesAt), minutes: minsLeft })}
               </p>
             );
           })()}
-          <p className="text-xs text-gray-400">{t('home.doorDurationExplainer')}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{t('home.doorDurationExplainer')}</p>
           <button
             onClick={() => setShowDurationPicker(false)}
             className="w-full bg-emerald-500 text-white py-3 rounded-2xl font-semibold"
@@ -1350,7 +1350,7 @@ export default function Home() {
       {/* Upcoming scheduled sessions */}
       {(upcomingSessions as any[]).length > 0 && (
         <div className="mt-4 space-y-3">
-          <h2 className="text-sm font-bold text-violet-800">{t('home.scheduledSessionTitle')}</h2>
+          <h2 className="text-sm font-bold text-violet-800 dark:text-violet-300">{t('home.scheduledSessionTitle')}</h2>
           {(upcomingSessions as any[]).map((session: any) => (
             <ScheduledSessionCard
               key={session.id}
@@ -1367,7 +1367,7 @@ export default function Home() {
       {!showScheduleMore ? (
         <button
           onClick={() => setShowScheduleMore(true)}
-          className="mt-4 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          className="mt-4 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
         >
           {t('home.openAnother')}
         </button>
@@ -1399,7 +1399,7 @@ export default function Home() {
           >
             {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
           </a>
-          <button onClick={() => setCalendarToast(null)} className="text-gray-400 p-1 shrink-0">
+          <button onClick={() => setCalendarToast(null)} className="text-gray-400 dark:text-gray-500 p-1 shrink-0">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -1430,10 +1430,10 @@ function TipsSection() {
   const showFeedbackTip = !feedbackDismissed && !showInviteTip;
 
   const tipContent = showInviteTip ? (
-    <div className="bg-white border-t border-gray-100 px-4 py-4">
+    <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-gray-600 flex-1">{t('home.inviteFriendsText')}</p>
-        <button onClick={dismissInvite} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.inviteFriendsText')}</p>
+        <button onClick={dismissInvite} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -1444,36 +1444,36 @@ function TipsSection() {
           await copyText(invitesApi.generate().then(data => `${t('home.friendshipCopyText')}\n${data.url}`));
           setToast({ message: t('home.inviteLinkCopied'), linkText: '', linkTo: '' });
         }}
-        className="text-sm font-semibold text-emerald-600"
+        className="text-sm font-semibold text-emerald-600 dark:text-emerald-400"
       >
         {t('home.copyInviteLink')}
       </button>
     </div>
   ) : showFeedbackTip ? (
-    <div className="bg-white border-t border-gray-100 px-4 py-4">
+    <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-gray-600 flex-1">{t('home.feedbackTipText')}</p>
-        <button onClick={() => { dismissFeedback(); setToast({ message: t('home.feedbackTipDismissed'), linkText: t('profile.title'), linkTo: '/profile' }); }} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.feedbackTipText')}</p>
+        <button onClick={() => { dismissFeedback(); setToast({ message: t('home.feedbackTipDismissed'), linkText: t('profile.title'), linkTo: '/profile' }); }} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
-      <button onClick={() => setShowFeedback(true)} className="text-sm font-semibold text-emerald-600">
+      <button onClick={() => setShowFeedback(true)} className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
         {t('home.feedbackTipLink')}
       </button>
     </div>
   ) : !coffeeDismissed && everReceived?.received ? (
-    <div className="bg-white border-t border-gray-100 px-4 py-4">
+    <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-gray-600 flex-1">{t('home.coffeeTipText')}</p>
-        <button onClick={dismissCoffee} className="text-gray-300 hover:text-gray-500 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.coffeeTipText')}</p>
+        <button onClick={dismissCoffee} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
-      <a href="https://www.buymeacoffee.com/dropby" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-emerald-600">
+      <a href="https://www.buymeacoffee.com/dropby" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
         {t('home.coffeeTipLink')}
       </a>
     </div>

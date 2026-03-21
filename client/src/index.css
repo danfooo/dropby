@@ -11,6 +11,11 @@
     -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
   }
+  @media (prefers-color-scheme: dark) {
+    body {
+      @apply bg-gray-950 text-gray-50;
+    }
+  }
   /* Prevent iOS auto-zoom on input focus (triggers when font-size < 16px) */
   input, textarea, select {
     font-size: 16px;

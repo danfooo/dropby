@@ -4,13 +4,13 @@ import { useTranslation } from 'react-i18next';
 export default function TabBar() {
   const { t } = useTranslation();
   return (
-    <nav className="bg-white border-t border-gray-100 safe-bottom">
+    <nav className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 safe-bottom">
       <div className="flex">
         <NavLink
           to="/home"
           className={({ isActive }) =>
             `flex-1 flex flex-col items-center py-3 text-xs font-medium transition-colors ${
-              isActive ? 'text-emerald-600' : 'text-gray-400'
+              isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'
             }`
           }
         >
@@ -23,7 +23,7 @@ export default function TabBar() {
           to="/friends"
           className={({ isActive }) =>
             `flex-1 flex flex-col items-center py-3 text-xs font-medium transition-colors ${
-              isActive ? 'text-emerald-600' : 'text-gray-400'
+              isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'
             }`
           }
         >

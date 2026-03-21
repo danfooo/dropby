@@ -15,11 +15,11 @@ export default function ConfirmDialog({ open, onClose, onConfirm, title, message
   const { t } = useTranslation();
   return (
     <Modal open={open} onClose={onClose} title={title}>
-      <p className="text-gray-600 mb-6">{message}</p>
+      <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
       <div className="flex gap-3">
         <button
           onClick={onClose}
-          className="flex-1 py-2.5 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
+          className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           {t('common.cancel')}
         </button>

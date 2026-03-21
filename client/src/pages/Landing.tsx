@@ -11,31 +11,31 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-full flex flex-col bg-white">
+    <div className="min-h-full flex flex-col bg-white dark:bg-gray-950">
       {/* Top spacer */}
       <div className="flex-1" />
 
       {/* Hero */}
       <div className="flex flex-col items-center px-6 py-8 text-center">
         <img src="/logo-icon.svg" alt="dropby" className="w-16 h-16 mb-4" />
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">dropby</h1>
-        <p className="text-2xl font-semibold text-gray-900 mb-2">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-50 mb-2">dropby</h1>
+        <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-2">
           {t('landing.tagline')}
         </p>
-        <p className="text-gray-400 text-sm max-w-xs leading-relaxed">{t('landing.subtagline')}</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm max-w-xs leading-relaxed">{t('landing.subtagline')}</p>
       </div>
 
       {/* Feature cards */}
-      <div className="px-6 py-8 border-t border-gray-100">
+      <div className="px-6 py-8 border-t border-gray-100 dark:border-gray-800">
         <div className="space-y-4 max-w-sm mx-auto">
           {steps.map(item => (
             <div key={item.titleKey} className="flex gap-4 items-start">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-lg flex-shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-lg flex-shrink-0">
                 {item.icon}
               </div>
               <div>
-                <p className="font-semibold text-gray-900">{t(item.titleKey)}</p>
-                <p className="text-sm text-gray-500 mt-0.5">{t(item.descKey)}</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-50">{t(item.titleKey)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{t(item.descKey)}</p>
               </div>
             </div>
           ))}
@@ -57,7 +57,7 @@ export default function Landing() {
 
       {/* Imprint */}
       <div className="pb-8 text-center">
-        <Link to="/about" className="text-xs text-gray-500 hover:text-gray-700">About</Link>
+        <Link to="/about" className="text-xs text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">About</Link>
       </div>
     </div>
   );

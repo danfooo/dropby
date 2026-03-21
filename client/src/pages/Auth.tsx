@@ -100,7 +100,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-center px-6 py-10 bg-white">
+    <div className="min-h-full flex flex-col items-center justify-center px-6 py-10 bg-white dark:bg-gray-950">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img src="/logo.svg" alt="dropby" className="h-16 mx-auto" />
@@ -108,12 +108,12 @@ export default function Auth() {
 
         {view === 'forgot' ? (
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('auth.forgotPassword')}</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-50 mb-2">{t('auth.forgotPassword')}</h2>
             {!forgotSent ? (
               <>
-                <p className="text-sm text-gray-500 mb-6">{t('auth.forgotPasswordDesc')}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t('auth.forgotPasswordDesc')}</p>
                 {error && (
-                  <div className="bg-red-50 border border-red-100 text-red-700 rounded-xl p-3 text-sm mb-4">{error}</div>
+                  <div className="bg-red-50 dark:bg-red-950 border border-red-100 dark:border-red-900 text-red-700 rounded-xl p-3 text-sm mb-4">{error}</div>
                 )}
                 <form onSubmit={async e => {
                   e.preventDefault();
@@ -133,20 +133,20 @@ export default function Auth() {
                     required
                     value={forgotEmail}
                     onChange={e => setForgotEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:text-gray-50"
                   />
                   <button type="submit" disabled={loading} className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-colors">
                     {loading ? t('auth.pleaseWait') : t('auth.sendResetLink')}
                   </button>
                 </form>
                 <p className="text-center mt-4">
-                  <button type="button" onClick={() => { setView('auth'); setError(''); }} className="text-sm text-gray-500 hover:text-gray-700">{t('auth.backToLogin')}</button>
+                  <button type="button" onClick={() => { setView('auth'); setError(''); }} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">{t('auth.backToLogin')}</button>
                 </p>
               </>
             ) : (
               <div>
-                <p className="text-sm text-gray-600 mb-6">{t('auth.resetLinkSent')}</p>
-                <button type="button" onClick={() => { setView('auth'); setForgotSent(false); setError(''); }} className="w-full bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm hover:bg-gray-50">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{t('auth.resetLinkSent')}</p>
+                <button type="button" onClick={() => { setView('auth'); setForgotSent(false); setError(''); }} className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
                   {t('auth.backToLogin')}
                 </button>
               </div>
@@ -157,18 +157,18 @@ export default function Auth() {
             {inviter && (
               <div className="text-center mb-6">
                 <Avatar name={inviter.display_name} size="lg" className="mx-auto mb-3" />
-                <p className="text-gray-700 font-medium">{t('auth.connectWithName', { name: inviter.display_name })}</p>
+                <p className="text-gray-700 dark:text-gray-300 font-medium">{t('auth.connectWithName', { name: inviter.display_name })}</p>
               </div>
             )}
 
             {/* Tabs */}
-            <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6">
               {(['login', 'signup'] as Tab[]).map(tabKey => (
                 <button
                   key={tabKey}
                   onClick={() => { setTab(tabKey); setError(''); setMessage(''); setShowResend(false); }}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-                    tab === tabKey ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                    tab === tabKey ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {tabKey === 'login' ? t('auth.login') : t('auth.signup')}
@@ -177,7 +177,7 @@ export default function Auth() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-100 text-red-700 rounded-xl p-3 text-sm mb-4">
+              <div className="bg-red-50 dark:bg-red-950 border border-red-100 dark:border-red-900 text-red-700 rounded-xl p-3 text-sm mb-4">
                 {error}
                 {showResend && (
                   <button onClick={handleResend} className="block mt-1 underline font-medium">
@@ -187,7 +187,7 @@ export default function Auth() {
               </div>
             )}
             {message && (
-              <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl p-3 text-sm mb-4">
+              <div className="bg-emerald-50 dark:bg-emerald-950 border border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 rounded-xl p-3 text-sm mb-4">
                 {message}
               </div>
             )}
@@ -200,7 +200,7 @@ export default function Auth() {
                   required
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 />
               )}
               <input
@@ -221,7 +221,7 @@ export default function Auth() {
               />
               {tab === 'login' && (
                 <div className="text-right -mt-1">
-                  <button type="button" onClick={() => { setView('forgot'); setForgotEmail(email); setError(''); setMessage(''); }} className="text-xs text-gray-500 hover:text-gray-700">
+                  <button type="button" onClick={() => { setView('forgot'); setForgotEmail(email); setError(''); setMessage(''); }} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                     {t('auth.forgotPassword')}
                   </button>
                 </div>
@@ -237,9 +237,9 @@ export default function Auth() {
 
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-gray-200 dark:border-gray-700" />
               </div>
-              <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">{t('auth.or')}</div>
+              <div className="relative flex justify-center text-xs text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-950 px-2">{t('auth.or')}</div>
             </div>
 
             <div className="flex justify-center">
@@ -254,8 +254,8 @@ export default function Auth() {
           </>
         )}
       </div>
-      <p className="mt-10 text-xs text-gray-500">
-        <a href="/about" className="hover:text-gray-700">About</a>
+      <p className="mt-10 text-xs text-gray-500 dark:text-gray-500">
+        <a href="/about" className="hover:text-gray-700 dark:hover:text-gray-300">About</a>
       </p>
     </div>
   );

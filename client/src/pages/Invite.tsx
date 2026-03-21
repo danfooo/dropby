@@ -119,17 +119,17 @@ export default function Invite() {
       setTimeout(() => setInviteBackCopied(false), 3000);
     };
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white">
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
         <p className="text-5xl mb-4">⏰</p>
         <h1 className="text-xl font-bold mb-2">{t('invite.expiredTitle')}</h1>
-        <p className="text-gray-500 mb-8">{t('invite.expiredDesc', { ago: agoText })}</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">{t('invite.expiredDesc', { ago: agoText })}</p>
         <button
           onClick={handleInviteBack}
           className="w-full max-w-xs bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-2xl font-semibold mb-3"
         >
           {inviteBackCopied ? t('invite.inviteBackCopied') : t('invite.inviteBackCta', { name: inviterName })}
         </button>
-        <Link to="/home" className="text-sm text-gray-500 hover:text-gray-700">
+        <Link to="/home" className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
           {t('invite.goHome')}
         </Link>
       </div>
@@ -138,10 +138,10 @@ export default function Invite() {
 
   if (error === 'INVALID' || !info) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white">
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
         <p className="text-5xl mb-4">🤔</p>
         <h1 className="text-xl font-bold mb-2">{t('invite.invalidTitle')}</h1>
-        <p className="text-gray-500 mb-8">{t('invite.invalidDesc')}</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">{t('invite.invalidDesc')}</p>
         <Link to="/" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
           {t('invite.goHome')}
         </Link>
@@ -153,10 +153,10 @@ export default function Invite() {
   if (user && accepted) {
     if (info.isSelf) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white">
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
           <p className="text-5xl mb-4">😄</p>
           <h1 className="text-xl font-bold mb-2">{t('invite.ownLinkTitle')}</h1>
-          <p className="text-gray-500 mb-8">{t('invite.ownLinkDesc')}</p>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">{t('invite.ownLinkDesc')}</p>
           <Link to="/home" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
             {t('invite.goHome')}
           </Link>
@@ -166,12 +166,12 @@ export default function Invite() {
 
     if (info.alreadyFriends) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white">
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
           <p className="text-5xl mb-4">👋</p>
           <h1 className="text-xl font-bold mb-2">{t('invite.alreadyFriendsTitle')}</h1>
           {info.status ? (
             <>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 {info.status.note
                   ? t('invite.doorOpenWithNote', { name: info.inviter.display_name, note: info.status.note })
                   : t('invite.doorOpen', { name: info.inviter.display_name })}
@@ -190,18 +190,18 @@ export default function Invite() {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white">
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
         <p className="text-5xl mb-4">🎉</p>
         <h1 className="text-xl font-bold mb-2">{t('invite.friendsNowTitle')}</h1>
-        <p className="text-gray-500 mb-6">{t('invite.friendsNowDesc', { name: acceptedName })}</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">{t('invite.friendsNowDesc', { name: acceptedName })}</p>
         {info.status && (
-          <div className="w-full max-w-xs bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mb-6 text-left">
+          <div className="w-full max-w-xs bg-emerald-50 dark:bg-emerald-950 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 mb-6 text-left">
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-sm font-semibold text-emerald-800">{t('invite.doorOpen', { name: acceptedName })}</span>
+              <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">{t('invite.doorOpen', { name: acceptedName })}</span>
             </div>
             {info.status.note && (
-              <p className="text-sm text-emerald-700 ml-4">{info.status.note}</p>
+              <p className="text-sm text-emerald-700 dark:text-emerald-400 ml-4">{info.status.note}</p>
             )}
           </div>
         )}
@@ -231,26 +231,26 @@ export default function Invite() {
     };
 
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-10">
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-center px-6 py-10">
         <div className="w-full max-w-sm text-center">
           <Avatar name={info.inviter.display_name} size="lg" className="mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-gray-900">{info.inviter.display_name}</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-50">{info.inviter.display_name}</h1>
           {isScheduled ? (
-            <p className="text-violet-600 font-semibold mb-1 mt-1">
+            <p className="text-violet-600 dark:text-violet-400 font-semibold mb-1 mt-1">
               🕐 {formatScheduledTime(info.status.starts_at, info.status.ends_at)}
             </p>
           ) : (
-            <p className="text-gray-500 mb-1">{t('invite.hasTheirDoorOpen')}</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-1">{t('invite.hasTheirDoorOpen')}</p>
           )}
           {info.status.note && (
-            <p className="text-lg font-medium text-gray-800 mb-4">"{info.status.note}"</p>
+            <p className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">"{info.status.note}"</p>
           )}
 
           {isScheduled && (
             <a
               href={`/api/invites/${token}/calendar.ics`}
               download
-              className="block text-sm text-violet-600 hover:text-violet-800 font-medium mb-4"
+              className="block text-sm text-violet-600 dark:text-violet-400 hover:text-violet-800 font-medium mb-4"
             >
               {t('invite.addToCalendar')}
             </a>
@@ -262,13 +262,13 @@ export default function Invite() {
               <div className="flex gap-3">
                 <button
                   onClick={() => guestRsvp.rsvp !== 'going' && changeGuestRsvp('going')}
-                  className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-colors ${guestRsvp.rsvp === 'going' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                  className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-colors ${guestRsvp.rsvp === 'going' ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                 >
                   {t('invite.rsvpGoing')}
                 </button>
                 <button
                   onClick={() => guestRsvp.rsvp !== 'maybe' && changeGuestRsvp('maybe')}
-                  className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-colors ${guestRsvp.rsvp === 'maybe' ? 'bg-amber-400 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                  className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-colors ${guestRsvp.rsvp === 'maybe' ? 'bg-amber-400 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                 >
                   {t('invite.rsvpMaybe')}
                 </button>
@@ -291,13 +291,13 @@ export default function Invite() {
             </div>
           )}
 
-          <Link to={`/auth?redirect=/invite/${token}`} className="text-sm text-gray-500 underline">
+          <Link to={`/auth?redirect=/invite/${token}`} className="text-sm text-gray-500 dark:text-gray-400 underline">
             {t('invite.signUpToJoin')}
           </Link>
         </div>
 
         <div className="pt-6 text-center">
-          <Link to="/about" className="text-xs text-gray-500 hover:text-gray-700">About</Link>
+          <Link to="/about" className="text-xs text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">About</Link>
         </div>
 
         <GuestGoingModal
@@ -319,7 +319,7 @@ export default function Invite() {
 
   // Fallback
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white">
+    <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
       <Link to="/" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
         {t('invite.goHome')}
       </Link>
@@ -367,7 +367,7 @@ function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = '
               type="button"
               onClick={() => setRsvp('going')}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
-                rsvp === 'going' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-gray-50 text-gray-700 border-gray-200'
+                rsvp === 'going' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
               }`}
             >
               {t('invite.rsvpGoing')}
@@ -376,7 +376,7 @@ function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = '
               type="button"
               onClick={() => setRsvp('maybe')}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
-                rsvp === 'maybe' ? 'bg-amber-400 text-white border-amber-400' : 'bg-gray-50 text-gray-700 border-gray-200'
+                rsvp === 'maybe' ? 'bg-amber-400 text-white border-amber-400' : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
               }`}
             >
               {t('invite.rsvpMaybe')}
@@ -389,14 +389,14 @@ function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = '
           required
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
         />
         <input
           type="text"
           placeholder={t('invite.emailOrPhoneOptional')}
           value={contact}
           onChange={e => { setContact(e.target.value); if (!e.target.value) setConsent(false); }}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
         />
         {contact && (
           <label className="flex items-start gap-3 cursor-pointer">
@@ -406,7 +406,7 @@ function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = '
               onChange={e => setConsent(e.target.checked)}
               className="mt-0.5 w-4 h-4 accent-emerald-500"
             />
-            <span className="text-sm text-gray-600">{t('invite.sendMeAppLink')}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{t('invite.sendMeAppLink')}</span>
           </label>
         )}
         <button
