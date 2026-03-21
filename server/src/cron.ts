@@ -223,3 +223,15 @@ setInterval(() => {
     db.prepare('UPDATE statuses SET notifications_sent = 1 WHERE id = ?').run(status.id);
   }
 }, 10_000);
+
+// Daily at 03:00 UTC: purge event_log rows older than 12 months
+// Preserve user.signup and user.verify forever — one-time, low-volume, historically valuable.
+cron.schedule('0 3 * * *', () => {
+  const cutoff = Math.floor(Date.now() / 1000) - 365 * 86400;
+  const result = db.prepare(`
+    DELETE FROM event_log WHERE ts < ? AND event NOT IN ('user.signup', 'user.verify')
+  `).run(cutoff);
+  if (result.changes > 0) {
+    console.log(`[cron] purged ${result.changes} event_log rows older than 12 months`);
+  }
+});
