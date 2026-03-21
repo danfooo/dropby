@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { jwtVerify } from 'jose';
 import { db } from '../db/index.js';
 import { registerSSE, unregisterSSE } from '../services/sse.js';
+import { log } from '../services/analytics.js';
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.get('/', async (req, res) => {
 
   res.write('event: connected\ndata: {}\n\n');
   registerSSE(userId, res);
+  log('session.start', userId);
 
   const keepAlive = setInterval(() => {
     try {

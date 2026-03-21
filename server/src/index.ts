@@ -12,6 +12,8 @@ import notesRouter from './routes/notes.js';
 import nudgesRouter from './routes/nudges.js';
 import eventsRouter from './routes/events.js';
 import feedbackRouter from './routes/feedback.js';
+import trackRouter from './routes/track.js';
+import adminRouter from './routes/admin.js';
 
 // Start cron jobs
 import './cron.js';
@@ -43,6 +45,8 @@ app.use('/api/notes', notesRouter);
 app.use('/api/nudges', nudgesRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/feedback', feedbackRouter);
+app.use('/api/track', trackRouter);
+app.use('/api/admin', adminRouter);
 
 // Test-only routes — never mounted in production
 if (process.env.NODE_ENV === 'test') {
