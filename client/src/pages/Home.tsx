@@ -430,7 +430,7 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
           <div className="flex-[2] px-3 py-2 border-r border-violet-200 dark:border-violet-800">
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">Date</label>
             <input type="date" value={editDate} min={format(new Date(), 'yyyy-MM-dd')} onChange={e => setEditDate(e.target.value)}
-              className="w-full text-sm bg-transparent outline-none" />
+              className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
           </div>
           <div className="flex-1 px-3 py-2 border-r border-violet-200 dark:border-violet-800">
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
@@ -440,7 +440,7 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
           <div className="flex-1 px-3 py-2">
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
             <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
-              className="w-full text-sm bg-transparent outline-none" />
+              className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
           </div>
         </div>
         <input

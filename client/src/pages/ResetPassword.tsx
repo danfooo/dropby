@@ -77,7 +77,7 @@ export default function ResetPassword() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <input
                 type="password"
@@ -85,7 +85,7 @@ export default function ResetPassword() {
                 required
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <button
                 type="submit"

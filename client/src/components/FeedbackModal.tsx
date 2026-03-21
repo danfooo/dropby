@@ -129,7 +129,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
               onChange={e => setReplyEmail(e.target.value)}
               placeholder={t('feedback.emailPlaceholder')}
               required
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
+              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
             />
           )}
 
