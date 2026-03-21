@@ -62,6 +62,15 @@ router.get('/metrics', requireAuth, (req: AuthRequest, res) => {
     last_week: weeklyPulse(lastWeekStart, thisWeekStart),
   };
 
+  // ── 8-week trend ───────────────────────────────────────────────
+  // Newest week first so the UI can render top-to-bottom = recent-to-old.
+  const weeks = Array.from({ length: 8 }, (_, i) => {
+    const end = now - i * WEEK;
+    const start = end - WEEK;
+    const label = i === 0 ? 'This week' : i === 1 ? 'Last week' : `${i + 1} weeks ago`;
+    return { label, ...weeklyPulse(start, end) };
+  });
+
   // ── Signup funnel (last 30 days cohort) ───────────────────────
   // Each step is traced forward from the same cohort of signups,
   // so drop-offs are meaningful (not comparing different populations).
@@ -184,7 +193,7 @@ router.get('/metrics', requireAuth, (req: AuthRequest, res) => {
     recent: recentFails.map(r => ({ ts: r.ts, ...JSON.parse(r.data ?? '{}') })),
   };
 
-  res.json({ weekly, funnel, invite_funnel, push_effectiveness, push_alarms });
+  res.json({ weekly, weeks, funnel, invite_funnel, push_effectiveness, push_alarms });
 });
 
 export default router;

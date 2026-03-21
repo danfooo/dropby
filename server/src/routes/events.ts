@@ -33,7 +33,13 @@ router.get('/', async (req, res) => {
 
   res.write('event: connected\ndata: {}\n\n');
   registerSSE(userId, res);
-  log('session.start', userId);
+
+  // Dedup: only log once per hour per user to avoid SSE-reconnect inflation
+  const hourAgo = Math.floor(Date.now() / 1000) - 3600;
+  const recentSession = db.prepare(
+    'SELECT id FROM event_log WHERE event = ? AND user_id = ? AND ts >= ? LIMIT 1'
+  ).get('session.start', userId, hourAgo);
+  if (!recentSession) log('session.start', userId);
 
   const keepAlive = setInterval(() => {
     try {

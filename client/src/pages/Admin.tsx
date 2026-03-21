@@ -9,8 +9,13 @@ interface WeekSlice {
   push_fails: number;
 }
 
+interface WeekTrend extends WeekSlice {
+  label: string;
+}
+
 interface Metrics {
   weekly: { this_week: WeekSlice; last_week: WeekSlice };
+  weeks: WeekTrend[];
   funnel: {
     window_days: number;
     auth_page_views: number;
@@ -123,7 +128,7 @@ export default function Admin() {
     );
   }
 
-  const { weekly, funnel, invite_funnel: inv, push_effectiveness: pe, push_alarms } = metrics;
+  const { weekly, weeks, funnel, invite_funnel: inv, push_effectiveness: pe, push_alarms } = metrics;
   const tw = weekly.this_week;
   const lw = weekly.last_week;
 
@@ -150,6 +155,42 @@ export default function Admin() {
             {pct(tw.doors_with_going, tw.door_opens)} of doors got a going signal this week
           </p>
         )}
+      </section>
+
+      {/* 8-week trend */}
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          8-week trend
+        </h2>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="text-left px-4 py-2 font-medium text-gray-400">Week</th>
+                <th className="text-right px-3 py-2 font-medium text-gray-400">Signups</th>
+                <th className="text-right px-3 py-2 font-medium text-gray-400">Active</th>
+                <th className="text-right px-3 py-2 font-medium text-gray-400">Doors</th>
+                <th className="text-right px-4 py-2 font-medium text-gray-400">w/ going</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {weeks.map((w, i) => (
+                <tr key={i} className={i === 0 ? 'bg-emerald-50/50' : ''}>
+                  <td className="px-4 py-2 text-gray-500">{w.label}</td>
+                  <td className="px-3 py-2 text-right text-gray-900 tabular-nums">{w.signups}</td>
+                  <td className="px-3 py-2 text-right text-gray-900 tabular-nums">{w.active_users}</td>
+                  <td className="px-3 py-2 text-right text-gray-900 tabular-nums">{w.door_opens}</td>
+                  <td className="px-4 py-2 text-right text-gray-900 tabular-nums">
+                    {w.doors_with_going}
+                    {w.door_opens > 0 && (
+                      <span className="text-gray-400 ml-1">({pct(w.doors_with_going, w.door_opens)})</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {/* Signup funnel */}
