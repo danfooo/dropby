@@ -83,6 +83,8 @@
     "tapToCopyLink": "Tap to copy invite link",
     "addMoreEdit": "Add friends / Edit",
     "closeNow": "Close now",
+    "mutedFriendsHidden": "Muted friends don't show.",
+    "mutedFriendsChange": "Change in Friends →",
     "changeDuration": "Change",
     "changeDurationTitle": "Auto-close time",
     "doorDurationClosePreview": "Your door will close at {{time}} (in {{minutes}} min)",

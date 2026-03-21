@@ -83,6 +83,8 @@
     "tapToCopyLink": "Appuie pour copier le lien",
     "addMoreEdit": "Ajouter des amis / Modifier",
     "closeNow": "Fermer maintenant",
+    "mutedFriendsHidden": "Les amis en sourdine ne s'affichent pas.",
+    "mutedFriendsChange": "Modifier dans Amis →",
     "changeDuration": "Modifier",
     "changeDurationTitle": "Fermeture automatique",
     "doorDurationClosePreview": "Ta porte se fermera à {{time}} (dans {{minutes}} min)",

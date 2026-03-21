@@ -83,6 +83,8 @@
     "tapToCopyLink": "Toca para copiar el enlace",
     "addMoreEdit": "Añadir amigos / Editar",
     "closeNow": "Cerrar ahora",
+    "mutedFriendsHidden": "Los amigos silenciados no aparecen.",
+    "mutedFriendsChange": "Cambiar en Amigos →",
     "changeDuration": "Cambiar",
     "changeDurationTitle": "Cierre automático",
     "doorDurationClosePreview": "Tu puerta se cerrará a las {{time}} (en {{minutes}} min)",

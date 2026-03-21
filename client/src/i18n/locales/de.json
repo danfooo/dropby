@@ -83,6 +83,8 @@
     "tapToCopyLink": "Tippen zum Kopieren des Einladungslinks",
     "addMoreEdit": "Freunde hinzufügen / Bearbeiten",
     "closeNow": "Jetzt schließen",
+    "mutedFriendsHidden": "Stummgeschaltete Freunde werden nicht angezeigt.",
+    "mutedFriendsChange": "In Freunde ändern →",
     "changeDuration": "Ändern",
     "changeDurationTitle": "Automatisches Schließen",
     "doorDurationClosePreview": "Deine Tür schließt um {{time}} (in {{minutes}} Min.)",

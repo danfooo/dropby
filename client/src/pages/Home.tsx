@@ -364,15 +364,6 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
                   <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
                 </label>
               ))}
-              {mutedFriends.length > 0 && mutedFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer opacity-50 hover:bg-gray-50 px-4">
-                  <input type="checkbox" checked={recipients.includes(f.id)}
-                    onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                    className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                  <Avatar name={f.display_name} size="sm" />
-                  <span className="text-sm font-medium text-gray-700">{f.display_name}</span>
-                </label>
-              ))}
             </div>
           </div>
         </div>
@@ -471,15 +462,6 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
                       className="w-4 h-4 accent-violet-600 flex-shrink-0" />
                     <Avatar name={f.display_name} size="sm" />
                     <span className="text-sm font-medium text-violet-900">{f.display_name}</span>
-                  </label>
-                ))}
-                {mutedFriends.map((f: any) => (
-                  <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer opacity-50 hover:bg-violet-100 px-4">
-                    <input type="checkbox" checked={editRecipients.includes(f.id)}
-                      onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                      className="w-4 h-4 accent-violet-600 flex-shrink-0" />
-                    <Avatar name={f.display_name} size="sm" />
-                    <span className="text-sm font-medium text-violet-700">{f.display_name}</span>
                   </label>
                 ))}
               </div>
@@ -1009,20 +991,6 @@ export default function Home() {
                   <span className="text-sm font-medium text-gray-900">{f.display_name}</span>
                 </label>
               ))}
-              {mutedFriends.length > 0 && (
-                <>
-                  <p className="text-xs text-gray-400 pt-2 pb-1 font-medium">{t('home.muted')}</p>
-                  {mutedFriends.map((f: any) => (
-                    <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer opacity-50 hover:bg-gray-50 -mx-3 px-3 transition-colors">
-                      <input type="checkbox" checked={selectedRecipients.includes(f.id)}
-                        onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                        className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                      <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
-                      <span className="text-sm font-medium text-gray-700">{f.display_name}</span>
-                    </label>
-                  ))}
-                </>
-              )}
             </div>
             {(friends as any[]).length >= 4 && (
               <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-xl" />
@@ -1136,7 +1104,7 @@ export default function Home() {
 
           <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
             <h2 className="text-sm font-semibold mb-3">{t('home.recipients')}</h2>
-            {(friends as any[]).map((f: any) => (
+            {(friends as any[]).filter((f: any) => !f.muted).map((f: any) => (
               <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -1152,6 +1120,12 @@ export default function Home() {
                 <span className="text-sm">{f.display_name}</span>
               </label>
             ))}
+            {(friends as any[]).some((f: any) => f.muted) && (
+              <p className="text-xs text-gray-400 mt-2">
+                {t('home.mutedFriendsHidden')}{' '}
+                <Link to="/friends" className="underline text-gray-500">{t('home.mutedFriendsChange')}</Link>
+              </p>
+            )}
           </div>
 
           <button
