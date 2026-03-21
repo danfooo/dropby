@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "750398451662",
+    "project_id": "drop-by-2f177",
+    "storage_bucket": "drop-by-2f177.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:750398451662:android:9a2a7d0af0480638a6459f",
+        "android_client_info": {
+          "package_name": "cc.dropby.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "750398451662-qnfcr5cab59n6fq86dj54ibnsu69mj15.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPhEjxmdV5mgv9uk6wwJRguXk-li_1Fvc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "750398451662-qnfcr5cab59n6fq86dj54ibnsu69mj15.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
