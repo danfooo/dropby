@@ -998,7 +998,8 @@ export default function Home() {
         {hasFriends && (
           <div className="bg-white rounded-2xl p-3 mb-3 shadow-sm border border-gray-100">
             <h2 className="text-xs font-semibold text-gray-500 mb-1">{t('home.openDoorTo')}</h2>
-            <div className={`divide-y divide-gray-50${(friends as any[]).length >= 4 ? ' max-h-[136px] overflow-y-auto' : ''}`}>
+            <div className="relative">
+            <div className={`divide-y divide-gray-50 overflow-x-hidden${(friends as any[]).length >= 4 ? ' max-h-[136px] overflow-y-auto' : ''}`}>
               {activeFriends.map((f: any) => (
                 <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-3 px-3 transition-colors">
                   <input type="checkbox" checked={selectedRecipients.includes(f.id)}
@@ -1023,6 +1024,10 @@ export default function Home() {
                 </>
               )}
             </div>
+            {(friends as any[]).length >= 4 && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-xl" />
+            )}
+            </div>
           </div>
         )}
 
@@ -1044,8 +1049,6 @@ export default function Home() {
             {t('home.scheduleLater')}
           </button>
         </div>
-        <p className="text-xs text-gray-400 text-center mt-1">{t('home.openDoorDesc')}</p>
-
         {/* Pending scheduled sessions */}
         {(upcomingSessions as any[]).length > 0 && (
           <div className="mt-6 space-y-3">

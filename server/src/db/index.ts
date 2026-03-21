@@ -199,5 +199,11 @@ if (!goingCols.find(c => c.name === 'rsvp')) {
 if (!statusCols.find(c => c.name === 'ics_sequence')) {
   db.exec('ALTER TABLE statuses ADD COLUMN ics_sequence INTEGER NOT NULL DEFAULT 0');
 }
+if (!statusCols.find(c => c.name === 'notify_at')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN notify_at INTEGER');
+}
+if (!statusCols.find(c => c.name === 'notifications_sent')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN notifications_sent INTEGER NOT NULL DEFAULT 0');
+}
 
 export default db;

@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { db } from './db/index.js';
-import { notifyDoorClosingSoon, notifyNudge, notifyAutoNudge, notifyScheduledReminder } from './services/notifications.js';
+import { notifyDoorClosingSoon, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen } from './services/notifications.js';
+import { broadcastSSE } from './services/sse.js';
 import { randomUUID } from 'crypto';
 
 const DAY_NAMES: Record<string, string> = {
@@ -181,3 +182,41 @@ cron.schedule('* * * * *', () => {
     db.prepare('INSERT INTO auto_nudge_log (id, user_id) VALUES (?, ?)').run(randomUUID(), user.id);
   }
 });
+
+// Every 10 seconds: fire delayed open notifications
+setInterval(() => {
+  const now = Math.floor(Date.now() / 1000);
+  const pending = db.prepare(`
+    SELECT s.*, u.display_name
+    FROM statuses s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.notify_at IS NOT NULL
+      AND s.notify_at <= ?
+      AND s.notifications_sent = 0
+      AND s.closed_at IS NULL
+      AND s.closes_at > ?
+      AND s.starts_at IS NULL
+  `).all(now, now) as Array<any>;
+
+  for (const status of pending) {
+    const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?')
+      .all(status.id).map((r: any) => r.user_id);
+    const mutedByHost = db.prepare('SELECT muted_user_id FROM friend_mutes WHERE user_id = ?')
+      .all(status.user_id).map((r: any) => r.muted_user_id);
+
+    for (const rid of recipients) {
+      if (mutedByHost.includes(rid)) continue;
+      notifyFriendDoorOpen(rid, status.display_name, status.note || null);
+    }
+
+    broadcastSSE(recipients, 'status:open', {
+      status_id: status.id,
+      owner_id: status.user_id,
+      owner_name: status.display_name,
+      note: status.note || null,
+      closes_at: status.closes_at,
+    });
+
+    db.prepare('UPDATE statuses SET notifications_sent = 1 WHERE id = ?').run(status.id);
+  }
+}, 10_000);

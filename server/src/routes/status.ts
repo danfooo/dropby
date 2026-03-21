@@ -63,6 +63,8 @@ function formatStatus(status: any, userId: string) {
     created_at: status.created_at,
     starts_at: status.starts_at || null,
     ends_at: status.ends_at || null,
+    notify_at: status.notify_at || null,
+    notifications_sent: Boolean(status.notifications_sent),
     recipients,
     invite_links: inviteLinks,
     going_signals: goingSignals.map(g => ({
@@ -162,10 +164,12 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
 
   const statusId = randomUUID();
 
+  const notifyAt = isScheduled ? null : nowUnix + 90;
+
   db.prepare(`
-    INSERT INTO statuses (id, user_id, note, closes_at, starts_at, ends_at, reminder_minutes)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(statusId, userId, note || null, closesAt, startsAt, endsAt, reminderMinutes);
+    INSERT INTO statuses (id, user_id, note, closes_at, starts_at, ends_at, reminder_minutes, notify_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(statusId, userId, note || null, closesAt, startsAt, endsAt, reminderMinutes, notifyAt);
 
   // Add recipients (only friends)
   const friendIds = (db.prepare(`
@@ -190,26 +194,13 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const mutedByMe = db.prepare('SELECT muted_user_id FROM friend_mutes WHERE user_id = ?').all(userId).map((r: any) => r.muted_user_id);
 
   if (isScheduled) {
-    // Notify invitees about the upcoming scheduled session
+    // Notify invitees about the upcoming scheduled session immediately
     for (const rid of validRecipients) {
       if (mutedByMe.includes(rid)) continue;
       notifyScheduledSession(rid, userFull.display_name, startsAt!);
     }
-  } else {
-    // Notify invitees that door is open now
-    for (const rid of validRecipients) {
-      if (mutedByMe.includes(rid)) continue;
-      notifyFriendDoorOpen(rid, userFull.display_name, note || null);
-    }
-
-    broadcastSSE(validRecipients, 'status:open', {
-      status_id: statusId,
-      owner_id: userId,
-      owner_name: userFull.display_name,
-      note: note || null,
-      closes_at: closesAt,
-    });
   }
+  // Spontaneous: notifications are sent after 90s by the cron job
 
   const status = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
   res.status(201).json(status);
@@ -387,8 +378,11 @@ router.delete('/', requireAuth, (req: AuthRequest, res) => {
   const nowUnix = Math.floor(Date.now() / 1000);
   db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, status.id);
 
-  const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?').all(status.id).map((r: any) => r.user_id);
-  broadcastSSE(recipients, 'status:close', { status_id: status.id, owner_id: userId });
+  // Only broadcast close if friends were already notified of the open
+  if (status.notifications_sent) {
+    const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?').all(status.id).map((r: any) => r.user_id);
+    broadcastSSE(recipients, 'status:close', { status_id: status.id, owner_id: userId });
+  }
 
   res.json({ ok: true });
 });
