@@ -8,3 +8,4 @@ client/dist/
 ios/
 .DS_Store
 *.log
+android/app/google-services.json
