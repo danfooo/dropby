@@ -53,7 +53,8 @@
     "friends": "Friends"
   },
   "common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "done": "Done"
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",
@@ -84,6 +85,7 @@
     "closeNow": "Close now",
     "changeDuration": "Change",
     "changeDurationTitle": "Auto-close time",
+    "doorDurationClosePreview": "Your door will close at {{time}} (in {{minutes}} min)",
     "doorDurationExplainer": "Guests don't see a closing time — this just controls when your door disappears for your friends.",
     "alsoAvailable": "Also available",
     "yourDoorIsOpen": "Your door is open — tap to return",

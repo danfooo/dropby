@@ -53,7 +53,8 @@
     "friends": "Amis"
   },
   "common": {
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "done": "Terminé"
   },
   "home": {
     "greeting": "Salut, {{name}} 👋",
@@ -84,6 +85,7 @@
     "closeNow": "Fermer maintenant",
     "changeDuration": "Modifier",
     "changeDurationTitle": "Fermeture automatique",
+    "doorDurationClosePreview": "Ta porte se fermera à {{time}} (dans {{minutes}} min)",
     "doorDurationExplainer": "Les invités ne voient pas d'heure de fermeture — cela contrôle simplement quand ta porte disparaît pour tes amis.",
     "alsoAvailable": "Aussi disponibles",
     "yourDoorIsOpen": "Ta porte est ouverte — appuie pour revenir",

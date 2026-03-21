@@ -600,6 +600,7 @@ export default function Home() {
   const [showGoingModal, setShowGoingModal] = useState<string | null>(null);
   const [showScheduleMore, setShowScheduleMore] = useState(false);
   const [showDurationPicker, setShowDurationPicker] = useState(false);
+  const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(60);
   const [calendarToast, setCalendarToast] = useState<{ type: 'update' | 'remove'; sessionId: string } | null>(null);
 
   // Schedule form state
@@ -716,7 +717,7 @@ export default function Home() {
 
   const setDuration = useMutation({
     mutationFn: (minutes: number) => statusApi.setDuration(minutes),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setShowDurationPicker(false); },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
   });
 
   const updateStatus = useMutation({
@@ -1270,46 +1271,52 @@ export default function Home() {
         {t('home.addMoreEdit')}
       </button>
 
-      {/* Duration picker */}
-      {!showDurationPicker ? (
-        <div className="flex items-center justify-between px-1 mb-1">
-          <span className="text-sm text-gray-500">
-            {myStatus?.ends_at
-              ? t('home.closesAt', { time: formatTimeShort(myStatus.ends_at) })
-              : minutesLeft > 0
-                ? t('home.closesIn', { minutes: minutesLeft })
-                : t('home.closingSoon')}
-            {' · '}
-            <button
-              onClick={() => setShowDurationPicker(true)}
-              className="text-gray-700 font-medium hover:underline underline-offset-2"
-            >
-              {t('home.changeDuration')}
-            </button>
-          </span>
+      {/* Duration row */}
+      <div className="flex items-center justify-between px-1 mb-1">
+        <span className="text-sm text-gray-500">
+          {myStatus?.ends_at
+            ? t('home.closesAt', { time: formatTimeShort(myStatus.ends_at) })
+            : minutesLeft > 0
+              ? t('home.closesIn', { minutes: minutesLeft })
+              : t('home.closingSoon')}
+          {' · '}
           <button
-            onClick={() => closeStatus.mutate()}
-            disabled={closeStatus.isPending}
-            className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
+            onClick={() => {
+              setSelectedDurationMinutes(user?.default_door_minutes ?? 60);
+              setShowDurationPicker(true);
+            }}
+            className="text-gray-700 font-medium hover:underline underline-offset-2"
           >
-            {t('home.closeNow')}
+            {t('home.changeDuration')}
           </button>
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3 mb-1">
-          <p className="text-sm font-semibold text-gray-900">{t('home.changeDurationTitle')}</p>
+        </span>
+        <button
+          onClick={() => closeStatus.mutate()}
+          disabled={closeStatus.isPending}
+          className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
+        >
+          {t('home.closeNow')}
+        </button>
+      </div>
+
+      {/* Duration picker overlay */}
+      <Modal open={showDurationPicker} onClose={() => setShowDurationPicker(false)} title={t('home.changeDurationTitle')}>
+        <div className="space-y-4">
           <div className="flex gap-2">
             {([30, 60, 120, 240] as const).map(min => {
-              const wouldClosesAt = (myStatus?.created_at ?? 0) + min * 60;
               const nowSec = Math.floor(Date.now() / 1000);
+              const wouldClosesAt = (myStatus?.created_at ?? 0) + min * 60;
               const disabled = wouldClosesAt < nowSec + 60;
-              const isActive = (user?.default_door_minutes ?? 60) === min;
+              const isActive = selectedDurationMinutes === min;
               return (
                 <button
                   key={min}
-                  onClick={() => setDuration.mutate(min)}
+                  onClick={() => {
+                    setSelectedDurationMinutes(min);
+                    setDuration.mutate(min);
+                  }}
                   disabled={disabled || setDuration.isPending}
-                  className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                  className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                     isActive
                       ? 'bg-emerald-500 border-emerald-500 text-white'
                       : 'border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -1320,24 +1327,25 @@ export default function Home() {
               );
             })}
           </div>
+          {(() => {
+            const nowSec = Math.floor(Date.now() / 1000);
+            const closesAt = Math.max((myStatus?.created_at ?? nowSec) + selectedDurationMinutes * 60, nowSec + 60);
+            const minsLeft = Math.ceil((closesAt - nowSec) / 60);
+            return (
+              <p className="text-sm text-gray-500">
+                {t('home.doorDurationClosePreview', { time: formatTimeShort(closesAt), minutes: minsLeft })}
+              </p>
+            );
+          })()}
           <p className="text-xs text-gray-400">{t('home.doorDurationExplainer')}</p>
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setShowDurationPicker(false)}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              onClick={() => closeStatus.mutate()}
-              disabled={closeStatus.isPending}
-              className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
-            >
-              {t('home.closeNow')}
-            </button>
-          </div>
+          <button
+            onClick={() => setShowDurationPicker(false)}
+            className="w-full bg-emerald-500 text-white py-3 rounded-2xl font-semibold"
+          >
+            {t('common.done')}
+          </button>
         </div>
-      )}
+      </Modal>
 
       {/* Upcoming scheduled sessions */}
       {(upcomingSessions as any[]).length > 0 && (
