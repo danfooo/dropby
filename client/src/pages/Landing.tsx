@@ -5,9 +5,9 @@ export default function Landing() {
   const { t } = useTranslation();
 
   const steps = [
-    { step: '1', icon: '🚪', titleKey: 'landing.step1Title', descKey: 'landing.step1Desc' },
-    { step: '2', icon: '🔗', titleKey: 'landing.step2Title', descKey: 'landing.step2Desc' },
-    { step: '3', icon: '👋', titleKey: 'landing.step3Title', descKey: 'landing.step3Desc' },
+    { icon: '🚪', titleKey: 'landing.step1Title', descKey: 'landing.step1Desc' },
+    { icon: '👀', titleKey: 'landing.step2Title', descKey: 'landing.step2Desc' },
+    { icon: '✅', titleKey: 'landing.step3Title', descKey: 'landing.step3Desc' },
   ];
 
   return (
@@ -19,20 +19,17 @@ export default function Landing() {
       <div className="flex flex-col items-center px-6 py-8 text-center">
         <img src="/logo-icon.svg" alt="dropby" className="w-16 h-16 mb-4" />
         <h1 className="text-4xl font-bold text-gray-900 mb-2">dropby</h1>
-        <p className="text-lg text-gray-500 max-w-xs leading-relaxed">
+        <p className="text-2xl font-semibold text-gray-900 mb-2">
           {t('landing.tagline')}
         </p>
-        <p className="mt-1.5 text-gray-400 text-sm">{t('landing.subtagline')}</p>
+        <p className="text-gray-400 text-sm max-w-xs leading-relaxed">{t('landing.subtagline')}</p>
       </div>
 
-      {/* How it works */}
+      {/* Feature cards */}
       <div className="px-6 py-8 border-t border-gray-100">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-4">
-          {t('landing.howItWorks')}
-        </h2>
         <div className="space-y-4 max-w-sm mx-auto">
           {steps.map(item => (
-            <div key={item.step} className="flex gap-4 items-start">
+            <div key={item.titleKey} className="flex gap-4 items-start">
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-lg flex-shrink-0">
                 {item.icon}
               </div>

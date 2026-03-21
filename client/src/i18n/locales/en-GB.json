@@ -1,14 +1,13 @@
 {
   "landing": {
-    "tagline": "One tap tells your friends you're open to a spontaneous visit.",
-    "subtagline": "No plans. No group chats. Just \"swing by.\"",
-    "howItWorks": "How it works",
+    "tagline": "See your friends more.",
+    "subtagline": "Open your door whenever you're free — spontaneously or planned — and let the right friends know.",
     "step1Title": "Open your door",
-    "step1Desc": "Pick a vibe and tap open. Your door's open for 30 minutes.",
-    "step2Title": "Share the link",
-    "step2Desc": "Send it to whoever might want to swing by.",
-    "step3Title": "They drop by",
-    "step3Desc": "No planning, no back and forth. Just a visit.",
+    "step1Desc": "Just a tap to open now, or schedule a time. Friends get notified automatically.",
+    "step2Title": "See who's around",
+    "step2Desc": "When a friend's door is open, you'll see it. Drop by whenever.",
+    "step3Title": "Let them know you're coming",
+    "step3Desc": "One tap and they know you're on your way.",
     "getStarted": "Get started"
   },
   "auth": {

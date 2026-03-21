@@ -1,14 +1,13 @@
 {
   "landing": {
-    "tagline": "Un toque le dice a tus amigos que estás disponible para una visita espontánea.",
-    "subtagline": "Sin planes. Sin chats grupales. Solo \"pásate.\"",
-    "howItWorks": "Cómo funciona",
+    "tagline": "Ve a tus amigos más.",
+    "subtagline": "Abre tu puerta cuando estés libre — de forma espontánea o planificada — y avisa a los amigos que quieras.",
     "step1Title": "Abre tu puerta",
-    "step1Desc": "Elige un ambiente y toca abrir. Tu puerta está abierta 30 minutos.",
-    "step2Title": "Comparte el enlace",
-    "step2Desc": "Envíaselo a quien quiera pasarse.",
-    "step3Title": "Ellos pasan",
-    "step3Desc": "Sin planes, sin idas y venidas. Solo una visita.",
+    "step1Desc": "Solo un toque para abrir ahora, o programa un rato. Tus amigos reciben una notificación automáticamente.",
+    "step2Title": "Ve quién está disponible",
+    "step2Desc": "Cuando la puerta de un amigo está abierta, lo verás. Pásate cuando quieras.",
+    "step3Title": "Diles que vas",
+    "step3Desc": "Un toque y saben que estás en camino.",
     "getStarted": "Empezar"
   },
   "auth": {

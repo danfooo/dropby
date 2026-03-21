@@ -1,14 +1,13 @@
 {
   "landing": {
-    "tagline": "Un simple tap dit à tes amis que tu es dispo pour une visite impromptue.",
-    "subtagline": "Pas de plans. Pas de groupes. Juste \"passe donc.\"",
-    "howItWorks": "Comment ça marche",
+    "tagline": "Vois tes amis plus souvent.",
+    "subtagline": "Ouvre ta porte quand tu es libre — spontanément ou en planifiant — et préviens les bonnes personnes.",
     "step1Title": "Ouvre ta porte",
-    "step1Desc": "Choisis une ambiance et tape pour ouvrir. Ta porte est ouverte 30 minutes.",
-    "step2Title": "Partage le lien",
-    "step2Desc": "Envoie-le à ceux qui pourraient passer.",
-    "step3Title": "Ils passent",
-    "step3Desc": "Pas d'organisation, pas d'allers-retours. Juste une visite.",
+    "step1Desc": "Un simple tap pour ouvrir maintenant, ou planifie un créneau. Tes amis sont notifiés automatiquement.",
+    "step2Title": "Vois qui est dispo",
+    "step2Desc": "Quand la porte d'un ami est ouverte, tu le vois. Passe quand tu veux.",
+    "step3Title": "Dis que tu arrives",
+    "step3Desc": "Un tap et ils savent que tu es en route.",
     "getStarted": "Commencer"
   },
   "auth": {

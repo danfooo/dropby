@@ -1,14 +1,13 @@
 {
   "landing": {
-    "tagline": "Ett tryck berättar för dina vänner att du är öppen för spontant besök.",
-    "subtagline": "Inga planer. Inga gruppchattar. Bara \"sväng förbi.\"",
-    "howItWorks": "Så fungerar det",
+    "tagline": "Se dina vänner mer.",
+    "subtagline": "Öppna din dörr när du är ledig — spontant eller planerat — och låt rätt vänner veta.",
     "step1Title": "Öppna din dörr",
-    "step1Desc": "Välj en stämning och tryck öppna. Din dörr är öppen i 30 minuter.",
-    "step2Title": "Dela länken",
-    "step2Desc": "Skicka den till dem som kanske vill svänga förbi.",
-    "step3Title": "De svänger förbi",
-    "step3Desc": "Ingen planering, inget fram och tillbaka. Bara ett besök.",
+    "step1Desc": "Bara ett tryck för att öppna nu, eller schemalägg en tid. Vänner får automatisk notis.",
+    "step2Title": "Se vem som är hemma",
+    "step2Desc": "När en väns dörr är öppen ser du det. Sväng förbi när du vill.",
+    "step3Title": "Säg att du kommer",
+    "step3Desc": "Ett tryck och de vet att du är på väg.",
     "getStarted": "Kom igång"
   },
   "auth": {

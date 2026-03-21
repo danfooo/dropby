@@ -1,14 +1,13 @@
 {
   "landing": {
-    "tagline": "Ein Tippen zeigt deinen Freunden, dass du offen für spontanen Besuch bist.",
-    "subtagline": "Keine Pläne. Keine Gruppenchats. Einfach \"komm vorbei.\"",
-    "howItWorks": "So funktioniert's",
-    "step1Title": "Tür öffnen",
-    "step1Desc": "Wähl eine Stimmung und tipp auf öffnen. Deine Tür ist 30 Minuten offen.",
-    "step2Title": "Link teilen",
-    "step2Desc": "Schick ihn an alle, die vorbeikommen könnten.",
-    "step3Title": "Sie kommen vorbei",
-    "step3Desc": "Kein Planen, kein Hin und Her. Einfach ein Besuch.",
+    "tagline": "Sieh deine Freunde öfter.",
+    "subtagline": "Öffne deine Tür, wann immer du frei bist — spontan oder geplant — und lass die richtigen Freunde wissen.",
+    "step1Title": "Öffne deine Tür",
+    "step1Desc": "Einfach tippen um jetzt zu öffnen, oder eine Zeit planen. Freunde werden automatisch benachrichtigt.",
+    "step2Title": "Sieh, wer verfügbar ist",
+    "step2Desc": "Wenn die Tür eines Freundes offen ist, siehst du es. Einfach vorbeikommen.",
+    "step3Title": "Sag, dass du kommst",
+    "step3Desc": "Ein Tippen und sie wissen, dass du auf dem Weg bist.",
     "getStarted": "Loslegen"
   },
   "auth": {
