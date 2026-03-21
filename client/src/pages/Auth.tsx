@@ -31,6 +31,17 @@ export default function Auth() {
   const inviteToken = redirect.match(/^\/invite\/([^/?]+)/)?.[1] ?? null;
 
   useEffect(() => {
+    // Track auth page views for signup funnel analysis.
+    // Intent = signup if arriving via invite redirect, login otherwise.
+    const intent = redirect.startsWith('/invite/') ? 'signup' : 'login';
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: 'page.auth_viewed', data: { intent } }),
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!inviteToken) return;
     invitesApi.get(inviteToken)
       .then(data => {

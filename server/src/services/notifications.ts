@@ -1,6 +1,7 @@
 import { db } from '../db/index.js';
 import { createSign } from 'crypto';
 import * as http2 from 'http2';
+import { log } from './analytics.js';
 
 interface PushPayload {
   title: string;
@@ -75,6 +76,7 @@ async function sendFcm(token: string, payload: PushPayload) {
   if (!res.ok) {
     const err = await res.text();
     console.error('[FCM] Send error:', err);
+    throw new Error(`FCM ${res.status}: ${err.slice(0, 200)}`);
   }
 }
 
@@ -167,11 +169,15 @@ async function sendApns(token: string, payload: PushPayload): Promise<void> {
 }
 
 // ── Router ────────────────────────────────────────────────────
-async function sendPush(token: string, platform: string, payload: PushPayload) {
-  if (platform === 'android') {
-    await sendFcm(token, payload);
-  } else if (platform === 'ios') {
-    await sendApns(token, payload);
+async function sendPush(userId: string, token: string, platform: string, payload: PushPayload) {
+  try {
+    if (platform === 'android') {
+      await sendFcm(token, payload);
+    } else if (platform === 'ios') {
+      await sendApns(token, payload);
+    }
+  } catch (err: any) {
+    log('push.fail', userId, { type: payload.data?.type ?? 'unknown', platform, error: err.message });
   }
 }
 
@@ -184,9 +190,12 @@ function getPushTokens(userId: string) {
 // ── Public notification functions ─────────────────────────────
 export function notifyFriendDoorOpen(recipientId: string, openerName: string, note: string | null) {
   const tokens = getPushTokens(recipientId);
+  if (!tokens.length) return;
+  // Log once per recipient — used to measure door_open push → going conversion
+  log('push.sent', recipientId, { type: 'door_open' });
   const body = note ? `"${note}"` : 'Come drop by!';
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(recipientId, t.token, t.platform, {
       title: `${openerName} opened their door`,
       body,
       data: { type: 'door_open' },
@@ -198,7 +207,7 @@ export function notifyGoingSignal(hostId: string, guestName: string) {
   const tokens = getPushTokens(hostId);
   console.log(`[Push] notifyGoingSignal — hostId=${hostId} tokens=${tokens.length}`);
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(hostId, t.token, t.platform, {
       title: "Someone's on their way!",
       body: `${guestName} is coming`,
       data: { type: 'going_signal' },
@@ -209,7 +218,7 @@ export function notifyGoingSignal(hostId: string, guestName: string) {
 export function notifyDoorClosingSoon(userId: string, statusId: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(userId, t.token, t.platform, {
       title: 'Your door closes soon',
       body: 'Your door closes in 10 minutes',
       data: { type: 'closing_soon', statusId },
@@ -224,7 +233,7 @@ export function notifyDoorClosingSoon(userId: string, statusId: string) {
 export function notifyNudge(userId: string, dayName: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(userId, t.token, t.platform, {
       title: 'dropby',
       body: `Hey, got a free ${dayName}? Open your door`,
       data: { type: 'nudge' },
@@ -237,7 +246,7 @@ export function notifyScheduledSession(recipientId: string, hostName: string, st
   const date = new Date(startsAt * 1000);
   const dayTime = date.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true });
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(recipientId, t.token, t.platform, {
       title: `${hostName} scheduled a session`,
       body: `Opening ${dayTime}`,
       data: { type: 'scheduled_session' },
@@ -250,7 +259,7 @@ export function notifyScheduledReminder(userId: string, startsAt: number) {
   const date = new Date(startsAt * 1000);
   const timeStr = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(userId, t.token, t.platform, {
       title: 'dropby',
       body: `Your door is scheduled to open at ${timeStr} — ready?`,
       data: { type: 'scheduled_reminder' },
@@ -261,7 +270,7 @@ export function notifyScheduledReminder(userId: string, startsAt: number) {
 export function notifyAutoNudge(userId: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(userId, t.token, t.platform, {
       title: 'dropby',
       body: 'Open your door again? Change nudge timing anytime in Profile.',
       data: { type: 'auto_nudge' },
@@ -272,7 +281,7 @@ export function notifyAutoNudge(userId: string) {
 export function notifyCalendarUpdate(userId: string, icsUrl: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(userId, t.token, t.platform, {
       title: 'dropby',
       body: 'Time changed — tap to update your calendar',
       data: { type: 'calendar_update', icsUrl },
@@ -283,7 +292,7 @@ export function notifyCalendarUpdate(userId: string, icsUrl: string) {
 export function notifyCalendarCancel(userId: string, icsUrl: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>
-    sendPush(t.token, t.platform, {
+    sendPush(userId, t.token, t.platform, {
       title: 'Session cancelled',
       body: 'Tap to remove from your calendar',
       data: { type: 'calendar_cancel', icsUrl },

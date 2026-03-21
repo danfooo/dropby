@@ -4,6 +4,7 @@ import { db } from '../db/index.js';
 import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.js';
 import { notifyGoingSignal } from '../services/notifications.js';
 import { sendWelcomeMessage } from '../services/email.js';
+import { log } from '../services/analytics.js';
 
 const router = Router();
 
@@ -60,6 +61,7 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
 
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
   if (validRsvp === 'going') notifyGoingSignal(status.user_id, user.display_name);
+  log('going.sent', userId, { rsvp: validRsvp, is_guest: false });
 
   res.status(201).json({ ok: true });
 });
@@ -105,6 +107,8 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
   );
 
   if (validRsvp === 'going') notifyGoingSignal(status.user_id, name.trim());
+  log('going.sent', null, { rsvp: validRsvp, is_guest: true });
+
   res.status(201).json({ ok: true, signal_id: signalId, status_id: statusId });
 });
 
