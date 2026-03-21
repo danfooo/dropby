@@ -24,8 +24,8 @@ export async function registerUser(page: Page, { email, password, displayName }:
   await page.getByPlaceholder(/password/i).fill(password);
   await page.getByRole('button', { name: /create account/i }).click();
 
-  // Wait for the "check your email" success message (green banner)
-  await page.waitForSelector('.bg-emerald-50', { timeout: 10_000 });
+  // Wait for the green "check your email" success message
+  await page.waitForSelector('.bg-emerald-50', { timeout: 15_000 });
 }
 
 /**
@@ -36,8 +36,8 @@ export async function verifyEmail(page: Page, email: string): Promise<void> {
   const url = await getVerificationLink(email);
   await page.goto(url);
 
-  // Wait for "You're in" success state (green check circle)
-  await page.waitForSelector('.bg-emerald-100', { timeout: 10_000 });
+  // The verify page auto-logs in and redirects to /home after ~1.5s
+  await page.waitForURL('**/home', { timeout: 15_000 });
 }
 
 /**
@@ -48,7 +48,7 @@ export async function loginUser(page: Page, { email, password }: Pick<UserData, 
 
   await page.getByPlaceholder(/email/i).fill(email);
   await page.getByPlaceholder(/password/i).fill(password);
-  await page.getByRole('button', { name: /^log in$/i }).click();
+  await page.locator('form').getByRole('button', { name: /log in/i }).click();
 
   // Wait for redirect to /home
   await page.waitForURL('**/home', { timeout: 10_000 });

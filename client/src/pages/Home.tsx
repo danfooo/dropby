@@ -1281,6 +1281,7 @@ export default function Home() {
               : t('home.closingSoon')}
           {' · '}
           <button
+            data-testid="change-duration"
             onClick={() => {
               setSelectedDurationMinutes(user?.default_door_minutes ?? 60);
               setShowDurationPicker(true);

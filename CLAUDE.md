@@ -5,8 +5,9 @@
 dropby helps people spend more real time together. The app's job is to remove the friction between "I'd love to see you" and actually meeting up — spontaneously or planned. **Success means people are using the app less because they're out seeing each other more.**
 
 Two connected problems it solves:
+
 1. **Spontaneous visits have died** in most cultures. The coordination overhead — WhatsApp threads, voice messages, back-and-forth — kills the impulse before it becomes a meetup.
-2. **Friend-time doesn't get calendared.** Traditional calendar apps aren't used for coordinating with friends. Plans just don't happen.
+2. **Friend-time doesn't get calendared.** Traditional calendar apps aren't used for coordinating with friends. Plans often just don't happen.
 
 dropby sits between these: low-friction enough for the spontaneous case, structured enough for the planned case.
 
@@ -37,6 +38,7 @@ dropby sits between these: low-friction enough for the spontaneous case, structu
 Strengths: product thinking, UX, copy, and frontend (React/Tailwind). This is where you can move fast and expect pushback on ideas.
 
 Go slow and explain clearly for: infrastructure, DevOps, and platform setup — things like push notification pipelines, APNs/FCM configuration, app store submission, DNS, email delivery setup, SSL, environment variables, and deployment configuration. For these topics:
+
 - Don't assume familiarity with the tools or consoles involved
 - Say which service/console to open and where to find the setting
 - Flag when a mistake here is hard to reverse or has cost/security implications
@@ -45,6 +47,7 @@ Go slow and explain clearly for: infrastructure, DevOps, and platform setup — 
 ## Working together
 
 - If something looks like a deliberate product decision, try to understand the intent before questioning it
+- Never fabricate or bluff about what code does. If you're unsure whether a change had an effect, read the file to verify before claiming success.
 - **But do push back** if something seems internally inconsistent, unclear to users, or in tension with the principles above — that's more useful than silently accepting it
 - Never reframe a design decision as a bug without checking first
 - Localization: when editing UI copy, always update **all 6 locale files** (en-US, en-GB, de, es, fr, sv)
@@ -52,12 +55,14 @@ Go slow and explain clearly for: infrastructure, DevOps, and platform setup — 
 ## Spec
 
 `/spec-full.md` is the source of truth for what the product **does**. Keep it in sync with every change:
+
 - If a screen, flow, data model field, or behaviour changes, update the spec in the same commit
 - The spec describes only implemented, live behaviour — not intentions or future work
 
 ## TODO
 
 `/TODO.md` tracks what is **not yet done**: deferred features, known gaps, infrastructure tasks.
+
 - If something is removed or deferred during a change, move it to TODO.md (not the spec)
 - If a TODO item gets built, remove it from TODO.md and add it to the spec
 
@@ -71,6 +76,7 @@ Commit after every change, without being asked. Push immediately too unless it r
 ## Deploy
 
 Deploy command:
+
 ```
 fly deploy --build-arg VITE_GOOGLE_CLIENT_ID=750398451662-qnfcr5cab59n6fq86dj54ibnsu69mj15.apps.googleusercontent.com
 ```

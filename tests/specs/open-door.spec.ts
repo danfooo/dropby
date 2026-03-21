@@ -38,19 +38,10 @@ test('Alice opens her door; Bob sees it and taps Going; Alice sees Bob is on the
     await loginUser(alicePage, ALICE);
     await loginUser(bobPage, BOB);
 
-    // Alice opens her door with a note
+    // Alice opens her door with a note (fill note first, then click)
     const doorNote = 'Come say hi!';
-
-    // Click "Open the door" button
+    await alicePage.getByPlaceholder(/or write your own note/i).fill(doorNote);
     await alicePage.getByRole('button', { name: /open the door/i }).click();
-
-    // Fill in the note
-    await alicePage.getByPlaceholder(/note/i).fill(doorNote);
-
-    // Click the confirm/open button (also labelled "Open the door")
-    await alicePage.getByRole('button', { name: /open the door/i }).last().click();
-
-    // Wait for Alice's door-open view
     await expect(alicePage.getByText("You're open!")).toBeVisible({ timeout: 10_000 });
 
     // Assert the server has notify_at set on Alice's status
@@ -60,7 +51,7 @@ test('Alice opens her door; Bob sees it and taps Going; Alice sees Bob is on the
 
     // Bob refreshes his home screen — Alice's door should appear
     await bobPage.reload();
-    await bobPage.waitForLoadState('networkidle');
+    await bobPage.waitForLoadState('domcontentloaded');
 
     // Bob sees Alice's door with the note
     await expect(bobPage.getByText(doorNote)).toBeVisible({ timeout: 10_000 });
@@ -70,11 +61,11 @@ test('Alice opens her door; Bob sees it and taps Going; Alice sees Bob is on the
 
     // Alice's view: go back to home, should show "On their way" with Bob's name
     await alicePage.reload();
-    await alicePage.waitForLoadState('networkidle');
+    await alicePage.waitForLoadState('domcontentloaded');
 
     // Alice should see the going signals section with Bob listed
     await expect(alicePage.getByText(/on their way/i)).toBeVisible({ timeout: 10_000 });
-    await expect(alicePage.getByText('Bob')).toBeVisible();
+    await expect(alicePage.getByText('Bob').first()).toBeVisible();
   } finally {
     await aliceCtx.close();
     await bobCtx.close();

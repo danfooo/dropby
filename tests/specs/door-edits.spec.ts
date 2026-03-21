@@ -37,15 +37,14 @@ test('Alice edits the note on her open door — the note updates in Bob\'s view'
     await loginUser(alicePage, ALICE);
     await loginUser(bobPage, BOB);
 
-    // Alice opens her door with an initial note
+    // Alice opens her door with an initial note (fill note first, then click)
+    await alicePage.getByPlaceholder(/or write your own note/i).fill('Original note');
     await alicePage.getByRole('button', { name: /open the door/i }).click();
-    await alicePage.getByPlaceholder(/note/i).fill('Original note');
-    await alicePage.getByRole('button', { name: /open the door/i }).last().click();
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
     // Bob sees Alice's door with the original note
     await bobPage.reload();
-    await bobPage.waitForLoadState('networkidle');
+    await bobPage.waitForLoadState('domcontentloaded');
     await expect(bobPage.getByText('Original note')).toBeVisible({ timeout: 10_000 });
 
     // Alice edits the note by clicking on it (or the edit button)
@@ -64,7 +63,7 @@ test('Alice edits the note on her open door — the note updates in Bob\'s view'
 
     // Bob reloads and sees the updated note
     await bobPage.reload();
-    await bobPage.waitForLoadState('networkidle');
+    await bobPage.waitForLoadState('domcontentloaded');
     await expect(bobPage.getByText('Updated note')).toBeVisible({ timeout: 10_000 });
     await expect(bobPage.getByText('Original note')).not.toBeVisible();
   } finally {
@@ -80,17 +79,23 @@ test('Alice changes the auto-close duration — closes_at updates accordingly', 
   try {
     await loginUser(alicePage, ALICE);
 
+    // Close any door left open by a prior test (beforeAll is shared across tests)
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+    await alicePage.evaluate(async (tok) => {
+      await fetch('http://localhost:3000/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
+    }, token);
+    await alicePage.reload();
+    await alicePage.waitForLoadState('domcontentloaded');
+
     // Alice opens her door (no note needed)
     await alicePage.getByRole('button', { name: /open the door/i }).click();
-    await alicePage.getByRole('button', { name: /open the door/i }).last().click();
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
     // Get the initial closes_at
     const initialStatus = await getUserStatus(aliceId);
     const initialClosesAt = initialStatus.closes_at;
 
-    // Click "Change duration" link
-    await alicePage.getByRole('button', { name: /change duration/i }).click();
+    await alicePage.getByTestId('change-duration').click();
 
     // The duration picker modal should appear with 30 min, 1h, 2h, 4h options
     await expect(alicePage.getByRole('dialog')).toBeVisible({ timeout: 5_000 });
@@ -128,15 +133,22 @@ test('Alice closes her door manually — it disappears from Bob\'s feed', async 
     await loginUser(alicePage, ALICE);
     await loginUser(bobPage, BOB);
 
-    // Alice opens her door with a recognisable note
+    // Close any door left open by a prior test (beforeAll is shared across tests)
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+    await alicePage.evaluate(async (tok) => {
+      await fetch('http://localhost:3000/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
+    }, token);
+    await alicePage.reload();
+    await alicePage.waitForLoadState('domcontentloaded');
+
+    // Alice opens her door with a recognisable note (fill note first, then click)
+    await alicePage.getByPlaceholder(/or write your own note/i).fill('Closing test');
     await alicePage.getByRole('button', { name: /open the door/i }).click();
-    await alicePage.getByPlaceholder(/note/i).fill('Closing test');
-    await alicePage.getByRole('button', { name: /open the door/i }).last().click();
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
     // Bob sees Alice's door
     await bobPage.reload();
-    await bobPage.waitForLoadState('networkidle');
+    await bobPage.waitForLoadState('domcontentloaded');
     await expect(bobPage.getByText('Closing test')).toBeVisible({ timeout: 10_000 });
 
     // Alice closes her door manually by clicking "Close now"
@@ -148,7 +160,7 @@ test('Alice closes her door manually — it disappears from Bob\'s feed', async 
 
     // Bob reloads — Alice's door should no longer appear
     await bobPage.reload();
-    await bobPage.waitForLoadState('networkidle');
+    await bobPage.waitForLoadState('domcontentloaded');
     await expect(bobPage.getByText('Closing test')).not.toBeVisible({ timeout: 10_000 });
   } finally {
     await aliceCtx.close();

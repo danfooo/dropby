@@ -18,7 +18,7 @@ export default function Modal({ open, onClose, title, children }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md p-6 shadow-xl">
+      <div role="dialog" className="relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md p-6 shadow-xl">
         {title && <h2 className="text-lg font-semibold mb-4">{title}</h2>}
         {children}
       </div>

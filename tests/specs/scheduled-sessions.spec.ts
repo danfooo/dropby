@@ -79,7 +79,7 @@ test('Alice creates three scheduled sessions, edits one note, changes end time o
 
     // Navigate to home and verify all three appear in the upcoming sessions list
     await alicePage.goto('/home');
-    await alicePage.waitForLoadState('networkidle');
+    await alicePage.waitForLoadState('domcontentloaded');
 
     await expect(alicePage.getByText('Session 1')).toBeVisible({ timeout: 5_000 });
     await expect(alicePage.getByText('Session 2')).toBeVisible({ timeout: 5_000 });
@@ -98,13 +98,13 @@ test('Alice creates three scheduled sessions, edits one note, changes end time o
     );
 
     await alicePage.reload();
-    await alicePage.waitForLoadState('networkidle');
+    await alicePage.waitForLoadState('domcontentloaded');
 
     // Only Session 2 has the updated note; Sessions 1 and 3 are unchanged
     await expect(alicePage.getByText('Session 2 updated')).toBeVisible({ timeout: 5_000 });
     await expect(alicePage.getByText('Session 1')).toBeVisible();
     await expect(alicePage.getByText('Session 3')).toBeVisible();
-    await expect(alicePage.getByText('Session 2')).not.toBeVisible();
+    await expect(alicePage.getByText('Session 2', { exact: true })).not.toBeVisible();
 
     // Change the end time on Session 3 via the API
     const newEndsAt = futureUnix(3, 16); // 1 hour later than before
@@ -135,7 +135,7 @@ test('Alice creates three scheduled sessions, edits one note, changes end time o
     );
 
     await alicePage.reload();
-    await alicePage.waitForLoadState('networkidle');
+    await alicePage.waitForLoadState('domcontentloaded');
 
     // Session 1 should be gone; Sessions 2 and 3 should still be there
     await expect(alicePage.getByText('Session 1')).not.toBeVisible({ timeout: 5_000 });

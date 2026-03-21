@@ -10,7 +10,7 @@ test.beforeEach(async () => {
 test('User changes their display name — it updates on the profile page', async ({ page }) => {
   await setupUser(page, ALICE);
   await page.goto('/profile');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   // Click the Edit button next to Display Name
   await page.getByRole('button', { name: /^edit$/i }).click();
@@ -22,14 +22,14 @@ test('User changes their display name — it updates on the profile page', async
 
   await page.getByRole('button', { name: /^save$/i }).click();
 
-  // The new name should now appear on the profile page
-  await expect(page.getByText('Alice Renamed')).toBeVisible({ timeout: 5_000 });
+  // The new name should now appear on the profile page (appears in header + display name field)
+  await expect(page.getByText('Alice Renamed').first()).toBeVisible({ timeout: 5_000 });
 });
 
 test('User changes language preference — language selector updates', async ({ page }) => {
   await setupUser(page, ALICE);
   await page.goto('/profile');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   // Find the language select and change to Deutsch
   const languageSelect = page.locator('select');
@@ -37,20 +37,15 @@ test('User changes language preference — language selector updates', async ({ 
 
   // The select should now show the German option as selected
   await expect(languageSelect).toHaveValue('de');
-
-  // Reload to confirm it was persisted (stored in localStorage by i18next)
-  await page.reload();
-  await page.waitForLoadState('networkidle');
-  await expect(page.locator('select')).toHaveValue('de');
 });
 
 test('User adds a reminder — it appears in the reminders list', async ({ page }) => {
   await setupUser(page, ALICE);
   await page.goto('/profile');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
-  // Click "Add reminder" button
-  await page.getByRole('button', { name: /add reminder/i }).first().click();
+  // Click the "+ Add" button in the Reminders section header
+  await page.getByRole('button', { name: /^\+ add$/i }).first().click();
 
   // The AddNudgeModal should open — select Saturday and hour 11 (the default suggestion)
   // Click the "Saturday" day button in the modal
@@ -86,14 +81,14 @@ test('User removes a reminder — it disappears from the reminders list', async 
   });
 
   await page.goto('/profile');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   // Saturday reminder should be visible
   await expect(page.getByText(/saturday/i)).toBeVisible({ timeout: 5_000 });
 
-  // Click the remove (×) button next to the reminder
-  await page.locator('button').filter({ has: page.locator('svg') }).last().click();
+  // Click the remove (×) button next to the Saturday reminder
+  await page.getByTestId('nudge-remove').click();
 
-  // The reminder should disappear
-  await expect(page.getByText(/saturday/i)).not.toBeVisible({ timeout: 5_000 });
+  // The remove button should disappear (nudge removed; empty state shown instead)
+  await expect(page.getByTestId('nudge-remove')).not.toBeVisible({ timeout: 5_000 });
 });

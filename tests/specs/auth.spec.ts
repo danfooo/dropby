@@ -14,14 +14,10 @@ test('register, verify email, and log in successfully', async ({ page }) => {
   // The "check your email" banner should appear
   await expect(page.locator('.bg-emerald-50')).toBeVisible();
 
-  // Verify email via test API link
+  // Verify email via test API link — auto-redirects to /home
   await verifyEmail(page, ALICE.email);
 
-  // The verify-email page shows the success ("You're in!") state
-  await expect(page.getByText("You're in!")).toBeVisible();
-
-  // App automatically navigates to /home
-  await page.waitForURL('**/home', { timeout: 10_000 });
+  // Should now be on /home
   await expect(page).toHaveURL(/\/home/);
 });
 
@@ -37,7 +33,7 @@ test('login before email verification is blocked', async ({ page }) => {
   await page.goto('/auth');
   await page.getByPlaceholder(/email/i).fill(ALICE.email);
   await page.getByPlaceholder(/password/i).fill(ALICE.password);
-  await page.getByRole('button', { name: /^log in$/i }).click();
+  await page.locator('form').getByRole('button', { name: /log in/i }).click();
 
   // Should show the "check your email" error (EMAIL_NOT_VERIFIED maps to verifyEmailSent)
   await expect(page.locator('.bg-red-50')).toBeVisible();

@@ -47,7 +47,7 @@ app.use('/api/feedback', feedbackRouter);
 // Test-only routes — never mounted in production
 if (process.env.NODE_ENV === 'test') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const testRouter = require('./routes/test.js').default;
+  const testRouter = require('./routes/test').default;
   app.use('/api/test', testRouter);
 }
 

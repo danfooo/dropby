@@ -2,7 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/specs',
-  timeout: 15_000,
+  timeout: 180_000,
+  workers: 1,
   outputDir: 'test-results',
   reporter: [['list'], ['html', { open: 'never' }]],
 

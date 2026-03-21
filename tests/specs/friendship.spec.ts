@@ -20,30 +20,19 @@ test('Alice shares invite link; Bob visits it and they become friends', async ({
 
     // Alice goes to the Friends tab
     await alicePage.goto('/friends');
-    await alicePage.waitForLoadState('networkidle');
+    await alicePage.waitForLoadState('domcontentloaded');
 
-    // Alice clicks the "Invite" button to generate an invite link
-    // The handleInvite function calls invitesApi.generate() and then calls navigator.clipboard.writeText
-    // Since clipboard API might not be available in headless, we intercept at the API level instead
-    // by watching the network request for POST /api/invites
-    let inviteUrl = '';
-    alicePage.on('response', async (response) => {
-      if (response.url().includes('/api/invites') && response.request().method() === 'POST') {
-        try {
-          const body = await response.json();
-          if (body.url) inviteUrl = body.url;
-        } catch {}
-      }
-    });
+    // Alice clicks the "Invite" button and we capture the resulting invite URL
+    const [inviteResponse] = await Promise.all([
+      alicePage.waitForResponse(
+        (res) => res.url().includes('/api/invites') && res.request().method() === 'POST',
+        { timeout: 5_000 }
+      ),
+      alicePage.getByRole('button', { name: /^Invite$/i }).click(),
+    ]);
 
-    await alicePage.getByRole('button', { name: /^Invite$/i }).click();
-
-    // Wait for the invite API response
-    await alicePage.waitForResponse(
-      (res) => res.url().includes('/api/invites') && res.request().method() === 'POST',
-      { timeout: 5_000 }
-    );
-
+    const inviteBody = await inviteResponse.json();
+    const inviteUrl = inviteBody.url;
     expect(inviteUrl).toBeTruthy();
 
     // Bob registers and is now logged in
@@ -58,11 +47,11 @@ test('Alice shares invite link; Bob visits it and they become friends', async ({
 
     // Both users see each other in their friends list
     await bobPage.goto('/friends');
-    await bobPage.waitForLoadState('networkidle');
+    await bobPage.waitForLoadState('domcontentloaded');
     await expect(bobPage.getByText('Alice')).toBeVisible();
 
     await alicePage.goto('/friends');
-    await alicePage.waitForLoadState('networkidle');
+    await alicePage.waitForLoadState('domcontentloaded');
     await expect(alicePage.getByText('Bob')).toBeVisible();
   } finally {
     await aliceCtx.close();
