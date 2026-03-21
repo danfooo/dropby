@@ -18,7 +18,7 @@ router.get('/', requireAuth, (req: AuthRequest, res) => {
 router.post('/', requireAuth, (req: AuthRequest, res) => {
   const { text } = req.body;
   if (!text?.trim()) return res.status(400).json({ error: 'Text required' });
-  if (text.length > 60) return res.status(400).json({ error: 'Max 60 chars' });
+  if (text.length > 100) return res.status(400).json({ error: 'Max 100 chars' });
 
   // Check if already saved
   const existing = db.prepare('SELECT id FROM user_notes WHERE user_id = ? AND text = ?').get(req.userId, text.trim());
