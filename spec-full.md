@@ -168,6 +168,17 @@ Created when a non-logged-in user submits the web Going form with contact info. 
 
 Unique constraint on `(user_id, token)`. Multiple devices per user are supported. Upserted on each app launch.
 
+### Event Log
+| Field | Type | Notes |
+|---|---|---|
+| id | integer PK autoincrement | |
+| ts | unix timestamp | Defaults to `unixepoch()` |
+| event | text | Event name, e.g. `door.open` |
+| user_id | text nullable | Null for unauthenticated actions |
+| data | text nullable | JSON blob of event-specific fields |
+
+Append-only analytics log. No foreign key to `users` — rows survive user deletion. Indexed on `(event)`, `(user_id)`, and `(ts)`. Rows older than 12 months are purged nightly at 03:00 UTC, except `user.signup` and `user.verify` which are kept forever. See `logging.md` for the full event catalogue.
+
 ---
 
 ## 4. Views & Screens
@@ -705,6 +716,21 @@ Lets users share thoughts on whether dropby is helping make real moments happen,
 - **Email field**: shown only when opt-in is checked; pre-filled with logged-in user's email, editable
 - **Submit** → success screen with thank-you message
 
+### Admin Dashboard (`/admin`)
+
+Accessible only to users whose email is listed in the `ADMIN_EMAILS` environment variable (comma-separated). Returns 403 for everyone else.
+
+Sections:
+
+- **This week vs last week** — five metric cards (signups, active users, door opens, doors-with-going, push failures), each showing the current week value with a ±delta against the prior week
+- **8-week trend** — compact table showing the same five metrics per week for the last 8 calendar weeks, newest first
+- **Signup funnel (last 30 days)** — cohort-based: auth page views → signups → email verifies → first door open → received a going signal; each step shows drop-off % from the step above
+- **Invite funnel (last 30 days)** — invite link views (split by whether the host's door was live) → guest going signals → accepted friendships
+- **Notification effectiveness (last 30 days)** — scheduled nudge → door open within 4h; auto-nudge → door open within 4h; door-open push → going signal within 2h
+- **Push alarms** — shown only when failures exist in the last 24h; lists each failure with timestamp, type, platform, and error message
+
+---
+
 ### Data Model — `feedback` table
 | Field | Type | Notes |
 |---|---|---|
@@ -717,4 +743,35 @@ Lets users share thoughts on whether dropby is helping make real moments happen,
 
 ### API
 `POST /api/feedback` — requires auth. Body: `{ type, message, reply_email? }`. Returns `201 { id }`.
+
+---
+
+## 10. Analytics
+
+All server-side analytics are written to the `event_log` table by `server/src/services/analytics.ts`. The full event catalogue with data fields is in `logging.md`.
+
+### Events
+
+| Event | Emitted when | Key data fields |
+|---|---|---|
+| `user.signup` | New account created | `method: "email" \| "google"` |
+| `user.verify` | Email verification link accepted | — |
+| `session.start` | User establishes SSE connection; throttled to once per hour per user | — |
+| `page.auth_viewed` | Client tracks auth page view with signup intent | `intent: "signup"` |
+| `door.open` | User creates an active status | `recipients: number`, `has_note: boolean` |
+| `going.sent` | Going signal submitted | `rsvp: string`, `is_guest: boolean` |
+| `invite.viewed` | Invite link opened | `has_active_door: boolean` |
+| `invite.accepted` | Invite link accepted (friendship created) | — |
+| `nudge.sent` | Nudge push notification sent by cron | `type: "scheduled" \| "auto"` |
+| `push.sent` | Door-open push notification delivered | `type: "door_open"` |
+| `push.fail` | Push notification delivery failed | `type`, `platform`, `error` |
+
+### Retention
+
+- All events except `user.signup` and `user.verify` are deleted after 12 months (daily cron, 03:00 UTC)
+- `user.signup` and `user.verify` are kept indefinitely for cohort analysis
+
+### `session.start` deduplication
+
+The SSE connection reconnects frequently on mobile. To prevent this inflating the event count, `session.start` is only logged if no `session.start` event exists for that user in the past hour.
 
