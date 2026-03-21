@@ -112,7 +112,7 @@
     "scheduleReminderText": "On te rappellera {{minutes}} min avant",
     "scheduleReminderChange": "Modifier",
     "scheduledSessionTitle": "Sessions à venir",
-    "openAnother": "Ajouter un créneau",
+    "openAnother": "Ajouter un autre créneau",
     "scheduleOpenNow": "Ouvrir maintenant",
     "scheduleCancelSession": "Annuler la session",
     "freeUntil": "Libre jusqu'à {{time}}",

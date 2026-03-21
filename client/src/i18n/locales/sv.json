@@ -112,7 +112,7 @@
     "scheduleReminderText": "Vi påminner dig {{minutes}} min innan",
     "scheduleReminderChange": "Ändra",
     "scheduledSessionTitle": "Kommande sessioner",
-    "openAnother": "Lägg till en tid",
+    "openAnother": "Lägg till en till tid",
     "scheduleOpenNow": "Öppna nu",
     "scheduleCancelSession": "Avbryt session",
     "freeUntil": "Ledig till {{time}}",

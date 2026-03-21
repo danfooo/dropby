@@ -112,7 +112,7 @@
     "scheduleReminderText": "Wir erinnern dich {{minutes}} Min. vorher",
     "scheduleReminderChange": "Ändern",
     "scheduledSessionTitle": "Geplante Sitzungen",
-    "openAnother": "Zeit hinzufügen",
+    "openAnother": "Weitere Zeit hinzufügen",
     "scheduleOpenNow": "Jetzt öffnen",
     "scheduleCancelSession": "Sitzung absagen",
     "freeUntil": "Frei bis {{time}}",
