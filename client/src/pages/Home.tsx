@@ -356,7 +356,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
           </div>
           <div className="relative -mx-4">
             <div
-              className={`divide-y divide-gray-50${activeFriends.length >= 5 ? ' h-[132px] overflow-y-auto' : ''}`}
+              className={`divide-y divide-gray-50${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
               onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
             >
               {activeFriends.map((f: any) => (
@@ -463,7 +463,7 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
             </div>
             <div className="relative -mx-4">
               <div
-                className={`divide-y divide-violet-100${activeFriends.length >= 5 ? ' h-[132px] overflow-y-auto' : ''}`}
+                className={`divide-y divide-violet-100${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
                 onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
               >
                 {activeFriends.map((f: any) => (
@@ -997,7 +997,7 @@ export default function Home() {
             <h2 className="text-xs font-semibold text-gray-500 mb-1">{t('home.openDoorTo')}</h2>
             <div className="relative">
               <div
-                className={`divide-y divide-gray-50 overflow-x-hidden${activeFriends.length >= 5 ? ' h-[144px] overflow-y-auto' : ''}`}
+                className={`divide-y divide-gray-50 overflow-x-hidden${activeFriends.length >= 5 ? ' h-[192px] overflow-y-auto' : ''}`}
                 onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
               >
                 {activeFriends.map((f: any) => (
