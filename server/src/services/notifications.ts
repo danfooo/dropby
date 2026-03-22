@@ -1,4 +1,6 @@
 import { db } from '../db/index.js';
+import { createSign } from 'crypto';
+import * as http2 from 'http2';
 
 interface PushPayload {
   title: string;
@@ -77,9 +79,90 @@ async function sendFcm(token: string, payload: PushPayload) {
 }
 
 // ── APNs (iOS) ────────────────────────────────────────────────
-async function sendApns(token: string, payload: PushPayload) {
-  // TODO: implement when APNs key is available
-  console.log(`[APNs] ${token.slice(0, 20)}… | ${payload.title}: ${payload.body}`);
+let apnsJwt: { token: string; issuedAt: number } | null = null;
+let apnsSession: http2.ClientHttp2Session | null = null;
+
+function getApnsJwt(teamId: string, keyId: string, privateKey: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  if (apnsJwt && now - apnsJwt.issuedAt < 3300) return apnsJwt.token;
+
+  const header = Buffer.from(JSON.stringify({ alg: 'ES256', kid: keyId })).toString('base64url');
+  const body = Buffer.from(JSON.stringify({ iss: teamId, iat: now })).toString('base64url');
+  const signingInput = `${header}.${body}`;
+
+  const sign = createSign('SHA256');
+  sign.update(signingInput);
+  const sig = sign.sign({ key: privateKey, dsaEncoding: 'ieee-p1363' }).toString('base64url');
+
+  apnsJwt = { token: `${signingInput}.${sig}`, issuedAt: now };
+  return apnsJwt.token;
+}
+
+function getApnsSession(): http2.ClientHttp2Session {
+  const host = process.env.NODE_ENV === 'production'
+    ? 'https://api.push.apple.com'
+    : 'https://api.sandbox.push.apple.com';
+  if (apnsSession && !apnsSession.destroyed && !apnsSession.closed) return apnsSession;
+  apnsSession = http2.connect(host);
+  apnsSession.on('error', (err) => {
+    console.error('[APNs] Session error:', err.message);
+    apnsSession = null;
+  });
+  return apnsSession;
+}
+
+async function sendApns(token: string, payload: PushPayload): Promise<void> {
+  const keyId = process.env.APNS_KEY_ID;
+  const teamId = process.env.APNS_TEAM_ID;
+  const privateKey = process.env.APNS_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const bundleId = process.env.APNS_BUNDLE_ID ?? 'cc.dropby.app';
+
+  if (!keyId || !teamId || !privateKey) {
+    console.log(`[APNs] not configured — ${token.slice(0, 20)}… | ${payload.title}: ${payload.body}`);
+    return;
+  }
+
+  const jwt = getApnsJwt(teamId, keyId, privateKey);
+  const session = getApnsSession();
+  const host = process.env.NODE_ENV === 'production' ? 'api.push.apple.com' : 'api.sandbox.push.apple.com';
+
+  const apnsBody = JSON.stringify({
+    aps: {
+      alert: { title: payload.title, body: payload.body },
+      sound: 'default',
+    },
+    ...payload.data,
+  });
+
+  return new Promise((resolve) => {
+    const req = session.request({
+      ':method': 'POST',
+      ':path': `/3/device/${token}`,
+      ':authority': host,
+      'authorization': `bearer ${jwt}`,
+      'apns-topic': bundleId,
+      'apns-push-type': 'alert',
+      'content-type': 'application/json',
+      'content-length': String(Buffer.byteLength(apnsBody)),
+    });
+
+    req.write(apnsBody);
+    req.end();
+
+    let status = 0;
+    req.on('response', (headers) => { status = Number(headers[':status']); });
+
+    let responseData = '';
+    req.on('data', (chunk) => { responseData += chunk; });
+    req.on('end', () => {
+      if (status !== 200) console.error(`[APNs] ${status}:`, responseData);
+      resolve();
+    });
+    req.on('error', (err) => {
+      console.error('[APNs] Request error:', err.message);
+      resolve();
+    });
+  });
 }
 
 // ── Router ────────────────────────────────────────────────────
