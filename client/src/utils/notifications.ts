@@ -14,7 +14,7 @@ async function setupListeners() {
   listenersSetup = true;
   const { PushNotifications } = await import('@capacitor/push-notifications');
   PushNotifications.addListener('registration', async ({ value: token }) => {
-    try { await authApi.registerPushToken(token, Capacitor.getPlatform()); }
+    try { await authApi.registerPushToken(token, Capacitor.getPlatform() as 'ios' | 'android'); }
     catch (e) { console.warn('[Push] Failed to register token', e); }
   });
   PushNotifications.addListener('registrationError', (err) => {
