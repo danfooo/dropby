@@ -73,7 +73,7 @@
     "inviteFriendsText": "Want to see your friends more? Add them to your dropby.",
     "copyInviteLink": "Copy invite link →",
     "youreOpen": "You're open!",
-    "closesIn": "Closes in {{minutes}} min",
+    "closesIn": "Auto-closes in {{minutes}} min",
     "closesAt": "Closes at {{time}}",
     "keepItOpen": "Keep it open +30 min",
     "invited": "Visible to",

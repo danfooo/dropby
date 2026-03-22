@@ -73,7 +73,7 @@
     "inviteFriendsText": "Lad Freunde ein — sie sehen, wenn deine Tür offen ist.",
     "copyInviteLink": "Einladungslink kopieren →",
     "youreOpen": "Du bist offen!",
-    "closesIn": "Schließt in {{minutes}} Min.",
+    "closesIn": "Schließt automatisch in {{minutes}} Min.",
     "closesAt": "Schließt um {{time}}",
     "keepItOpen": "Weitere +30 Min. offen",
     "invited": "Sichtbar für",

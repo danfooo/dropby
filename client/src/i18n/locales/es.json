@@ -73,7 +73,7 @@
     "inviteFriendsText": "Invita a tus amigos — verán cuando tu puerta esté abierta.",
     "copyInviteLink": "Copiar enlace de invitación →",
     "youreOpen": "¡Estás abierto!",
-    "closesIn": "Cierra en {{minutes}} min",
+    "closesIn": "Se cierra automáticamente en {{minutes}} min",
     "closesAt": "Cierra a las {{time}}",
     "keepItOpen": "Mantener abierto +30 min",
     "invited": "Visible para",

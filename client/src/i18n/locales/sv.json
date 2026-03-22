@@ -73,7 +73,7 @@
     "inviteFriendsText": "Bjud in vänner — de ser när din dörr är öppen.",
     "copyInviteLink": "Kopiera inbjudningslänk →",
     "youreOpen": "Du är öppen!",
-    "closesIn": "Stänger om {{minutes}} min",
+    "closesIn": "Stänger automatiskt om {{minutes}} min",
     "closesAt": "Stänger kl. {{time}}",
     "keepItOpen": "Håll öppen +30 min",
     "invited": "Synlig för",
