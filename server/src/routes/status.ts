@@ -136,7 +136,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   let note: string | undefined = req.body.note;
   if (note) {
     note = sanitizeNote(note);
-    if (note.length > 100) return res.status(400).json({ error: 'Note max 100 chars' });
+    if (note.length > 160) return res.status(400).json({ error: 'Note max 160 chars' });
     if (!(await isNoteAllowed(note))) note = undefined;
   }
 
@@ -260,7 +260,7 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
   if (note !== undefined) {
     if (note) {
       note = sanitizeNote(note);
-      if (note.length > 100) return res.status(400).json({ error: 'Note max 100 chars' });
+      if (note.length > 160) return res.status(400).json({ error: 'Note max 160 chars' });
       if (!(await isNoteAllowed(note))) note = null;
     }
     db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, status.id);
@@ -306,7 +306,7 @@ router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
   if (note !== undefined) {
     if (note) {
       note = sanitizeNote(note);
-      if (note.length > 100) return res.status(400).json({ error: 'Note max 100 chars' });
+      if (note.length > 160) return res.status(400).json({ error: 'Note max 160 chars' });
       if (!(await isNoteAllowed(note))) note = null;
     }
     db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, statusId);

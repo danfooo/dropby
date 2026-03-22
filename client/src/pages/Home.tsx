@@ -292,20 +292,27 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
           ))}
         </div>
       )}
-      <input
-        type="text"
-        placeholder={t('home.customNotePlaceholder')}
-        value={note}
-        maxLength={100}
-        onChange={e => {
-          setNote(e.target.value);
-          if (selectedChip && e.target.value !== selectedChip) {
-            setSelectedChip('');
-            setPreviousNote(null);
-          }
-        }}
-        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
-      />
+      <div className="relative">
+        <input
+          type="text"
+          placeholder={t('home.customNotePlaceholder')}
+          value={note}
+          maxLength={160}
+          onChange={e => {
+            setNote(e.target.value);
+            if (selectedChip && e.target.value !== selectedChip) {
+              setSelectedChip('');
+              setPreviousNote(null);
+            }
+          }}
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+        {note.length >= 130 && (
+          <span className={`absolute right-3 bottom-2.5 text-xs pointer-events-none ${note.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
+            {160 - note.length}
+          </span>
+        )}
+      </div>
       {/* Schedule pickers — only when scheduleMode */}
       {scheduleMode && (
         <>
@@ -445,14 +452,21 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
               className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
           </div>
         </div>
-        <input
-          type="text"
-          placeholder={t('home.notePlaceholder')}
-          value={editNote}
-          maxLength={100}
-          onChange={e => setEditNote(e.target.value)}
-          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
-        />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder={t('home.notePlaceholder')}
+            value={editNote}
+            maxLength={160}
+            onChange={e => setEditNote(e.target.value)}
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
+          />
+          {editNote.length >= 130 && (
+            <span className={`absolute right-3 bottom-2.5 text-xs pointer-events-none ${editNote.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
+              {160 - editNote.length}
+            </span>
+          )}
+        </div>
         {friends.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-1">
@@ -965,7 +979,7 @@ export default function Home() {
           <input
             type="text"
             placeholder={t('home.customNotePlaceholder')}
-            maxLength={100}
+            maxLength={160}
             value={note}
             onChange={e => {
               setNote(e.target.value);
@@ -976,9 +990,9 @@ export default function Home() {
             }}
             className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
-          {note.length >= 80 && (
-            <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 90 ? 'text-red-400' : 'text-gray-400'}`}>
-              {100 - note.length}
+          {note.length >= 130 && (
+            <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
+              {160 - note.length}
             </span>
           )}
         </div>
@@ -1155,14 +1169,21 @@ export default function Home() {
 
         <div className="px-4 pt-6">
           <h1 className="text-xl font-bold mb-4">{t('home.edit')}</h1>
-          <input
-            type="text"
-            placeholder={t('home.notePlaceholder')}
-            maxLength={100}
-            defaultValue={initNote}
-            onChange={e => setEditNote(e.target.value)}
-            className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
-          />
+          <div className="relative mb-4">
+            <input
+              type="text"
+              placeholder={t('home.notePlaceholder')}
+              maxLength={160}
+              defaultValue={initNote}
+              onChange={e => setEditNote(e.target.value)}
+              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            {editNote.length >= 130 && (
+              <span className={`absolute right-3 bottom-3.5 text-xs pointer-events-none ${editNote.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
+                {160 - editNote.length}
+              </span>
+            )}
+          </div>
 
           {initEndsAt && (
             <div className="mb-4">
