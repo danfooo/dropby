@@ -122,7 +122,12 @@
     "scheduledRsvpCount": "{{going}} kommen, {{maybe}} vielleicht",
     "addToCalendar": "Zum Kalender hinzufügen",
     "updateCalendar": "Kalender aktualisieren",
-    "removeFromCalendar": "Aus Kalender entfernen"
+    "removeFromCalendar": "Aus Kalender entfernen",
+    "notifOpenTitle": "Benachrichtigt werden, wenn ein Freund sagt, dass er auf dem Weg ist?",
+    "notifGoingTitle": "Benachrichtigt werden, wenn es Neuigkeiten gibt?",
+    "notifDesc": "dropby informiert dich, wenn etwas passiert.",
+    "notifAllow": "Ja, Benachrichtigungen aktivieren",
+    "notifSkip": "Nicht jetzt"
   },
   "friends": {
     "title": "Freunde",

@@ -122,7 +122,12 @@
     "scheduledRsvpCount": "{{going}} going, {{maybe}} maybe",
     "addToCalendar": "Add to Calendar",
     "updateCalendar": "Update calendar",
-    "removeFromCalendar": "Remove from calendar"
+    "removeFromCalendar": "Remove from calendar",
+    "notifOpenTitle": "Get notified when a friend says they're on their way?",
+    "notifGoingTitle": "Get notified if there are updates?",
+    "notifDesc": "dropby will let you know when something happens.",
+    "notifAllow": "Yes, turn on notifications",
+    "notifSkip": "Not now"
   },
   "friends": {
     "title": "Friends",

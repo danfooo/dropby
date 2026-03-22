@@ -122,7 +122,12 @@
     "scheduledRsvpCount": "{{going}} kommer, {{maybe}} kanske",
     "addToCalendar": "Lägg till i kalender",
     "updateCalendar": "Uppdatera kalender",
-    "removeFromCalendar": "Ta bort från kalender"
+    "removeFromCalendar": "Ta bort från kalender",
+    "notifOpenTitle": "Få en notis när en vän säger att de är på väg?",
+    "notifGoingTitle": "Få en notis om det händer något?",
+    "notifDesc": "dropby meddelar dig när något händer.",
+    "notifAllow": "Ja, slå på notiser",
+    "notifSkip": "Inte nu"
   },
   "friends": {
     "title": "Vänner",

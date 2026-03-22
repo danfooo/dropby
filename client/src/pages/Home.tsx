@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
+import { Capacitor } from '@capacitor/core';
+import { hasAskedNotifications, requestNotificationPermission } from '../utils/notifications';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 import UserMenu from '../components/UserMenu';
@@ -598,6 +600,8 @@ export default function Home() {
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(60);
   const [calendarToast, setCalendarToast] = useState<{ type: 'update' | 'remove'; sessionId: string } | null>(null);
+  const [notifSheet, setNotifSheet] = useState<'open' | 'going' | null>(null);
+  const pendingAction = useRef<(() => void) | null>(null);
 
   // Schedule form state
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -763,11 +767,16 @@ export default function Home() {
   });
 
   const sendGoing = async (statusId: string, rsvp: 'going' | 'maybe' = 'going') => {
+    if (Capacitor.isNativePlatform() && !hasAskedNotifications()) {
+      pendingAction.current = () => sendGoing(statusId, rsvp);
+      setNotifSheet('going');
+      return;
+    }
     await goingApi.send(statusId, rsvp);
     qc.invalidateQueries({ queryKey: ['friendStatuses'] });
   };
 
-  const handleOpen = async () => {
+  const doOpen = async () => {
     const trimmedNote = note.trim() || undefined;
     if (trimmedNote && !selectedChip) {
       await notesApi.save(trimmedNote);
@@ -787,6 +796,30 @@ export default function Home() {
     } else {
       createStatus.mutate({ note: trimmedNote, recipient_ids: selectedRecipients });
     }
+  };
+
+  const handleOpen = async () => {
+    if (Capacitor.isNativePlatform() && !hasAskedNotifications()) {
+      pendingAction.current = doOpen;
+      setNotifSheet('open');
+      return;
+    }
+    await doOpen();
+  };
+
+  const handleNotifOk = async () => {
+    setNotifSheet(null);
+    const action = pendingAction.current;
+    pendingAction.current = null;
+    requestNotificationPermission();
+    if (action) action();
+  };
+
+  const handleNotifSkip = async () => {
+    setNotifSheet(null);
+    const action = pendingAction.current;
+    pendingAction.current = null;
+    if (action) action();
   };
 
   const handleSaveEdit = () => {
@@ -1076,6 +1109,29 @@ export default function Home() {
             </button>
           </div>
         )}
+
+        <Modal open={notifSheet !== null} onClose={handleNotifSkip}>
+          <p className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-2">
+            {notifSheet === 'going' ? t('home.notifGoingTitle') : t('home.notifOpenTitle')}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            {t('home.notifDesc')}
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handleNotifOk}
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
+            >
+              {t('home.notifAllow')}
+            </button>
+            <button
+              onClick={handleNotifSkip}
+              className="w-full text-gray-500 dark:text-gray-400 py-2 text-sm"
+            >
+              {t('home.notifSkip')}
+            </button>
+          </div>
+        </Modal>
       </div>
     );
   }
