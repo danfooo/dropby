@@ -182,21 +182,34 @@ function HeroStoreButtons({ mounted }: { mounted: boolean }) {
   );
 }
 
-// ── Bottom store buttons (no QR) ──────────────────────────────
+// ── Bottom store buttons (with always-visible QR) ─────────────
 
 function BottomStoreButtons({ visible }: { visible: boolean }) {
   const { t } = useTranslation();
   const btn = 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-white hover:bg-gray-50 active:scale-95 text-gray-900 font-semibold text-sm transition-[background-color,transform] duration-150 hover:scale-105';
   return (
-    <div className={`flex flex-col sm:flex-row gap-3 justify-center ${fx(visible)}`} style={{ transitionDelay: '150ms' }}>
-      <a href={STORE_LINKS.ios} className={btn}>
-        <AppleIcon />
-        {t('marketing.downloadAppStore')}
-      </a>
-      <a href={STORE_LINKS.android} className={btn}>
-        <PlayIcon />
-        {t('marketing.downloadGooglePlay')}
-      </a>
+    <div className={`${fx(visible)}`} style={{ transitionDelay: '150ms' }}>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href={STORE_LINKS.ios} className={btn}>
+          <AppleIcon />
+          {t('marketing.downloadAppStore')}
+        </a>
+        <a href={STORE_LINKS.android} className={btn}>
+          <PlayIcon />
+          {t('marketing.downloadGooglePlay')}
+        </a>
+      </div>
+      {/* QR codes — always visible */}
+      <div className="flex justify-center gap-10 mt-8">
+        <div className="flex flex-col items-center gap-2">
+          <img src="/qr-ios.svg" alt="iOS QR code" className="w-20 h-20 rounded-xl" />
+          <p className="text-xs text-emerald-100">{t('marketing.downloadAppStore')}</p>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <img src="/qr-android.svg" alt="Android QR code" className="w-20 h-20 rounded-xl" />
+          <p className="text-xs text-emerald-100">{t('marketing.downloadGooglePlay')}</p>
+        </div>
+      </div>
     </div>
   );
 }
