@@ -470,9 +470,10 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
   );
 }
 
-function ScheduledSessionCard({ session, friends = [], onCancel, onSave }: {
+function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
   session: any;
   friends?: any[];
+  me?: { display_name: string; avatar_url?: string | null } | null;
   onCancel: () => void;
   onSave?: (data: { note?: string; starts_at?: number; ends_at?: number; recipient_ids?: string[] }) => void;
 }) {
@@ -585,6 +586,12 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onSave }: {
 
   return (
     <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl p-4">
+      {me && (
+        <div className="flex items-center gap-3 mb-3">
+          <Avatar name={me.display_name} url={me.avatar_url} size="md" />
+          <p className="font-semibold text-violet-900 dark:text-violet-100">{me.display_name}</p>
+        </div>
+      )}
       <p className="text-sm text-violet-700 dark:text-violet-300 font-medium mb-1">
         🕐 {formatTime(session.starts_at)} – {formatTimeShort(session.ends_at)}
       </p>
@@ -1147,6 +1154,7 @@ export default function Home() {
                 key={session.id}
                 session={session}
                 friends={friends as any[]}
+                me={user}
                 onCancel={() => cancelScheduled.mutate(session.id)}
                 onSave={data => updateScheduled.mutate({ id: session.id, data })}
               />
@@ -1515,6 +1523,7 @@ export default function Home() {
               key={session.id}
               session={session}
               friends={friends as any[]}
+              me={user}
               onCancel={() => cancelScheduled.mutate(session.id)}
               onSave={data => updateScheduled.mutate({ id: session.id, data })}
             />
