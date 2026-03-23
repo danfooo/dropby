@@ -4,8 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import Cropper from 'react-easy-crop';
 import { authApi, nudgesApi } from '../api';
-import { Capacitor } from '@capacitor/core';
-import { hasAskedNotifications, requestNotificationPermission } from '../utils/notifications';
+import { requestNotificationPermission } from '../utils/notifications';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -389,7 +388,7 @@ export default function Profile() {
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between mb-1">
             <h2 className="font-semibold text-gray-900 dark:text-gray-50">{t('profile.remindersTitle')}</h2>
-            <button onClick={() => { if (Capacitor.isNativePlatform() && !hasAskedNotifications()) requestNotificationPermission(); setShowAddNudge(true); }} className="text-sm text-emerald-600 font-medium">
+            <button onClick={() => { requestNotificationPermission(); setShowAddNudge(true); }} className="text-sm text-emerald-600 font-medium">
               {t('profile.addReminder')}
             </button>
           </div>
@@ -401,7 +400,7 @@ export default function Profile() {
                 {t(`profile.days.${suggestNextNudge([]).day}`)} {formatHour(suggestNextNudge([]).hour)}
               </span>
               <button
-                onClick={() => { if (Capacitor.isNativePlatform() && !hasAskedNotifications()) requestNotificationPermission(); addNudgeInline.mutate({ d: suggestNextNudge([]).day, h: suggestNextNudge([]).hour }); }}
+                onClick={() => { requestNotificationPermission(); addNudgeInline.mutate({ d: suggestNextNudge([]).day, h: suggestNextNudge([]).hour }); }}
                 disabled={addNudgeInline.isPending}
                 className="text-sm text-emerald-600 dark:text-emerald-400 font-medium px-3 py-1 bg-emerald-50 dark:bg-emerald-950 rounded-lg disabled:opacity-50"
               >
@@ -434,12 +433,12 @@ export default function Profile() {
             </div>
             <button
               onClick={() => {
-                if (Capacitor.isNativePlatform() && !hasAskedNotifications()) requestNotificationPermission();
+                requestNotificationPermission();
                 updateMe.mutate({ auto_nudge_enabled: !user?.auto_nudge_enabled });
               }}
-              className={`relative w-11 h-6 rounded-full transition-colors ${user?.auto_nudge_enabled && (!Capacitor.isNativePlatform() || hasAskedNotifications()) ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}
+              className={`relative w-11 h-6 rounded-full transition-colors ${user?.auto_nudge_enabled ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${user?.auto_nudge_enabled && (!Capacitor.isNativePlatform() || hasAskedNotifications()) ? 'translate-x-5' : ''}`} />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${user?.auto_nudge_enabled ? 'translate-x-5' : ''}`} />
             </button>
           </div>
         </div>

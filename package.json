@@ -22,6 +22,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@capacitor/ios": "^8.2.0"
+    "@capacitor/ios": "^8.2.0",
+    "@capacitor/push-notifications": "^8.0.2"
   }
 }

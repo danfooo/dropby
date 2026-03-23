@@ -1,12 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { authApi } from '../api';
 
-export const NOTIF_ASKED_KEY = 'dropby_notif_asked';
-
-export function hasAskedNotifications(): boolean {
-  return localStorage.getItem(NOTIF_ASKED_KEY) === '1';
-}
-
 let listenersSetup = false;
 
 async function setupListeners() {
@@ -22,8 +16,19 @@ async function setupListeners() {
   });
 }
 
+// Returns true if the interstitial should be shown (permission not yet decided)
+export async function shouldShowNotifPrompt(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  try {
+    const { PushNotifications } = await import('@capacitor/push-notifications');
+    const { receive } = await PushNotifications.checkPermissions();
+    return receive === 'prompt' || receive === 'prompt-with-rationale';
+  } catch {
+    return false;
+  }
+}
+
 export async function requestNotificationPermission(): Promise<void> {
-  localStorage.setItem(NOTIF_ASKED_KEY, '1');
   if (!Capacitor.isNativePlatform()) return;
   try {
     const { PushNotifications } = await import('@capacitor/push-notifications');
@@ -37,7 +42,7 @@ export async function requestNotificationPermission(): Promise<void> {
 }
 
 export async function reRegisterIfPermitted(): Promise<void> {
-  if (!Capacitor.isNativePlatform() || !hasAskedNotifications()) return;
+  if (!Capacitor.isNativePlatform()) return;
   try {
     const { PushNotifications } = await import('@capacitor/push-notifications');
     const permission = await PushNotifications.checkPermissions();

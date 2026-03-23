@@ -5,8 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
-import { Capacitor } from '@capacitor/core';
-import { hasAskedNotifications, requestNotificationPermission } from '../utils/notifications';
+import { shouldShowNotifPrompt, requestNotificationPermission } from '../utils/notifications';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 import UserMenu from '../components/UserMenu';
@@ -845,7 +844,7 @@ export default function Home() {
   });
 
   const sendGoing = async (statusId: string, rsvp: 'going' | 'maybe' = 'going') => {
-    if (Capacitor.isNativePlatform() && !hasAskedNotifications()) {
+    if (await shouldShowNotifPrompt()) {
       pendingAction.current = () => sendGoing(statusId, rsvp);
       setNotifSheet('going');
       return;
@@ -877,7 +876,7 @@ export default function Home() {
   };
 
   const handleOpen = async () => {
-    if (Capacitor.isNativePlatform() && !hasAskedNotifications()) {
+    if (await shouldShowNotifPrompt()) {
       pendingAction.current = doOpen;
       setNotifSheet('open');
       return;
@@ -964,7 +963,7 @@ export default function Home() {
 
         {/* Friend doors open now */}
         {openFriendDoors.length > 0 && (
-          <div className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-200/60 dark:border-fuchsia-900/60">
+          <div data-testid="friends-available" className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-200/60 dark:border-fuchsia-900/60">
             <h2 className="text-base font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
               {t('home.friendsAvailable')} ✨
             </h2>
