@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 // ── Animation helpers ─────────────────────────────────────────
 
-/** Returns [ref, inView] — fires once when element enters the viewport. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function useInView(threshold = 0.15): [React.RefObject<any>, boolean] {
   const ref = useRef<Element>(null);
@@ -22,7 +21,6 @@ function useInView(threshold = 0.15): [React.RefObject<any>, boolean] {
   return [ref as React.RefObject<any>, inView];
 }
 
-/** Tailwind classes for fade+slide-up transition. Use inline style for delay. */
 function fx(visible: boolean) {
   return `transition-[opacity,transform] duration-700 ease-out ${
     visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
@@ -47,40 +45,158 @@ function PlayIcon() {
   );
 }
 
-// ── Shared sub-components ─────────────────────────────────────
-
-function StoreButtons({ variant }: { variant: 'primary' | 'inverted' }) {
-  const { t } = useTranslation();
-  const btn =
-    variant === 'primary'
-      ? 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-semibold text-sm transition-[background-color,transform] duration-150 hover:scale-105'
-      : 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-white hover:bg-gray-50 active:scale-95 text-gray-900 font-semibold text-sm transition-[background-color,transform] duration-150 hover:scale-105';
+function GlobeIcon() {
   return (
-    <div className="flex flex-col sm:flex-row gap-3">
-      <a href="#" className={btn}>
-        <AppleIcon />
-        {t('marketing.downloadAppStore')}
-      </a>
-      <a href="#" className={btn}>
-        <PlayIcon />
-        {t('marketing.downloadGooglePlay')}
-      </a>
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a14.5 14.5 0 0 1 0 20M12 2a14.5 14.5 0 0 0 0 20M2 12h20" />
+    </svg>
+  );
+}
+
+// ── Language switcher ─────────────────────────────────────────
+
+const LANGUAGES = [
+  { code: 'en-US', label: 'English',      short: 'EN'    },
+  { code: 'en-GB', label: 'English (UK)', short: 'EN·GB' },
+  { code: 'de',    label: 'Deutsch',      short: 'DE'    },
+  { code: 'es',    label: 'Español',      short: 'ES'    },
+  { code: 'fr',    label: 'Français',     short: 'FR'    },
+  { code: 'sv',    label: 'Svenska',      short: 'SV'    },
+];
+
+function LanguageSwitcher() {
+  const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const current = LANGUAGES.find(l => l.code === i18n.language) ?? LANGUAGES[0];
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        aria-label="Change language"
+      >
+        <GlobeIcon />
+        {current.short}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-fade-in">
+          {LANGUAGES.map(lang => (
+            <button
+              key={lang.code}
+              onClick={() => { i18n.changeLanguage(lang.code); setOpen(false); }}
+              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                lang.code === i18n.language
+                  ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-semibold'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              {lang.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function QrBlock({ variant }: { variant: 'primary' | 'inverted' }) {
-  const labelClass = variant === 'primary' ? 'text-gray-400 dark:text-gray-500' : 'text-emerald-100';
+// ── Hero store buttons with QR reveal ────────────────────────
+
+const STORE_LINKS = {
+  ios:     '#', // TODO: replace with App Store URL
+  android: '#', // TODO: replace with Google Play URL
+};
+
+function HeroStoreButtons({ mounted }: { mounted: boolean }) {
+  const { t } = useTranslation();
+  const [activeStore, setActiveStore] = useState<'ios' | 'android' | null>(null);
+
+  const toggle = (store: 'ios' | 'android') => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveStore(prev => prev === store ? null : store);
+  };
+
+  const btnBase = 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full font-semibold text-sm transition-[background-color,transform,box-shadow] duration-150 hover:scale-105 active:scale-95';
+  const btnActive = `${btnBase} bg-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-emerald-900`;
+  const btnIdle   = `${btnBase} bg-emerald-500 hover:bg-emerald-400 text-white`;
+
   return (
-    <div className="hidden md:flex gap-8 mt-6">
-      <div className="flex flex-col items-center gap-2">
-        <img src="/qr-ios.svg" alt="QR code — App Store" className="w-20 h-20 rounded-lg" />
-        <span className={`text-xs ${labelClass}`}>App Store</span>
+    <div className={fx(mounted)} style={{ transitionDelay: '350ms' }}>
+      {/* Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href={STORE_LINKS.ios} onClick={toggle('ios')}
+          className={activeStore === 'ios' ? btnActive : btnIdle}>
+          <AppleIcon />
+          {t('marketing.downloadAppStore')}
+        </a>
+        <a href={STORE_LINKS.android} onClick={toggle('android')}
+          className={activeStore === 'android' ? btnActive : btnIdle}>
+          <PlayIcon />
+          {t('marketing.downloadGooglePlay')}
+        </a>
       </div>
-      <div className="flex flex-col items-center gap-2">
-        <img src="/qr-android.svg" alt="QR code — Google Play" className="w-20 h-20 rounded-lg" />
-        <span className={`text-xs ${labelClass}`}>Google Play</span>
+
+      {/* QR reveal panel — expands below the buttons */}
+      <div
+        className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-out ${
+          activeStore ? 'max-h-56 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <img
+            src={activeStore === 'ios' ? '/qr-ios.svg' : '/qr-android.svg'}
+            alt="QR code"
+            className="w-28 h-28 rounded-xl shadow-md"
+          />
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            {t('marketing.scanWithPhone')}
+          </p>
+          <a
+            href={activeStore === 'ios' ? STORE_LINKS.ios : STORE_LINKS.android}
+            className="text-sm font-medium text-emerald-500 hover:text-emerald-400 transition-colors"
+          >
+            {activeStore === 'ios'
+              ? t('marketing.downloadAppStore')
+              : t('marketing.downloadGooglePlay')
+            } →
+          </a>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ── Bottom store buttons (no QR) ──────────────────────────────
+
+function BottomStoreButtons({ visible }: { visible: boolean }) {
+  const { t } = useTranslation();
+  const btn = 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-white hover:bg-gray-50 active:scale-95 text-gray-900 font-semibold text-sm transition-[background-color,transform] duration-150 hover:scale-105';
+  return (
+    <div className={`flex flex-col sm:flex-row gap-3 justify-center ${fx(visible)}`} style={{ transitionDelay: '150ms' }}>
+      <a href={STORE_LINKS.ios} className={btn}>
+        <AppleIcon />
+        {t('marketing.downloadAppStore')}
+      </a>
+      <a href={STORE_LINKS.android} className={btn}>
+        <PlayIcon />
+        {t('marketing.downloadGooglePlay')}
+      </a>
     </div>
   );
 }
@@ -90,14 +206,12 @@ function QrBlock({ variant }: { variant: 'primary' | 'inverted' }) {
 export default function Get() {
   const { t } = useTranslation();
 
-  // Hero mounts with a stagger — small timeout lets transitions fire
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 60);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(timer);
   }, []);
 
-  // Scroll sections
   const [problemRef, problemIn] = useInView();
   const [howRef, howIn] = useInView();
   const [step1Ref, step1In] = useInView(0.2);
@@ -114,6 +228,11 @@ export default function Get() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
+
+      {/* ── Language switcher — fixed top-right ──────────────── */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
 
       {/* ── 1: Hero ──────────────────────────────────────────── */}
       <section className="min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center">
@@ -134,10 +253,7 @@ export default function Get() {
         >
           {t('marketing.tagline2')}
         </p>
-        <div className={fx(mounted)} style={{ transitionDelay: '350ms' }}>
-          <StoreButtons variant="primary" />
-          <QrBlock variant="primary" />
-        </div>
+        <HeroStoreButtons mounted={mounted} />
         <Link
           to="/auth"
           className={`mt-8 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ${fx(mounted)}`}
@@ -234,16 +350,11 @@ export default function Get() {
         <h2 className={`text-3xl md:text-4xl font-bold text-white mb-10 ${fx(bottomIn)}`}>
           {t('marketing.bottomHeadline')}
         </h2>
-        <div className={`flex justify-center ${fx(bottomIn)}`} style={{ transitionDelay: '150ms' }}>
-          <StoreButtons variant="inverted" />
-        </div>
-        <div className={`flex justify-center ${fx(bottomIn)}`} style={{ transitionDelay: '250ms' }}>
-          <QrBlock variant="inverted" />
-        </div>
+        <BottomStoreButtons visible={bottomIn} />
         <Link
           to="/auth"
           className={`mt-8 inline-block text-sm text-emerald-100 hover:text-white transition-colors ${fx(bottomIn)}`}
-          style={{ transitionDelay: '350ms' }}
+          style={{ transitionDelay: '300ms' }}
         >
           {t('marketing.webFallback')} →
         </Link>
