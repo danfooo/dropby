@@ -99,9 +99,8 @@ function getApnsJwt(teamId: string, keyId: string, privateKey: string): string {
 }
 
 function getApnsSession(): http2.ClientHttp2Session {
-  const host = process.env.NODE_ENV === 'production'
-    ? 'https://api.push.apple.com'
-    : 'https://api.sandbox.push.apple.com';
+  const sandbox = process.env.APNS_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
+  const host = sandbox ? 'https://api.sandbox.push.apple.com' : 'https://api.push.apple.com';
   if (apnsSession && !apnsSession.destroyed && !apnsSession.closed) return apnsSession;
   apnsSession = http2.connect(host);
   apnsSession.on('error', (err) => {
@@ -124,7 +123,8 @@ async function sendApns(token: string, payload: PushPayload): Promise<void> {
 
   const jwt = getApnsJwt(teamId, keyId, privateKey);
   const session = getApnsSession();
-  const host = process.env.NODE_ENV === 'production' ? 'api.push.apple.com' : 'api.sandbox.push.apple.com';
+  const sandbox = process.env.APNS_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
+  const host = sandbox ? 'api.sandbox.push.apple.com' : 'api.push.apple.com';
 
   const apnsBody = JSON.stringify({
     aps: {
