@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { useAuthStore } from './stores/auth';
 import { authApi } from './api';
 import { useSSE } from './hooks/useSSE';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import Landing from './pages/Landing';
+import Get from './pages/Get';
 import Auth from './pages/Auth';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
@@ -47,7 +49,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={user ? <Navigate to="/home" /> : <Landing />} />
+      <Route path="/" element={user ? <Navigate to="/home" /> : (Capacitor.isNativePlatform() ? <Landing /> : <Get />)} />
       <Route path="/auth" element={user ? <Navigate to="/home" /> : <Auth />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/reset-password" element={<ResetPassword />} />

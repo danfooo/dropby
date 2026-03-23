@@ -1,4 +1,26 @@
 {
+  "marketing": {
+    "tagline": "Antes simplemente aparecías.",
+    "tagline2": "Hemos creado algo para eso.",
+    "problemHeadline": "Estamos más conectados que nunca.",
+    "problemLine2": "Y sin embargo, más difíciles de alcanzar.",
+    "problemBody": "Sigues la vida de tus amigos en pantalla. Simplemente ya no acabáis en la misma habitación.",
+    "problemCoda": "dropby es el puente de vuelta.",
+    "howHeadline": "Funciona como la gente realmente funciona.",
+    "howSubline": "En casa, en el parque, en la cancha — donde estés.",
+    "step1Title": "Abre tu puerta",
+    "step1Desc": "Un toque dice que estás disponible — ahora mismo o a una hora que elijas. Tus amigos reciben una notificación.",
+    "step2Title": "Ve quién está libre",
+    "step2Desc": "Cuando un amigo abre su puerta, lo verás. Sin preguntar. Sin planificar.",
+    "step3Title": "Di que vas",
+    "step3Desc": "Un toque. Sabrán que estás interesado. El resto de la conversación ocurre donde siempre.",
+    "socialCaption": "Personas reales, tiempo real, sin ceremonias.",
+    "bottomHeadline": "Deja el móvil por la razón correcta.",
+    "downloadAppStore": "Descargar en App Store",
+    "downloadGooglePlay": "Obtener en Google Play",
+    "scanWithPhone": "Escanear con tu móvil",
+    "webFallback": "o usar la versión web"
+  },
   "landing": {
     "tagline": "Ve a tus amigos más.",
     "subtagline": "Abre tu puerta cuando estés libre — de forma espontánea o planificada — y avisa a los amigos que quieras.",

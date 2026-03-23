@@ -1,4 +1,26 @@
 {
+  "marketing": {
+    "tagline": "You used to just show up.",
+    "tagline2": "We built something for that.",
+    "problemHeadline": "We're more connected than ever.",
+    "problemLine2": "And somehow harder to reach.",
+    "problemBody": "You follow each other's lives on a screen. You just don't end up in the same room any more.",
+    "problemCoda": "dropby is a bridge back.",
+    "howHeadline": "It works the way people actually work.",
+    "howSubline": "At home, in the park, a basketball court — wherever you happen to be.",
+    "step1Title": "Open your door",
+    "step1Desc": "One tap says you're around — right now, or at a time you pick. Your friends get notified.",
+    "step2Title": "See who's free",
+    "step2Desc": "When a friend opens their door, you'll see it. No asking. No planning required.",
+    "step3Title": "Say you're coming",
+    "step3Desc": "One tap. They'll know you're interested. The rest of the conversation happens wherever it usually does.",
+    "socialCaption": "Real people, real time, no ceremony.",
+    "bottomHeadline": "Put your phone down for the right reason.",
+    "downloadAppStore": "Download on the App Store",
+    "downloadGooglePlay": "Get it on Google Play",
+    "scanWithPhone": "Scan with your phone",
+    "webFallback": "or try the web version"
+  },
   "landing": {
     "tagline": "See your friends more.",
     "subtagline": "Open your door whenever you're free — spontaneously or planned — and let the right friends know.",

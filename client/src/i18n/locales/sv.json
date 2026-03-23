@@ -1,4 +1,26 @@
 {
+  "marketing": {
+    "tagline": "Förr dök man bara upp.",
+    "tagline2": "Vi har byggt något för det.",
+    "problemHeadline": "Vi är mer uppkopplade än någonsin.",
+    "problemLine2": "Och ändå svårare att nå.",
+    "problemBody": "Du följer dina vänners liv på en skärm. Ni hamnar bara inte i samma rum längre.",
+    "problemCoda": "dropby är bryggan tillbaka.",
+    "howHeadline": "Det fungerar som folk faktiskt fungerar.",
+    "howSubline": "Hemma, i parken, på basketplanen — var du än är.",
+    "step1Title": "Öppna din dörr",
+    "step1Desc": "Ett tryck säger att du är tillgänglig — just nu eller vid en tid du väljer. Dina vänner får en notis.",
+    "step2Title": "Se vem som är ledig",
+    "step2Desc": "När en vän öppnar sin dörr ser du det. Inget frågande. Ingen planering krävs.",
+    "step3Title": "Säg att du kommer",
+    "step3Desc": "Ett tryck. De vet att du är intresserad. Resten av konversationen sker som den brukar.",
+    "socialCaption": "Riktiga människor, realtid, utan ceremonier.",
+    "bottomHeadline": "Lägg ner telefonen av rätt anledning.",
+    "downloadAppStore": "Ladda ner på App Store",
+    "downloadGooglePlay": "Hämta på Google Play",
+    "scanWithPhone": "Skanna med din telefon",
+    "webFallback": "eller använd webbversionen"
+  },
   "landing": {
     "tagline": "Se dina vänner mer.",
     "subtagline": "Öppna din dörr när du är ledig — spontant eller planerat — och låt rätt vänner veta.",

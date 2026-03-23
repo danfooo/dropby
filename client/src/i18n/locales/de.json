@@ -1,4 +1,26 @@
 {
+  "marketing": {
+    "tagline": "Früher bist du einfach vorbeigekommen.",
+    "tagline2": "Wir haben etwas dafür gebaut.",
+    "problemHeadline": "Wir sind vernetzter als je zuvor.",
+    "problemLine2": "Und irgendwie schwerer zu erreichen.",
+    "problemBody": "Du verfolgst das Leben deiner Freunde auf dem Bildschirm. Ihr landet nur nicht mehr im selben Raum.",
+    "problemCoda": "dropby ist die Brücke zurück.",
+    "howHeadline": "Es funktioniert, wie Menschen wirklich funktionieren.",
+    "howSubline": "Zuhause, im Park, auf dem Basketballplatz — wo auch immer du gerade bist.",
+    "step1Title": "Öffne deine Tür",
+    "step1Desc": "Ein Tipper sagt, dass du da bist — jetzt sofort oder zu einem Zeitpunkt deiner Wahl. Deine Freunde werden benachrichtigt.",
+    "step2Title": "Sieh, wer frei ist",
+    "step2Desc": "Wenn ein Freund seine Tür öffnet, siehst du es. Kein Fragen. Kein Planen nötig.",
+    "step3Title": "Sag, dass du kommst",
+    "step3Desc": "Ein Tipper. Sie wissen, dass du Interesse hast. Der Rest läuft dort weiter, wo eure Gespräche sonst auch stattfinden.",
+    "socialCaption": "Echte Menschen, echte Zeit, keine Umstände.",
+    "bottomHeadline": "Leg das Handy für den richtigen Grund weg.",
+    "downloadAppStore": "Im App Store laden",
+    "downloadGooglePlay": "Bei Google Play laden",
+    "scanWithPhone": "Mit dem Handy scannen",
+    "webFallback": "oder die Web-Version nutzen"
+  },
   "landing": {
     "tagline": "Sieh deine Freunde öfter.",
     "subtagline": "Öffne deine Tür, wann immer du frei bist — spontan oder geplant — und lass die richtigen Freunde wissen.",

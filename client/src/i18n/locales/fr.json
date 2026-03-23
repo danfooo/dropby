@@ -1,4 +1,26 @@
 {
+  "marketing": {
+    "tagline": "Avant, tu passais simplement.",
+    "tagline2": "Nous avons créé quelque chose pour ça.",
+    "problemHeadline": "Nous sommes plus connectés que jamais.",
+    "problemLine2": "Et pourtant, plus difficiles à rejoindre.",
+    "problemBody": "Tu suis la vie de tes amis sur un écran. Vous ne vous retrouvez tout simplement plus dans la même pièce.",
+    "problemCoda": "dropby est le pont vers le retour.",
+    "howHeadline": "Ça fonctionne comme les gens fonctionnent vraiment.",
+    "howSubline": "Chez toi, au parc, sur le terrain de basket — où que tu sois.",
+    "step1Title": "Ouvre ta porte",
+    "step1Desc": "Un tapotement dit que tu es disponible — tout de suite ou à un moment que tu choisis. Tes amis sont notifiés.",
+    "step2Title": "Vois qui est libre",
+    "step2Desc": "Quand un ami ouvre sa porte, tu le verras. Sans demander. Sans planifier.",
+    "step3Title": "Dis que tu viens",
+    "step3Desc": "Un tapotement. Ils sauront que tu es intéressé. La suite se passe là où vos conversations ont lieu d'habitude.",
+    "socialCaption": "De vraies personnes, en temps réel, sans cérémonie.",
+    "bottomHeadline": "Pose ton téléphone pour la bonne raison.",
+    "downloadAppStore": "Télécharger sur l'App Store",
+    "downloadGooglePlay": "Obtenir sur Google Play",
+    "scanWithPhone": "Scanner avec ton téléphone",
+    "webFallback": "ou utiliser la version web"
+  },
   "landing": {
     "tagline": "Vois tes amis plus souvent.",
     "subtagline": "Ouvre ta porte quand tu es libre — spontanément ou en planifiant — et préviens les bonnes personnes.",
