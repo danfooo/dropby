@@ -12,7 +12,7 @@
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui",
     "cap:init": "npx cap sync",
-    "db:snapshot": "DIR=db-snapshot-$(date +%Y%m%d-%H%M%S) && mkdir -p $DIR && fly ssh sftp get /app/server/data/drop-by.db $DIR/drop-by.db && fly ssh sftp get /app/server/data/drop-by.db-wal $DIR/drop-by.db-wal && fly ssh sftp get /app/server/data/drop-by.db-shm $DIR/drop-by.db-shm && echo \"Snapshot saved to $DIR\""
+    "db:snapshot": "DIR=db-snapshot-$(date +%Y%m%d-%H%M%S) && mkdir -p $DIR && fly ssh sftp get /app/server/data/drop-by.db $DIR/drop-by.db && fly ssh sftp get /app/server/data/drop-by.db-wal $DIR/drop-by.db-wal && fly ssh sftp get /app/server/data/drop-by.db-shm $DIR/drop-by.db-shm && echo \"Snapshot saved to $DIR\" && open -a TablePlus $DIR/drop-by.db"
   },
   "devDependencies": {
     "@capacitor/android": "^8.2.0",
@@ -20,5 +20,8 @@
     "@playwright/test": "^1.58.2",
     "concurrently": "^8.2.2",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@capacitor/ios": "^8.2.0"
   }
 }
