@@ -1,5 +1,35 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+
+// ── Animation helpers ─────────────────────────────────────────
+
+/** Returns [ref, inView] — fires once when element enters the viewport. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function useInView(threshold = 0.15): [React.RefObject<any>, boolean] {
+  const ref = useRef<Element>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref as React.RefObject<any>, inView];
+}
+
+/** Tailwind classes for fade+slide-up transition. Use inline style for delay. */
+function fx(visible: boolean) {
+  return `transition-[opacity,transform] duration-700 ease-out ${
+    visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+  }`;
+}
+
+// ── Icons ─────────────────────────────────────────────────────
 
 function AppleIcon() {
   return (
@@ -17,12 +47,14 @@ function PlayIcon() {
   );
 }
 
+// ── Shared sub-components ─────────────────────────────────────
+
 function StoreButtons({ variant }: { variant: 'primary' | 'inverted' }) {
   const { t } = useTranslation();
   const btn =
     variant === 'primary'
-      ? 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-sm transition-colors'
-      : 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm transition-colors';
+      ? 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-semibold text-sm transition-[background-color,transform] duration-150 hover:scale-105'
+      : 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-white hover:bg-gray-50 active:scale-95 text-gray-900 font-semibold text-sm transition-[background-color,transform] duration-150 hover:scale-105';
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       <a href="#" className={btn}>
@@ -38,7 +70,6 @@ function StoreButtons({ variant }: { variant: 'primary' | 'inverted' }) {
 }
 
 function QrBlock({ variant }: { variant: 'primary' | 'inverted' }) {
-  const { t } = useTranslation();
   const labelClass = variant === 'primary' ? 'text-gray-400 dark:text-gray-500' : 'text-emerald-100';
   return (
     <div className="hidden md:flex gap-8 mt-6">
@@ -54,13 +85,31 @@ function QrBlock({ variant }: { variant: 'primary' | 'inverted' }) {
   );
 }
 
+// ── Page ──────────────────────────────────────────────────────
+
 export default function Get() {
   const { t } = useTranslation();
 
+  // Hero mounts with a stagger — small timeout lets transitions fire
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Scroll sections
+  const [problemRef, problemIn] = useInView();
+  const [howRef, howIn] = useInView();
+  const [step1Ref, step1In] = useInView(0.2);
+  const [step2Ref, step2In] = useInView(0.2);
+  const [step3Ref, step3In] = useInView(0.2);
+  const [cardRef, cardIn] = useInView(0.2);
+  const [bottomRef, bottomIn] = useInView();
+
   const steps = [
-    { icon: '🚪', titleKey: 'marketing.step1Title', descKey: 'marketing.step1Desc' },
-    { icon: '👀', titleKey: 'marketing.step2Title', descKey: 'marketing.step2Desc' },
-    { icon: '🏃', titleKey: 'marketing.step3Title', descKey: 'marketing.step3Desc' },
+    { icon: '🚪', titleKey: 'marketing.step1Title', descKey: 'marketing.step1Desc', ref: step1Ref, inView: step1In },
+    { icon: '👀', titleKey: 'marketing.step2Title', descKey: 'marketing.step2Desc', ref: step2Ref, inView: step2In },
+    { icon: '🏃', titleKey: 'marketing.step3Title', descKey: 'marketing.step3Desc', ref: step3Ref, inView: step3In },
   ];
 
   return (
@@ -68,36 +117,49 @@ export default function Get() {
 
       {/* ── 1: Hero ──────────────────────────────────────────── */}
       <section className="min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center">
-        <img src="/logo-icon.svg" alt="dropby" className="w-16 h-16 mb-6 dark:invert" />
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-50 leading-tight mb-3">
+        <img
+          src="/logo-icon.svg" alt="dropby"
+          className={`w-16 h-16 mb-6 dark:invert ${fx(mounted)}`}
+          style={{ transitionDelay: '0ms' }}
+        />
+        <h1
+          className={`text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-50 leading-tight mb-3 ${fx(mounted)}`}
+          style={{ transitionDelay: '100ms' }}
+        >
           {t('marketing.tagline')}
         </h1>
-        <p className="text-xl md:text-2xl font-semibold text-gray-500 dark:text-gray-400 mb-10">
+        <p
+          className={`text-xl md:text-2xl font-semibold text-gray-500 dark:text-gray-400 mb-10 ${fx(mounted)}`}
+          style={{ transitionDelay: '200ms' }}
+        >
           {t('marketing.tagline2')}
         </p>
-        <StoreButtons variant="primary" />
-        <QrBlock variant="primary" />
+        <div className={fx(mounted)} style={{ transitionDelay: '350ms' }}>
+          <StoreButtons variant="primary" />
+          <QrBlock variant="primary" />
+        </div>
         <Link
           to="/auth"
-          className="mt-8 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          className={`mt-8 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ${fx(mounted)}`}
+          style={{ transitionDelay: '500ms' }}
         >
           {t('marketing.webFallback')} →
         </Link>
       </section>
 
       {/* ── 2: The problem ───────────────────────────────────── */}
-      <section className="px-6 py-20 bg-gray-50 dark:bg-gray-900">
+      <section ref={problemRef} className="px-6 py-20 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-xl mx-auto text-center">
-          <p className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-50 leading-snug mb-2">
+          <p className={`text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-50 leading-snug mb-2 ${fx(problemIn)}`} style={{ transitionDelay: '0ms' }}>
             {t('marketing.problemHeadline')}
           </p>
-          <p className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-50 leading-snug mb-8">
+          <p className={`text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-50 leading-snug mb-8 ${fx(problemIn)}`} style={{ transitionDelay: '100ms' }}>
             {t('marketing.problemLine2')}
           </p>
-          <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed mb-8">
+          <p className={`text-lg text-gray-500 dark:text-gray-400 leading-relaxed mb-8 ${fx(problemIn)}`} style={{ transitionDelay: '200ms' }}>
             {t('marketing.problemBody')}
           </p>
-          <p className="text-lg font-semibold text-emerald-500">
+          <p className={`text-lg font-semibold text-emerald-500 ${fx(problemIn)}`} style={{ transitionDelay: '320ms' }}>
             {t('marketing.problemCoda')}
           </p>
         </div>
@@ -106,17 +168,22 @@ export default function Get() {
       {/* ── 3: How it works ──────────────────────────────────── */}
       <section className="px-6 py-20 bg-white dark:bg-gray-950">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-3">
+          <div ref={howRef} className="text-center mb-12">
+            <h2 className={`text-3xl font-bold text-gray-900 dark:text-gray-50 mb-3 ${fx(howIn)}`}>
               {t('marketing.howHeadline')}
             </h2>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
+            <p className={`text-sm text-gray-400 dark:text-gray-500 ${fx(howIn)}`} style={{ transitionDelay: '100ms' }}>
               {t('marketing.howSubline')}
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-10">
-            {steps.map(step => (
-              <div key={step.titleKey} className="flex flex-col items-start md:items-center md:text-center">
+            {steps.map((step, i) => (
+              <div
+                key={step.titleKey}
+                ref={step.ref}
+                className={`flex flex-col items-start md:items-center md:text-center ${fx(step.inView)}`}
+                style={{ transitionDelay: `${i * 120}ms` }}
+              >
                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-2xl mb-4 flex-shrink-0">
                   {step.icon}
                 </div>
@@ -131,7 +198,13 @@ export default function Get() {
       {/* ── 4: Mock in-app moment ────────────────────────────── */}
       <section className="px-6 py-20 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-xs mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md border border-gray-100 dark:border-gray-700 mb-8">
+          <div
+            ref={cardRef}
+            className={`bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md border border-gray-100 dark:border-gray-700 mb-8 transition-[opacity,transform] duration-700 ease-out ${
+              cardIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+            style={{ animation: cardIn ? 'float 4s ease-in-out 0.8s infinite' : undefined }}
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                 S
@@ -150,26 +223,27 @@ export default function Get() {
               </div>
             </div>
           </div>
-          <p className="text-center text-gray-500 dark:text-gray-400 text-base">
+          <p className={`text-center text-gray-500 dark:text-gray-400 text-base ${fx(cardIn)}`} style={{ transitionDelay: '200ms' }}>
             {t('marketing.socialCaption')}
           </p>
         </div>
       </section>
 
       {/* ── 5: Bottom CTA band ───────────────────────────────── */}
-      <section className="bg-emerald-500 px-6 py-20 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-10">
+      <section ref={bottomRef} className="bg-emerald-500 px-6 py-20 text-center">
+        <h2 className={`text-3xl md:text-4xl font-bold text-white mb-10 ${fx(bottomIn)}`}>
           {t('marketing.bottomHeadline')}
         </h2>
-        <div className="flex justify-center">
+        <div className={`flex justify-center ${fx(bottomIn)}`} style={{ transitionDelay: '150ms' }}>
           <StoreButtons variant="inverted" />
         </div>
-        <div className="flex justify-center">
+        <div className={`flex justify-center ${fx(bottomIn)}`} style={{ transitionDelay: '250ms' }}>
           <QrBlock variant="inverted" />
         </div>
         <Link
           to="/auth"
-          className="mt-8 inline-block text-sm text-emerald-100 hover:text-white transition-colors"
+          className={`mt-8 inline-block text-sm text-emerald-100 hover:text-white transition-colors ${fx(bottomIn)}`}
+          style={{ transitionDelay: '350ms' }}
         >
           {t('marketing.webFallback')} →
         </Link>
