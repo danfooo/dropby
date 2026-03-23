@@ -26,6 +26,36 @@ function formatTimeShort(ts: number): string {
   return format(new Date(ts * 1000), 'h:mm a');
 }
 
+function getScheduleGroup(startsAt: number): string {
+  const msDay = 86400000;
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const ts = new Date(startsAt * 1000).getTime();
+  if (ts < todayMidnight + 2 * msDay) return 'tomorrow';
+  const dow = new Date(todayMidnight).getDay(); // 0=Sun
+  const nextMon = todayMidnight + (dow === 0 ? 1 : 8 - dow) * msDay;
+  if (ts < nextMon) return 'this_week';
+  if (ts < nextMon + 7 * msDay) return 'next_week';
+  const date = new Date(startsAt * 1000);
+  return format(date, date.getFullYear() === now.getFullYear() ? 'MMMM' : 'MMMM yyyy');
+}
+
+function groupScheduledDoors(doors: any[]): { key: string; doors: any[] }[] {
+  const sorted = [...doors].sort((a, b) => a.starts_at - b.starts_at);
+  const groups: { key: string; doors: any[] }[] = [];
+  const seen = new Map<string, { key: string; doors: any[] }>();
+  for (const door of sorted) {
+    const key = getScheduleGroup(door.starts_at);
+    if (!seen.has(key)) {
+      const group = { key, doors: [] };
+      groups.push(group);
+      seen.set(key, group);
+    }
+    seen.get(key)!.doors.push(door);
+  }
+  return groups;
+}
+
 // Friend status card (door open or upcoming)
 function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: string, rsvp: 'going' | 'maybe') => void }) {
   const { t } = useTranslation();
@@ -813,6 +843,7 @@ export default function Home() {
   };
 
   const handleOpen = async () => {
+    console.log('[handleOpen] isNative:', Capacitor.isNativePlatform(), 'hasAsked:', hasAskedNotifications());
     if (Capacitor.isNativePlatform() && !hasAskedNotifications()) {
       pendingAction.current = doOpen;
       setNotifSheet('open');
@@ -878,6 +909,12 @@ export default function Home() {
       .sort((a: any, b: any) => (b.friendship_created_at ?? 0) - (a.friendship_created_at ?? 0));
   }, [friends]);
 
+  const nowTs = Math.floor(Date.now() / 1000);
+  const openFriendDoors = (friendStatuses as any[]).filter((s: any) => !s.starts_at || s.starts_at <= nowTs);
+  const scheduledFriendGroups = groupScheduledDoors(
+    (friendStatuses as any[]).filter((s: any) => s.starts_at && s.starts_at > nowTs)
+  );
+
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {
     const scheduleButtonLabel = scheduleEnabled
@@ -892,14 +929,14 @@ export default function Home() {
         </div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-6 mt-5">{getGreeting(t)}</h1>
 
-        {/* Friend doors open / upcoming */}
-        {(friendStatuses as any[]).length > 0 && (
+        {/* Friend doors open now */}
+        {openFriendDoors.length > 0 && (
           <div className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-200/60 dark:border-fuchsia-900/60">
             <h2 className="text-base font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
               {t('home.friendsAvailable')} ✨
             </h2>
             <div className="space-y-3">
-              {(friendStatuses as any[]).map((s: any) => (
+              {openFriendDoors.map((s: any) => (
                 <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
               ))}
             </div>
@@ -1099,6 +1136,28 @@ export default function Home() {
           </div>
         )}
 
+        {/* Scheduled friend doors — grouped by when they open */}
+        {scheduledFriendGroups.length > 0 && (
+          <div className="mt-6">
+            {scheduledFriendGroups.map(({ key, doors }) => {
+              const label = key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
+                : key === 'this_week' ? t('home.scheduledGroupThisWeek')
+                : key === 'next_week' ? t('home.scheduledGroupNextWeek')
+                : key;
+              return (
+                <div key={key} className="mb-4">
+                  <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{label}</h2>
+                  <div className="space-y-3">
+                    {doors.map((s: any) => (
+                      <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <TipsSection />
 
         {calendarToast && (
@@ -1249,14 +1308,14 @@ export default function Home() {
         <UserMenu />
       </div>
 
-      {/* Friend doors also open / upcoming */}
-      {(friendStatuses as any[]).length > 0 && (
+      {/* Friend doors also open now */}
+      {openFriendDoors.length > 0 && (
         <div className="mb-6">
           <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
             {t('home.alsoAvailable')}
           </h2>
           <div className="space-y-3">
-            {(friendStatuses as any[]).map((s: any) => (
+            {openFriendDoors.map((s: any) => (
               <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
             ))}
           </div>
@@ -1438,6 +1497,28 @@ export default function Home() {
               onSave={data => updateScheduled.mutate({ id: session.id, data })}
             />
           ))}
+        </div>
+      )}
+
+      {/* Scheduled friend doors — grouped by when they open */}
+      {scheduledFriendGroups.length > 0 && (
+        <div className="mt-6">
+          {scheduledFriendGroups.map(({ key, doors }) => {
+            const label = key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
+              : key === 'this_week' ? t('home.scheduledGroupThisWeek')
+              : key === 'next_week' ? t('home.scheduledGroupNextWeek')
+              : key;
+            return (
+              <div key={key} className="mb-4">
+                <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{label}</h2>
+                <div className="space-y-3">
+                  {doors.map((s: any) => (
+                    <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
