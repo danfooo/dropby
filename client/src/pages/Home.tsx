@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -469,11 +470,10 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
   );
 }
 
-function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave }: {
+function ScheduledSessionCard({ session, friends = [], onCancel, onSave }: {
   session: any;
   friends?: any[];
   onCancel: () => void;
-  onOpen?: () => void;
   onSave?: (data: { note?: string; starts_at?: number; ends_at?: number; recipient_ids?: string[] }) => void;
 }) {
   const { t } = useTranslation();
@@ -599,7 +599,7 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
         </p>
       )}
       <a
-        href={`/api/status/${session.id}/calendar.ics`}
+        href={`${Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : ''}/api/status/${session.id}/calendar.ics`}
         download
         onClick={() => localStorage.setItem(icsKey, '1')}
         className="inline-block text-xs text-violet-500 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 mb-3"
@@ -607,14 +607,6 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
         {t('home.addToCalendar')}
       </a>
       <div className="flex gap-2">
-        {onOpen && (
-          <button
-            onClick={onOpen}
-            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2 rounded-xl text-sm font-semibold"
-          >
-            {t('home.scheduleOpenNow')}
-          </button>
-        )}
         <button
           onClick={() => setEditing(true)}
           className="px-4 py-2 text-sm text-violet-600 hover:text-violet-800 font-medium"
@@ -811,15 +803,6 @@ export default function Home() {
   const revokeInvite = useMutation({
     mutationFn: (token: string) => invitesApi.revoke(token),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
-  });
-
-  const activateScheduled = useMutation({
-    mutationFn: (id: string) => statusApi.activate(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['myStatus'] });
-      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
-      setView('open');
-    },
   });
 
   const cancelScheduled = useMutation({
@@ -1164,7 +1147,6 @@ export default function Home() {
                 key={session.id}
                 session={session}
                 friends={friends as any[]}
-                onOpen={() => activateScheduled.mutate(session.id)}
                 onCancel={() => cancelScheduled.mutate(session.id)}
                 onSave={data => updateScheduled.mutate({ id: session.id, data })}
               />
