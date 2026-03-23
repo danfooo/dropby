@@ -79,7 +79,9 @@
   },
   "common": {
     "cancel": "Avbryt",
-    "done": "Klar"
+    "done": "Klar",
+    "appBannerText": "Du vet inte när en vän öppnar sin dörr utan appen.",
+    "appBannerCta": "Skaffa appen"
   },
   "home": {
     "greeting": "Hej, {{name}} 👋",

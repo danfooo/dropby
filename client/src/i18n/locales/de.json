@@ -79,7 +79,9 @@
   },
   "common": {
     "cancel": "Abbrechen",
-    "done": "Fertig"
+    "done": "Fertig",
+    "appBannerText": "Du erfährst nicht, wenn ein Freund seine Tür öffnet — ohne die App.",
+    "appBannerCta": "App holen"
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",

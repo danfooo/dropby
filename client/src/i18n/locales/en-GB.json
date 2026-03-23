@@ -79,7 +79,9 @@
   },
   "common": {
     "cancel": "Cancel",
-    "done": "Done"
+    "done": "Done",
+    "appBannerText": "You won't know when a friend opens their door without the app.",
+    "appBannerCta": "Get the app"
   },
   "home": {
     "greeting": "Hey, {{name}} 👋",

@@ -79,7 +79,9 @@
   },
   "common": {
     "cancel": "Annuler",
-    "done": "Terminé"
+    "done": "Terminé",
+    "appBannerText": "Tu ne sauras pas quand un ami ouvre sa porte sans l'appli.",
+    "appBannerCta": "Obtenir l'appli"
   },
   "home": {
     "greeting": "Salut, {{name}} 👋",
