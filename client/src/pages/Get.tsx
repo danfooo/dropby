@@ -339,16 +339,16 @@ export default function Get() {
                 S
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">Sarah opened her door 🚪</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">coffee and a walk, anyone?</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">Sarah {t('marketing.mockOpened')}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('marketing.mockNote')}</p>
               </div>
             </div>
             <div className="flex gap-2">
               <div className="flex-1 bg-emerald-500 text-white text-center py-2 rounded-xl text-sm font-semibold">
-                Going 🏃
+                {t('marketing.mockGoing')}
               </div>
               <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 text-center py-2 rounded-xl text-sm font-semibold">
-                Maybe
+                {t('marketing.mockMaybe')}
               </div>
             </div>
           </div>

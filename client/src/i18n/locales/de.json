@@ -19,7 +19,11 @@
     "downloadAppStore": "Im App Store laden",
     "downloadGooglePlay": "Bei Google Play laden",
     "scanWithPhone": "Mit dem Handy scannen",
-    "webFallback": "oder die Web-Version nutzen"
+    "webFallback": "oder die Web-Version nutzen",
+    "mockOpened": "hat ihre Tür geöffnet 🚪",
+    "mockNote": "Kaffee und ein Spaziergang, wer ist dabei?",
+    "mockGoing": "Dabei 🏃",
+    "mockMaybe": "Vielleicht"
   },
   "landing": {
     "tagline": "Sieh deine Freunde öfter.",

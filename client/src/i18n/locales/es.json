@@ -19,7 +19,11 @@
     "downloadAppStore": "Descargar en App Store",
     "downloadGooglePlay": "Obtener en Google Play",
     "scanWithPhone": "Escanear con tu móvil",
-    "webFallback": "o usar la versión web"
+    "webFallback": "o usar la versión web",
+    "mockOpened": "abrió su puerta 🚪",
+    "mockNote": "café y un paseo, ¿alguien se apunta?",
+    "mockGoing": "Voy 🏃",
+    "mockMaybe": "Quizás"
   },
   "landing": {
     "tagline": "Ve a tus amigos más.",

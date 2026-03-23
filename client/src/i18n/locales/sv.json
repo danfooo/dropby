@@ -19,7 +19,11 @@
     "downloadAppStore": "Ladda ner på App Store",
     "downloadGooglePlay": "Hämta på Google Play",
     "scanWithPhone": "Skanna med din telefon",
-    "webFallback": "eller använd webbversionen"
+    "webFallback": "eller använd webbversionen",
+    "mockOpened": "öppnade sin dörr 🚪",
+    "mockNote": "kaffe och en promenad, någon med?",
+    "mockGoing": "Jag kommer 🏃",
+    "mockMaybe": "Kanske"
   },
   "landing": {
     "tagline": "Se dina vänner mer.",

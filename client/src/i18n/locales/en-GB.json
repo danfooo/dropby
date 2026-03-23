@@ -19,7 +19,11 @@
     "downloadAppStore": "Download on the App Store",
     "downloadGooglePlay": "Get it on Google Play",
     "scanWithPhone": "Scan with your phone",
-    "webFallback": "or try the web version"
+    "webFallback": "or try the web version",
+    "mockOpened": "opened her door 🚪",
+    "mockNote": "coffee and a walk, anyone?",
+    "mockGoing": "Going 🏃",
+    "mockMaybe": "Maybe"
   },
   "landing": {
     "tagline": "See your friends more.",
