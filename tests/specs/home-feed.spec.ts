@@ -169,14 +169,26 @@ test('Muted friend: open door from muted friend does not appear in feed', async 
       { serverUrl: SERVER_URL, token: bobToken, aliceId },
     );
 
-    // Alice reloads — Bob's door should NOT appear anywhere in her feed
+    // Alice reloads home — Bob's door should NOT appear
     await alicePage.reload();
     await alicePage.waitForLoadState('domcontentloaded');
 
     await expect(alicePage.getByText('Doors opened to you')).not.toBeVisible({ timeout: 5_000 });
     await expect(alicePage.getByText('Muted door note')).not.toBeVisible();
+
+    // Alice goes to Friends and unmutes Bob
+    await alicePage.goto('/friends');
+    await alicePage.waitForLoadState('domcontentloaded');
+    await alicePage.getByRole('button', { name: /unmute/i }).click();
+
+    // Alice navigates back to home — Bob's door should now appear without a reload
+    await alicePage.goto('/');
+    await alicePage.waitForLoadState('domcontentloaded');
+
+    await expect(alicePage.getByText('Doors opened to you')).toBeVisible({ timeout: 10_000 });
+    await expect(alicePage.getByText('Muted door note')).toBeVisible();
   } finally {
-    // Unmute Bob and close his door
+    // Ensure Bob is unmuted and his door is closed
     const aliceToken = await alicePage.evaluate(() => localStorage.getItem('token'));
     await alicePage.evaluate(
       async ({ serverUrl, token, bobId }) => {

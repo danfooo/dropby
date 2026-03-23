@@ -27,12 +27,18 @@ export default function Friends() {
 
   const muteFriend = useMutation({
     mutationFn: (id: string) => friendsApi.mute(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['friends'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['friends'] });
+      qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    },
   });
 
   const unmuteFriend = useMutation({
     mutationFn: (id: string) => friendsApi.unmute(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['friends'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['friends'] });
+      qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    },
   });
 
   const cancelInvite = useMutation({
