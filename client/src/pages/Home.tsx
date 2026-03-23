@@ -1612,7 +1612,14 @@ function TipsSection() {
   const [feedbackDismissed, dismissFeedback] = usePermanentDismiss('tip_feedback_dismissed');
   const [coffeeDismissed, dismissCoffee] = usePermanentDismiss('tip_coffee_dismissed');
   const [showFeedback, setShowFeedback] = useState(false);
-  const [toast, setToast] = useState<{ message: string; linkText: string; linkTo: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; linkText: string; linkTo: string; persistent?: boolean } | null>(null);
+
+  // Web-only app install banner — highest priority, shown once until dismissed
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+    if (localStorage.getItem('app_banner_dismissed')) return;
+    setToast({ message: t('common.appBannerText'), linkText: t('common.appBannerCta'), linkTo: '/', persistent: true });
+  }, []);
 
   const { data: everReceived } = useQuery({ queryKey: ['everReceived'], queryFn: async () => { const { goingApi } = await import('../api'); return goingApi.everReceived(); } });
 
@@ -1674,7 +1681,7 @@ function TipsSection() {
   return (
     <>
       {portal && tipContent && createPortal(tipContent, portal)}
-      {toast && <Toast message={toast.message} linkText={toast.linkText || undefined} linkTo={toast.linkTo || undefined} onDismiss={() => setToast(null)} />}
+      {toast && <Toast message={toast.message} linkText={toast.linkText || undefined} linkTo={toast.linkTo || undefined} persistent={toast.persistent} onDismiss={() => { if (toast.persistent) localStorage.setItem('app_banner_dismissed', '1'); setToast(null); }} />}
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
   );
