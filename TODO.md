@@ -5,8 +5,8 @@
 
 ## Apple / APNs
 - [ ] Finish Apple Developer enrollment (pending approval)
-- [ ] Create App ID `cc.dropby.app` in Apple Developer portal
-- [ ] Generate APNs key (.p8) and implement `sendApns()` in `server/src/services/notifications.ts`
+- [ ] Verify push notifications end-to-end on TestFlight before App Store submission
+- [ ] When testing dev builds: set `fly secrets set APNS_SANDBOX=true`, unset before TestFlight/prod
 
 ## Infrastructure
 - [ ] Set up GitHub Actions deploy-on-push
