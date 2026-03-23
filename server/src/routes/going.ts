@@ -64,6 +64,13 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
   res.status(201).json({ ok: true });
 });
 
+// DELETE /api/going/:statusId — remove RSVP
+router.delete('/:statusId', requireAuth, (req: AuthRequest, res) => {
+  const { statusId } = req.params;
+  db.prepare('DELETE FROM going_signals WHERE status_id = ? AND user_id = ?').run(statusId, req.userId);
+  res.json({ ok: true });
+});
+
 // POST /api/going/:statusId/guest — web guest RSVP
 router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
   const { statusId } = req.params;

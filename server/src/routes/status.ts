@@ -165,7 +165,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
 
   const statusId = randomUUID();
 
-  const notifyAt = isScheduled ? null : nowUnix + 90;
+  const notifyAt = isScheduled ? null : nowUnix + 2;
 
   db.prepare(`
     INSERT INTO statuses (id, user_id, note, closes_at, starts_at, ends_at, reminder_minutes, notify_at)

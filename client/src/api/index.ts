@@ -97,6 +97,7 @@ export const goingApi = {
   sendGuest: (statusId: string, data: { name: string; contact?: string; marketing_consent?: boolean; rsvp?: 'going' | 'maybe' }) =>
     api.post(`/going/${statusId}/guest`, data).then(r => r.data),
   patchGuest: (signalId: string, rsvp: 'going' | 'maybe') => api.patch(`/going/guest/${signalId}`, { rsvp }).then(r => r.data),
+  remove: (statusId: string) => api.delete(`/going/${statusId}`).then(r => r.data),
   claim: (signalId: string) => api.post('/going/claim', { signal_id: signalId }).then(r => r.data),
 };
 

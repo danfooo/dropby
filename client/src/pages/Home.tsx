@@ -80,16 +80,16 @@ function groupScheduledDoors(doors: any[]): { key: string; doors: any[] }[] {
 }
 
 // Friend status card (door open or upcoming)
-function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: string, rsvp: 'going' | 'maybe') => void }) {
+function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: string, rsvp: 'going' | 'maybe' | null) => void }) {
   const { t } = useTranslation();
   const isScheduled = status.starts_at && status.starts_at > Math.floor(Date.now() / 1000);
   const [myRsvp, setMyRsvp] = useState<'going' | 'maybe' | null>(status.my_rsvp || null);
   const bigNote = status.note ? bigEmojiClass(status.note) : null;
 
   const handleRsvp = async (rsvp: 'going' | 'maybe') => {
-    if (myRsvp === rsvp) return;
-    setMyRsvp(rsvp);
-    await onGoing(status.id, rsvp);
+    const next = myRsvp === rsvp ? null : rsvp;
+    setMyRsvp(next);
+    await onGoing(status.id, next);
   };
 
   return (
@@ -843,13 +843,17 @@ export default function Home() {
     },
   });
 
-  const sendGoing = async (statusId: string, rsvp: 'going' | 'maybe' = 'going') => {
-    if (await shouldShowNotifPrompt()) {
+  const sendGoing = async (statusId: string, rsvp: 'going' | 'maybe' | null = 'going') => {
+    if (rsvp !== null && await shouldShowNotifPrompt()) {
       pendingAction.current = () => sendGoing(statusId, rsvp);
       setNotifSheet('going');
       return;
     }
-    await goingApi.send(statusId, rsvp);
+    if (rsvp === null) {
+      await goingApi.remove(statusId);
+    } else {
+      await goingApi.send(statusId, rsvp);
+    }
     qc.invalidateQueries({ queryKey: ['friendStatuses'] });
   };
 
