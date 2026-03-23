@@ -120,12 +120,11 @@ async function sendApns(token: string, payload: PushPayload): Promise<void> {
     console.log(`[APNs] not configured — ${token.slice(0, 20)}… | ${payload.title}: ${payload.body}`);
     return;
   }
-  console.log(`[APNs] Sending to ${host} — token=${token.slice(0, 20)}… | ${payload.title}`);
-
   const jwt = getApnsJwt(teamId, keyId, privateKey);
   const session = getApnsSession();
   const sandbox = process.env.APNS_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
   const host = sandbox ? 'api.sandbox.push.apple.com' : 'api.push.apple.com';
+  console.log(`[APNs] Sending to ${host} — token=${token.slice(0, 20)}… | ${payload.title}`);
 
   const apnsBody = JSON.stringify({
     aps: {
