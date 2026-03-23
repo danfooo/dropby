@@ -115,6 +115,8 @@
     "scheduledGroupTomorrow": "Tomorrow",
     "scheduledGroupThisWeek": "This week",
     "scheduledGroupNextWeek": "Next week",
+    "scheduledGroupSoon": "Soon",
+    "scheduledGroupLater": "Later",
     "openAnother": "Add another time",
     "scheduleOpenNow": "Open now",
     "scheduleCancelSession": "Cancel session",

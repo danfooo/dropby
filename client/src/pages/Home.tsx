@@ -36,8 +36,8 @@ function getScheduleGroup(startsAt: number): string {
   const nextMon = todayMidnight + (dow === 0 ? 1 : 8 - dow) * msDay;
   if (ts < nextMon) return 'this_week';
   if (ts < nextMon + 7 * msDay) return 'next_week';
-  const date = new Date(startsAt * 1000);
-  return format(date, date.getFullYear() === now.getFullYear() ? 'MMMM' : 'MMMM yyyy');
+  if (ts < todayMidnight + 30 * msDay) return 'soon';
+  return 'later';
 }
 
 function groupScheduledDoors(doors: any[]): { key: string; doors: any[] }[] {
@@ -1143,7 +1143,8 @@ export default function Home() {
               const label = key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
                 : key === 'this_week' ? t('home.scheduledGroupThisWeek')
                 : key === 'next_week' ? t('home.scheduledGroupNextWeek')
-                : key;
+                : key === 'soon' ? t('home.scheduledGroupSoon')
+                : t('home.scheduledGroupLater');
               return (
                 <div key={key} className="mb-4">
                   <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{label}</h2>

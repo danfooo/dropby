@@ -115,6 +115,8 @@
     "scheduledGroupTomorrow": "Mañana",
     "scheduledGroupThisWeek": "Esta semana",
     "scheduledGroupNextWeek": "La semana que viene",
+    "scheduledGroupSoon": "Pronto",
+    "scheduledGroupLater": "Más adelante",
     "openAnother": "Añadir otro horario",
     "scheduleOpenNow": "Abrir ahora",
     "scheduleCancelSession": "Cancelar sesión",

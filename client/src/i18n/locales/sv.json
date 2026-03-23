@@ -115,6 +115,8 @@
     "scheduledGroupTomorrow": "Imorgon",
     "scheduledGroupThisWeek": "Den här veckan",
     "scheduledGroupNextWeek": "Nästa vecka",
+    "scheduledGroupSoon": "Snart",
+    "scheduledGroupLater": "Senare",
     "openAnother": "Lägg till en till tid",
     "scheduleOpenNow": "Öppna nu",
     "scheduleCancelSession": "Avbryt session",
