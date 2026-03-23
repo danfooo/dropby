@@ -877,7 +877,6 @@ export default function Home() {
   };
 
   const handleOpen = async () => {
-    console.log('[handleOpen] isNative:', Capacitor.isNativePlatform(), 'hasAsked:', hasAskedNotifications());
     if (Capacitor.isNativePlatform() && !hasAskedNotifications()) {
       pendingAction.current = doOpen;
       setNotifSheet('open');
