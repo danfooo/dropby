@@ -103,7 +103,7 @@ export default function Auth() {
     <div className="min-h-full flex flex-col items-center justify-center px-6 py-10 bg-white dark:bg-gray-950">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="dropby" className="h-16 mx-auto" />
+          <img src="/logo.svg" alt="dropby" className="h-16 mx-auto dark:invert" />
         </div>
 
         {view === 'forgot' ? (
@@ -209,7 +209,7 @@ export default function Auth() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <input
                 type="password"
@@ -217,7 +217,7 @@ export default function Auth() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               {tab === 'login' && (
                 <div className="text-right -mt-1">
