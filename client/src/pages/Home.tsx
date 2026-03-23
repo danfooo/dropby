@@ -1145,45 +1145,47 @@ export default function Home() {
             {t('home.scheduleLater')}
           </button>
         </div>
-        {/* Pending scheduled sessions */}
-        {(upcomingSessions as any[]).length > 0 && (
-          <div className="mt-6 space-y-3">
-            <h2 className="text-sm font-bold text-violet-800 dark:text-violet-300">{t('home.scheduledSessionTitle')}</h2>
-            {(upcomingSessions as any[]).map((session: any) => (
-              <ScheduledSessionCard
-                key={session.id}
-                session={session}
-                friends={friends as any[]}
-                me={user}
-                onCancel={() => cancelScheduled.mutate(session.id)}
-                onSave={data => updateScheduled.mutate({ id: session.id, data })}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Scheduled friend doors — grouped by when they open */}
-        {scheduledFriendGroups.length > 0 && (
-          <div className="mt-6">
-            {scheduledFriendGroups.map(({ key, doors }) => {
-              const label = key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
-                : key === 'this_week' ? t('home.scheduledGroupThisWeek')
-                : key === 'next_week' ? t('home.scheduledGroupNextWeek')
-                : key === 'soon' ? t('home.scheduledGroupSoon')
-                : t('home.scheduledGroupLater');
-              return (
+        {/* Scheduled sessions — own + friends, grouped by when they open */}
+        {((upcomingSessions as any[]).length > 0 || scheduledFriendGroups.length > 0) && (() => {
+          const groupLabel = (key: string) => key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
+            : key === 'this_week' ? t('home.scheduledGroupThisWeek')
+            : key === 'next_week' ? t('home.scheduledGroupNextWeek')
+            : key === 'soon' ? t('home.scheduledGroupSoon')
+            : t('home.scheduledGroupLater');
+          const keyOrder = ['tomorrow', 'this_week', 'next_week', 'soon', 'later'];
+          const ownByKey = new Map<string, any[]>();
+          for (const s of upcomingSessions as any[]) {
+            const k = getScheduleGroup(s.starts_at);
+            if (!ownByKey.has(k)) ownByKey.set(k, []);
+            ownByKey.get(k)!.push(s);
+          }
+          const friendByKey = new Map(scheduledFriendGroups.map(g => [g.key, g.doors]));
+          const allKeys = keyOrder.filter(k => ownByKey.has(k) || friendByKey.has(k));
+          return (
+            <div className="mt-6">
+              {allKeys.map(key => (
                 <div key={key} className="mb-4">
-                  <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{label}</h2>
+                  <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{groupLabel(key)}</h2>
                   <div className="space-y-3">
-                    {doors.map((s: any) => (
+                    {(ownByKey.get(key) ?? []).map((session: any) => (
+                      <ScheduledSessionCard
+                        key={session.id}
+                        session={session}
+                        friends={friends as any[]}
+                        me={user}
+                        onCancel={() => cancelScheduled.mutate(session.id)}
+                        onSave={data => updateScheduled.mutate({ id: session.id, data })}
+                      />
+                    ))}
+                    {(friendByKey.get(key) ?? []).map((s: any) => (
                       <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
                     ))}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
 
         <TipsSection />
 
@@ -1514,44 +1516,47 @@ export default function Home() {
         </div>
       </Modal>
 
-      {/* Upcoming scheduled sessions */}
-      {(upcomingSessions as any[]).length > 0 && (
-        <div className="mt-4 space-y-3">
-          <h2 className="text-sm font-bold text-violet-800 dark:text-violet-300">{t('home.scheduledSessionTitle')}</h2>
-          {(upcomingSessions as any[]).map((session: any) => (
-            <ScheduledSessionCard
-              key={session.id}
-              session={session}
-              friends={friends as any[]}
-              me={user}
-              onCancel={() => cancelScheduled.mutate(session.id)}
-              onSave={data => updateScheduled.mutate({ id: session.id, data })}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Scheduled friend doors — grouped by when they open */}
-      {scheduledFriendGroups.length > 0 && (
-        <div className="mt-6">
-          {scheduledFriendGroups.map(({ key, doors }) => {
-            const label = key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
-              : key === 'this_week' ? t('home.scheduledGroupThisWeek')
-              : key === 'next_week' ? t('home.scheduledGroupNextWeek')
-              : key;
-            return (
+      {/* Scheduled sessions — own + friends, grouped by when they open */}
+      {((upcomingSessions as any[]).length > 0 || scheduledFriendGroups.length > 0) && (() => {
+        const groupLabel = (key: string) => key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
+          : key === 'this_week' ? t('home.scheduledGroupThisWeek')
+          : key === 'next_week' ? t('home.scheduledGroupNextWeek')
+          : key === 'soon' ? t('home.scheduledGroupSoon')
+          : t('home.scheduledGroupLater');
+        const keyOrder = ['tomorrow', 'this_week', 'next_week', 'soon', 'later'];
+        const ownByKey = new Map<string, any[]>();
+        for (const s of upcomingSessions as any[]) {
+          const k = getScheduleGroup(s.starts_at);
+          if (!ownByKey.has(k)) ownByKey.set(k, []);
+          ownByKey.get(k)!.push(s);
+        }
+        const friendByKey = new Map(scheduledFriendGroups.map(g => [g.key, g.doors]));
+        const allKeys = keyOrder.filter(k => ownByKey.has(k) || friendByKey.has(k));
+        return (
+          <div className="mt-4">
+            {allKeys.map(key => (
               <div key={key} className="mb-4">
-                <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{label}</h2>
+                <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{groupLabel(key)}</h2>
                 <div className="space-y-3">
-                  {doors.map((s: any) => (
+                  {(ownByKey.get(key) ?? []).map((session: any) => (
+                    <ScheduledSessionCard
+                      key={session.id}
+                      session={session}
+                      friends={friends as any[]}
+                      me={user}
+                      onCancel={() => cancelScheduled.mutate(session.id)}
+                      onSave={data => updateScheduled.mutate({ id: session.id, data })}
+                    />
+                  ))}
+                  {(friendByKey.get(key) ?? []).map((s: any) => (
                     <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
                   ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Open another */}
       {!showScheduleMore ? (
