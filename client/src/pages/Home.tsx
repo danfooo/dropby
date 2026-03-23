@@ -74,7 +74,7 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
         <Avatar name={status.owner_name} size="md" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-900 dark:text-gray-50">{status.owner_name}</p>
-          {status.note && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">"{status.note}"</p>}
+          {status.note && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{status.note}</p>}
           {isScheduled && (
             <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mt-0.5">
               🕐 {t('home.opensAt', { time: formatTime(status.starts_at) })}
