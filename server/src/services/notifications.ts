@@ -120,6 +120,7 @@ async function sendApns(token: string, payload: PushPayload): Promise<void> {
     console.log(`[APNs] not configured — ${token.slice(0, 20)}… | ${payload.title}: ${payload.body}`);
     return;
   }
+  console.log(`[APNs] Sending to ${host} — token=${token.slice(0, 20)}… | ${payload.title}`);
 
   const jwt = getApnsJwt(teamId, keyId, privateKey);
   const session = getApnsSession();
@@ -155,7 +156,8 @@ async function sendApns(token: string, payload: PushPayload): Promise<void> {
     let responseData = '';
     req.on('data', (chunk) => { responseData += chunk; });
     req.on('end', () => {
-      if (status !== 200) console.error(`[APNs] ${status}:`, responseData);
+      if (status === 200) console.log(`[APNs] Delivered — token=${token.slice(0, 20)}…`);
+      else console.error(`[APNs] ${status}:`, responseData);
       resolve();
     });
     req.on('error', (err) => {
@@ -195,6 +197,7 @@ export function notifyFriendDoorOpen(recipientId: string, openerName: string, no
 
 export function notifyGoingSignal(hostId: string, guestName: string) {
   const tokens = getPushTokens(hostId);
+  console.log(`[Push] notifyGoingSignal — hostId=${hostId} tokens=${tokens.length}`);
   tokens.forEach(t =>
     sendPush(t.token, t.platform, {
       title: "Someone's on their way!",

@@ -295,6 +295,7 @@ router.post('/push-token', requireAuth, (req: AuthRequest, res) => {
     VALUES (?, ?, ?, ?, ?)
     ON CONFLICT(user_id, token) DO UPDATE SET updated_at = excluded.updated_at
   `).run(randomUUID(), req.userId, token, platform, now);
+  console.log(`[Push] Token registered — user=${req.userId} platform=${platform} token=${token.slice(0, 20)}…`);
   res.json({ ok: true });
 });
 
