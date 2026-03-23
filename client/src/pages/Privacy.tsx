@@ -12,8 +12,7 @@ export default function Privacy() {
           ← Back
         </Link>
 
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-1">Privacy Policy</h1>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-10">Last updated: March 2026</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-10">Privacy Policy</h1>
 
         <div className="space-y-8 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
 
