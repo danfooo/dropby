@@ -16,10 +16,12 @@
       @apply bg-gray-950 text-gray-50;
     }
   }
-  /* Prevent iOS auto-zoom on input focus (triggers when font-size < 16px) */
-  input, textarea, select {
-    font-size: 16px;
-  }
+}
+
+/* Prevent iOS auto-zoom on input focus (triggers when font-size < 16px).
+   Intentionally outside @layer so it overrides Tailwind text-* utilities. */
+input, textarea, select {
+  font-size: 16px;
 }
 
 @keyframes float {
