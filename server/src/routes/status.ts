@@ -103,12 +103,13 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
     JOIN friendships f ON
       (f.user_a_id = ? AND f.user_b_id = s.user_id) OR
       (f.user_b_id = ? AND f.user_a_id = s.user_id)
-    WHERE s.closed_at IS NULL AND (
+    LEFT JOIN friend_mutes fm ON fm.user_id = ? AND fm.muted_user_id = s.user_id
+    WHERE s.closed_at IS NULL AND fm.id IS NULL AND (
       ((s.starts_at IS NULL OR s.starts_at <= ?) AND s.closes_at > ?)
       OR s.starts_at > ?
     )
     ORDER BY COALESCE(s.starts_at, s.created_at) ASC
-  `).all(userId, userId, userId, nowUnix, nowUnix, nowUnix) as any[];
+  `).all(userId, userId, userId, userId, nowUnix, nowUnix, nowUnix) as any[];
 
   const myRsvps = db.prepare(`
     SELECT status_id, rsvp FROM going_signals WHERE user_id = ?
