@@ -88,6 +88,186 @@ test('Notification scheduling — newly added recipient: Carol gets added to an 
   }
 });
 
+test('Spontaneous door open sets notify_at ~90s from now with notifications_sent = 0', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+
+  try {
+    await loginUser(alicePage, ALICE);
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+    const before = Math.floor(Date.now() / 1000);
+
+    await alicePage.evaluate(
+      async ({ serverUrl, token, bobId }) => {
+        await fetch(`${serverUrl}/api/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ note: 'Spontaneous', recipient_ids: [bobId] }),
+        });
+      },
+      { serverUrl: SERVER_URL, token, bobId }
+    );
+
+    const status = await getUserStatus(aliceId);
+    expect(status.notify_at).not.toBeNull();
+    expect(status.notify_at!).toBeGreaterThanOrEqual(before + 85);
+    expect(status.notify_at!).toBeLessThanOrEqual(before + 100);
+    expect(status.notifications_sent).toBe(false);
+  } finally {
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+    await alicePage.evaluate(
+      async ({ serverUrl, token }) => {
+        await fetch(`${serverUrl}/api/status`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      },
+      { serverUrl: SERVER_URL, token }
+    );
+    await aliceCtx.close();
+  }
+});
+
+test('Scheduled session creation sets notify_at = null (notification sent immediately)', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+
+  try {
+    await loginUser(alicePage, ALICE);
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+
+    const startsAt = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+    const endsAt = startsAt + 3600;
+
+    // Check notify_at directly from the creation response — the test status
+    // endpoint only returns currently-active statuses, not future ones.
+    const created = await alicePage.evaluate(
+      async ({ serverUrl, token, bobId, startsAt, endsAt }) => {
+        const r = await fetch(`${serverUrl}/api/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ note: 'Scheduled', recipient_ids: [bobId], starts_at: startsAt, ends_at: endsAt }),
+        });
+        return r.json();
+      },
+      { serverUrl: SERVER_URL, token, bobId, startsAt, endsAt }
+    );
+
+    expect(created.notify_at).toBeNull();
+  } finally {
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+    await alicePage.evaluate(
+      async ({ serverUrl, token }) => {
+        await fetch(`${serverUrl}/api/status`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      },
+      { serverUrl: SERVER_URL, token }
+    );
+    await aliceCtx.close();
+  }
+});
+
+test('Push token registration is accepted by the server', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+
+  try {
+    await loginUser(alicePage, ALICE);
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+
+    const status = await alicePage.evaluate(
+      async ({ serverUrl, token }) => {
+        const r = await fetch(`${serverUrl}/api/auth/push-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ token: 'fake-device-token-abc123', platform: 'ios' }),
+        });
+        return r.status;
+      },
+      { serverUrl: SERVER_URL, token }
+    );
+
+    expect(status).toBe(200);
+  } finally {
+    await aliceCtx.close();
+  }
+});
+
+test('Push token registration rejects unknown platform', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+
+  try {
+    await loginUser(alicePage, ALICE);
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+
+    const status = await alicePage.evaluate(
+      async ({ serverUrl, token }) => {
+        const r = await fetch(`${serverUrl}/api/auth/push-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ token: 'fake-device-token-abc123', platform: 'web' }),
+        });
+        return r.status;
+      },
+      { serverUrl: SERVER_URL, token }
+    );
+
+    expect(status).toBe(400);
+  } finally {
+    await aliceCtx.close();
+  }
+});
+
+test('RSVP going on an open door succeeds and is recorded', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const bobCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  const bobPage = await bobCtx.newPage();
+
+  try {
+    await loginUser(alicePage, ALICE);
+    await loginUser(bobPage, BOB);
+
+    const aliceToken = await alicePage.evaluate(() => localStorage.getItem('token'));
+    const bobToken = await bobPage.evaluate(() => localStorage.getItem('token'));
+
+    // Alice opens her door for Bob
+    const statusRes = await alicePage.evaluate(
+      async ({ serverUrl, token, bobId, carolId }) => {
+        const r = await fetch(`${serverUrl}/api/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ note: 'Come over', recipient_ids: [bobId, carolId] }),
+        });
+        return r.json();
+      },
+      { serverUrl: SERVER_URL, token: aliceToken, bobId, carolId }
+    );
+
+    // Bob RSVPs going
+    const rsvpStatus = await bobPage.evaluate(
+      async ({ serverUrl, token, statusId }) => {
+        const r = await fetch(`${serverUrl}/api/going/${statusId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ rsvp: 'going' }),
+        });
+        return r.status;
+      },
+      { serverUrl: SERVER_URL, token: bobToken, statusId: statusRes.id }
+    );
+
+    expect(rsvpStatus).toBe(201);
+  } finally {
+    const aliceToken = await alicePage.evaluate(() => localStorage.getItem('token'));
+    await alicePage.evaluate(
+      async ({ serverUrl, token }) => {
+        await fetch(`${serverUrl}/api/status`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      },
+      { serverUrl: SERVER_URL, token: aliceToken }
+    );
+    await aliceCtx.close();
+    await bobCtx.close();
+  }
+});
+
 test('Muted friend is excluded from recipient list when host opens door', async ({ browser }) => {
   // Uses aliceId, bobId, carolId from beforeAll.
   // Alice & Bob are friends; Alice & Carol are friends; no mutes yet.
@@ -120,8 +300,10 @@ test('Muted friend is excluded from recipient list when host opens door', async 
     await alicePage.reload();
     await alicePage.waitForLoadState('domcontentloaded');
 
-    // Wait until the door-closed view is ready (friends data loaded, button interactive)
-    await expect(alicePage.getByRole('button', { name: /open the door/i })).toBeVisible({ timeout: 10_000 });
+    // Wait until Carol's name appears in the recipient list — confirms friends query has resolved
+    // and the muted state is reflected. Waiting for the button alone is not enough because the
+    // button renders before the async friends data arrives.
+    await expect(alicePage.getByText('Carol')).toBeVisible({ timeout: 10_000 });
 
     // Alice opens her door (no explicit recipient selection — relies on UI defaults)
     await alicePage.getByRole('button', { name: /open the door/i }).click();
