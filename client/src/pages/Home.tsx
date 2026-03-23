@@ -26,6 +26,30 @@ function formatTimeShort(ts: number): string {
   return format(new Date(ts * 1000), 'h:mm a');
 }
 
+// Returns a Tailwind text-size class if the string is emoji-only, null otherwise.
+// Uses grapheme segmentation so multi-codepoint emoji (e.g. 👨‍👩‍👧‍👦) count as one.
+// Thresholds inspired by iMessage (1-3 emoji) / WhatsApp (emoji-only = big):
+//   1 emoji  → text-5xl
+//   2–3      → text-4xl
+//   4–5      → text-3xl
+//   6+       → null (render normally)
+function bigEmojiClass(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  const segments = [...new Intl.Segmenter().segment(trimmed)];
+  let count = 0;
+  for (const { segment } of segments) {
+    if (/^\s+$/.test(segment)) continue;
+    if (/\p{Extended_Pictographic}/u.test(segment)) { count++; }
+    else return null; // contains non-emoji character
+  }
+  if (count === 0) return null;
+  if (count === 1) return 'text-5xl';
+  if (count <= 3) return 'text-4xl';
+  if (count <= 5) return 'text-3xl';
+  return null;
+}
+
 function getScheduleGroup(startsAt: number): string {
   const msDay = 86400000;
   const now = new Date();
@@ -61,6 +85,7 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
   const { t } = useTranslation();
   const isScheduled = status.starts_at && status.starts_at > Math.floor(Date.now() / 1000);
   const [myRsvp, setMyRsvp] = useState<'going' | 'maybe' | null>(status.my_rsvp || null);
+  const bigNote = status.note ? bigEmojiClass(status.note) : null;
 
   const handleRsvp = async (rsvp: 'going' | 'maybe') => {
     if (myRsvp === rsvp) return;
@@ -74,7 +99,11 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
         <Avatar name={status.owner_name} size="md" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-900 dark:text-gray-50">{status.owner_name}</p>
-          {status.note && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{status.note}</p>}
+          {status.note && (
+            <p className={bigNote ? `${bigNote} leading-none` : 'text-sm text-gray-500 dark:text-gray-400 truncate'}>
+              {status.note}
+            </p>
+          )}
           {isScheduled && (
             <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mt-0.5">
               🕐 {t('home.opensAt', { time: formatTime(status.starts_at) })}
@@ -449,6 +478,7 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
   onSave?: (data: { note?: string; starts_at?: number; ends_at?: number; recipient_ids?: string[] }) => void;
 }) {
   const { t } = useTranslation();
+  const bigNote = session.note ? bigEmojiClass(session.note) : null;
   const icsKey = `dropby_ics_${session.id}`;
   const [editing, setEditing] = useState(false);
   const sessionDate = format(new Date(session.starts_at * 1000), 'yyyy-MM-dd');
@@ -559,7 +589,11 @@ function ScheduledSessionCard({ session, friends = [], onCancel, onOpen, onSave 
       <p className="text-sm text-violet-700 dark:text-violet-300 font-medium mb-1">
         🕐 {formatTime(session.starts_at)} – {formatTimeShort(session.ends_at)}
       </p>
-      {session.note && <p className="text-sm text-violet-600 dark:text-violet-400 mb-2">"{session.note}"</p>}
+      {session.note && (
+        <p className={bigNote ? `${bigNote} leading-none mb-2` : 'text-sm text-violet-600 dark:text-violet-400 mb-2'}>
+          {session.note}
+        </p>
+      )}
       {session.going_signals?.length > 0 && (
         <p className="text-xs text-violet-500 dark:text-violet-400 mb-2">
           {session.going_signals.map((g: any) => g.name).join(', ')} {session.going_signals.length === 1 ? 'is' : 'are'} coming
@@ -1328,19 +1362,22 @@ export default function Home() {
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
           {t('home.youreOpen')}
         </div>
-        {myStatus?.note && (
-          <button
-            onClick={() => {
-              setEditNote(myStatus.note || '');
-              setEditRecipients(myStatus.recipients.map((r: any) => r.id) || []);
-              setEditEndsAt(myStatus.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
-              setView('edit');
-            }}
-            className="text-sm text-gray-500 dark:text-gray-400 mt-2 block w-full"
-          >
-            {myStatus.note}
-          </button>
-        )}
+        {myStatus?.note && (() => {
+          const big = bigEmojiClass(myStatus.note);
+          return (
+            <button
+              onClick={() => {
+                setEditNote(myStatus.note || '');
+                setEditRecipients(myStatus.recipients.map((r: any) => r.id) || []);
+                setEditEndsAt(myStatus.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
+                setView('edit');
+              }}
+              className={big ? `${big} leading-none mt-2 block w-full` : 'text-sm text-gray-500 dark:text-gray-400 mt-2 block w-full'}
+            >
+              {myStatus.note}
+            </button>
+          );
+        })()}
       </div>
 
       {/* Recipients + invite links */}
