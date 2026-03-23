@@ -88,68 +88,77 @@ test('Notification scheduling — newly added recipient: Carol gets added to an 
   }
 });
 
-test.skip('Muted users — notification behaviour: muting controls who the host notifies', async ({ browser }) => {
-  // Reset for a clean run
-  await resetTestUsers();
-
+test('Muted friend is excluded from recipient list when host opens door', async ({ browser }) => {
+  // Uses aliceId, bobId, carolId from beforeAll.
+  // Alice & Bob are friends; Alice & Carol are friends; no mutes yet.
   const aliceCtx = await browser.newContext();
   const bobCtx = await browser.newContext();
+  const carolCtx = await browser.newContext();
   const alicePage = await aliceCtx.newPage();
   const bobPage = await bobCtx.newPage();
+  const carolPage = await carolCtx.newPage();
 
-  let localAliceId = '';
-  let localBobId = '';
+  let aliceToken = '';
 
   try {
-    localAliceId = await setupUser(alicePage, ALICE);
-    localBobId = await setupUser(bobPage, BOB);
-    await makeFriends(ALICE.email, BOB.email);
-
-    // Alice mutes Bob (Alice is the host; by muting Bob, Alice won't notify him when she opens her door)
     await loginUser(alicePage, ALICE);
+    await loginUser(bobPage, BOB);
+    await loginUser(carolPage, CAROL);
 
-    const aliceToken = await alicePage.evaluate(() => localStorage.getItem('token'));
+    aliceToken = await alicePage.evaluate(() => localStorage.getItem('token') ?? '');
 
+    // Close any door Alice left open from a previous test, then mute Bob
     await alicePage.evaluate(
       async ({ serverUrl, token, bobId }) => {
-        await fetch(`${serverUrl}/api/friends/${bobId}/mute`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await fetch(`${serverUrl}/api/status`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        await fetch(`${serverUrl}/api/friends/${bobId}/mute`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
       },
-      { serverUrl: SERVER_URL, token: aliceToken, bobId: localBobId }
+      { serverUrl: SERVER_URL, token: aliceToken, bobId },
     );
 
-    // Alice opens her door — the UI excludes muted friends from recipient selection
-    // For a direct test of the notification path, open via API with Bob in recipient_ids
-    // The server respects Alice's mute list for scheduled sessions but spontaneous
-    // notifications go through the cron which also checks mutedByHost.
-    // Here we open the door via the UI to confirm muted friends are excluded from selection.
+    // Reload so the UI picks up Bob's muted state
     await alicePage.reload();
     await alicePage.waitForLoadState('domcontentloaded');
 
-    // Open the door (single click — form is always visible, no two-step flow)
+    // Wait until the door-closed view is ready (friends data loaded, button interactive)
+    await expect(alicePage.getByRole('button', { name: /open the door/i })).toBeVisible({ timeout: 10_000 });
+
+    // Alice opens her door (no explicit recipient selection — relies on UI defaults)
     await alicePage.getByRole('button', { name: /open the door/i }).click();
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
-    // Verify via test API that the status was created
-    const aliceStatus = await getUserStatus(localAliceId);
-    expect(aliceStatus).toBeTruthy();
-    // notify_at is set (the cron will check mutedByHost before actually sending notifications)
-    expect(aliceStatus.notify_at).not.toBeNull();
+    // Verify via the status API that Bob is NOT a recipient but Carol IS
+    const aliceStatus: any = await alicePage.evaluate(
+      async ({ serverUrl, token }) => {
+        const r = await fetch(`${serverUrl}/api/status`, { headers: { Authorization: `Bearer ${token}` } });
+        return r.json();
+      },
+      { serverUrl: SERVER_URL, token: aliceToken },
+    );
+    const recipientIds = aliceStatus.recipients.map((r: any) => r.id);
+    expect(recipientIds).not.toContain(bobId);
+    expect(recipientIds).toContain(carolId);
 
-    // Bob should not see Alice's door in his feed because he is not a recipient
-    // (Alice muted Bob → Bob was excluded from Alice's recipient list)
-    await loginUser(bobPage, BOB);
-    await bobPage.reload();
+    // Bob's home: Alice's door is NOT visible (he's not a recipient)
+    await bobPage.goto('/home');
     await bobPage.waitForLoadState('domcontentloaded');
+    await expect(bobPage.getByTestId('friends-available')).not.toBeVisible({ timeout: 5_000 });
 
-    // Bob's home page should not show Alice's open door
-    const homeText = await bobPage.locator('body').textContent();
-    expect(homeText).not.toContain("You're open!");
-    // Alice's door note (empty in this case) won't appear, and no "going" button for Alice's door
+    // Carol's home: Alice's door IS visible (she is a recipient)
+    await carolPage.goto('/home');
+    await carolPage.waitForLoadState('domcontentloaded');
+    await expect(carolPage.getByTestId('friends-available')).toBeVisible({ timeout: 10_000 });
   } finally {
+    // Unmute Bob and close Alice's door
+    await alicePage.evaluate(
+      async ({ serverUrl, token, bobId }) => {
+        await fetch(`${serverUrl}/api/friends/${bobId}/mute`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        await fetch(`${serverUrl}/api/status`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      },
+      { serverUrl: SERVER_URL, token: aliceToken, bobId },
+    );
     await aliceCtx.close();
     await bobCtx.close();
+    await carolCtx.close();
   }
 });
