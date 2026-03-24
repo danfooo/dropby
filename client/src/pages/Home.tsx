@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
@@ -1644,11 +1643,9 @@ function TipsSection({ setToast }: { setToast: (toast: { message: string; linkTe
     </div>
   ) : null;
 
-  const portal = document.getElementById('tip-portal');
-
   return (
     <>
-      {portal && tipContent && createPortal(tipContent, portal)}
+      {tipContent}
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
   );
