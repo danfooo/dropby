@@ -71,7 +71,7 @@ test('Open now: friend door appears in "Doors opened to you" section', async ({ 
     await alicePage.reload();
     await alicePage.waitForLoadState('domcontentloaded');
 
-    await expect(alicePage.getByText('Doors opened to you')).toBeVisible({ timeout: 10_000 });
+    await expect(alicePage.getByTestId('friends-available')).toBeVisible({ timeout: 10_000 });
     await expect(alicePage.getByText('Come over!')).toBeVisible();
   } finally {
     const bobToken = await bobPage.evaluate(() => localStorage.getItem('token'));
@@ -173,7 +173,7 @@ test('Muted friend: open door from muted friend does not appear in feed', async 
     await alicePage.reload();
     await alicePage.waitForLoadState('domcontentloaded');
 
-    await expect(alicePage.getByText('Doors opened to you')).not.toBeVisible({ timeout: 5_000 });
+    await expect(alicePage.getByTestId('friends-available')).not.toBeVisible({ timeout: 5_000 });
     await expect(alicePage.getByText('Muted door note')).not.toBeVisible();
 
     // Alice goes to Friends and unmutes Bob
@@ -185,7 +185,7 @@ test('Muted friend: open door from muted friend does not appear in feed', async 
     await alicePage.goto('/');
     await alicePage.waitForLoadState('domcontentloaded');
 
-    await expect(alicePage.getByText('Doors opened to you')).toBeVisible({ timeout: 10_000 });
+    await expect(alicePage.getByTestId('friends-available')).toBeVisible({ timeout: 10_000 });
     await expect(alicePage.getByText('Muted door note')).toBeVisible();
   } finally {
     // Ensure Bob is unmuted and his door is closed

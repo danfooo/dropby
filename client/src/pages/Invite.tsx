@@ -166,7 +166,7 @@ export default function Invite() {
 
     if (info.alreadyFriends) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
+        <div data-testid="invite-already-friends" className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
           <p className="text-5xl mb-4">👋</p>
           <h1 className="text-xl font-bold mb-2">{t('invite.alreadyFriendsTitle')}</h1>
           {info.status ? (
@@ -190,7 +190,7 @@ export default function Invite() {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
+      <div data-testid="invite-accepted" className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
         <p className="text-5xl mb-4">🎉</p>
         <h1 className="text-xl font-bold mb-2">{t('invite.friendsNowTitle')}</h1>
         <p className="text-gray-500 dark:text-gray-400 mb-6">{t('invite.friendsNowDesc', { name: acceptedName })}</p>
@@ -201,7 +201,7 @@ export default function Invite() {
               <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">{t('invite.doorOpen', { name: acceptedName })}</span>
             </div>
             {info.status.note && (
-              <p className="text-sm text-emerald-700 dark:text-emerald-400 ml-4">{info.status.note}</p>
+              <p data-testid="invite-door-note" className="text-sm text-emerald-700 dark:text-emerald-400 ml-4">{info.status.note}</p>
             )}
           </div>
         )}
