@@ -1209,6 +1209,7 @@ export default function Home() {
             </button>
           </div>
         </Modal>
+      {toast && <Toast message={toast.message} linkText={toast.linkText} linkTo={toast.linkTo} linkHref={toast.linkHref} download={toast.download} onDismiss={() => setToast(null)} />}
       </div>
     );
   }
