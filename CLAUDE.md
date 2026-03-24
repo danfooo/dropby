@@ -50,7 +50,8 @@ Go slow and explain clearly for: infrastructure, DevOps, and platform setup — 
 - Never fabricate or bluff about what code does. If you're unsure whether a change had an effect, read the file to verify before claiming success.
 - **But do push back** if something seems internally inconsistent, unclear to users, or in tension with the principles above — that's more useful than silently accepting it
 - Never reframe a design decision as a bug without checking first
-- Localization: when editing UI copy, always update **all 6 locale files** (en-US, en-GB, de, es, fr, sv)
+- Localization: when editing UI copy, always update **all 6 locale files** (en-US, de, es, fr, it, pt, sv)
+- iOS input zoom: never use `text-xs` or `text-sm` on `<input>` or `<textarea>` elements — iOS zooms on font-size < 16px. Use `text-base` or larger, or set font-size via inline style if needed.
 
 ## Spec
 
