@@ -10,8 +10,8 @@ import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 import UserMenu from '../components/UserMenu';
 import Modal from '../components/Modal';
-import Toast from '../components/Toast';
 import FeedbackModal from '../components/FeedbackModal';
+import { useToast } from '../contexts/toast';
 import { getSuggestions } from '../i18n/suggestions';
 import { copyText } from '../utils/clipboard';
 
@@ -675,7 +675,7 @@ export default function Home() {
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(60);
   const [notifSheet, setNotifSheet] = useState<'open' | 'going' | null>(null);
-  const [toast, setToast] = useState<{ message: string; linkText?: string; linkTo?: string; linkHref?: string; download?: boolean } | null>(null);
+  const setToast = useToast();
   const pendingAction = useRef<(() => void) | null>(null);
 
   // Schedule form state
@@ -1184,7 +1184,7 @@ export default function Home() {
           );
         })()}
 
-        <TipsSection setToast={setToast} />
+        <TipsSection />
 
 
         <Modal open={notifSheet !== null} onClose={handleNotifSkip}>
@@ -1209,7 +1209,6 @@ export default function Home() {
             </button>
           </div>
         </Modal>
-      {toast && <Toast message={toast.message} linkText={toast.linkText} linkTo={toast.linkTo} linkHref={toast.linkHref} download={toast.download} onDismiss={() => setToast(null)} />}
       </div>
     );
   }
@@ -1555,7 +1554,6 @@ export default function Home() {
         </div>
       )}
 
-      {toast && <Toast message={toast.message} linkText={toast.linkText} linkTo={toast.linkTo} linkHref={toast.linkHref} download={toast.download} onDismiss={() => setToast(null)} />}
     </div>
   );
 }
@@ -1566,8 +1564,9 @@ function usePermanentDismiss(key: string): [boolean, () => void] {
   return [dismissed, dismiss];
 }
 
-function TipsSection({ setToast }: { setToast: (toast: { message: string; linkText?: string; linkTo?: string; linkHref?: string; download?: boolean } | null) => void }) {
+function TipsSection() {
   const { t } = useTranslation();
+  const setToast = useToast();
   const [appBannerDismissed, dismissAppBanner] = usePermanentDismiss('app_banner_dismissed');
   const [inviteDismissed, dismissInvite] = usePermanentDismiss('tip_invite_dismissed');
   const [feedbackDismissed, dismissFeedback] = usePermanentDismiss('tip_feedback_dismissed');
