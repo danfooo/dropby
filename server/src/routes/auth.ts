@@ -91,6 +91,7 @@ router.delete('/avatar', requireAuth, (req: AuthRequest, res) => {
 
 // DELETE /api/auth/me
 router.delete('/me', requireAuth, (req: AuthRequest, res) => {
+  db.prepare('DELETE FROM event_log WHERE user_id = ?').run(req.userId);
   db.prepare('DELETE FROM users WHERE id = ?').run(req.userId);
   res.json({ ok: true });
 });
