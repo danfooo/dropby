@@ -816,9 +816,7 @@ export default function Home() {
     mutationFn: (id: string) => statusApi.cancelScheduledById(id),
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
-      if (localStorage.getItem(`dropby_ics_${id}`)) {
-        setToast({ message: t('home.removeFromCalendar'), linkText: t('home.removeFromCalendar'), linkHref: `/api/status/${id}/calendar.ics?cancel=1`, download: true });
-      }
+      setToast({ message: t('home.removeFromCalendar'), linkText: t('home.downloadIcs'), linkHref: `/api/status/${id}/calendar.ics?cancel=1`, download: true });
     },
   });
 
@@ -828,7 +826,7 @@ export default function Home() {
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
       if (localStorage.getItem(`dropby_ics_${id}`)) {
-        setToast({ message: t('home.updateCalendar'), linkText: t('home.updateCalendar'), linkHref: `/api/status/${id}/calendar.ics`, download: true });
+        setToast({ message: t('home.updateCalendar'), linkText: t('home.downloadIcs'), linkHref: `/api/status/${id}/calendar.ics`, download: true });
       }
     },
   });
