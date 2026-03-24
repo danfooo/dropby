@@ -123,9 +123,20 @@ const STORE_LINKS = {
   android: '#', // TODO: replace with Google Play URL
 };
 
+// null = desktop; show both stores
+const mobilePlatform: 'ios' | 'android' | null = (() => {
+  const ua = navigator.userAgent;
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  if (/android/i.test(ua)) return 'android';
+  return null;
+})();
+
 function HeroStoreButtons({ mounted }: { mounted: boolean }) {
   const { t } = useTranslation();
   const [activeStore, setActiveStore] = useState<'ios' | 'android' | null>(null);
+
+  const showIos     = mobilePlatform !== 'android';
+  const showAndroid = mobilePlatform !== 'ios';
 
   const toggle = (store: 'ios' | 'android') => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -140,16 +151,20 @@ function HeroStoreButtons({ mounted }: { mounted: boolean }) {
     <div className={fx(mounted)} style={{ transitionDelay: '350ms' }}>
       {/* Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <a href={STORE_LINKS.ios} onClick={toggle('ios')}
-          className={activeStore === 'ios' ? btnActive : btnIdle}>
-          <AppleIcon />
-          {t('marketing.downloadAppStore')}
-        </a>
-        <a href={STORE_LINKS.android} onClick={toggle('android')}
-          className={activeStore === 'android' ? btnActive : btnIdle}>
-          <PlayIcon />
-          {t('marketing.downloadGooglePlay')}
-        </a>
+        {showIos && (
+          <a href={STORE_LINKS.ios} onClick={toggle('ios')}
+            className={activeStore === 'ios' ? btnActive : btnIdle}>
+            <AppleIcon />
+            {t('marketing.downloadAppStore')}
+          </a>
+        )}
+        {showAndroid && (
+          <a href={STORE_LINKS.android} onClick={toggle('android')}
+            className={activeStore === 'android' ? btnActive : btnIdle}>
+            <PlayIcon />
+            {t('marketing.downloadGooglePlay')}
+          </a>
+        )}
       </div>
 
       {/* QR reveal panel — expands below the buttons */}
@@ -187,28 +202,40 @@ function HeroStoreButtons({ mounted }: { mounted: boolean }) {
 function BottomStoreButtons({ visible }: { visible: boolean }) {
   const { t } = useTranslation();
   const btn = 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-white hover:bg-gray-50 active:scale-95 text-gray-900 font-semibold text-sm transition-[background-color,transform] duration-150 hover:scale-105';
+
+  const showIos     = mobilePlatform !== 'android';
+  const showAndroid = mobilePlatform !== 'ios';
+
   return (
     <div className={`${fx(visible)}`} style={{ transitionDelay: '150ms' }}>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <a href={STORE_LINKS.ios} className={btn}>
-          <AppleIcon />
-          {t('marketing.downloadAppStore')}
-        </a>
-        <a href={STORE_LINKS.android} className={btn}>
-          <PlayIcon />
-          {t('marketing.downloadGooglePlay')}
-        </a>
+        {showIos && (
+          <a href={STORE_LINKS.ios} className={btn}>
+            <AppleIcon />
+            {t('marketing.downloadAppStore')}
+          </a>
+        )}
+        {showAndroid && (
+          <a href={STORE_LINKS.android} className={btn}>
+            <PlayIcon />
+            {t('marketing.downloadGooglePlay')}
+          </a>
+        )}
       </div>
       {/* QR codes — always visible */}
       <div className="flex justify-center gap-10 mt-8">
-        <div className="flex flex-col items-center gap-2">
-          <img src="/qr-ios.svg" alt="iOS QR code" className="w-20 h-20 rounded-xl" />
-          <p className="text-xs text-emerald-100">{t('marketing.downloadAppStore')}</p>
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <img src="/qr-android.svg" alt="Android QR code" className="w-20 h-20 rounded-xl" />
-          <p className="text-xs text-emerald-100">{t('marketing.downloadGooglePlay')}</p>
-        </div>
+        {showIos && (
+          <div className="flex flex-col items-center gap-2">
+            <img src="/qr-ios.svg" alt="iOS QR code" className="w-20 h-20 rounded-xl" />
+            <p className="text-xs text-emerald-100">{t('marketing.downloadAppStore')}</p>
+          </div>
+        )}
+        {showAndroid && (
+          <div className="flex flex-col items-center gap-2">
+            <img src="/qr-android.svg" alt="Android QR code" className="w-20 h-20 rounded-xl" />
+            <p className="text-xs text-emerald-100">{t('marketing.downloadGooglePlay')}</p>
+          </div>
+        )}
       </div>
     </div>
   );
