@@ -1580,7 +1580,7 @@ function TipsSection({ setToast }: { setToast: (toast: { message: string; linkTe
   const showFeedbackTip = !feedbackDismissed && !showInviteTip && !showAppBanner;
 
   const tipContent = showAppBanner ? (
-    <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
+    <div className="bg-white dark:bg-gray-900 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('common.appBannerText')}</p>
         <button onClick={dismissAppBanner} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
@@ -1594,7 +1594,7 @@ function TipsSection({ setToast }: { setToast: (toast: { message: string; linkTe
       </Link>
     </div>
   ) : showInviteTip ? (
-    <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
+    <div className="bg-white dark:bg-gray-900 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.inviteFriendsText')}</p>
         <button onClick={dismissInvite} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
@@ -1605,8 +1605,12 @@ function TipsSection({ setToast }: { setToast: (toast: { message: string; linkTe
       </div>
       <button
         onClick={async () => {
-          await copyText(invitesApi.generate().then(data => `${t('home.friendshipCopyText')}\n${data.url}`));
-          setToast({ message: t('home.inviteLinkCopied'), linkText: '', linkTo: '' });
+          try {
+            await copyText(invitesApi.generate().then(data => `${t('home.friendshipCopyText')}\n${data.url}`));
+            setToast({ message: t('home.inviteLinkCopied') });
+          } catch {
+            setToast({ message: t('home.couldNotCopy') });
+          }
         }}
         className="text-sm font-semibold text-emerald-600 dark:text-emerald-400"
       >
@@ -1614,7 +1618,7 @@ function TipsSection({ setToast }: { setToast: (toast: { message: string; linkTe
       </button>
     </div>
   ) : showFeedbackTip ? (
-    <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
+    <div className="bg-white dark:bg-gray-900 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.feedbackTipText')}</p>
         <button onClick={() => { dismissFeedback(); setToast({ message: t('home.feedbackTipDismissed'), linkText: t('profile.title'), linkTo: '/profile' }); }} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
@@ -1628,7 +1632,7 @@ function TipsSection({ setToast }: { setToast: (toast: { message: string; linkTe
       </button>
     </div>
   ) : !coffeeDismissed && everReceived?.received ? (
-    <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
+    <div className="bg-white dark:bg-gray-900 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.coffeeTipText')}</p>
         <button onClick={dismissCoffee} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
@@ -1645,7 +1649,12 @@ function TipsSection({ setToast }: { setToast: (toast: { message: string; linkTe
 
   return (
     <>
-      {tipContent}
+      {tipContent && (
+        <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+          <p className="px-4 pt-3 pb-0 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{t('home.tipsSectionTitle')}</p>
+          {tipContent}
+        </div>
+      )}
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
   );
