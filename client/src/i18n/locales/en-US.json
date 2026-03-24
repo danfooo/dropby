@@ -82,7 +82,7 @@
   "common": {
     "cancel": "Cancel",
     "done": "Done",
-    "appBannerText": "You won't know when a friend opens their door without the app.",
+    "appBannerText": "Get the dropby app to be notified when friends open the door, or when they RSVP.",
     "appBannerCta": "Get the app"
   },
   "home": {
@@ -126,6 +126,7 @@
     "recipients": "Recipients",
     "saveChanges": "Save changes",
     "undo": "Undo ({{seconds}}s)",
+    "tipsSectionTitle": "Tips",
     "feedbackTipText": "Enjoying dropby? Your feedback shapes what we build next.",
     "feedbackTipDismissed": "You can always share feedback from your",
     "feedbackTipLink": "Share thoughts →",
@@ -255,6 +256,7 @@
     "removePhoto": "Remove photo",
     "shareFeedback": "Share feedback",
     "resetOnboarding": "Reset tips",
+    "tipsReset": "Tips reset — they'll show up again on the home screen",
     "buyMeCoffee": "Support dropby ☕",
     "email": "Email",
     "remindersTitle": "Reminders",

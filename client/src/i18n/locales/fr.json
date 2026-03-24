@@ -82,7 +82,7 @@
   "common": {
     "cancel": "Annuler",
     "done": "Terminé",
-    "appBannerText": "Tu ne sauras pas quand un ami ouvre sa porte sans l'appli.",
+    "appBannerText": "Installe l'appli dropby pour savoir quand tes amis ouvrent leur porte ou répondent à une invitation.",
     "appBannerCta": "Obtenir l'appli"
   },
   "home": {
@@ -126,6 +126,7 @@
     "recipients": "Destinataires",
     "saveChanges": "Enregistrer",
     "undo": "Annuler ({{seconds}}s)",
+    "tipsSectionTitle": "Conseils",
     "feedbackTipText": "Tu aimes dropby ? Ton avis guide ce qu'on construit ensuite.",
     "feedbackTipDismissed": "Tu peux toujours partager ton avis depuis ton",
     "feedbackTipLink": "Partager →",
@@ -255,6 +256,7 @@
     "removePhoto": "Supprimer la photo",
     "shareFeedback": "Partager un avis",
     "resetOnboarding": "Réinitialiser les conseils",
+    "tipsReset": "Conseils réinitialisés — ils réapparaîtront sur l'écran d'accueil",
     "buyMeCoffee": "Soutenir dropby ☕",
     "email": "E-mail",
     "remindersTitle": "Rappels",

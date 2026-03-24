@@ -10,6 +10,7 @@ import Avatar from '../components/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
 import FeedbackModal from '../components/FeedbackModal';
+import { useToast } from '../contexts/toast';
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 type DayKey = typeof DAY_KEYS[number];
@@ -213,6 +214,7 @@ function AvatarCropModal({ open, onClose, onSave, onRemove, hasAvatar }: { open:
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
+  const setToast = useToast();
   const { user, setUser, clearAuth } = useAuthStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -442,6 +444,7 @@ export default function Profile() {
           <button
             onClick={() => {
               ['tip_nudge_dismissed', 'tip_invite_dismissed', 'tip_feedback_dismissed', 'tip_coffee_dismissed'].forEach(k => localStorage.removeItem(k));
+              setToast({ message: t('profile.tipsReset') });
             }}
             className="w-full py-3 text-gray-600 dark:text-gray-400 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800"
           >

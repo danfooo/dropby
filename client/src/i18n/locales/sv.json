@@ -82,7 +82,7 @@
   "common": {
     "cancel": "Avbryt",
     "done": "Klar",
-    "appBannerText": "Du vet inte när en vän öppnar sin dörr utan appen.",
+    "appBannerText": "Ladda ner dropby-appen för att få veta när vänner öppnar dörren eller svarar på en inbjudan.",
     "appBannerCta": "Skaffa appen"
   },
   "home": {
@@ -126,6 +126,7 @@
     "recipients": "Mottagare",
     "saveChanges": "Spara ändringar",
     "undo": "Ångra ({{seconds}}s)",
+    "tipsSectionTitle": "Tips",
     "feedbackTipText": "Gillar du dropby? Ditt feedback styr vad vi bygger härnäst.",
     "feedbackTipDismissed": "Du kan alltid dela feedback från din",
     "feedbackTipLink": "Dela tankar →",
@@ -255,6 +256,7 @@
     "removePhoto": "Ta bort foto",
     "shareFeedback": "Dela feedback",
     "resetOnboarding": "Återställ tips",
+    "tipsReset": "Tips återställda — de visas igen på hemskärmen",
     "buyMeCoffee": "Stöd dropby ☕",
     "email": "E-post",
     "remindersTitle": "Påminnelser",

@@ -82,7 +82,7 @@
   "common": {
     "cancel": "Cancelar",
     "done": "Feito",
-    "appBannerText": "Não saberás quando um amigo abre a porta sem a app.",
+    "appBannerText": "Instala a app dropby para saber quando os teus amigos abrem a porta ou confirmam presença.",
     "appBannerCta": "Obter a app"
   },
   "home": {
@@ -126,6 +126,7 @@
     "recipients": "Destinatários",
     "saveChanges": "Guardar alterações",
     "undo": "Desfazer ({{seconds}}s)",
+    "tipsSectionTitle": "Dicas",
     "feedbackTipText": "Gostas do dropby? O teu feedback molda o que construímos a seguir.",
     "feedbackTipDismissed": "Podes sempre partilhar feedback no teu",
     "feedbackTipLink": "Partilhar opinião →",
@@ -255,6 +256,7 @@
     "removePhoto": "Remover foto",
     "shareFeedback": "Partilhar feedback",
     "resetOnboarding": "Repor dicas",
+    "tipsReset": "Dicas repostas — voltarão a aparecer no ecrã inicial",
     "buyMeCoffee": "Apoiar o dropby ☕",
     "email": "Email",
     "remindersTitle": "Lembretes",
