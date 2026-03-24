@@ -675,8 +675,8 @@ export default function Home() {
   const [showScheduleMore, setShowScheduleMore] = useState(false);
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(60);
-  const [calendarToast, setCalendarToast] = useState<{ type: 'update' | 'remove'; sessionId: string } | null>(null);
   const [notifSheet, setNotifSheet] = useState<'open' | 'going' | null>(null);
+  const [toast, setToast] = useState<{ message: string; linkText?: string; linkTo?: string; linkHref?: string; download?: boolean } | null>(null);
   const pendingAction = useRef<(() => void) | null>(null);
 
   // Schedule form state
@@ -817,7 +817,7 @@ export default function Home() {
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
       if (localStorage.getItem(`dropby_ics_${id}`)) {
-        setCalendarToast({ type: 'remove', sessionId: id });
+        setToast({ message: t('home.removeFromCalendar'), linkText: t('home.removeFromCalendar'), linkHref: `/api/status/${id}/calendar.ics?cancel=1`, download: true });
       }
     },
   });
@@ -828,7 +828,7 @@ export default function Home() {
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
       if (localStorage.getItem(`dropby_ics_${id}`)) {
-        setCalendarToast({ type: 'update', sessionId: id });
+        setToast({ message: t('home.updateCalendar'), linkText: t('home.updateCalendar'), linkHref: `/api/status/${id}/calendar.ics`, download: true });
       }
     },
   });
@@ -1187,30 +1187,8 @@ export default function Home() {
           );
         })()}
 
-        <TipsSection />
+        <TipsSection setToast={setToast} />
 
-        {calendarToast && (
-          <div className="fixed bottom-4 left-4 right-4 z-50 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl p-3 flex items-center gap-3 shadow-lg">
-            <span className="flex-1 text-sm">
-              {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
-            </span>
-            <a
-              href={calendarToast.type === 'update'
-                ? `/api/status/${calendarToast.sessionId}/calendar.ics`
-                : `/api/status/${calendarToast.sessionId}/calendar.ics?cancel=1`}
-              download
-              className="text-sm text-emerald-400 dark:text-emerald-600 font-medium whitespace-nowrap"
-              onClick={() => setCalendarToast(null)}
-            >
-              {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
-            </a>
-            <button onClick={() => setCalendarToast(null)} className="text-gray-400 dark:text-gray-500 p-1 shrink-0">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
 
         <Modal open={notifSheet !== null} onClose={handleNotifSkip}>
           <p className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-2">
@@ -1579,28 +1557,7 @@ export default function Home() {
         </div>
       )}
 
-      {calendarToast && (
-        <div className="fixed bottom-4 left-4 right-4 z-50 bg-gray-900 text-white rounded-xl p-3 flex items-center gap-3 shadow-lg">
-          <span className="flex-1 text-sm">
-            {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
-          </span>
-          <a
-            href={calendarToast.type === 'update'
-              ? `/api/status/${calendarToast.sessionId}/calendar.ics`
-              : `/api/status/${calendarToast.sessionId}/calendar.ics?cancel=1`}
-            download
-            className="text-sm text-emerald-400 font-medium whitespace-nowrap"
-            onClick={() => setCalendarToast(null)}
-          >
-            {calendarToast.type === 'update' ? t('home.updateCalendar') : t('home.removeFromCalendar')}
-          </a>
-          <button onClick={() => setCalendarToast(null)} className="text-gray-400 dark:text-gray-500 p-1 shrink-0">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
+      {toast && <Toast message={toast.message} linkText={toast.linkText} linkTo={toast.linkTo} linkHref={toast.linkHref} download={toast.download} onDismiss={() => setToast(null)} />}
     </div>
   );
 }
@@ -1611,27 +1568,35 @@ function usePermanentDismiss(key: string): [boolean, () => void] {
   return [dismissed, dismiss];
 }
 
-function TipsSection() {
+function TipsSection({ setToast }: { setToast: (toast: { message: string; linkText?: string; linkTo?: string; linkHref?: string; download?: boolean } | null) => void }) {
   const { t } = useTranslation();
+  const [appBannerDismissed, dismissAppBanner] = usePermanentDismiss('app_banner_dismissed');
   const [inviteDismissed, dismissInvite] = usePermanentDismiss('tip_invite_dismissed');
   const [feedbackDismissed, dismissFeedback] = usePermanentDismiss('tip_feedback_dismissed');
   const [coffeeDismissed, dismissCoffee] = usePermanentDismiss('tip_coffee_dismissed');
   const [showFeedback, setShowFeedback] = useState(false);
-  const [toast, setToast] = useState<{ message: string; linkText: string; linkTo: string; persistent?: boolean } | null>(null);
-
-  // Web-only app install banner — highest priority, shown once until dismissed
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) return;
-    if (localStorage.getItem('app_banner_dismissed')) return;
-    setToast({ message: t('common.appBannerText'), linkText: t('common.appBannerCta'), linkTo: '/', persistent: true });
-  }, []);
 
   const { data: everReceived } = useQuery({ queryKey: ['everReceived'], queryFn: async () => { const { goingApi } = await import('../api'); return goingApi.everReceived(); } });
 
-  const showInviteTip = !inviteDismissed;
-  const showFeedbackTip = !feedbackDismissed && !showInviteTip;
+  const showAppBanner = !Capacitor.isNativePlatform() && !appBannerDismissed;
+  const showInviteTip = !inviteDismissed && !showAppBanner;
+  const showFeedbackTip = !feedbackDismissed && !showInviteTip && !showAppBanner;
 
-  const tipContent = showInviteTip ? (
+  const tipContent = showAppBanner ? (
+    <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
+      <div className="flex items-start justify-between mb-2">
+        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('common.appBannerText')}</p>
+        <button onClick={dismissAppBanner} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <Link to="/get" className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+        {t('common.appBannerCta')}
+      </Link>
+    </div>
+  ) : showInviteTip ? (
     <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.inviteFriendsText')}</p>
@@ -1686,7 +1651,6 @@ function TipsSection() {
   return (
     <>
       {portal && tipContent && createPortal(tipContent, portal)}
-      {toast && <Toast message={toast.message} linkText={toast.linkText || undefined} linkTo={toast.linkTo || undefined} persistent={toast.persistent} onDismiss={() => { if (toast.persistent) localStorage.setItem('app_banner_dismissed', '1'); setToast(null); }} />}
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
   );
