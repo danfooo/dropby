@@ -378,17 +378,17 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
             <div className="flex-[2] px-3 py-2 border-r border-gray-200 dark:border-gray-700">
               <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">Date</label>
               <input type="date" value={date} min={todayStr()} onChange={e => setDate(e.target.value)}
-                className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+                className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
             </div>
             <div className="flex-1 px-3 py-2 border-r border-gray-200 dark:border-gray-700">
               <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
               <input type="time" value={start} onChange={e => setStart(e.target.value)}
-                className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+                className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
             </div>
             <div className="flex-1 px-3 py-2">
               <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
               <input type="time" value={end} onChange={e => setEnd(e.target.value)}
-                className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+                className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -498,17 +498,17 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
           <div className="flex-[2] px-3 py-2 border-r border-violet-200 dark:border-violet-800">
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">Date</label>
             <input type="date" value={editDate} min={format(new Date(), 'yyyy-MM-dd')} onChange={e => setEditDate(e.target.value)}
-              className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+              className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
           </div>
           <div className="flex-1 px-3 py-2 border-r border-violet-200 dark:border-violet-800">
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
             <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
-              className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+              className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
           </div>
           <div className="flex-1 px-3 py-2">
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
             <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
-              className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+              className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
           </div>
         </div>
         <div className="relative">
@@ -1064,17 +1064,17 @@ export default function Home() {
               <div className="flex-[2] px-3 py-2 border-r border-gray-200 dark:border-gray-700">
                 <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">Date</label>
                 <input type="date" value={scheduleDate} min={todayStr()} onChange={e => setScheduleDate(e.target.value)}
-                  className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+                  className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
               </div>
               <div className="flex-1 px-3 py-2 border-r border-gray-200 dark:border-gray-700">
                 <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
                 <input type="time" value={scheduleStart} onChange={e => setScheduleStart(e.target.value)}
-                  className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+                  className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
               </div>
               <div className="flex-1 px-3 py-2">
                 <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
                 <input type="time" value={scheduleEnd} onChange={e => setScheduleEnd(e.target.value)}
-                  className="w-full text-sm bg-transparent outline-none dark:text-gray-50" />
+                  className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
               </div>
             </div>
             <div className="flex items-center gap-2">
