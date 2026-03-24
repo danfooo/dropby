@@ -66,8 +66,7 @@ export default function Friends() {
 
   const handleInvite = async () => {
     try {
-      const data = await invitesApi.generate();
-      await navigator.clipboard.writeText(`${t('home.friendshipCopyText')}\n${data.url}`);
+      await copyText(invitesApi.generate().then(data => `${t('home.friendshipCopyText')}\n${data.url}`));
       alert(t('home.inviteLinkCopied'));
     } catch {
       alert(t('home.couldNotCopy'));
@@ -94,13 +93,13 @@ export default function Friends() {
               onClick={handleInvite}
               className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm font-medium"
             >
-              {t('friends.invite')}
+              {t('friends.copyInviteLink')}
             </button>
             <button
               onClick={() => setShowAddModal(true)}
               className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium"
             >
-              {t('friends.add')}
+              {t('friends.addByEmail')}
             </button>
           </div>
         </div>
