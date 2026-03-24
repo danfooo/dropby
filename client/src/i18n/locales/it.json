@@ -71,7 +71,9 @@
     "passwordUpdated": "Password aggiornata. Accesso in corso…",
     "backToLogin": "Torna all'accesso",
     "googleFailed": "Accesso con Google fallito",
-    "somethingWentWrong": "Qualcosa è andato storto. Riprova."
+    "somethingWentWrong": "Qualcosa è andato storto. Riprova.",
+    "appleFailed": "Accesso Apple non riuscito",
+    "continueWithApple": "Continua con Apple"
   },
   "nav": {
     "home": "Home",

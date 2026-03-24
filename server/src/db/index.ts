@@ -158,6 +158,9 @@ db.exec(`
 
 // Migrations for existing databases
 const cols = db.pragma('table_info(users)') as { name: string }[];
+if (!cols.find(c => c.name === 'apple_id')) {
+  db.exec('ALTER TABLE users ADD COLUMN apple_id TEXT UNIQUE');
+}
 if (!cols.find(c => c.name === 'avatar_seed')) {
   db.exec('ALTER TABLE users ADD COLUMN avatar_seed INTEGER NOT NULL DEFAULT 0');
 }

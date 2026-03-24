@@ -71,7 +71,9 @@
     "passwordUpdated": "Palavra-passe atualizada. A entrar…",
     "backToLogin": "Voltar ao início de sessão",
     "googleFailed": "Falha no início de sessão com Google",
-    "somethingWentWrong": "Algo correu mal. Tenta novamente."
+    "somethingWentWrong": "Algo correu mal. Tenta novamente.",
+    "appleFailed": "Falha no login com Apple",
+    "continueWithApple": "Continuar com Apple"
   },
   "nav": {
     "home": "Início",

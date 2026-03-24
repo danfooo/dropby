@@ -71,7 +71,9 @@
     "passwordUpdated": "Contraseña actualizada. Iniciando sesión…",
     "backToLogin": "Volver al inicio de sesión",
     "googleFailed": "Error al iniciar sesión con Google",
-    "somethingWentWrong": "Algo salió mal. Por favor, inténtalo de nuevo."
+    "somethingWentWrong": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "appleFailed": "Error con Apple",
+    "continueWithApple": "Continuar con Apple"
   },
   "nav": {
     "home": "Inicio",

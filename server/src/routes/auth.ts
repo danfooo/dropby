@@ -243,6 +243,67 @@ router.post('/google', async (req, res) => {
   }
 });
 
+// POST /api/auth/apple
+router.post('/apple', async (req, res) => {
+  const { identityToken, fullName } = req.body;
+  if (!identityToken) return res.status(400).json({ error: 'Apple identity token required' });
+
+  const bundleId = process.env.APPLE_BUNDLE_ID;
+  if (!bundleId) return res.status(500).json({ error: 'Apple OAuth not configured' });
+
+  try {
+    const { createRemoteJWKSet, jwtVerify } = await import('jose');
+    const JWKS = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'));
+    const { payload } = await jwtVerify(identityToken, JWKS, {
+      issuer: 'https://appleid.apple.com',
+      audience: bundleId,
+    });
+
+    const appleId = payload.sub as string;
+    // Apple only sends email on first sign-in; it may be a relay address
+    const email = (payload.email as string | undefined)?.toLowerCase();
+
+    let user = db.prepare('SELECT * FROM users WHERE apple_id = ?').get(appleId) as any;
+
+    // Try to link to existing account by email (if Apple provides it)
+    if (!user && email) {
+      user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    }
+
+    if (!user) {
+      // New user — Apple only gives us a name on the very first sign-in
+      const givenName = fullName?.givenName;
+      const familyName = fullName?.familyName;
+      const displayName = (givenName && familyName)
+        ? `${givenName} ${familyName}`.trim()
+        : givenName || (email ? email.split('@')[0] : 'dropby user');
+
+      // Apple relay emails look real but aren't reusable — still store them
+      const userEmail = email || `${appleId}@privaterelay.appleid.com`;
+      const id = randomUUID();
+      db.prepare(`
+        INSERT INTO users (id, email, display_name, apple_id, email_verified)
+        VALUES (?, ?, ?, ?, 1)
+      `).run(id, userEmail, displayName, appleId);
+      user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+      log('user.signup', id, { method: 'apple' });
+    } else {
+      const updates: string[] = ['email_verified = 1'];
+      const values: unknown[] = [];
+      if (!user.apple_id) { updates.push('apple_id = ?'); values.push(appleId); }
+      values.push(user.id);
+      db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+      user = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
+    }
+
+    const token = await signJwt(user.id);
+    res.json({ token, user: userResponse(user) });
+  } catch (err: any) {
+    console.error('Apple auth error:', err.message);
+    res.status(401).json({ error: 'Invalid Apple token' });
+  }
+});
+
 // POST /api/auth/forgot-password
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;

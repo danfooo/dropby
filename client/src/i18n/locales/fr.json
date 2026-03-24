@@ -71,7 +71,9 @@
     "passwordUpdated": "Mot de passe mis à jour. Connexion en cours…",
     "backToLogin": "Retour à la connexion",
     "googleFailed": "Échec de la connexion Google",
-    "somethingWentWrong": "Quelque chose s'est mal passé. Réessaie."
+    "somethingWentWrong": "Quelque chose s'est mal passé. Réessaie.",
+    "appleFailed": "Connexion Apple échouée",
+    "continueWithApple": "Continuer avec Apple"
   },
   "nav": {
     "home": "Accueil",

@@ -71,7 +71,9 @@
     "passwordUpdated": "Passwort aktualisiert. Du wirst eingeloggt…",
     "backToLogin": "Zurück zur Anmeldung",
     "googleFailed": "Google-Anmeldung fehlgeschlagen",
-    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuch es erneut."
+    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuch es erneut.",
+    "appleFailed": "Apple-Anmeldung fehlgeschlagen",
+    "continueWithApple": "Mit Apple fortfahren"
   },
   "nav": {
     "home": "Startseite",

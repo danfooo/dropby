@@ -71,6 +71,8 @@
     "passwordUpdated": "Password updated. Taking you in…",
     "backToLogin": "Back to login",
     "googleFailed": "Google sign-in failed",
+    "appleFailed": "Apple sign-in failed",
+    "continueWithApple": "Continue with Apple",
     "somethingWentWrong": "Something went wrong. Please try again."
   },
   "nav": {

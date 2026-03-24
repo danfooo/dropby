@@ -71,7 +71,9 @@
     "passwordUpdated": "Lösenord uppdaterat. Loggar in…",
     "backToLogin": "Tillbaka till inloggning",
     "googleFailed": "Google-inloggning misslyckades",
-    "somethingWentWrong": "Något gick fel. Försök igen."
+    "somethingWentWrong": "Något gick fel. Försök igen.",
+    "appleFailed": "Apple-inloggning misslyckades",
+    "continueWithApple": "Fortsätt med Apple"
   },
   "nav": {
     "home": "Hem",

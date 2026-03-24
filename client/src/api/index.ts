@@ -33,6 +33,8 @@ export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }).then(r => r.data),
   google: (credential: string) => api.post('/auth/google', { credential }).then(r => r.data),
+  apple: (identityToken: string, fullName?: { givenName?: string; familyName?: string }) =>
+    api.post('/auth/apple', { identityToken, fullName }).then(r => r.data),
   verifyEmail: (token: string) => api.post('/auth/verify-email', { token }).then(r => r.data),
   resendVerification: (email: string, redirect_url?: string) => api.post('/auth/resend-verification', { email, redirect_url }).then(r => r.data),
   forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }).then(r => r.data),
