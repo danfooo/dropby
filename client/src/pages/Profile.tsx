@@ -27,27 +27,18 @@ function suggestNextNudge(existing: Array<{ day_of_week: string; hour: number }>
 }
 
 function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: () => void; existing: any[] }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const suggestion = suggestNextNudge(existing);
   const [day, setDay] = useState(suggestion.day);
-  const [hour, setHour] = useState(suggestion.hour);
+  const [time, setTime] = useState(`${String(suggestion.hour).padStart(2, '0')}:00`);
 
-  const use24h = ['de', 'es', 'fr'].includes((i18n.language ?? '').split('-')[0]);
-
-  const formatHour = (h: number) => {
-    if (use24h) return `${h}:00`;
-    const ampm = h < 12 ? 'am' : 'pm';
-    const disp = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${disp}${ampm}`;
-  };
+  const hour = parseInt(time.split(':')[0], 10);
 
   const addNudge = useMutation({
     mutationFn: ({ d, h }: { d: string; h: number }) => nudgesApi.add(d, h),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['nudges'] }); onClose(); },
   });
-
-  const suggestedDayLabel = t(`profile.days.${suggestion.day}`);
 
   return (
     <Modal open={open} onClose={onClose} title={t('profile.addReminderTitle')}>
@@ -69,30 +60,18 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
           </div>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">{t('profile.time', { time: formatHour(hour) })}</label>
-          <div className="grid grid-cols-4 gap-1.5">
-            {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22].map(h => (
-              <button
-                key={h}
-                onClick={() => setHour(h)}
-                className={`py-2 rounded-lg text-xs font-medium transition-colors ${
-                  hour === h ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-              >
-                {formatHour(h)}
-              </button>
-            ))}
-          </div>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">{t('profile.time', { time: '' }).trim()}</label>
+          <input
+            type="time"
+            value={time}
+            onChange={e => setTime(e.target.value || time)}
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+          />
         </div>
         <div className="bg-emerald-50 dark:bg-emerald-950 rounded-xl p-3">
           <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">{t('profile.suggested')}</p>
           <p className="text-sm text-emerald-900 dark:text-emerald-200">
-            {suggestedDayLabel} {use24h ? `${suggestion.hour}:00` : (() => {
-              const h = suggestion.hour;
-              const ampm = h < 12 ? 'am' : 'pm';
-              const disp = h === 0 ? 12 : h > 12 ? h - 12 : h;
-              return `${disp}${ampm}`;
-            })()}
+            {t(`profile.days.${suggestion.day}`)} {String(suggestion.hour).padStart(2, '0')}:00
           </p>
           <button
             onClick={() => addNudge.mutate({ d: suggestion.day, h: suggestion.hour })}
