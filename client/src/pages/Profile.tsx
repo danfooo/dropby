@@ -375,11 +375,12 @@ export default function Profile() {
             onChange={e => i18n.changeLanguage(e.target.value)}
             className="text-sm text-gray-900 dark:text-gray-50 bg-transparent border-none outline-none cursor-pointer"
           >
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
+            <option value="en-US">English</option>
             <option value="de">Deutsch</option>
             <option value="es">Español</option>
             <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+            <option value="pt">Português</option>
             <option value="sv">Svenska</option>
           </select>
         </div>

@@ -57,12 +57,13 @@ function GlobeIcon() {
 // ── Language switcher ─────────────────────────────────────────
 
 const LANGUAGES = [
-  { code: 'en-US', label: 'English',      short: 'EN'    },
-  { code: 'en-GB', label: 'English (UK)', short: 'EN·GB' },
-  { code: 'de',    label: 'Deutsch',      short: 'DE'    },
-  { code: 'es',    label: 'Español',      short: 'ES'    },
-  { code: 'fr',    label: 'Français',     short: 'FR'    },
-  { code: 'sv',    label: 'Svenska',      short: 'SV'    },
+  { code: 'en-US', label: 'English',   short: 'EN' },
+  { code: 'de',    label: 'Deutsch',   short: 'DE' },
+  { code: 'es',    label: 'Español',   short: 'ES' },
+  { code: 'fr',    label: 'Français',  short: 'FR' },
+  { code: 'it',    label: 'Italiano',  short: 'IT' },
+  { code: 'pt',    label: 'Português', short: 'PT' },
+  { code: 'sv',    label: 'Svenska',   short: 'SV' },
 ];
 
 function LanguageSwitcher() {

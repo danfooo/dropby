@@ -2,19 +2,22 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import enUS from './locales/en-US.json';
-import enGB from './locales/en-GB.json';
 import de from './locales/de.json';
 import es from './locales/es.json';
 import fr from './locales/fr.json';
+import it from './locales/it.json';
+import pt from './locales/pt.json';
 import sv from './locales/sv.json';
 
 const langMap: Record<string, string> = {
   'en-US': 'en-US',
-  'en-GB': 'en-GB',
+  'en-GB': 'en-US',
   en: 'en-US',
   de: 'de',
   es: 'es',
   fr: 'fr',
+  it: 'it',
+  pt: 'pt',
   sv: 'sv',
 };
 
@@ -27,10 +30,11 @@ i18n
     lng,
     resources: {
       'en-US': { translation: enUS },
-      'en-GB': { translation: enGB },
       de: { translation: de },
       es: { translation: es },
       fr: { translation: fr },
+      it: { translation: it },
+      pt: { translation: pt },
       sv: { translation: sv },
     },
     fallbackLng: 'en-US',
