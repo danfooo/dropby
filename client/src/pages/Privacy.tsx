@@ -60,6 +60,10 @@ export default function Privacy() {
                 <p className="font-medium text-gray-800 dark:text-gray-200">Feedback</p>
                 <p className="text-gray-600 dark:text-gray-400">If you submit feedback through the app, we store your message and, optionally, your email if you want a reply.</p>
               </div>
+              <div>
+                <p className="font-medium text-gray-800 dark:text-gray-200">Usage analytics</p>
+                <p className="text-gray-600 dark:text-gray-400">We log basic in-app events — such as opening your door, sending a going signal, and whether notifications led to an action — to understand how well the product is working. This data is stored on our own servers, never shared with third parties, and deleted after 12 months (or immediately when you delete your account).</p>
+              </div>
             </div>
           </section>
 
@@ -68,7 +72,7 @@ export default function Privacy() {
             <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
               <li>We don't sell your data.</li>
               <li>We don't run ads.</li>
-              <li>We don't use third-party analytics or tracking cookies.</li>
+              <li>We don't use third-party analytics services or tracking cookies.</li>
               <li>We don't share your data with anyone except where strictly required to run the service (see below).</li>
             </ul>
           </section>
