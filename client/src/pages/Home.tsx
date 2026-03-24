@@ -1607,9 +1607,9 @@ function TipsSection({ setToast }: { setToast: (toast: { message: string; linkTe
         onClick={async () => {
           try {
             await copyText(invitesApi.generate().then(data => `${t('home.friendshipCopyText')}\n${data.url}`));
-            setToast({ message: t('home.inviteLinkCopied') });
+            alert(t('home.inviteLinkCopied'));
           } catch {
-            setToast({ message: t('home.couldNotCopy') });
+            alert(t('home.couldNotCopy'));
           }
         }}
         className="text-sm font-semibold text-emerald-600 dark:text-emerald-400"
