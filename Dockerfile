@@ -5,6 +5,7 @@ ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
+COPY scripts/ ../scripts/
 COPY client/ ./
 RUN npm run build
 
