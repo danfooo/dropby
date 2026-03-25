@@ -5,7 +5,6 @@ dist/
 server/data/
 db-snapshot-*/
 client/dist/
-ios/
 .DS_Store
 *.log
 android/app/google-services.json
