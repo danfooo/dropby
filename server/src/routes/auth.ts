@@ -249,14 +249,16 @@ router.post('/apple', async (req, res) => {
   if (!identityToken) return res.status(400).json({ error: 'Apple identity token required' });
 
   const bundleId = process.env.APPLE_BUNDLE_ID;
-  if (!bundleId) return res.status(500).json({ error: 'Apple OAuth not configured' });
+  const serviceId = process.env.APPLE_SERVICE_ID;
+  if (!bundleId && !serviceId) return res.status(500).json({ error: 'Apple OAuth not configured' });
 
   try {
     const { createRemoteJWKSet, jwtVerify } = await import('jose');
     const JWKS = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'));
+    const audiences = [bundleId, serviceId].filter(Boolean) as string[];
     const { payload } = await jwtVerify(identityToken, JWKS, {
       issuer: 'https://appleid.apple.com',
-      audience: bundleId,
+      audience: audiences.length === 1 ? audiences[0] : audiences,
     });
 
     const appleId = payload.sub as string;

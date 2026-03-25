@@ -19,9 +19,9 @@
 }
 
 /* Prevent iOS auto-zoom on input focus (triggers when font-size < 16px).
-   Intentionally outside @layer so it overrides Tailwind text-* utilities. */
+   !important beats Tailwind utilities even without @layer support (iOS < 15.4). */
 input, textarea, select {
-  font-size: 16px;
+  font-size: 16px !important;
 }
 
 @keyframes float {

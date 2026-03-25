@@ -102,20 +102,50 @@ export default function Auth() {
     setLoading(true);
     setError('');
     try {
-      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
-      const result = await SignInWithApple.authorize({
-        clientId: 'cc.dropby.app',
-        redirectURI: 'https://drop-by.fly.dev',
-        scopes: 'email name',
-      });
-      const { identityToken, givenName, familyName } = result.response;
-      if (!identityToken) throw new Error('No identity token');
-      const fullName = (givenName || familyName) ? { givenName: givenName ?? undefined, familyName: familyName ?? undefined } : undefined;
-      const data = await authApi.apple(identityToken, fullName);
-      handleSuccess(data);
+      if (Capacitor.getPlatform() === 'ios') {
+        // Native iOS: use Capacitor plugin
+        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+        const result = await SignInWithApple.authorize({
+          clientId: 'cc.dropby.app',
+          redirectURI: 'https://drop-by.fly.dev',
+          scopes: 'email name',
+        });
+        const { identityToken, givenName, familyName } = result.response;
+        if (!identityToken) throw new Error('No identity token');
+        const fullName = (givenName || familyName) ? { givenName: givenName ?? undefined, familyName: familyName ?? undefined } : undefined;
+        const data = await authApi.apple(identityToken, fullName);
+        handleSuccess(data);
+      } else {
+        // Web: use Apple JS SDK
+        if (!(window as any).AppleID) {
+          await new Promise<void>((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load Apple Sign In'));
+            document.head.appendChild(script);
+          });
+        }
+        const AppleID = (window as any).AppleID;
+        AppleID.auth.init({
+          clientId: import.meta.env.VITE_APPLE_SERVICE_ID,
+          scope: 'name email',
+          redirectURI: window.location.origin,
+          usePopup: true,
+        });
+        const result = await AppleID.auth.signIn();
+        const identityToken = result.authorization?.id_token;
+        if (!identityToken) throw new Error('No identity token');
+        const firstName = result.user?.name?.firstName;
+        const lastName = result.user?.name?.lastName;
+        const fullName = (firstName || lastName) ? { givenName: firstName ?? undefined, familyName: lastName ?? undefined } : undefined;
+        const data = await authApi.apple(identityToken, fullName);
+        handleSuccess(data);
+      }
     } catch (err: any) {
-      // Ignore user cancellation (Apple error code 1001)
-      if (err?.code !== '1001' && !String(err?.message ?? '').includes('1001')) {
+      // Ignore user cancellation
+      const msg = String(err?.message ?? err?.error ?? '');
+      if (err?.code !== '1001' && !msg.includes('1001') && err?.error !== 'popup_closed_by_user') {
         setError(t('auth.appleFailed'));
       }
     } finally {
@@ -289,7 +319,7 @@ export default function Auth() {
               />
             </div>
 
-            {Capacitor.getPlatform() === 'ios' && (
+            {(Capacitor.getPlatform() === 'ios' || (Capacitor.getPlatform() === 'web' && import.meta.env.VITE_APPLE_SERVICE_ID)) && (
               <button
                 type="button"
                 onClick={handleAppleSignIn}
