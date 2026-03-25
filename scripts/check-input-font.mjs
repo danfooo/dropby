@@ -4,11 +4,13 @@
  * font-size < 16px — the global CSS rule enforces 16px, so these classes
  * are misleading dead weight at best and a zoom trap if the rule is removed.
  */
-import { readFileSync } from 'fs';
-import { globSync } from 'glob';
+import { readFileSync, readdirSync } from 'fs';
+import { join } from 'path';
 
 const clientDir = new URL('../client', import.meta.url).pathname;
-const files = globSync('src/**/*.{tsx,jsx}', { cwd: clientDir });
+const files = readdirSync(join(clientDir, 'src'), { recursive: true })
+  .filter(f => /\.(tsx|jsx)$/.test(f))
+  .map(f => `src/${f}`);
 let errors = 0;
 
 for (const file of files) {
