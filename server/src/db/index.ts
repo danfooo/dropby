@@ -17,6 +17,7 @@ db.exec(`
     display_name TEXT NOT NULL,
     password_hash TEXT,
     google_id TEXT UNIQUE,
+    apple_id TEXT UNIQUE,
     timezone TEXT,
     auto_nudge_enabled INTEGER NOT NULL DEFAULT 1,
     avatar_seed INTEGER NOT NULL DEFAULT 0,
@@ -159,7 +160,8 @@ db.exec(`
 // Migrations for existing databases
 const cols = db.pragma('table_info(users)') as { name: string }[];
 if (!cols.find(c => c.name === 'apple_id')) {
-  db.exec('ALTER TABLE users ADD COLUMN apple_id TEXT UNIQUE');
+  db.exec('ALTER TABLE users ADD COLUMN apple_id TEXT');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_id ON users(apple_id) WHERE apple_id IS NOT NULL');
 }
 if (!cols.find(c => c.name === 'avatar_seed')) {
   db.exec('ALTER TABLE users ADD COLUMN avatar_seed INTEGER NOT NULL DEFAULT 0');
