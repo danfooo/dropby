@@ -24,20 +24,12 @@ export default function Auth() {
   const [view, setView] = useState<'auth' | 'forgot'>('auth');
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
-  const [isDark, setIsDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
   const { setAuth } = useAuthStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/home';
 
   const inviteToken = redirect.match(/^\/invite\/([^/?]+)/)?.[1] ?? null;
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
 
   useEffect(() => {
     // Track auth page views for signup funnel analysis.
@@ -178,7 +170,7 @@ export default function Auth() {
     <div className="min-h-full flex flex-col items-center justify-center px-6 py-10 bg-white dark:bg-gray-950">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="dropby" className="h-16 mx-auto" style={isDark ? { filter: 'invert(1)' } : undefined} />
+          <img src="/logo.svg" alt="dropby" className="h-16 mx-auto dark:[filter:invert(1)]" />
         </div>
 
         {view === 'forgot' ? (
@@ -324,7 +316,7 @@ export default function Auth() {
                 width={340}
                 shape="rectangular"
                 text="continue_with"
-                theme={isDark ? 'filled_black' : 'outline'}
+                theme="filled_black"
               />
             </div>
 
