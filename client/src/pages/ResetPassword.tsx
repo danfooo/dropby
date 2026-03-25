@@ -41,7 +41,7 @@ export default function ResetPassword() {
     <div className="min-h-full flex flex-col items-center justify-center px-6 py-10 bg-white">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="dropby" className="h-10 mx-auto" />
+          <img src="/logo.svg" alt="dropby" className="h-10 mx-auto dark:[filter:invert(1)]" />
         </div>
 
         {status === 'error' && !token && (

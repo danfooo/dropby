@@ -947,7 +947,7 @@ export default function Home() {
     return (
       <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
         <div className="flex items-center justify-between mb-1">
-          <img src="/logo-icon.svg" alt="dropby" className="h-8 dark:invert" />
+          <img src="/logo-icon.svg" alt="dropby" className="h-8 dark:[filter:invert(1)]" />
           <UserMenu />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-6 mt-5">{getGreeting(t)}</h1>
@@ -1308,7 +1308,7 @@ export default function Home() {
     <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <img src="/logo.svg" alt="dropby" className="h-8" />
+        <img src="/logo.svg" alt="dropby" className="h-8 dark:[filter:invert(1)]" />
         <UserMenu />
       </div>
 

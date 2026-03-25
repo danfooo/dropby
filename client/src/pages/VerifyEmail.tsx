@@ -29,7 +29,7 @@ export default function VerifyEmail() {
   return (
     <div className="min-h-full flex flex-col items-center justify-center px-6 py-10 bg-white">
       <div className="w-full max-w-sm text-center">
-        <img src="/logo-icon.svg" alt="dropby" className="h-14 w-14 mx-auto mb-6 dark:invert" />
+        <img src="/logo-icon.svg" alt="dropby" className="h-14 w-14 mx-auto mb-6 dark:[filter:invert(1)]" />
 
         {status === 'verifying' && (
           <>

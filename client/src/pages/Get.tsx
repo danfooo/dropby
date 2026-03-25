@@ -279,7 +279,7 @@ export default function Get() {
       <section className="min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center">
         <img
           src="/logo-icon.svg" alt="dropby"
-          className={`w-16 h-16 mb-6 dark:invert ${fx(mounted)}`}
+          className={`w-16 h-16 mb-6 dark:[filter:invert(1)] ${fx(mounted)}`}
           style={{ transitionDelay: '0ms' }}
         />
         <h1
