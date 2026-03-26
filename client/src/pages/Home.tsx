@@ -599,6 +599,11 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
           {session.note}
         </p>
       )}
+      {session.recipients?.length > 0 && (
+        <p className="text-xs text-violet-500 dark:text-violet-400 mb-2 truncate">
+          {session.recipients.map((r: any) => r.display_name).join(', ')}…
+        </p>
+      )}
       {session.going_signals?.length > 0 && (
         <p className="text-xs text-violet-500 dark:text-violet-400 mb-2">
           {session.going_signals.map((g: any) => g.name).join(', ')} {session.going_signals.length === 1 ? 'is' : 'are'} coming
