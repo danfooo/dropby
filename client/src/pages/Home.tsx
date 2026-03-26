@@ -94,30 +94,28 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
 
   return (
     <div className={`rounded-2xl p-4 shadow-sm border ${isScheduled ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700' : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800'}`}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-3">
         <Avatar name={status.owner_name} size="md" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 dark:text-gray-50">{status.owner_name}</p>
-          {status.note && (
-            <p className={bigNote ? `${bigNote} leading-none` : 'text-sm text-gray-500 dark:text-gray-400 truncate'}>
-              {status.note}
-            </p>
-          )}
-          {isScheduled && (
-            <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mt-0.5">
-              🕐 {t('home.opensAt', { time: formatTime(status.starts_at) })}
-            </p>
-          )}
-          {!isScheduled && status.ends_at && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              {t('home.freeUntil', { time: formatTimeShort(status.ends_at) })}
-            </p>
-          )}
-        </div>
+        <p className="font-semibold text-gray-900 dark:text-gray-50">{status.owner_name}</p>
       </div>
+      {status.note && (
+        <p className={bigNote ? `${bigNote} leading-none mb-2` : 'text-sm text-gray-500 dark:text-gray-400 truncate mb-2'}>
+          {status.note}
+        </p>
+      )}
+      {isScheduled && (
+        <p className="text-xs text-violet-500 dark:text-violet-400 mb-3">
+          {t('home.opensAt', { time: formatTime(status.starts_at) })}
+        </p>
+      )}
+      {!isScheduled && status.ends_at && (
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+          {t('home.freeUntil', { time: formatTimeShort(status.ends_at) })}
+        </p>
+      )}
 
       {/* RSVP buttons */}
-      <div className="flex gap-2 mt-3">
+      <div className="flex gap-2">
         <button
           onClick={() => handleRsvp('going')}
           className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
@@ -597,6 +595,11 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
       {session.note && (
         <p className={bigNote ? `${bigNote} leading-none mb-2` : 'text-sm text-violet-600 dark:text-violet-400 mb-2'}>
           {session.note}
+        </p>
+      )}
+      {session.recipients?.length > 0 && (
+        <p className="text-xs text-violet-500 dark:text-violet-400 mb-2 truncate">
+          {session.recipients.map((r: any) => r.display_name).join(', ')}…
         </p>
       )}
       {session.going_signals?.length > 0 && (
