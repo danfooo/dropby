@@ -23,7 +23,7 @@
     "mockOpened": "hat ihre Tür geöffnet 👋",
     "mockNote": "Kaffee und ein Spaziergang, wer ist dabei?",
     "mockGoing": "Dabei 🏃",
-    "mockMaybe": "Vielleicht"
+    "mockGoing2": "Ich bin in 20 Min da"
   },
   "landing": {
     "tagline": "Sieh deine Freunde öfter.",
@@ -154,8 +154,9 @@
     "freeUntil": "Frei bis {{time}}",
     "opensAt": "Öffnet {{time}}",
     "rsvpGoing": "Ich komme ✅",
-    "rsvpMaybe": "Vielleicht",
-    "scheduledRsvpCount": "{{going}} kommen, {{maybe}} vielleicht",
+    "rsvpNotePlaceholder": "Notiz hinzufügen (optional)",
+    "rsvpNoteSend": "Senden",
+    "rsvpNoteHint": "Das ist eine Einwegnotiz, kein Chat.",
     "addToCalendar": "Zum Kalender hinzufügen",
     "updateCalendar": "Sitzung geändert — ICS-Datei neu herunterladen, um Kalender zu synchronisieren",
     "removeFromCalendar": "Sitzung abgesagt",
@@ -225,8 +226,8 @@
     "weNotifiedThem": "Wir haben {{name}} benachrichtigt, dass du unterwegs bist.",
     "yourRsvp": "Deine Antwort",
     "rsvpGoing": "Ich komme ✅",
-    "rsvpMaybe": "Vielleicht 🤔",
-    "rsvpChanged": "Rückmeldung aktualisiert!",
+    "notePlaceholder": "Gibt es etwas, das sie wissen sollten? (optional)",
+    "noteDisclaimer": "{{name}} wird benachrichtigt, sieht es aber vielleicht nicht sofort. Melde dich direkt, wenn du koordinieren musst.",
     "addToCalendar": "Zum Kalender hinzufügen"
   },
   "feedback": {

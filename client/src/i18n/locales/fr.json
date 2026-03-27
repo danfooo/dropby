@@ -23,7 +23,7 @@
     "mockOpened": "a ouvert sa porte 👋",
     "mockNote": "café et une balade, des volontaires ?",
     "mockGoing": "J'y vais 🏃",
-    "mockMaybe": "Peut-être"
+    "mockGoing2": "J'arrive dans 20 min"
   },
   "landing": {
     "tagline": "Vois tes amis plus souvent.",
@@ -154,8 +154,9 @@
     "freeUntil": "Libre jusqu'à {{time}}",
     "opensAt": "Ouvre {{time}}",
     "rsvpGoing": "J'y vais ✅",
-    "rsvpMaybe": "Peut-être",
-    "scheduledRsvpCount": "{{going}} y vont, {{maybe}} peut-être",
+    "rsvpNotePlaceholder": "Ajouter une note (optionnel)",
+    "rsvpNoteSend": "Envoyer",
+    "rsvpNoteHint": "C'est une note unidirectionnelle, pas un chat.",
     "addToCalendar": "Ajouter au calendrier",
     "updateCalendar": "Session modifiée — re-télécharge le .ics pour synchroniser ton calendrier",
     "removeFromCalendar": "Session annulée",
@@ -225,8 +226,8 @@
     "weNotifiedThem": "On a envoyé une notification à {{name}} pour lui dire que tu arrives.",
     "yourRsvp": "Votre réponse",
     "rsvpGoing": "J'y vais ✅",
-    "rsvpMaybe": "Peut-être 🤔",
-    "rsvpChanged": "RSVP mis à jour !",
+    "notePlaceholder": "Quelque chose qu'ils devraient savoir ? (optionnel)",
+    "noteDisclaimer": "{{name}} recevra une notification, mais ne la verra peut-être pas tout de suite. Contacte-le directement si tu dois coordonner.",
     "addToCalendar": "Ajouter au calendrier"
   },
   "feedback": {

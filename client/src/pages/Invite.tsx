@@ -28,8 +28,10 @@ export default function Invite() {
   const [accepted, setAccepted] = useState(false);
   const [acceptedName, setAcceptedName] = useState('');
   const [showGoingForm, setShowGoingForm] = useState(false);
-  const [pendingRsvp, setPendingRsvp] = useState<'going' | 'maybe'>('going');
-  const [guestRsvp, setGuestRsvp] = useState<{ signalId: string; rsvp: 'going' | 'maybe' } | null>(null);
+  const [guestRsvp, setGuestRsvp] = useState<{ signalId: string } | null>(null);
+  const [guestNote, setGuestNote] = useState('');
+  const [guestNoteSaving, setGuestNoteSaving] = useState(false);
+  const [guestNoteSaved, setGuestNoteSaved] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -57,7 +59,7 @@ export default function Invite() {
       if (raw) {
         try {
           const stored = JSON.parse(raw);
-          if (stored.statusId === info.status.id) setGuestRsvp({ signalId: stored.signalId, rsvp: stored.rsvp });
+          if (stored.statusId === info.status.id) setGuestRsvp({ signalId: stored.signalId });
         } catch {}
       }
     }
@@ -216,18 +218,16 @@ export default function Invite() {
   if (!user && info.status) {
     const isScheduled = info.status.starts_at && info.status.starts_at > Math.floor(Date.now() / 1000);
 
-    const changeGuestRsvp = async (newRsvp: 'going' | 'maybe') => {
-      if (!guestRsvp) return;
+    const handleUpdateGuestNote = async () => {
+      if (!guestRsvp || !guestNote.trim()) return;
+      setGuestNoteSaving(true);
       try {
-        await goingApi.patchGuest(guestRsvp.signalId, newRsvp);
-        const updated = { ...guestRsvp, rsvp: newRsvp };
-        setGuestRsvp(updated);
-        const raw = localStorage.getItem('dropby_guest_rsvp');
-        if (raw) {
-          const stored = JSON.parse(raw);
-          localStorage.setItem('dropby_guest_rsvp', JSON.stringify({ ...stored, rsvp: newRsvp }));
-        }
-      } catch {}
+        await goingApi.patchGuest(guestRsvp.signalId, guestNote.trim());
+        setGuestNoteSaved(true);
+        setTimeout(() => setGuestNoteSaved(false), 2000);
+      } catch {} finally {
+        setGuestNoteSaving(false);
+      }
     };
 
     return (
@@ -257,36 +257,34 @@ export default function Invite() {
           )}
 
           {guestRsvp ? (
-            <div className="mb-4">
-              <p className="text-xs text-gray-400 text-center mb-2">{t('invite.yourRsvp')}</p>
-              <div className="flex gap-3">
+            <div className="mb-4 text-left">
+              <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 text-center mb-3">{t('invite.rsvpGoing')} — {t('invite.yourRsvp')}</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={guestNote}
+                  onChange={e => setGuestNote(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleUpdateGuestNote(); }}
+                  placeholder={t('invite.notePlaceholder')}
+                  className="flex-1 px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
                 <button
-                  onClick={() => guestRsvp.rsvp !== 'going' && changeGuestRsvp('going')}
-                  className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-colors ${guestRsvp.rsvp === 'going' ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                  onClick={handleUpdateGuestNote}
+                  disabled={!guestNote.trim() || guestNoteSaving}
+                  className="px-3 py-2.5 bg-emerald-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold"
                 >
-                  {t('invite.rsvpGoing')}
-                </button>
-                <button
-                  onClick={() => guestRsvp.rsvp !== 'maybe' && changeGuestRsvp('maybe')}
-                  className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-colors ${guestRsvp.rsvp === 'maybe' ? 'bg-amber-400 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-                >
-                  {t('invite.rsvpMaybe')}
+                  {guestNoteSaved ? '✓' : t('home.rsvpNoteSend')}
                 </button>
               </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{t('invite.noteDisclaimer', { name: info.inviter.display_name })}</p>
             </div>
           ) : (
-            <div className="flex gap-3 mb-4">
+            <div className="mb-4">
               <button
-                onClick={() => { setPendingRsvp('going'); setShowGoingForm(true); }}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-semibold text-base"
+                onClick={() => setShowGoingForm(true)}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-semibold text-base"
               >
                 {t('invite.rsvpGoing')}
-              </button>
-              <button
-                onClick={() => { setPendingRsvp('maybe'); setShowGoingForm(true); }}
-                className="flex-1 bg-amber-400 hover:bg-amber-500 text-white py-4 rounded-2xl font-semibold text-base"
-              >
-                {t('invite.rsvpMaybe')}
               </button>
             </div>
           )}
@@ -304,12 +302,12 @@ export default function Invite() {
           open={showGoingForm}
           onClose={() => setShowGoingForm(false)}
           statusId={info.status.id}
-          isScheduled={!!isScheduled}
-          initialRsvp={pendingRsvp}
-          onSuccess={({ signalId, rsvp }) => {
-            const data = { signalId, statusId: info.status!.id, rsvp };
+          hostName={info.inviter.display_name}
+          onSuccess={({ signalId, note }) => {
+            const data = { signalId, statusId: info.status!.id };
             localStorage.setItem('dropby_guest_rsvp', JSON.stringify(data));
-            setGuestRsvp({ signalId, rsvp });
+            setGuestRsvp({ signalId });
+            if (note) setGuestNote(note);
             setShowGoingForm(false);
           }}
         />
@@ -327,14 +325,12 @@ export default function Invite() {
   );
 }
 
-function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = 'going', onSuccess }: { open: boolean; onClose: () => void; statusId: string; isScheduled: boolean; initialRsvp?: 'going' | 'maybe'; onSuccess: (data: { signalId: string; rsvp: 'going' | 'maybe' }) => void }) {
+function GuestGoingModal({ open, onClose, statusId, hostName, onSuccess }: { open: boolean; onClose: () => void; statusId: string; hostName: string; onSuccess: (data: { signalId: string; note?: string }) => void }) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [consent, setConsent] = useState(false);
-  const [rsvp, setRsvp] = useState<'going' | 'maybe'>(initialRsvp);
-
-  useEffect(() => { setRsvp(initialRsvp); }, [initialRsvp]);
+  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -347,9 +343,9 @@ function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = '
         name: name.trim(),
         contact: contact.trim() || undefined,
         marketing_consent: consent,
-        rsvp,
+        note: note.trim() || undefined,
       });
-      onSuccess({ signalId: result.signal_id, rsvp });
+      onSuccess({ signalId: result.signal_id, note: note.trim() || undefined });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Something went wrong');
     } finally {
@@ -358,45 +354,23 @@ function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = '
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={isScheduled ? t('invite.rsvpModalTitle') : t('invite.goingModalTitle')}>
+    <Modal open={open} onClose={onClose} title={t('invite.goingModalTitle')}>
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-3">
-        {isScheduled && (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setRsvp('going')}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
-                rsvp === 'going' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              {t('invite.rsvpGoing')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setRsvp('maybe')}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
-                rsvp === 'maybe' ? 'bg-amber-400 text-white border-amber-400' : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              {t('invite.rsvpMaybe')}
-            </button>
-          </div>
-        )}
         <input
           type="text"
           placeholder={t('invite.firstName')}
           required
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
         />
         <input
           type="text"
           placeholder={t('invite.emailOrPhoneOptional')}
           value={contact}
           onChange={e => { setContact(e.target.value); if (!e.target.value) setConsent(false); }}
-          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
         />
         {contact && (
           <label className="flex items-start gap-3 cursor-pointer">
@@ -408,6 +382,16 @@ function GuestGoingModal({ open, onClose, statusId, isScheduled, initialRsvp = '
             />
             <span className="text-sm text-gray-600 dark:text-gray-400">{t('invite.sendMeAppLink')}</span>
           </label>
+        )}
+        <input
+          type="text"
+          placeholder={t('invite.notePlaceholder')}
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        />
+        {note.trim() && (
+          <p className="text-xs text-gray-400 dark:text-gray-500 -mt-1">{t('invite.noteDisclaimer', { name: hostName })}</p>
         )}
         <button
           type="submit"

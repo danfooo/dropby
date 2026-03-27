@@ -211,6 +211,12 @@ const goingCols = db.pragma('table_info(going_signals)') as { name: string }[];
 if (!goingCols.find(c => c.name === 'rsvp')) {
   db.exec("ALTER TABLE going_signals ADD COLUMN rsvp TEXT NOT NULL DEFAULT 'going'");
 }
+if (!goingCols.find(c => c.name === 'note')) {
+  db.exec('ALTER TABLE going_signals ADD COLUMN note TEXT');
+}
+if (!goingCols.find(c => c.name === 'reminder_sent')) {
+  db.exec('ALTER TABLE going_signals ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0');
+}
 
 if (!statusCols.find(c => c.name === 'ics_sequence')) {
   db.exec('ALTER TABLE statuses ADD COLUMN ics_sequence INTEGER NOT NULL DEFAULT 0');

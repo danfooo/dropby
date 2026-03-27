@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { db } from './db/index.js';
-import { notifyDoorClosingSoon, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen } from './services/notifications.js';
+import { notifyDoorClosingSoon, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder } from './services/notifications.js';
 import { broadcastSSE } from './services/sse.js';
 import { randomUUID } from 'crypto';
 import { log } from './services/analytics.js';
@@ -224,6 +224,32 @@ setInterval(() => {
     db.prepare('UPDATE statuses SET notifications_sent = 1 WHERE id = ?').run(status.id);
   }
 }, 10_000);
+
+// Every minute: fire "you said you were going" reminders for upcoming scheduled sessions
+cron.schedule('* * * * *', () => {
+  const now = Math.floor(Date.now() / 1000);
+  const windowStart = now + 25 * 60;
+  const windowEnd = now + 35 * 60;
+
+  const signals = db.prepare(`
+    SELECT gs.id, gs.user_id, s.starts_at, u.display_name as host_name
+    FROM going_signals gs
+    JOIN statuses s ON s.id = gs.status_id
+    JOIN users u ON u.id = s.user_id
+    WHERE gs.rsvp = 'going'
+      AND gs.reminder_sent = 0
+      AND gs.user_id IS NOT NULL
+      AND s.starts_at IS NOT NULL
+      AND s.starts_at > ? AND s.starts_at <= ?
+      AND s.closed_at IS NULL
+  `).all(windowStart, windowEnd) as Array<{ id: string; user_id: string; starts_at: number; host_name: string }>;
+
+  for (const signal of signals) {
+    notifyGoingReminder(signal.user_id, signal.host_name, signal.starts_at);
+    db.prepare('UPDATE going_signals SET reminder_sent = 1 WHERE id = ?').run(signal.id);
+    log('nudge.sent', signal.user_id, { type: 'going_reminder' });
+  }
+});
 
 // Daily at 03:00 UTC: purge event_log rows older than 12 months
 // Preserve user.signup and user.verify forever — one-time, low-volume, historically valuable.

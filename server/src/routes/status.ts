@@ -35,7 +35,7 @@ function formatStatus(status: any, userId: string) {
   `).all(status.id) as Array<{ id: string; display_name: string }>;
 
   const goingSignals = db.prepare(`
-    SELECT gs.id, gs.created_at, gs.rsvp,
+    SELECT gs.id, gs.created_at, gs.rsvp, gs.note,
       u.id as user_id, u.display_name,
       gc.name as guest_name
     FROM going_signals gs
@@ -46,7 +46,7 @@ function formatStatus(status: any, userId: string) {
   `).all(status.id) as any[];
 
   const myGoing = userId
-    ? db.prepare('SELECT id, rsvp FROM going_signals WHERE status_id = ? AND user_id = ?').get(status.id, userId) as any
+    ? db.prepare('SELECT id, rsvp, note FROM going_signals WHERE status_id = ? AND user_id = ?').get(status.id, userId) as any
     : null;
 
   const nowUnix = Math.floor(Date.now() / 1000);
@@ -72,10 +72,12 @@ function formatStatus(status: any, userId: string) {
       id: g.id,
       name: g.display_name || g.guest_name || 'Guest',
       rsvp: g.rsvp || 'going',
+      note: g.note || null,
       created_at: g.created_at,
     })),
     my_going: Boolean(myGoing),
     my_rsvp: myGoing?.rsvp || null,
+    my_note: myGoing?.note || null,
   };
 }
 
@@ -113,9 +115,9 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
   `).all(userId, userId, userId, userId, nowUnix, nowUnix, nowUnix) as any[];
 
   const myRsvps = db.prepare(`
-    SELECT status_id, rsvp FROM going_signals WHERE user_id = ?
-  `).all(userId) as Array<{ status_id: string; rsvp: string }>;
-  const rsvpMap = new Map(myRsvps.map(r => [r.status_id, r.rsvp]));
+    SELECT status_id, rsvp, note FROM going_signals WHERE user_id = ?
+  `).all(userId) as Array<{ status_id: string; rsvp: string; note: string | null }>;
+  const rsvpMap = new Map(myRsvps.map(r => [r.status_id, r]));
 
   res.json(friendStatuses.map(s => ({
     id: s.id,
@@ -126,7 +128,8 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
     starts_at: s.starts_at || null,
     ends_at: s.ends_at || null,
     my_going: rsvpMap.has(s.id),
-    my_rsvp: rsvpMap.get(s.id) || null,
+    my_rsvp: rsvpMap.get(s.id)?.rsvp || null,
+    my_note: rsvpMap.get(s.id)?.note || null,
   })));
 });
 

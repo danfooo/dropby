@@ -37,11 +37,11 @@ router.post('/claim', requireAuth, (req: AuthRequest, res) => {
   res.json({ ok: true });
 });
 
-// POST /api/going/:statusId — logged-in RSVP (going or maybe), changeable
+// POST /api/going/:statusId — logged-in RSVP (going only), changeable; accepts optional note
 router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
   const { statusId } = req.params;
   const userId = req.userId!;
-  const { rsvp = 'going' } = req.body;
+  const { note } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
 
   // Accept active or scheduled statuses
@@ -51,19 +51,42 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
   `).get(statusId, nowUnix, nowUnix) as any;
   if (!status) return res.status(404).json({ error: 'Status not found or expired' });
 
-  const validRsvp = rsvp === 'maybe' ? 'maybe' : 'going';
+  const trimmedNote = note?.trim() || null;
 
-  // Upsert — allow changing RSVP
+  // Upsert — allow updating RSVP and note
   db.prepare(`
-    INSERT INTO going_signals (id, status_id, user_id, rsvp) VALUES (?, ?, ?, ?)
-    ON CONFLICT(status_id, user_id) DO UPDATE SET rsvp = excluded.rsvp
-  `).run(randomUUID(), statusId, userId, validRsvp);
+    INSERT INTO going_signals (id, status_id, user_id, rsvp, note) VALUES (?, ?, ?, 'going', ?)
+    ON CONFLICT(status_id, user_id) DO UPDATE SET rsvp = 'going', note = excluded.note
+  `).run(randomUUID(), statusId, userId, trimmedNote);
 
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
-  if (validRsvp === 'going') notifyGoingSignal(status.user_id, user.display_name);
-  log('going.sent', userId, { rsvp: validRsvp, is_guest: false });
+  notifyGoingSignal(status.user_id, user.display_name, trimmedNote);
+  log('going.sent', userId, { rsvp: 'going', is_guest: false });
 
   res.status(201).json({ ok: true });
+});
+
+// PATCH /api/going/:statusId — update note only (logged-in)
+router.patch('/:statusId', requireAuth, (req: AuthRequest, res) => {
+  const { statusId } = req.params;
+  const userId = req.userId!;
+  const { note } = req.body;
+
+  const trimmedNote = note?.trim() || null;
+
+  const signal = db.prepare('SELECT id FROM going_signals WHERE status_id = ? AND user_id = ?').get(statusId, userId) as any;
+  if (!signal) return res.status(404).json({ error: 'Not found' });
+
+  db.prepare('UPDATE going_signals SET note = ? WHERE id = ?').run(trimmedNote, signal.id);
+
+  // Notify host of note update
+  const status = db.prepare('SELECT user_id FROM statuses WHERE id = ?').get(statusId) as any;
+  if (status) {
+    const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+    notifyGoingSignal(status.user_id, user.display_name, trimmedNote);
+  }
+
+  res.json({ ok: true });
 });
 
 // DELETE /api/going/:statusId — remove RSVP
@@ -76,7 +99,7 @@ router.delete('/:statusId', requireAuth, (req: AuthRequest, res) => {
 // POST /api/going/:statusId/guest — web guest RSVP
 router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
   const { statusId } = req.params;
-  const { name, contact, marketing_consent, rsvp = 'going' } = req.body;
+  const { name, contact, marketing_consent, note } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
 
   if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
@@ -99,27 +122,39 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
     sendWelcomeMessage(contact.trim(), `${appUrl}/download`);
   }
 
-  const validRsvp = rsvp === 'maybe' ? 'maybe' : 'going';
+  const trimmedNote = note?.trim() || null;
 
   const signalId = randomUUID();
-  db.prepare('INSERT INTO going_signals (id, status_id, user_id, guest_contact_id, rsvp) VALUES (?, ?, NULL, ?, ?)').run(
-    signalId, statusId, guestContactId, validRsvp
+  db.prepare('INSERT INTO going_signals (id, status_id, user_id, guest_contact_id, rsvp, note) VALUES (?, ?, NULL, ?, \'going\', ?)').run(
+    signalId, statusId, guestContactId, trimmedNote
   );
 
-  if (validRsvp === 'going') notifyGoingSignal(status.user_id, name.trim());
-  log('going.sent', null, { rsvp: validRsvp, is_guest: true });
+  notifyGoingSignal(status.user_id, name.trim(), trimmedNote);
+  log('going.sent', null, { rsvp: 'going', is_guest: true });
 
   res.status(201).json({ ok: true, signal_id: signalId, status_id: statusId });
 });
 
-// PATCH /api/going/guest/:signalId — update guest RSVP
+// PATCH /api/going/guest/:signalId — update guest note
 router.patch('/guest/:signalId', (req, res) => {
   const { signalId } = req.params;
-  const { rsvp } = req.body;
-  const validRsvp = rsvp === 'maybe' ? 'maybe' : 'going';
+  const { note } = req.body;
+  const trimmedNote = note?.trim() || null;
 
-  const result = db.prepare('UPDATE going_signals SET rsvp = ? WHERE id = ? AND user_id IS NULL').run(validRsvp, signalId);
-  if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
+  const signal = db.prepare(`
+    SELECT gs.id, s.user_id as host_id, gc.name as guest_name
+    FROM going_signals gs
+    JOIN statuses s ON s.id = gs.status_id
+    LEFT JOIN guest_contacts gc ON gc.id = gs.guest_contact_id
+    WHERE gs.id = ? AND gs.user_id IS NULL
+  `).get(signalId) as any;
+
+  if (!signal) return res.status(404).json({ error: 'Not found' });
+
+  db.prepare('UPDATE going_signals SET note = ? WHERE id = ?').run(trimmedNote, signalId);
+
+  // Notify host of note update
+  notifyGoingSignal(signal.host_id, signal.guest_name || 'Guest', trimmedNote);
 
   res.json({ ok: true });
 });

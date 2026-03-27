@@ -75,6 +75,9 @@ A user may have at most one active status at a time. A status is considered acti
 | status_id | uuid FK → statuses | |
 | user_id | uuid FK → users nullable | Null for guest Going signals |
 | guest_contact_id | uuid FK → guest_contacts nullable | Set for guest Going signals when contact info was provided |
+| rsvp | text | Always `'going'` (Maybe removed) |
+| note | text nullable | Optional one-way note to host |
+| reminder_sent | integer | 0/1; whether the pre-session going reminder push has been sent |
 | created_at | unix timestamp | |
 
 Unique constraint on `(status_id, user_id)` for logged-in users — one signal per user per status. No cap for guest signals.
@@ -306,8 +309,10 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 **Invite link row**
 - "Anyone with link" row — tap to copy a fresh 7-day invite link with `status_id` attached
 
-**Going signals from non-friends** (guests)
-- Guest names shown in the going signals section when they submit the web Going form
+**Going signals section**
+- Shown when anyone has sent a Going signal
+- Each entry: ✅ name, and their note (if any) shown beneath in italics
+- Guest names included when they submit the web Going form
 
 **Actions**
 - "Add more / Edit" button → Door Open Edit view
@@ -342,11 +347,15 @@ Accessible via "Add more / Edit".
 Shown at the top of the Home screen when one or more friends have an active status that includes the current user as a recipient. Updates in real time via SSE.
 
 - One card per open friend: avatar, display name, note (if any), time remaining
-- "I'm going ✅" button per card
+- "Going ✅" button per card
   - One tap, no confirmation
-  - Sends push notification to host: "[name] said, they are going!"
+  - Sends push notification to host: "[name] is on their way"
   - On first tap ever (across the whole app): triggers OS notification permission prompt
-  - After tapping: button replaced with a non-interactive "On my way" confirmation state
+  - After tapping: button stays active (tap again to cancel RSVP); an optional note field appears below the button
+- **Optional note**: After tapping Going, a text input appears with placeholder "Add a note (optional)" and a Send button
+  - Sends `PATCH /api/going/:statusId` with the note; host receives a push notification
+  - A hint below reads "This is a one-way note, not a chat."
+  - Tapping Going again to cancel RSVP clears the note field
 
 Both the friend's open door section and the user's own door UI are visible simultaneously when both are active.
 
@@ -428,24 +437,25 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 
 ### Web Going Modal (within `/invite/:token`)
 
-Shown when a non-logged-in user taps "Going ✅" or "Maybe" on an open or scheduled door.
+Shown when a non-logged-in user taps "Going ✅" on an open or scheduled door.
 
-- RSVP toggle (Going / Maybe) shown for scheduled sessions; defaults to whichever button was tapped
 - First name (required)
 - Email or phone (optional); if provided, checkbox appears: "Send me a link to the app" (default unchecked)
+- Note (optional): free-text field for anything the host should know (e.g. ETA, who they're bringing)
 - Submit: "I'm on my way! 🏃" / loading: "Sending…"
 - On submit:
   - Server returns `signal_id` and `status_id`
-  - Client stores `dropby_guest_rsvp = { signalId, statusId, rsvp }` in localStorage
-  - Push notification sent to host: "[name] said, they are going!"
+  - Client stores `dropby_guest_rsvp = { signalId, statusId }` in localStorage
+  - Push notification sent to host: "[name] is on their way" (with note as body if provided)
   - If contact + consent: welcome message sent, guest_contacts row created
-  - Success state: shows "Your RSVP" with Going / Maybe toggle buttons (current option highlighted)
+  - Success state: shows "Going ✅ — Your RSVP" + an optional note update field
 - Validation: first name required, shown inline
+- Note disclaimer: appears when note field has content — "{{name}} will be notified, but may not see this right away. Reach out separately if you need to coordinate."
 
 **Guest RSVP persistence (localStorage)**
 - On any `/invite/:token` page load for a valid invite: `dropby_invite_token` is stored in localStorage
-- If localStorage contains a `dropby_guest_rsvp` matching the current status, the RSVP toggle is shown instead of the form — allowing the guest to change their RSVP
-- RSVP change: `PATCH /api/going/guest/:signalId` with new rsvp value; localStorage is updated
+- If localStorage contains a `dropby_guest_rsvp` matching the current status, the note edit field is shown instead of the Going form
+- Note update: `PATCH /api/going/guest/:signalId` with new note; host is notified; localStorage retains the signalId
 - On login or signup completion: `associatePendingGuest()` runs silently:
   1. If `dropby_invite_token` is set: `POST /api/invites/:token/accept` (creates friendship)
   2. If `dropby_guest_rsvp` is set: `POST /api/going/claim { signal_id }` (migrates guest signal to user account)
@@ -618,9 +628,13 @@ The redirect destination must survive signup → email verification → login:
 
 - Available on each open friend's card on the Home screen
 - One tap, no confirmation, one signal per user per status
-- After tapping: button replaced with non-interactive confirmed state
-- Sends push notification to host: "[name] said, they are going!"
+- After tapping: button stays active (tap again to cancel); optional note field appears below
+- Sends push notification to host: "[name] is on their way" (with note as body if provided)
 - Triggers OS notification permission prompt on first use (if not yet granted)
+- **Optional note**: free-text field that appears after tapping Going
+  - Sends `PATCH /api/going/:statusId { note }` — host receives a push notification on every note change
+  - Hint: "This is a one-way note, not a chat."
+  - Notes are a one-way signal; no reply from the host is possible in-app
 
 ### Push Notifications
 
@@ -629,10 +643,11 @@ Sent via FCM (Android) and APNs (iOS).
 | Event | Recipient | Copy |
 |---|---|---|
 | Friend opens door | All selected recipients with OS permission | "[Name]'s door is open" |
-| Going signal received | Door opener | "[Name] said, they are going!" |
+| Going signal or note update | Door opener | "[Name] is on their way" / note as body if provided |
 | 10 min before close | Door opener | "Your door closes in 10 minutes" |
 | Nudge reminder | User themselves | "Hey, got a free [day]? Open your door" |
 | Auto-nudge | User themselves | "You opened your door this time last week — open it again?" |
+| Going reminder | RSVP'd user (logged-in) | "You said you'd drop by [name]'s at [time] — still heading over?" |
 
 Muting user A suppresses:
 - A being notified when the muting user opens their door (A is unchecked by default)
@@ -644,6 +659,14 @@ Muting user A suppresses:
 - Server checks every minute for due nudges based on each user's stored timezone
 - Suppressed if user already has an active status at the scheduled time
 - No cap on number of slots
+
+### Going Reminder
+
+- Sent to logged-in users who RSVPd "Going" to a **scheduled session**, approximately 30 minutes before it starts
+- Only sent once per going signal (`reminder_sent` flag prevents re-sending)
+- Not sent to guest (unauthenticated) RSVPs — no push token available
+- Copy: "You said you'd drop by [host name]'s at [time] — still heading over?"
+- Complements ICS calendar downloads; no harm in a user receiving both
 
 ### Auto-Nudge (Repeat Behaviour)
 

@@ -23,7 +23,7 @@
     "mockOpened": "abriu a porta 👋",
     "mockNote": "café e uma caminhada, alguém?",
     "mockGoing": "Vou lá 🏃",
-    "mockMaybe": "Talvez"
+    "mockGoing2": "Chego em 20 min"
   },
   "landing": {
     "tagline": "Vê os teus amigos mais vezes.",
@@ -154,8 +154,9 @@
     "freeUntil": "Livre até às {{time}}",
     "opensAt": "Abre às {{time}}",
     "rsvpGoing": "Vou lá ✅",
-    "rsvpMaybe": "Talvez",
-    "scheduledRsvpCount": "{{going}} vão, {{maybe}} talvez",
+    "rsvpNotePlaceholder": "Adicionar uma nota (opcional)",
+    "rsvpNoteSend": "Enviar",
+    "rsvpNoteHint": "Esta é uma nota unidirecional, não um chat.",
     "addToCalendar": "Adicionar ao calendário",
     "updateCalendar": "Sessão alterada — descarrega o .ics para sincronizar o teu calendário",
     "removeFromCalendar": "Sessão cancelada",
@@ -225,8 +226,8 @@
     "weNotifiedThem": "Enviámos uma notificação a {{name}} a dizer que estás a caminho.",
     "yourRsvp": "O teu RSVP",
     "rsvpGoing": "Vou lá ✅",
-    "rsvpMaybe": "Talvez 🤔",
-    "rsvpChanged": "RSVP atualizado!",
+    "notePlaceholder": "Algo que devem saber? (opcional)",
+    "noteDisclaimer": "{{name}} receberá uma notificação, mas pode não a ver logo. Entra em contacto diretamente se precisares de coordenar.",
     "addToCalendar": "Adicionar ao calendário"
   },
   "feedback": {

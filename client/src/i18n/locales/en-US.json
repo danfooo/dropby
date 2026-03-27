@@ -23,7 +23,7 @@
     "mockOpened": "opened her door 👋",
     "mockNote": "coffee and a walk, anyone?",
     "mockGoing": "Going 🏃",
-    "mockMaybe": "Maybe"
+    "mockGoing2": "I'll be there in 20 min"
   },
   "landing": {
     "tagline": "See your friends more.",
@@ -154,8 +154,9 @@
     "freeUntil": "Free until {{time}}",
     "opensAt": "Opens {{time}}",
     "rsvpGoing": "Going ✅",
-    "rsvpMaybe": "Maybe",
-    "scheduledRsvpCount": "{{going}} going, {{maybe}} maybe",
+    "rsvpNotePlaceholder": "Add a note (optional)",
+    "rsvpNoteSend": "Send",
+    "rsvpNoteHint": "This is a one-way note, not a chat.",
     "addToCalendar": "Add to Calendar",
     "updateCalendar": "Session changed — re-download the .ics to sync your calendar",
     "removeFromCalendar": "Session cancelled",
@@ -225,8 +226,8 @@
     "weNotifiedThem": "We sent {{name}} a notification that you're on your way.",
     "yourRsvp": "Your RSVP",
     "rsvpGoing": "Going ✅",
-    "rsvpMaybe": "Maybe 🤔",
-    "rsvpChanged": "RSVP updated!",
+    "notePlaceholder": "Anything they should know? (optional)",
+    "noteDisclaimer": "{{name}} will be notified, but may not see this right away. Reach out separately if you need to coordinate.",
     "addToCalendar": "Add to Calendar"
   },
   "feedback": {

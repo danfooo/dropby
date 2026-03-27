@@ -80,16 +80,32 @@ function groupScheduledDoors(doors: any[]): { key: string; doors: any[] }[] {
 }
 
 // Friend status card (door open or upcoming)
-function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: string, rsvp: 'going' | 'maybe' | null) => void }) {
+function FriendStatusCard({ status, onGoing, onNoteUpdate }: { status: any; onGoing: (id: string, rsvp: 'going' | null) => void; onNoteUpdate: (id: string, note: string) => void }) {
   const { t } = useTranslation();
   const isScheduled = status.starts_at && status.starts_at > Math.floor(Date.now() / 1000);
-  const [myRsvp, setMyRsvp] = useState<'going' | 'maybe' | null>(status.my_rsvp || null);
+  const [myRsvp, setMyRsvp] = useState<'going' | null>(status.my_rsvp === 'going' ? 'going' : null);
+  const [noteText, setNoteText] = useState(status.my_note || '');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
   const bigNote = status.note ? bigEmojiClass(status.note) : null;
 
-  const handleRsvp = async (rsvp: 'going' | 'maybe') => {
-    const next = myRsvp === rsvp ? null : rsvp;
+  const handleGoing = async () => {
+    const next = myRsvp === 'going' ? null : 'going';
     setMyRsvp(next);
+    if (next === null) setNoteText('');
     await onGoing(status.id, next);
+  };
+
+  const handleSendNote = async () => {
+    if (!noteText.trim()) return;
+    setNoteSaving(true);
+    try {
+      await onNoteUpdate(status.id, noteText.trim());
+      setNoteSaved(true);
+      setTimeout(() => setNoteSaved(false), 2000);
+    } finally {
+      setNoteSaving(false);
+    }
   };
 
   return (
@@ -114,29 +130,41 @@ function FriendStatusCard({ status, onGoing }: { status: any; onGoing: (id: stri
         </p>
       )}
 
-      {/* RSVP buttons */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleRsvp('going')}
-          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
-            myRsvp === 'going'
-              ? 'bg-emerald-500 text-white'
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-950'
-          }`}
-        >
-          {t('home.rsvpGoing')}
-        </button>
-        <button
-          onClick={() => handleRsvp('maybe')}
-          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
-            myRsvp === 'maybe'
-              ? 'bg-amber-400 text-white'
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-950'
-          }`}
-        >
-          {t('home.rsvpMaybe')}
-        </button>
-      </div>
+      {/* RSVP button */}
+      <button
+        onClick={handleGoing}
+        className={`w-full py-2 rounded-xl text-sm font-semibold transition-colors ${
+          myRsvp === 'going'
+            ? 'bg-emerald-500 text-white'
+            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-950'
+        }`}
+      >
+        {t('home.rsvpGoing')}
+      </button>
+
+      {/* Note field — shown after Going is confirmed */}
+      {myRsvp === 'going' && (
+        <div className="mt-3">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSendNote(); }}
+              placeholder={t('home.rsvpNotePlaceholder')}
+              className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <button
+              onClick={handleSendNote}
+              disabled={!noteText.trim() || noteSaving}
+              className="px-3 py-2 bg-emerald-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold"
+            >
+              {noteSaved ? '✓' : t('home.rsvpNoteSend')}
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">{t('home.rsvpNoteHint')}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -852,7 +880,7 @@ export default function Home() {
     },
   });
 
-  const sendGoing = async (statusId: string, rsvp: 'going' | 'maybe' | null = 'going') => {
+  const sendGoing = async (statusId: string, rsvp: 'going' | null = 'going') => {
     if (rsvp !== null && await shouldShowNotifPrompt()) {
       pendingAction.current = () => sendGoing(statusId, rsvp);
       setNotifSheet('going');
@@ -861,8 +889,13 @@ export default function Home() {
     if (rsvp === null) {
       await goingApi.remove(statusId);
     } else {
-      await goingApi.send(statusId, rsvp);
+      await goingApi.send(statusId);
     }
+    qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+  };
+
+  const updateGoingNote = async (statusId: string, note: string) => {
+    await goingApi.updateNote(statusId, note);
     qc.invalidateQueries({ queryKey: ['friendStatuses'] });
   };
 
@@ -981,7 +1014,7 @@ export default function Home() {
             </h2>
             <div className="space-y-3">
               {openFriendDoors.map((s: any) => (
-                <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
+                <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
               ))}
             </div>
           </div>
@@ -1204,7 +1237,7 @@ export default function Home() {
                       />
                     ))}
                     {(friendByKey.get(key) ?? []).map((s: any) => (
-                      <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
+                      <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
                     ))}
                   </div>
                 </div>
@@ -1349,7 +1382,7 @@ export default function Home() {
           </h2>
           <div className="space-y-3">
             {openFriendDoors.map((s: any) => (
-              <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
+              <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
             ))}
           </div>
         </div>
@@ -1405,10 +1438,14 @@ export default function Home() {
         <div className="bg-emerald-50 dark:bg-emerald-950 rounded-2xl p-4 mb-4 border border-emerald-100 dark:border-emerald-800">
           <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2">{t('home.onTheirWay')}</h2>
           {myStatus.going_signals.map((g: any) => (
-            <div key={g.id} className="flex items-center gap-2 py-1">
-              <span className="text-base">{g.rsvp === 'maybe' ? '🤔' : '✅'}</span>
-              <span className="text-sm text-emerald-900 dark:text-emerald-200 font-medium">{g.name}</span>
-              {g.rsvp === 'maybe' && <span className="text-xs text-emerald-600 dark:text-emerald-400">maybe</span>}
+            <div key={g.id} className="py-1">
+              <div className="flex items-center gap-2">
+                <span className="text-base">✅</span>
+                <span className="text-sm text-emerald-900 dark:text-emerald-200 font-medium">{g.name}</span>
+              </div>
+              {g.note && (
+                <p className="text-xs text-emerald-700 dark:text-emerald-400 ml-7 mt-0.5 italic">"{g.note}"</p>
+              )}
             </div>
           ))}
         </div>
@@ -1553,7 +1590,7 @@ export default function Home() {
                     />
                   ))}
                   {(friendByKey.get(key) ?? []).map((s: any) => (
-                    <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} />
+                    <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
                   ))}
                 </div>
               </div>

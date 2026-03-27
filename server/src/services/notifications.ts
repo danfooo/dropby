@@ -203,14 +203,28 @@ export function notifyFriendDoorOpen(recipientId: string, openerName: string, no
   );
 }
 
-export function notifyGoingSignal(hostId: string, guestName: string) {
+export function notifyGoingSignal(hostId: string, guestName: string, note?: string | null) {
   const tokens = getPushTokens(hostId);
   console.log(`[Push] notifyGoingSignal — hostId=${hostId} tokens=${tokens.length}`);
+  const body = note ? `"${note}"` : 'See you soon!';
   tokens.forEach(t =>
     sendPush(hostId, t.token, t.platform, {
-      title: "Someone's on their way!",
-      body: `${guestName} is coming`,
+      title: `${guestName} is on their way`,
+      body,
       data: { type: 'going_signal' },
+    })
+  );
+}
+
+export function notifyGoingReminder(userId: string, hostName: string, startsAt: number) {
+  const tokens = getPushTokens(userId);
+  const date = new Date(startsAt * 1000);
+  const timeStr = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  tokens.forEach(t =>
+    sendPush(userId, t.token, t.platform, {
+      title: 'dropby',
+      body: `You said you'd drop by ${hostName}'s at ${timeStr} — still heading over?`,
+      data: { type: 'going_reminder' },
     })
   );
 }

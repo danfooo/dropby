@@ -95,10 +95,11 @@ export const invitesApi = {
 // Going
 export const goingApi = {
   everReceived: () => api.get('/going/ever-received').then(r => r.data),
-  send: (statusId: string, rsvp: 'going' | 'maybe' = 'going') => api.post(`/going/${statusId}`, { rsvp }).then(r => r.data),
-  sendGuest: (statusId: string, data: { name: string; contact?: string; marketing_consent?: boolean; rsvp?: 'going' | 'maybe' }) =>
+  send: (statusId: string, note?: string) => api.post(`/going/${statusId}`, { note }).then(r => r.data),
+  updateNote: (statusId: string, note: string) => api.patch(`/going/${statusId}`, { note }).then(r => r.data),
+  sendGuest: (statusId: string, data: { name: string; contact?: string; marketing_consent?: boolean; note?: string }) =>
     api.post(`/going/${statusId}/guest`, data).then(r => r.data),
-  patchGuest: (signalId: string, rsvp: 'going' | 'maybe') => api.patch(`/going/guest/${signalId}`, { rsvp }).then(r => r.data),
+  patchGuest: (signalId: string, note: string) => api.patch(`/going/guest/${signalId}`, { note }).then(r => r.data),
   remove: (statusId: string) => api.delete(`/going/${statusId}`).then(r => r.data),
   claim: (signalId: string) => api.post('/going/claim', { signal_id: signalId }).then(r => r.data),
 };
