@@ -1,5 +1,11 @@
 # dropby — TODOs
 
+## Icon design double-accounting
+`ios-icon.svg` and `favicon.svg` use the **cropped/offset** composition:
+`translate(730, 614) scale(1.55) translate(-751, -639)` — house pushed right and enlarged so it bleeds off the icon edges.
+
+All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`) still use the **centered** composition (scale 1.05). If the cropped style is confirmed as the final direction, those should be updated too and Android icons regenerated.
+
 ## Auth
 - [ ] Apple OAuth: specced, not implemented
 
