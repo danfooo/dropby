@@ -54,10 +54,11 @@ cron.schedule('* * * * *', () => {
 });
 
 // Every minute: fire scheduled nudges
+// Runs every minute (no hour-boundary guard) so a restart mid-hour still catches
+// any schedule whose hour has already passed today. The alreadySentToday check below
+// prevents double-sending.
 cron.schedule('* * * * *', () => {
   const now = new Date();
-  const currentMinute = now.getMinutes();
-  if (currentMinute !== 0) return; // only fire on the hour
 
   const users = db.prepare('SELECT id, timezone, auto_nudge_enabled FROM users').all() as Array<{
     id: string; timezone: string | null; auto_nudge_enabled: number;
@@ -81,7 +82,7 @@ cron.schedule('* * * * *', () => {
 
     const schedules = db.prepare(`
       SELECT id, day_of_week, hour, last_sent_at FROM nudge_schedules
-      WHERE user_id = ? AND day_of_week = ? AND hour = ?
+      WHERE user_id = ? AND day_of_week = ? AND hour <= ?
     `).all(user.id, localDayShort, localHour) as Array<{
       id: string; day_of_week: string; hour: number; last_sent_at: number | null;
     }>;
@@ -114,12 +115,12 @@ cron.schedule('* * * * *', () => {
   }
 });
 
-// Every minute: auto-nudge check (fires on the hour)
-// For each user with auto_nudge_enabled, if they previously opened their door at
-// this local hour (within last 7 days, but not today), and haven't opened today, nudge them.
+// Every minute: auto-nudge check
+// Fires within the first 10 minutes of each hour so a restart within that window
+// still catches the nudge. The auto_nudge_log "sent in last 20 hours" check prevents duplicates.
 cron.schedule('* * * * *', () => {
   const now = new Date();
-  if (now.getMinutes() !== 0) return;
+  if (now.getMinutes() > 10) return;
 
   const nowUnix = Math.floor(now.getTime() / 1000);
 
