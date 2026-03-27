@@ -85,7 +85,7 @@ router.get('/:token/calendar.ics', optionalAuth, (req: AuthRequest, res) => {
     `UID:dropby-${status.id}@dropby.app`,
     `DTSTAMP:${formatIcsDate(new Date())}`,
     `DTSTART:${formatIcsDate(new Date(status.starts_at * 1000))}`,
-    `DTEND:${formatIcsDate(new Date(status.ends_at * 1000))}`,
+    `DTEND:${formatIcsDate(new Date((status.ends_at ?? status.closes_at) * 1000))}`,
     `SUMMARY:${summary}`,
     `SEQUENCE:${sequence}`,
     'END:VEVENT',

@@ -145,16 +145,14 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const nowUnix = Math.floor(Date.now() / 1000);
   const isScheduled = rawStartsAt && Number(rawStartsAt) > nowUnix;
 
-  if (isScheduled && !rawEndsAt) {
-    return res.status(400).json({ error: 'ends_at required for scheduled sessions' });
-  }
-
   const startsAt: number | null = isScheduled ? Number(rawStartsAt) : null;
   const endsAt: number | null = rawEndsAt ? Number(rawEndsAt) : null;
   const reminderMinutes: number | null = isScheduled ? (rawReminderMinutes ?? 30) : null;
   const user = db.prepare('SELECT default_door_minutes FROM users WHERE id = ?').get(userId) as any;
   const doorMinutes = user?.default_door_minutes ?? 60;
-  const closesAt = isScheduled ? Number(rawEndsAt) : nowUnix + doorMinutes * 60;
+  const closesAt = isScheduled
+    ? (endsAt ?? (Number(rawStartsAt) + doorMinutes * 60))
+    : nowUnix + doorMinutes * 60;
 
   // Close any existing active status — but only for spontaneous opens (scheduled sessions coexist)
   if (!isScheduled) {
@@ -482,7 +480,7 @@ function generateIcs(status: any, hostName: string, method: 'REQUEST' | 'CANCEL'
     `UID:dropby-${status.id}@dropby.app`,
     `DTSTAMP:${formatIcsDate(now)}`,
     `DTSTART:${formatIcsDate(new Date(status.starts_at * 1000))}`,
-    `DTEND:${formatIcsDate(new Date(status.ends_at * 1000))}`,
+    `DTEND:${formatIcsDate(new Date((status.ends_at ?? status.closes_at) * 1000))}`,
     `SUMMARY:${summary}`,
     `SEQUENCE:${sequence}`,
     'END:VEVENT',

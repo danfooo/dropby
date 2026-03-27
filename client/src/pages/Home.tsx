@@ -258,7 +258,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
   defaultNote?: string;
   defaultRecipients?: string[];
   isPending?: boolean;
-  onSubmit: (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at: number; reminder_minutes: number }) => void;
+  onSubmit: (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at?: number; reminder_minutes: number }) => void;
   onOpenNow?: (data: { note?: string; recipient_ids: string[] }) => void;
   onCancel: () => void;
 }) {
@@ -274,6 +274,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
   const [end, setEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
   const [reminder, setReminder] = useState(30);
   const [showReminder, setShowReminder] = useState(false);
+  const [hasEndTime, setHasEndTime] = useState(false);
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
 
   const { data: savedNotes = [] } = useQuery({ queryKey: ['notes'], queryFn: notesApi.list });
@@ -378,17 +379,25 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
               <input type="date" value={date} min={todayStr()} onChange={e => setDate(e.target.value)}
                 className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
             </div>
-            <div className="flex-1 px-3 py-2 border-r border-gray-200 dark:border-gray-700">
+            <div className={`flex-1 px-3 py-2 ${hasEndTime ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}>
               <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
               <input type="time" value={start} onChange={e => setStart(e.target.value)}
                 className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
             </div>
-            <div className="flex-1 px-3 py-2">
-              <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
-              <input type="time" value={end} onChange={e => setEnd(e.target.value)}
-                className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-            </div>
+            {hasEndTime && (
+              <div className="flex-1 px-3 py-2 relative">
+                <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
+                <input type="time" value={end} onChange={e => setEnd(e.target.value)}
+                  className="w-full text-base bg-transparent outline-none dark:text-gray-50 pr-5" />
+                <button onClick={() => setHasEndTime(false)} className="absolute top-2 right-2 text-gray-300 dark:text-gray-600 hover:text-gray-500 text-xs leading-none">✕</button>
+              </div>
+            )}
           </div>
+          {!hasEndTime && (
+            <button onClick={() => setHasEndTime(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
+              + end time
+            </button>
+          )}
           <div className="flex items-center gap-2">
             <p className="text-xs text-gray-400 dark:text-gray-500 flex-1">{t('home.scheduleReminderText', { minutes: reminder })}</p>
             <button onClick={() => setShowReminder(v => !v)} className="text-xs text-violet-600 font-medium">
@@ -443,7 +452,7 @@ function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPen
       <div className="flex gap-2">
         <button
           onClick={() => scheduleMode
-            ? onSubmit({ note: trimmedNote, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: toUnix(date, end), reminder_minutes: reminder })
+            ? onSubmit({ note: trimmedNote, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: hasEndTime ? toUnix(date, end) : undefined, reminder_minutes: reminder })
             : onOpenNow?.({ note: trimmedNote, recipient_ids: recipients })
           }
           disabled={isPending}
@@ -481,7 +490,8 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
   const sessionDate = format(new Date(session.starts_at * 1000), 'yyyy-MM-dd');
   const [editDate, setEditDate] = useState(sessionDate);
   const [editStart, setEditStart] = useState(format(new Date(session.starts_at * 1000), 'HH:mm'));
-  const [editEnd, setEditEnd] = useState(format(new Date(session.ends_at * 1000), 'HH:mm'));
+  const [hasEditEnd, setHasEditEnd] = useState(!!session.ends_at);
+  const [editEnd, setEditEnd] = useState(session.ends_at ? format(new Date(session.ends_at * 1000), 'HH:mm') : addHours(sessionDate, format(new Date(session.starts_at * 1000), 'HH:mm'), 2));
   const [editNote, setEditNote] = useState(session.note || '');
   const [editRecipients, setEditRecipients] = useState<string[]>((session.recipients || []).map((r: any) => r.id));
 
@@ -498,17 +508,25 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
             <input type="date" value={editDate} min={format(new Date(), 'yyyy-MM-dd')} onChange={e => setEditDate(e.target.value)}
               className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
           </div>
-          <div className="flex-1 px-3 py-2 border-r border-violet-200 dark:border-violet-800">
+          <div className={`flex-1 px-3 py-2 ${hasEditEnd ? 'border-r border-violet-200 dark:border-violet-800' : ''}`}>
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
             <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
               className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
           </div>
-          <div className="flex-1 px-3 py-2">
-            <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
-            <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
-              className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-          </div>
+          {hasEditEnd && (
+            <div className="flex-1 px-3 py-2 relative">
+              <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
+              <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
+                className="w-full text-base bg-transparent outline-none dark:text-gray-50 pr-5" />
+              <button onClick={() => setHasEditEnd(false)} className="absolute top-2 right-2 text-violet-300 dark:text-violet-700 hover:text-violet-500 text-xs leading-none">✕</button>
+            </div>
+          )}
         </div>
+        {!hasEditEnd && (
+          <button onClick={() => setHasEditEnd(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
+            + end time
+          </button>
+        )}
         <div className="relative">
           <input
             type="text"
@@ -561,7 +579,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
               onSave?.({
                 note: editNote || undefined,
                 starts_at: toUnix(editDate, editStart),
-                ends_at: toUnix(editDate, editEnd),
+                ends_at: hasEditEnd ? toUnix(editDate, editEnd) : undefined,
                 recipient_ids: editRecipients,
               });
               setEditing(false);
@@ -590,7 +608,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
         </div>
       )}
       <p className="text-sm text-violet-700 dark:text-violet-300 font-medium mb-1">
-        🕐 {formatTime(session.starts_at)} – {formatTimeShort(session.ends_at)}
+        🕐 {formatTime(session.starts_at)}{session.ends_at ? ` – ${formatTimeShort(session.ends_at)}` : ''}
       </p>
       {session.note && (
         <p className={bigNote ? `${bigNote} leading-none mb-2` : 'text-sm text-violet-600 dark:text-violet-400 mb-2'}>
@@ -688,6 +706,7 @@ export default function Home() {
   const [scheduleEnd, setScheduleEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
   const [reminderMinutes, setReminderMinutes] = useState(30);
   const [showReminderPicker, setShowReminderPicker] = useState(false);
+  const [scheduleHasEndTime, setScheduleHasEndTime] = useState(false);
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
 
   const { data: myStatus, isLoading: statusLoading } = useQuery({
@@ -856,12 +875,11 @@ export default function Home() {
 
     if (scheduleEnabled) {
       const startsAt = toUnix(scheduleDate, scheduleStart);
-      const endsAt = toUnix(scheduleDate, scheduleEnd);
       createStatus.mutate({
         note: trimmedNote,
         recipient_ids: selectedRecipients,
         starts_at: startsAt,
-        ends_at: endsAt,
+        ends_at: scheduleHasEndTime ? toUnix(scheduleDate, scheduleEnd) : undefined,
         reminder_minutes: reminderMinutes,
       });
     } else {
@@ -1069,17 +1087,25 @@ export default function Home() {
                 <input type="date" value={scheduleDate} min={todayStr()} onChange={e => setScheduleDate(e.target.value)}
                   className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
               </div>
-              <div className="flex-1 px-3 py-2 border-r border-gray-200 dark:border-gray-700">
+              <div className={`flex-1 px-3 py-2 ${scheduleHasEndTime ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}>
                 <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
                 <input type="time" value={scheduleStart} onChange={e => setScheduleStart(e.target.value)}
                   className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
               </div>
-              <div className="flex-1 px-3 py-2">
-                <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
-                <input type="time" value={scheduleEnd} onChange={e => setScheduleEnd(e.target.value)}
-                  className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-              </div>
+              {scheduleHasEndTime && (
+                <div className="flex-1 px-3 py-2 relative">
+                  <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
+                  <input type="time" value={scheduleEnd} onChange={e => setScheduleEnd(e.target.value)}
+                    className="w-full text-base bg-transparent outline-none dark:text-gray-50 pr-5" />
+                  <button onClick={() => setScheduleHasEndTime(false)} className="absolute top-2 right-2 text-gray-300 dark:text-gray-600 hover:text-gray-500 text-xs leading-none">✕</button>
+                </div>
+              )}
             </div>
+            {!scheduleHasEndTime && (
+              <button onClick={() => setScheduleHasEndTime(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
+                + end time
+              </button>
+            )}
             <div className="flex items-center gap-2">
               <p className="text-xs text-gray-400 dark:text-gray-500 flex-1">{t('home.scheduleReminderText', { minutes: reminderMinutes })}</p>
               <button onClick={() => setShowReminderPicker(v => !v)} className="text-xs text-violet-600 font-medium">
