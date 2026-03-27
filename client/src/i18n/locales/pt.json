@@ -20,7 +20,7 @@
     "downloadGooglePlay": "Obter no Google Play",
     "scanWithPhone": "Digitaliza com o teu telemóvel",
     "webFallback": "ou experimenta a versão web",
-    "mockOpened": "abriu a porta 🚪",
+    "mockOpened": "abriu a porta 👋",
     "mockNote": "café e uma caminhada, alguém?",
     "mockGoing": "Vou lá 🏃",
     "mockMaybe": "Talvez"
@@ -206,7 +206,7 @@
     "alreadyFriendsTitle": "Já são amigos!",
     "doorOpen": "{{name}} tem a porta aberta",
     "doorOpenWithNote": "{{name}} tem a porta aberta: \"{{note}}\"",
-    "doorOpenCta": "A porta está aberta 🚪",
+    "doorOpenCta": "A porta está aberta 👋",
     "hurray": "Ótimo",
     "friendsNowTitle": "Já são amigos!",
     "friendsNowDesc": "Tu e {{name}} são agora amigos no dropby.",

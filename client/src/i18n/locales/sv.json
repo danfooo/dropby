@@ -20,7 +20,7 @@
     "downloadGooglePlay": "Hämta på Google Play",
     "scanWithPhone": "Skanna med din telefon",
     "webFallback": "eller använd webbversionen",
-    "mockOpened": "öppnade sin dörr 🚪",
+    "mockOpened": "öppnade sin dörr 👋",
     "mockNote": "kaffe och en promenad, någon med?",
     "mockGoing": "Jag kommer 🏃",
     "mockMaybe": "Kanske"
@@ -206,7 +206,7 @@
     "alreadyFriendsTitle": "Ni är redan vänner!",
     "doorOpen": "{{name}} har sin dörr öppen",
     "doorOpenWithNote": "{{name}} har sin dörr öppen: \"{{note}}\"",
-    "doorOpenCta": "Dörren är öppen 🚪",
+    "doorOpenCta": "Dörren är öppen 👋",
     "hurray": "Hurra",
     "friendsNowTitle": "Ni är nu vänner!",
     "friendsNowDesc": "Du och {{name}} är nu vänner på dropby.",

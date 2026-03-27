@@ -5,7 +5,7 @@ export default function Landing() {
   const { t } = useTranslation();
 
   const steps = [
-    { icon: '🚪', titleKey: 'landing.step1Title', descKey: 'landing.step1Desc' },
+    { icon: '👋', titleKey: 'landing.step1Title', descKey: 'landing.step1Desc' },
     { icon: '👀', titleKey: 'landing.step2Title', descKey: 'landing.step2Desc' },
     { icon: '✅', titleKey: 'landing.step3Title', descKey: 'landing.step3Desc' },
   ];

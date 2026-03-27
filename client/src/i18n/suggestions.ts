@@ -8,7 +8,7 @@ type Suggestion = {
 export const en_US_suggestions: Suggestion[] = [
   // Any time, any context
   { text: 'Come over 🫶', timeOfDay: 'any', season: 'any', dayType: 'any' },
-  { text: "Door's open 🚪", timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: "Door's open 👋", timeOfDay: 'any', season: 'any', dayType: 'any' },
   { text: 'Come say hi 👋', timeOfDay: 'any', season: 'any', dayType: 'any' },
   { text: 'Come hang', timeOfDay: 'any', season: 'any', dayType: 'any' },
   { text: 'Just hanging', timeOfDay: 'any', season: 'any', dayType: 'any' },
@@ -62,7 +62,7 @@ export const en_US_suggestions: Suggestion[] = [
 export const en_GB_suggestions: Suggestion[] = [
   // Any time
   { text: 'Come over 🫶', timeOfDay: 'any', season: 'any', dayType: 'any' },
-  { text: "Door's open 🚪", timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: "Door's open 👋", timeOfDay: 'any', season: 'any', dayType: 'any' },
   { text: 'Fancy a natter?', timeOfDay: 'any', season: 'any', dayType: 'any' },
   { text: 'Bank holiday chilling', timeOfDay: 'any', season: 'any', dayType: 'weekend' },
 
@@ -93,7 +93,7 @@ export const en_GB_suggestions: Suggestion[] = [
 export const de_suggestions: Suggestion[] = [
   // Any time
   { text: 'Komm vorbei!', timeOfDay: 'any', season: 'any', dayType: 'any' },
-  { text: 'Tür ist offen 🚪', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: 'Tür ist offen 👋', timeOfDay: 'any', season: 'any', dayType: 'any' },
 
   // Morning
   { text: 'Kaffee kocht ☕', timeOfDay: 'morning', season: 'any', dayType: 'any' },
@@ -119,7 +119,7 @@ export const de_suggestions: Suggestion[] = [
 export const es_suggestions: Suggestion[] = [
   // Any time
   { text: 'Ven a pasar 🫶', timeOfDay: 'any', season: 'any', dayType: 'any' },
-  { text: 'La puerta está abierta 🚪', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: 'La puerta está abierta 👋', timeOfDay: 'any', season: 'any', dayType: 'any' },
 
   // Morning
   { text: 'Café listo ☕', timeOfDay: 'morning', season: 'any', dayType: 'any' },
@@ -144,7 +144,7 @@ export const es_suggestions: Suggestion[] = [
 export const fr_suggestions: Suggestion[] = [
   // Any time
   { text: 'Viens passer 🫶', timeOfDay: 'any', season: 'any', dayType: 'any' },
-  { text: 'La porte est ouverte 🚪', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: 'La porte est ouverte 👋', timeOfDay: 'any', season: 'any', dayType: 'any' },
 
   // Morning
   { text: 'Café chaud ☕', timeOfDay: 'morning', season: 'any', dayType: 'any' },
@@ -170,7 +170,7 @@ export const fr_suggestions: Suggestion[] = [
 export const sv_suggestions: Suggestion[] = [
   // Any time
   { text: 'Sväng förbi 🫶', timeOfDay: 'any', season: 'any', dayType: 'any' },
-  { text: 'Dörren är öppen 🚪', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: 'Dörren är öppen 👋', timeOfDay: 'any', season: 'any', dayType: 'any' },
   { text: 'Kom in 🏠', timeOfDay: 'any', season: 'any', dayType: 'any' },
 
   // Morning

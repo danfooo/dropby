@@ -262,7 +262,7 @@ export default function Get() {
   const [bottomRef, bottomIn] = useInView();
 
   const steps = [
-    { icon: '🚪', titleKey: 'marketing.step1Title', descKey: 'marketing.step1Desc', ref: step1Ref, inView: step1In },
+    { icon: '👋', titleKey: 'marketing.step1Title', descKey: 'marketing.step1Desc', ref: step1Ref, inView: step1In },
     { icon: '👀', titleKey: 'marketing.step2Title', descKey: 'marketing.step2Desc', ref: step2Ref, inView: step2In },
     { icon: '🏃', titleKey: 'marketing.step3Title', descKey: 'marketing.step3Desc', ref: step3Ref, inView: step3In },
   ];
