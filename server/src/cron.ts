@@ -115,12 +115,12 @@ cron.schedule('* * * * *', () => {
   }
 });
 
-// Every minute: auto-nudge check
-// Fires within the first 10 minutes of each hour so a restart within that window
-// still catches the nudge. The auto_nudge_log "sent in last 20 hours" check prevents duplicates.
+// Every minute: auto-nudge check (fires on the hour)
+// Note: not restart-resilient — auto-nudges are heuristic/optional so missing
+// one on a rare server restart is acceptable. Scheduled nudges (above) are resilient.
 cron.schedule('* * * * *', () => {
   const now = new Date();
-  if (now.getMinutes() > 10) return;
+  if (now.getMinutes() !== 0) return;
 
   const nowUnix = Math.floor(now.getTime() / 1000);
 
