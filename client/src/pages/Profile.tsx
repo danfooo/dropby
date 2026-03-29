@@ -347,14 +347,14 @@ export default function Profile() {
         </div>
 
         {/* Language */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             {t('profile.language')}
           </label>
           <select
             value={i18n.language}
             onChange={e => i18n.changeLanguage(e.target.value)}
-            className="text-sm text-gray-900 dark:text-gray-50 bg-transparent border-none outline-none cursor-pointer"
+            className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border-none outline-none cursor-pointer"
           >
             <option value="en-US">English</option>
             <option value="de">Deutsch</option>
