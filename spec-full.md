@@ -261,16 +261,10 @@ Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side
 - If the user has no friends, the recipient section is hidden entirely
 
 **Open door button**
-- "Open 30 min 🚪"
+- "Open the door"
 - On first tap ever: trigger OS notification permission prompt before proceeding (if not already granted)
 - Creates a status with the selected note and recipients
 - Navigates to Door Open view
-
-**Schedule toggle** — "🗓 Schedule it" pill button; expands a date/time form (date, start time, end time, reminder); "Open the door" button becomes "🗓 Schedule it"
-
-**Upcoming sessions** (below open door button, above tips)
-- All of the user's pending scheduled sessions shown as cards; each shows time range, note, going signal names, "Open now" button, and "Cancel session" link
-- Supports multiple simultaneous scheduled sessions
 
 **Tips section** (below open door button)
 
@@ -318,16 +312,6 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 - "Add more / Edit" button → Door Open Edit view
 - "Close now" link → immediately closes the status, returns to Door Closed view
 
-**Upcoming sessions** (below close button)
-- Same card format as Door Closed view, but without "Open now" (can't open a second door while one is active)
-- Cancel button on each card
-
-**Schedule another** (below upcoming sessions)
-- Small "🗓 Schedule another" pill button — hidden by default, expands inline schedule form
-- Form: date, start time, end time, reminder — same as Door Closed schedule form; no note field (schedule without context)
-- "Cancel" collapses the form without saving
-- On submit: creates a new scheduled session, collapses form
-
 ---
 
 ### Home — Door Open Edit View
@@ -358,6 +342,30 @@ Shown at the top of the Home screen when one or more friends have an active stat
   - Tapping Going again to cancel RSVP clears the note field
 
 Both the friend's open door section and the user's own door UI are visible simultaneously when both are active.
+
+---
+
+### Later Tab — Upcoming (`/upcoming`)
+
+All future/scheduled content lives here. Home (Now tab) is present-only.
+
+**Plan something CTA**
+- "Plan something" button always visible at top
+- Tapping expands the schedule creation form; tapping Cancel collapses it
+
+**Schedule creation form** (always in schedule mode)
+- Note chips + free-text note input (same as Home)
+- Date, start time, optional end time pickers
+- Reminder picker (5 / 15 / 30 min / 1h; default 30 min)
+- Recipient checkboxes (non-muted friends)
+- "Schedule" submit button → `POST /api/statuses` with `starts_at`; invalidates upcoming sessions list
+
+**Grouped sessions list** (grouped by time bucket: Tomorrow / This week / Next week / Soon / Later)
+- Own scheduled sessions shown as `ScheduledSessionCard`s (edit + cancel)
+- Friends' scheduled sessions shown as `FriendStatusCard`s (Going RSVP + note)
+- Own sessions appear first within each group, then friends'
+
+**Empty state** — "Nothing planned yet" + "Tap above to plan a session." shown when no sessions exist and form is collapsed
 
 ---
 
@@ -530,7 +538,7 @@ Accessible via the back-arrow header of Home.
 ## 5. Navigation
 
 - **Unauthenticated**: Landing (`/`) and Auth (`/auth`) are standalone with no nav bar. `/verify-email` and `/invite/:token` are also accessible without auth.
-- **Authenticated**: Bottom tab bar with two tabs — **Home** and **Friends**. Profile is reachable from Home's header, not a tab.
+- **Authenticated**: Bottom tab bar with three tabs — **Now** (`/home`), **Later** (`/upcoming`), and **Friends**. Profile is reachable from the Now tab's header, not a tab. The Later tab shows a violet badge count when there are upcoming items (own scheduled sessions + friends' scheduled sessions).
 - The `*` catch-all redirects to `/`.
 
 ---
