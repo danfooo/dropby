@@ -162,7 +162,6 @@
     "opensAt": "Öffnet {{time}}",
     "rsvpGoing": "Ich komme ✅",
     "rsvpNotePlaceholder": "Notiz hinzufügen (optional)",
-    "rsvpNoteSend": "Senden",
     "rsvpNoteHint": "Das ist eine Einwegnotiz, kein Chat.",
     "addToCalendar": "Zum Kalender hinzufügen",
     "updateCalendar": "Sitzung geändert — ICS-Datei neu herunterladen, um Kalender zu synchronisieren",

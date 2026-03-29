@@ -162,7 +162,6 @@
     "opensAt": "Öppnar {{time}}",
     "rsvpGoing": "Jag kommer ✅",
     "rsvpNotePlaceholder": "Lägg till en anteckning (valfritt)",
-    "rsvpNoteSend": "Skicka",
     "rsvpNoteHint": "Det här är en envägsanteckning, inte en chatt.",
     "addToCalendar": "Lägg till i kalender",
     "updateCalendar": "Passet ändrades — ladda ner .ics-filen igen för att synka kalendern",

@@ -162,7 +162,6 @@
     "opensAt": "Opens {{time}}",
     "rsvpGoing": "Going ✅",
     "rsvpNotePlaceholder": "Add a note (optional)",
-    "rsvpNoteSend": "Send",
     "rsvpNoteHint": "This is a one-way note, not a chat.",
     "addToCalendar": "Add to Calendar",
     "updateCalendar": "Session changed — re-download the .ics to sync your calendar",

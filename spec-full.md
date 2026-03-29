@@ -336,7 +336,7 @@ Shown at the top of the Home screen when one or more friends have an active stat
   - Sends push notification to host: "[name] is on their way"
   - On first tap ever (across the whole app): triggers OS notification permission prompt
   - After tapping: button stays active (tap again to cancel RSVP); an optional note field appears below the button
-- **Optional note**: After tapping Going, a text input appears with placeholder "Add a note (optional)" and a Send button
+- **Optional note**: After tapping Going, a text input appears with placeholder "Add a note (optional)"; no send button — note is sent on blur or Enter
   - Sends `PATCH /api/going/:statusId` with the note; host receives a push notification
   - A hint below reads "This is a one-way note, not a chat."
   - Tapping Going again to cancel RSVP clears the note field
@@ -639,8 +639,8 @@ The redirect destination must survive signup → email verification → login:
 - After tapping: button stays active (tap again to cancel); optional note field appears below
 - Sends push notification to host: "[name] is on their way" (with note as body if provided)
 - Triggers OS notification permission prompt on first use (if not yet granted)
-- **Optional note**: free-text field that appears after tapping Going
-  - Sends `PATCH /api/going/:statusId { note }` — host receives a push notification on every note change
+- **Optional note**: free-text field that appears after tapping Going; no send button — sent on blur or Enter
+  - Sends `PATCH /api/going/:statusId { note }` — host receives a push notification on each send
   - Hint: "This is a one-way note, not a chat."
   - Notes are a one-way signal; no reply from the host is possible in-app
 
