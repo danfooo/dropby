@@ -94,9 +94,9 @@
   },
   "home": {
     "greeting": "Hej, {{name}} 👋",
-    "greetingMorning": "God morgon",
-    "greetingAfternoon": "God eftermiddag",
-    "greetingEvening": "God kväll",
+    "greetingMorning": "Öppna din dörr i morse",
+    "greetingAfternoon": "Öppna din dörr i eftermiddag",
+    "greetingEvening": "Öppna din dörr i kväll",
     "friendsAvailable": "Dörrar öppnade för dig",
     "openFor": "Öppen i {{minutes}} min",
     "closingSoon": "Stänger snart",

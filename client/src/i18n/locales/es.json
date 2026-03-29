@@ -94,9 +94,9 @@
   },
   "home": {
     "greeting": "¡Hola, {{name}} 👋",
-    "greetingMorning": "Buenos días",
-    "greetingAfternoon": "Buenas tardes",
-    "greetingEvening": "Buenas noches",
+    "greetingMorning": "Abre tu puerta esta mañana",
+    "greetingAfternoon": "Abre tu puerta esta tarde",
+    "greetingEvening": "Abre tu puerta esta noche",
     "friendsAvailable": "Puertas abiertas para ti",
     "openFor": "Abierto {{minutes}} min",
     "closingSoon": "Cerrando pronto",
