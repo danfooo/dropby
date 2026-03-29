@@ -11,6 +11,7 @@ import { bigEmojiClass, formatTimeShort } from '../utils/schedule';
 import Avatar from '../components/Avatar';
 import FriendStatusCard from '../components/FriendStatusCard';
 import UserMenu from '../components/UserMenu';
+import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import FeedbackModal from '../components/FeedbackModal';
 import { useToast } from '../contexts/toast';
@@ -355,10 +356,7 @@ export default function Home() {
   if (view === 'closed') {
     return (
       <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
-        <div className="flex items-center justify-between mb-1">
-          <img src="/logo-icon.svg" alt="dropby" className="h-8 dark:[filter:invert(1)]" />
-          <UserMenu />
-        </div>
+        <PageHeader className="mb-1" />
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-6 mt-5">{getGreeting(t)}</h1>
 
         {/* Friend doors open now */}
@@ -625,10 +623,7 @@ export default function Home() {
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <img src="/logo.svg" alt="dropby" className="h-8 dark:[filter:invert(1)]" />
-        <UserMenu />
-      </div>
+      <PageHeader />
 
       {/* Friend doors also open now */}
       {openFriendDoors.length > 0 && (

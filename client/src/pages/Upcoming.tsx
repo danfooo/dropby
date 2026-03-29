@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import PageHeader from '../components/PageHeader';
 import { Capacitor } from '@capacitor/core';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -536,6 +537,7 @@ export default function Upcoming() {
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pb-24 safe-top">
+      <PageHeader />
       {/* Plan something CTA */}
       {!showForm ? (
         <button
