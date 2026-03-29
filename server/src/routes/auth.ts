@@ -213,7 +213,17 @@ router.post('/google', async (req, res) => {
     const { sub: googleId, email, name, picture } = payload;
     const emailLower = email.toLowerCase();
 
-    let user = db.prepare('SELECT * FROM users WHERE google_id = ? OR email = ?').get(googleId, emailLower) as any;
+    // gmail.com and googlemail.com are the same Google mailbox
+    const altEmail = emailLower.endsWith('@gmail.com')
+      ? emailLower.replace('@gmail.com', '@googlemail.com')
+      : emailLower.endsWith('@googlemail.com')
+      ? emailLower.replace('@googlemail.com', '@gmail.com')
+      : null;
+
+    let user = (altEmail
+      ? db.prepare('SELECT * FROM users WHERE google_id = ? OR email = ? OR email = ?').get(googleId, emailLower, altEmail)
+      : db.prepare('SELECT * FROM users WHERE google_id = ? OR email = ?').get(googleId, emailLower)
+    ) as any;
 
     if (!user) {
       const id = randomUUID();
