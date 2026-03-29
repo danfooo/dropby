@@ -76,8 +76,14 @@
     "continueWithApple": "Continuer avec Apple"
   },
   "nav": {
-    "home": "Accueil",
+    "now": "Maintenant",
+    "later": "Plus tard",
     "friends": "Amis"
+  },
+  "upcoming": {
+    "planSomething": "Planifier quelque chose",
+    "emptyTitle": "Rien de prévu",
+    "emptyDesc": "Appuie ci-dessus pour planifier une session."
   },
   "common": {
     "cancel": "Annuler",

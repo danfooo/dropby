@@ -76,8 +76,14 @@
     "somethingWentWrong": "Something went wrong. Please try again."
   },
   "nav": {
-    "home": "Home",
+    "now": "Now",
+    "later": "Later",
     "friends": "Friends"
+  },
+  "upcoming": {
+    "planSomething": "Plan something",
+    "emptyTitle": "Nothing planned yet",
+    "emptyDesc": "Tap above to plan a session."
   },
   "common": {
     "cancel": "Cancel",
