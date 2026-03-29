@@ -261,7 +261,7 @@ Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side
 - If the user has no friends, the recipient section is hidden entirely
 
 **Open door button**
-- "Open the door"
+- "Open Now"
 - On first tap ever: trigger OS notification permission prompt before proceeding (if not already granted)
 - Creates a status with the selected note and recipients
 - Navigates to Door Open view
