@@ -34,10 +34,8 @@ export default defineConfig({
         changeOrigin: true,
       },
       // Static files served by Express (avatars, uploads, etc.)
-      // Matches any path starting with a slash followed by a segment that
-      // contains no dot (i.e. not a Vite-owned asset like /icon-192.png)
-      // but does eventually contain a dot in a later segment (i.e. a file).
-      '^/[^.]+/.+\\..+': {
+      // Matches /segment/filename.ext but excludes Vite internals (/src, /node_modules, /@)
+      '^/(?!src|node_modules|@)[^./]+/[^/]+\\.[^/]+$': {
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
