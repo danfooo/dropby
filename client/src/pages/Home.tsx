@@ -373,9 +373,9 @@ export default function Home() {
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {
     return (
-      <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 flex flex-col">
-        <PageHeader className="mb-1" />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-6 mt-5">{getGreeting(t)}</h1>
+      <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 safe-top flex flex-col">
+        <PageHeader />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-6">{getGreeting(t)}</h1>
 
         {/* Friend doors open now */}
         {openFriendDoors.length > 0 && (
@@ -656,7 +656,7 @@ export default function Home() {
 
   // --- DOOR OPEN VIEW ---
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 safe-top">
       {/* Header */}
       <PageHeader />
 
