@@ -355,7 +355,7 @@ export default function Home() {
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {
     return (
-      <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
+      <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24 flex flex-col">
         <PageHeader className="mb-1" />
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-6 mt-5">{getGreeting(t)}</h1>
 
@@ -501,7 +501,9 @@ export default function Home() {
           </button>
         </div>
 
-        <TipsSection />
+        <div className="mt-auto pt-6 -mx-4">
+          <TipsSection />
+        </div>
 
         <Modal open={notifSheet !== null} onClose={handleNotifSkip}>
           <p className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-2">
