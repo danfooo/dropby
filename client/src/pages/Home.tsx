@@ -379,7 +379,7 @@ export default function Home() {
         {/* Friend doors open now */}
         {openFriendDoors.length > 0 && (
           <div data-testid="friends-available" className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-200/60 dark:border-fuchsia-900/60">
-            <h2 className="text-base font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
+            <h2 className="text-2xl font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
               {t('home.friendsAvailable')}
             </h2>
             <div className="space-y-3">
@@ -390,10 +390,9 @@ export default function Home() {
           </div>
         )}
 
-        {openFriendDoors.length > 0
-          ? <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">{getGreeting(t)}</h2>
-          : <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-4">{getGreeting(t)}</h1>
-        }
+        <h2 className={`font-bold text-gray-900 dark:text-gray-50 mb-4 ${openFriendDoors.length > 0 ? 'text-lg' : 'text-2xl'}`}>
+          {getGreeting(t)}
+        </h2>
 
         {/* Note chips: saved notes first (max 2), then suggestions */}
         {(visibleSaved.length > 0 || chips.length > 0) && (
