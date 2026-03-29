@@ -97,7 +97,7 @@
     "greetingMorning": "Ouvre ta porte ce matin",
     "greetingAfternoon": "Ouvre ta porte cet après-midi",
     "greetingEvening": "Ouvre ta porte ce soir",
-    "friendsAvailable": "Portes ouvertes pour toi",
+    "friendsAvailable": "Ouvert maintenant",
     "openFor": "Ouvert {{minutes}} min",
     "closingSoon": "Ferme bientôt",
     "goingButton": "J'arrive ✅",

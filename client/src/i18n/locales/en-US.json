@@ -97,7 +97,7 @@
     "greetingMorning": "Open your door this morning",
     "greetingAfternoon": "Open your door this afternoon",
     "greetingEvening": "Open your door this evening",
-    "friendsAvailable": "Doors opened to you",
+    "friendsAvailable": "Open right now",
     "openFor": "Open for {{minutes}} min",
     "closingSoon": "Closing soon",
     "goingButton": "Going ✅",
