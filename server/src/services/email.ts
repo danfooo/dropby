@@ -9,7 +9,8 @@ const APP_URL = () => process.env.APP_URL || "http://localhost:5173";
 async function send(to: string, subject: string, html: string) {
   if (!resend) {
     console.log(`[EMAIL] To: ${to} | Subject: ${subject}`);
-    console.log(`[EMAIL] ${html.replace(/<[^>]+>/g, " ")}`);
+    const text = html.replace(/<a[^>]+href="([^"]+)"[^>]*>/gi, " $1 ").replace(/<[^>]+>/g, " ");
+    console.log(`[EMAIL] ${text}`);
     return;
   }
   await resend.emails.send({ from: FROM, to, subject, html });
