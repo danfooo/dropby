@@ -77,8 +77,8 @@ test('Alice creates three scheduled sessions, edits one note, changes end time o
       sessions.push({ id: res.id, note });
     }
 
-    // Navigate to home and verify all three appear in the upcoming sessions list
-    await alicePage.goto('/home');
+    // Navigate to Later tab and verify all three appear in the upcoming sessions list
+    await alicePage.goto('/upcoming');
     await alicePage.waitForLoadState('domcontentloaded');
 
     await expect(alicePage.getByText('Session 1')).toBeVisible({ timeout: 5_000 });

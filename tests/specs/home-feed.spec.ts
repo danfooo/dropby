@@ -113,8 +113,8 @@ test('Scheduled: friend scheduled session appears under its time group heading',
       { serverUrl: SERVER_URL, token: bobToken, aliceId, startsAt, endsAt },
     );
 
-    // Alice reloads — should see the "Tomorrow" section with Bob's card
-    await alicePage.reload();
+    // Alice navigates to the Later tab — should see the "Tomorrow" section with Bob's card
+    await alicePage.goto('/upcoming');
     await alicePage.waitForLoadState('domcontentloaded');
 
     await expect(alicePage.getByRole('heading', { name: 'Tomorrow' })).toBeVisible({ timeout: 10_000 });
