@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Capacitor } from '@capacitor/core';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { Capacitor } from '@capacitor/core';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
 import { shouldShowNotifPrompt, requestNotificationPermission } from '../utils/notifications';
 import { useAuthStore } from '../stores/auth';
+import { bigEmojiClass, formatTimeShort } from '../utils/schedule';
 import Avatar from '../components/Avatar';
+import FriendStatusCard from '../components/FriendStatusCard';
 import UserMenu from '../components/UserMenu';
 import Modal from '../components/Modal';
 import FeedbackModal from '../components/FeedbackModal';
@@ -16,158 +18,6 @@ import { getSuggestions } from '../i18n/suggestions';
 import { copyText } from '../utils/clipboard';
 
 type HomeView = 'closed' | 'open' | 'edit';
-
-function formatTime(ts: number): string {
-  return format(new Date(ts * 1000), 'EEE h:mm a');
-}
-
-function formatTimeShort(ts: number): string {
-  return format(new Date(ts * 1000), 'h:mm a');
-}
-
-// Returns a Tailwind text-size class if the string is emoji-only, null otherwise.
-// Uses grapheme segmentation so multi-codepoint emoji (e.g. 👨‍👩‍👧‍👦) count as one.
-// Thresholds inspired by iMessage (1-3 emoji) / WhatsApp (emoji-only = big):
-//   1 emoji  → text-5xl
-//   2–3      → text-4xl
-//   4–5      → text-3xl
-//   6+       → null (render normally)
-function bigEmojiClass(text: string): string | null {
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-  const segments = [...new Intl.Segmenter().segment(trimmed)];
-  let count = 0;
-  for (const { segment } of segments) {
-    if (/^\s+$/.test(segment)) continue;
-    if (/\p{Extended_Pictographic}/u.test(segment)) { count++; }
-    else return null; // contains non-emoji character
-  }
-  if (count === 0) return null;
-  if (count === 1) return 'text-5xl';
-  if (count <= 3) return 'text-4xl';
-  if (count <= 5) return 'text-3xl';
-  return null;
-}
-
-function getScheduleGroup(startsAt: number): string {
-  const msDay = 86400000;
-  const now = new Date();
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const ts = new Date(startsAt * 1000).getTime();
-  if (ts < todayMidnight + 2 * msDay) return 'tomorrow';
-  const dow = new Date(todayMidnight).getDay(); // 0=Sun
-  const nextMon = todayMidnight + (dow === 0 ? 1 : 8 - dow) * msDay;
-  if (ts < nextMon) return 'this_week';
-  if (ts < nextMon + 7 * msDay) return 'next_week';
-  if (ts < todayMidnight + 30 * msDay) return 'soon';
-  return 'later';
-}
-
-function groupScheduledDoors(doors: any[]): { key: string; doors: any[] }[] {
-  const sorted = [...doors].sort((a, b) => a.starts_at - b.starts_at);
-  const groups: { key: string; doors: any[] }[] = [];
-  const seen = new Map<string, { key: string; doors: any[] }>();
-  for (const door of sorted) {
-    const key = getScheduleGroup(door.starts_at);
-    if (!seen.has(key)) {
-      const group = { key, doors: [] };
-      groups.push(group);
-      seen.set(key, group);
-    }
-    seen.get(key)!.doors.push(door);
-  }
-  return groups;
-}
-
-// Friend status card (door open or upcoming)
-function FriendStatusCard({ status, onGoing, onNoteUpdate }: { status: any; onGoing: (id: string, rsvp: 'going' | null) => void; onNoteUpdate: (id: string, note: string) => void }) {
-  const { t } = useTranslation();
-  const isScheduled = status.starts_at && status.starts_at > Math.floor(Date.now() / 1000);
-  const [myRsvp, setMyRsvp] = useState<'going' | null>(status.my_rsvp === 'going' ? 'going' : null);
-  const [noteText, setNoteText] = useState(status.my_note || '');
-  const [noteSaving, setNoteSaving] = useState(false);
-  const [noteSaved, setNoteSaved] = useState(false);
-  const bigNote = status.note ? bigEmojiClass(status.note) : null;
-
-  const handleGoing = async () => {
-    const next = myRsvp === 'going' ? null : 'going';
-    setMyRsvp(next);
-    if (next === null) setNoteText('');
-    await onGoing(status.id, next);
-  };
-
-  const handleSendNote = async () => {
-    if (!noteText.trim()) return;
-    setNoteSaving(true);
-    try {
-      await onNoteUpdate(status.id, noteText.trim());
-      setNoteSaved(true);
-      setTimeout(() => setNoteSaved(false), 2000);
-    } finally {
-      setNoteSaving(false);
-    }
-  };
-
-  return (
-    <div className={`rounded-2xl p-4 shadow-sm border ${isScheduled ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700' : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800'}`}>
-      <div className="flex items-center gap-3 mb-3">
-        <Avatar name={status.owner_name} size="md" />
-        <p className="font-semibold text-gray-900 dark:text-gray-50">{status.owner_name}</p>
-      </div>
-      {status.note && (
-        <p className={bigNote ? `${bigNote} leading-none mb-2` : 'text-sm text-gray-500 dark:text-gray-400 truncate mb-2'}>
-          {status.note}
-        </p>
-      )}
-      {isScheduled && (
-        <p className="text-xs text-violet-500 dark:text-violet-400 mb-3">
-          {t('home.opensAt', { time: formatTime(status.starts_at) })}
-        </p>
-      )}
-      {!isScheduled && status.ends_at && (
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
-          {t('home.freeUntil', { time: formatTimeShort(status.ends_at) })}
-        </p>
-      )}
-
-      {/* RSVP button */}
-      <button
-        onClick={handleGoing}
-        className={`w-full py-2 rounded-xl text-sm font-semibold transition-colors ${
-          myRsvp === 'going'
-            ? 'bg-emerald-500 text-white'
-            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-950'
-        }`}
-      >
-        {t('home.rsvpGoing')}
-      </button>
-
-      {/* Note field — shown after Going is confirmed */}
-      {myRsvp === 'going' && (
-        <div className="mt-3">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={noteText}
-              onChange={e => setNoteText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSendNote(); }}
-              placeholder={t('home.rsvpNotePlaceholder')}
-              className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            />
-            <button
-              onClick={handleSendNote}
-              disabled={!noteText.trim() || noteSaving}
-              className="px-3 py-2 bg-emerald-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold"
-            >
-              {noteSaved ? '✓' : t('home.rsvpNoteSend')}
-            </button>
-          </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">{t('home.rsvpNoteHint')}</p>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Recipient row in door-open view
 function RecipientRow({ recipient, onRemove }: { recipient: any; onRemove: () => void }) {
@@ -281,431 +131,12 @@ function InviteLinkRow({ token, createdAt, onRevoke }: { token: string; createdA
   );
 }
 
-function ScheduleForm({ friends, defaultNote = '', defaultRecipients = [], isPending, onSubmit, onOpenNow, onCancel }: {
-  friends: any[];
-  defaultNote?: string;
-  defaultRecipients?: string[];
-  isPending?: boolean;
-  onSubmit: (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at?: number; reminder_minutes: number }) => void;
-  onOpenNow?: (data: { note?: string; recipient_ids: string[] }) => void;
-  onCancel: () => void;
-}) {
-  const { t, i18n } = useTranslation();
-  const qc = useQueryClient();
-  const [note, setNote] = useState(defaultNote);
-  const [selectedChip, setSelectedChip] = useState('');
-  const [previousNote, setPreviousNote] = useState<string | null>(null);
-  const [recipients, setRecipients] = useState<string[]>(defaultRecipients);
-  const [scheduleMode, setScheduleMode] = useState(false);
-  const [date, setDate] = useState(todayStr);
-  const [start, setStart] = useState(defaultStartTime);
-  const [end, setEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
-  const [reminder, setReminder] = useState(30);
-  const [showReminder, setShowReminder] = useState(false);
-  const [hasEndTime, setHasEndTime] = useState(false);
-  const [friendsAtBottom, setFriendsAtBottom] = useState(false);
-
-  const { data: savedNotes = [] } = useQuery({ queryKey: ['notes'], queryFn: notesApi.list });
-  const hideNote = useMutation({
-    mutationFn: (id: string) => notesApi.setHidden(id, true),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
-  });
-  const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
-  const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden).slice(0, 2);
-  const chips = suggestions.slice(0, 7);
-
-  const pickChip = (text: string) => {
-    if (selectedChip === text) {
-      setNote(previousNote ?? '');
-      setSelectedChip('');
-      setPreviousNote(null);
-    } else {
-      setPreviousNote(selectedChip === '' ? note : null);
-      setNote(text);
-      setSelectedChip(text);
-    }
-  };
-
-  useEffect(() => {
-    setEnd(addHours(date, start, 2));
-  }, [date, start]);
-
-  const activeFriends = friends.filter((f: any) => !f.muted);
-  const mutedFriends = friends.filter((f: any) => f.muted);
-  const trimmedNote = note.trim() || undefined;
-
-  return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 space-y-3">
-      {/* Note chips: saved notes first (max 2), then suggestions */}
-      {(visibleSaved.length > 0 || chips.length > 0) && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {visibleSaved.map((n: any) => (
-            <div
-              key={n.id}
-              className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                selectedChip === n.text
-                  ? 'bg-emerald-500 text-white border-emerald-500'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              <button onClick={() => pickChip(n.text)}>{n.text}</button>
-              <button
-                onClick={() => hideNote.mutate(n.id)}
-                className={`ml-1 rounded-full p-0.5 transition-colors ${
-                  selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-                aria-label="Remove"
-              >
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
-          {chips.map((chip: string) => (
-            <button
-              key={chip}
-              onClick={() => pickChip(chip)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                selectedChip === chip
-                  ? 'bg-emerald-500 text-white border-emerald-500'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="relative">
-        <input
-          type="text"
-          placeholder={t('home.customNotePlaceholder')}
-          value={note}
-          maxLength={160}
-          onChange={e => {
-            setNote(e.target.value);
-            if (selectedChip && e.target.value !== selectedChip) {
-              setSelectedChip('');
-              setPreviousNote(null);
-            }
-          }}
-          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
-        />
-        {note.length >= 130 && (
-          <span className={`absolute right-3 bottom-2.5 text-xs pointer-events-none ${note.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
-            {160 - note.length}
-          </span>
-        )}
-      </div>
-      {/* Schedule pickers — only when scheduleMode */}
-      {scheduleMode && (
-        <>
-          <div className="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800">
-            <div className="flex-[2] px-3 py-2 border-r border-gray-200 dark:border-gray-700">
-              <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">Date</label>
-              <input type="date" value={date} min={todayStr()} onChange={e => setDate(e.target.value)}
-                className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-            </div>
-            <div className={`flex-1 px-3 py-2 ${hasEndTime ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}>
-              <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
-              <input type="time" value={start} onChange={e => setStart(e.target.value)}
-                className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-            </div>
-            {hasEndTime && (
-              <div className="flex-1 px-3 py-2 relative">
-                <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
-                <input type="time" value={end} onChange={e => setEnd(e.target.value)}
-                  className="w-full text-base bg-transparent outline-none dark:text-gray-50 pr-5" />
-                <button onClick={() => setHasEndTime(false)} className="absolute top-2 right-2 text-gray-300 dark:text-gray-600 hover:text-gray-500 text-xs leading-none">✕</button>
-              </div>
-            )}
-          </div>
-          {!hasEndTime && (
-            <button onClick={() => setHasEndTime(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
-              + end time
-            </button>
-          )}
-          <div className="flex items-center gap-2">
-            <p className="text-xs text-gray-400 dark:text-gray-500 flex-1">{t('home.scheduleReminderText', { minutes: reminder })}</p>
-            <button onClick={() => setShowReminder(v => !v)} className="text-xs text-violet-600 font-medium">
-              {t('home.scheduleReminderChange')}
-            </button>
-          </div>
-          {showReminder && (
-            <div className="flex gap-2 flex-wrap">
-              {REMINDER_OPTIONS.map(m => (
-                <button key={m} onClick={() => { setReminder(m); setShowReminder(false); }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    reminder === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
-                  }`}>
-                  {m === 60 ? '1h' : `${m} min`}
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-      {friends.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{t('home.openDoorTo')}</p>
-            {activeFriends.length >= 5 && (
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                {activeFriends.filter((f: any) => recipients.includes(f.id)).length} / {activeFriends.length}
-              </span>
-            )}
-          </div>
-          <div className="relative -mx-4">
-            <div
-              className={`divide-y divide-gray-50 dark:divide-gray-800${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
-              onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
-            >
-              {activeFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-4">
-                  <input type="checkbox" checked={recipients.includes(f.id)}
-                    onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                    className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                  <Avatar name={f.display_name} size="sm" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
-                </label>
-              ))}
-            </div>
-            {activeFriends.length >= 5 && !friendsAtBottom && (
-              <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none" />
-            )}
-          </div>
-        </div>
-      )}
-      <div className="flex gap-2">
-        <button
-          onClick={() => scheduleMode
-            ? onSubmit({ note: trimmedNote, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: hasEndTime ? toUnix(date, end) : undefined, reminder_minutes: reminder })
-            : onOpenNow?.({ note: trimmedNote, recipient_ids: recipients })
-          }
-          disabled={isPending}
-          className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-2xl font-semibold text-sm disabled:opacity-50 transition-colors"
-        >
-          {scheduleMode ? t('home.scheduleToggle') : t('home.openDoor')}
-        </button>
-        <button
-          onClick={() => setScheduleMode(v => !v)}
-          className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition-colors ${
-            scheduleMode ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
-        >
-          {t('home.scheduleLater')}
-        </button>
-      </div>
-      <button onClick={onCancel} className="w-full text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors">
-        {t('common.cancel')}
-      </button>
-    </div>
-  );
-}
-
-function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
-  session: any;
-  friends?: any[];
-  me?: { display_name: string; avatar_url?: string | null } | null;
-  onCancel: () => void;
-  onSave?: (data: { note?: string; starts_at?: number; ends_at?: number; recipient_ids?: string[] }) => void;
-}) {
-  const { t } = useTranslation();
-  const bigNote = session.note ? bigEmojiClass(session.note) : null;
-  const icsKey = `dropby_ics_${session.id}`;
-  const [editing, setEditing] = useState(false);
-  const sessionDate = format(new Date(session.starts_at * 1000), 'yyyy-MM-dd');
-  const [editDate, setEditDate] = useState(sessionDate);
-  const [editStart, setEditStart] = useState(format(new Date(session.starts_at * 1000), 'HH:mm'));
-  const [hasEditEnd, setHasEditEnd] = useState(!!session.ends_at);
-  const [editEnd, setEditEnd] = useState(session.ends_at ? format(new Date(session.ends_at * 1000), 'HH:mm') : addHours(sessionDate, format(new Date(session.starts_at * 1000), 'HH:mm'), 2));
-  const [editNote, setEditNote] = useState(session.note || '');
-  const [editRecipients, setEditRecipients] = useState<string[]>((session.recipients || []).map((r: any) => r.id));
-
-  const activeFriends = friends.filter((f: any) => !f.muted);
-  const mutedFriends = friends.filter((f: any) => f.muted);
-  const [friendsAtBottom, setFriendsAtBottom] = useState(false);
-
-  if (editing) {
-    return (
-      <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl p-4 space-y-3">
-        <div className="flex border border-violet-200 dark:border-violet-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900">
-          <div className="flex-[2] px-3 py-2 border-r border-violet-200 dark:border-violet-800">
-            <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">Date</label>
-            <input type="date" value={editDate} min={format(new Date(), 'yyyy-MM-dd')} onChange={e => setEditDate(e.target.value)}
-              className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-          </div>
-          <div className={`flex-1 px-3 py-2 ${hasEditEnd ? 'border-r border-violet-200 dark:border-violet-800' : ''}`}>
-            <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
-            <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
-              className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-          </div>
-          {hasEditEnd && (
-            <div className="flex-1 px-3 py-2 relative">
-              <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
-              <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
-                className="w-full text-base bg-transparent outline-none dark:text-gray-50 pr-5" />
-              <button onClick={() => setHasEditEnd(false)} className="absolute top-2 right-2 text-violet-300 dark:text-violet-700 hover:text-violet-500 text-xs leading-none">✕</button>
-            </div>
-          )}
-        </div>
-        {!hasEditEnd && (
-          <button onClick={() => setHasEditEnd(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
-            + end time
-          </button>
-        )}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder={t('home.notePlaceholder')}
-            value={editNote}
-            maxLength={160}
-            onChange={e => setEditNote(e.target.value)}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
-          />
-          {editNote.length >= 130 && (
-            <span className={`absolute right-3 bottom-2.5 text-xs pointer-events-none ${editNote.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
-              {160 - editNote.length}
-            </span>
-          )}
-        </div>
-        {friends.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs text-violet-500 dark:text-violet-400 font-medium">{t('home.openDoorTo')}</p>
-              {activeFriends.length >= 5 && (
-                <span className="text-xs text-violet-400 dark:text-violet-500">
-                  {activeFriends.filter((f: any) => editRecipients.includes(f.id)).length} / {activeFriends.length}
-                </span>
-              )}
-            </div>
-            <div className="relative -mx-4">
-              <div
-                className={`divide-y divide-violet-100 dark:divide-violet-900${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
-                onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
-              >
-                {activeFriends.map((f: any) => (
-                  <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900 px-4">
-                    <input type="checkbox" checked={editRecipients.includes(f.id)}
-                      onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                      className="w-4 h-4 accent-violet-600 flex-shrink-0" />
-                    <Avatar name={f.display_name} size="sm" />
-                    <span className="text-sm font-medium text-violet-900 dark:text-violet-100">{f.display_name}</span>
-                  </label>
-                ))}
-              </div>
-              {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-violet-50 dark:from-violet-950 to-transparent pointer-events-none" />
-              )}
-            </div>
-          </div>
-        )}
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              onSave?.({
-                note: editNote || undefined,
-                starts_at: toUnix(editDate, editStart),
-                ends_at: hasEditEnd ? toUnix(editDate, editEnd) : undefined,
-                recipient_ids: editRecipients,
-              });
-              setEditing(false);
-            }}
-            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2 rounded-xl text-sm font-semibold"
-          >
-            {t('home.saveChanges')}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="px-4 py-2 text-sm text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 font-medium"
-          >
-            {t('common.cancel')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl p-4">
-      {me && (
-        <div className="flex items-center gap-3 mb-3">
-          <Avatar name={me.display_name} url={me.avatar_url} size="md" />
-          <p className="font-semibold text-violet-900 dark:text-violet-100">{me.display_name}</p>
-        </div>
-      )}
-      <p className="text-sm text-violet-700 dark:text-violet-300 font-medium mb-1">
-        🕐 {formatTime(session.starts_at)}{session.ends_at ? ` – ${formatTimeShort(session.ends_at)}` : ''}
-      </p>
-      {session.note && (
-        <p className={bigNote ? `${bigNote} leading-none mb-2` : 'text-sm text-violet-600 dark:text-violet-400 mb-2'}>
-          {session.note}
-        </p>
-      )}
-      {session.recipients?.length > 0 && (
-        <p className="text-xs text-violet-500 dark:text-violet-400 mb-2 truncate">
-          {session.recipients.map((r: any) => r.display_name).join(', ')}…
-        </p>
-      )}
-      {session.going_signals?.length > 0 && (
-        <p className="text-xs text-violet-500 dark:text-violet-400 mb-2">
-          {session.going_signals.map((g: any) => g.name).join(', ')} {session.going_signals.length === 1 ? 'is' : 'are'} coming
-        </p>
-      )}
-      <a
-        href={`${Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : ''}/api/status/${session.id}/calendar.ics`}
-        download
-        onClick={() => localStorage.setItem(icsKey, '1')}
-        className="inline-block text-xs text-violet-500 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 mb-3"
-      >
-        {t('home.addToCalendar')}
-      </a>
-      <div className="flex gap-2">
-        <button
-          onClick={() => setEditing(true)}
-          className="px-4 py-2 text-sm text-violet-600 hover:text-violet-800 font-medium"
-        >
-          {t('home.edit')}
-        </button>
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 text-sm text-violet-600 hover:text-violet-800 font-medium"
-        >
-          {t('home.scheduleCancelSession')}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function getGreeting(t: (key: string) => string): string {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 12) return t('home.greetingMorning');
   if (hour >= 12 && hour < 18) return t('home.greetingAfternoon');
   return t('home.greetingEvening');
 }
-
-// Default date/time helpers
-function todayStr() {
-  return format(new Date(), 'yyyy-MM-dd');
-}
-function defaultStartTime() {
-  const d = new Date();
-  d.setMinutes(0, 0, 0);
-  d.setHours(d.getHours() + 1);
-  return format(d, 'HH:mm');
-}
-function addHours(dateStr: string, timeStr: string, hours: number): string {
-  const d = new Date(`${dateStr}T${timeStr}`);
-  d.setHours(d.getHours() + hours);
-  return format(d, 'HH:mm');
-}
-function toUnix(dateStr: string, timeStr: string): number {
-  return Math.floor(new Date(`${dateStr}T${timeStr}`).getTime() / 1000);
-}
-
-const REMINDER_OPTIONS = [5, 15, 30, 60];
 
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -719,33 +150,17 @@ export default function Home() {
   const [editNote, setEditNote] = useState('');
   const [editRecipients, setEditRecipients] = useState<string[]>([]);
   const [editEndsAt, setEditEndsAt] = useState('');
-  const [showGoingModal, setShowGoingModal] = useState<string | null>(null);
-  const [showScheduleMore, setShowScheduleMore] = useState(false);
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(60);
   const [notifSheet, setNotifSheet] = useState<'open' | 'going' | null>(null);
   const setToast = useToast();
   const pendingAction = useRef<(() => void) | null>(null);
 
-  // Schedule form state
-  const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState(todayStr);
-  const [scheduleStart, setScheduleStart] = useState(defaultStartTime);
-  const [scheduleEnd, setScheduleEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
-  const [reminderMinutes, setReminderMinutes] = useState(30);
-  const [showReminderPicker, setShowReminderPicker] = useState(false);
-  const [scheduleHasEndTime, setScheduleHasEndTime] = useState(false);
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
 
   const { data: myStatus, isLoading: statusLoading } = useQuery({
     queryKey: ['myStatus'],
     queryFn: statusApi.get,
-    refetchInterval: 30000,
-  });
-
-  const { data: upcomingSessions = [] } = useQuery({
-    queryKey: ['upcomingSessions'],
-    queryFn: statusApi.getUpcoming,
     refetchInterval: 30000,
   });
 
@@ -795,11 +210,6 @@ export default function Home() {
     }
   }, [myStatus, statusLoading]);
 
-  // Update schedule end time when start changes
-  useEffect(() => {
-    setScheduleEnd(addHours(scheduleDate, scheduleStart, 2));
-  }, [scheduleDate, scheduleStart]);
-
   // Countdown timer
   const [secondsLeft, setSecondsLeft] = useState(0);
   useEffect(() => {
@@ -814,15 +224,9 @@ export default function Home() {
 
   const createStatus = useMutation({
     mutationFn: (data: Parameters<typeof statusApi.create>[0]) => statusApi.create(data),
-    onSuccess: (result) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['myStatus'] });
-      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
-      if (result?.starts_at) {
-        setScheduleEnabled(false);
-        setShowScheduleMore(false);
-      } else {
-        setView('open');
-      }
+      setView('open');
     },
   });
 
@@ -834,11 +238,6 @@ export default function Home() {
   const closeStatus = useMutation({
     mutationFn: statusApi.close,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setView('closed'); },
-  });
-
-  const prolongStatus = useMutation({
-    mutationFn: statusApi.prolong,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
   });
 
   const setDuration = useMutation({
@@ -859,25 +258,6 @@ export default function Home() {
   const revokeInvite = useMutation({
     mutationFn: (token: string) => invitesApi.revoke(token),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
-  });
-
-  const cancelScheduled = useMutation({
-    mutationFn: (id: string) => statusApi.cancelScheduledById(id),
-    onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
-      setToast({ message: t('home.removeFromCalendar'), linkText: t('home.downloadIcs'), linkHref: `/api/status/${id}/calendar.ics?cancel=1`, download: true });
-    },
-  });
-
-  const updateScheduled = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof statusApi.updateById>[1] }) =>
-      statusApi.updateById(id, data),
-    onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
-      if (localStorage.getItem(`dropby_ics_${id}`)) {
-        setToast({ message: t('home.updateCalendar'), linkText: t('home.downloadIcs'), linkHref: `/api/status/${id}/calendar.ics`, download: true });
-      }
-    },
   });
 
   const sendGoing = async (statusId: string, rsvp: 'going' | null = 'going') => {
@@ -905,19 +285,7 @@ export default function Home() {
       await notesApi.save(trimmedNote);
       qc.invalidateQueries({ queryKey: ['notes'] });
     }
-
-    if (scheduleEnabled) {
-      const startsAt = toUnix(scheduleDate, scheduleStart);
-      createStatus.mutate({
-        note: trimmedNote,
-        recipient_ids: selectedRecipients,
-        starts_at: startsAt,
-        ends_at: scheduleHasEndTime ? toUnix(scheduleDate, scheduleEnd) : undefined,
-        reminder_minutes: reminderMinutes,
-      });
-    } else {
-      createStatus.mutate({ note: trimmedNote, recipient_ids: selectedRecipients });
-    }
+    createStatus.mutate({ note: trimmedNote, recipient_ids: selectedRecipients });
   };
 
   const handleOpen = async () => {
@@ -948,7 +316,7 @@ export default function Home() {
     let ends_at: number | undefined;
     if (editEndsAt && myStatus?.ends_at) {
       const dateStr = format(new Date(myStatus.ends_at * 1000), 'yyyy-MM-dd');
-      ends_at = toUnix(dateStr, editEndsAt);
+      ends_at = Math.floor(new Date(`${dateStr}T${editEndsAt}`).getTime() / 1000);
     }
     updateStatus.mutate({ note: editNote || undefined, recipient_ids: editRecipients, ends_at });
   };
@@ -980,24 +348,11 @@ export default function Home() {
         return (b.friendship_created_at ?? 0) - (a.friendship_created_at ?? 0);
       });
   }, [friends, selectedRecipients]);
-  const mutedFriends = useMemo(() => {
-    return (friends as any[])
-      .filter((f: any) => f.muted)
-      .sort((a: any, b: any) => (b.friendship_created_at ?? 0) - (a.friendship_created_at ?? 0));
-  }, [friends]);
-
   const nowTs = Math.floor(Date.now() / 1000);
   const openFriendDoors = (friendStatuses as any[]).filter((s: any) => !s.starts_at || s.starts_at <= nowTs);
-  const scheduledFriendGroups = groupScheduledDoors(
-    (friendStatuses as any[]).filter((s: any) => s.starts_at && s.starts_at > nowTs)
-  );
 
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {
-    const scheduleButtonLabel = scheduleEnabled
-      ? t('home.openDoor') // "Open the door" label changes for scheduled too
-      : t('home.openDoor');
-
     return (
       <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
         <div className="flex items-center justify-between mb-1">
@@ -1111,55 +466,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Schedule pickers — shown when scheduleEnabled */}
-        {scheduleEnabled && (
-          <div className="mb-3 space-y-2">
-            <div className="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800">
-              <div className="flex-[2] px-3 py-2 border-r border-gray-200 dark:border-gray-700">
-                <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">Date</label>
-                <input type="date" value={scheduleDate} min={todayStr()} onChange={e => setScheduleDate(e.target.value)}
-                  className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-              </div>
-              <div className={`flex-1 px-3 py-2 ${scheduleHasEndTime ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}>
-                <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
-                <input type="time" value={scheduleStart} onChange={e => setScheduleStart(e.target.value)}
-                  className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
-              </div>
-              {scheduleHasEndTime && (
-                <div className="flex-1 px-3 py-2 relative">
-                  <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
-                  <input type="time" value={scheduleEnd} onChange={e => setScheduleEnd(e.target.value)}
-                    className="w-full text-base bg-transparent outline-none dark:text-gray-50 pr-5" />
-                  <button onClick={() => setScheduleHasEndTime(false)} className="absolute top-2 right-2 text-gray-300 dark:text-gray-600 hover:text-gray-500 text-xs leading-none">✕</button>
-                </div>
-              )}
-            </div>
-            {!scheduleHasEndTime && (
-              <button onClick={() => setScheduleHasEndTime(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
-                + end time
-              </button>
-            )}
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-400 dark:text-gray-500 flex-1">{t('home.scheduleReminderText', { minutes: reminderMinutes })}</p>
-              <button onClick={() => setShowReminderPicker(v => !v)} className="text-xs text-violet-600 font-medium">
-                {t('home.scheduleReminderChange')}
-              </button>
-            </div>
-            {showReminderPicker && (
-              <div className="flex gap-2 flex-wrap">
-                {REMINDER_OPTIONS.map(m => (
-                  <button key={m} onClick={() => { setReminderMinutes(m); setShowReminderPicker(false); }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      reminderMinutes === m ? 'bg-violet-500 text-white border-violet-500' : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
-                    }`}>
-                    {m === 60 ? '1h' : `${m} min`}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Recipient selection */}
         {hasFriends && (
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 mb-3 shadow-sm border border-gray-100 dark:border-gray-800">
@@ -1186,68 +492,18 @@ export default function Home() {
           </div>
         )}
 
-        {/* Open / Schedule button row */}
+        {/* Open button */}
         <div className="flex gap-2">
           <button
             onClick={handleOpen}
             disabled={createStatus.isPending}
             className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
           >
-            {createStatus.isPending ? t('home.opening') : scheduleEnabled ? t('home.scheduleToggle') : t('home.openDoor')}
-          </button>
-          <button
-            onClick={() => setScheduleEnabled(v => !v)}
-            className={`px-4 py-3 rounded-2xl text-sm font-medium transition-colors ${
-              scheduleEnabled ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
-          >
-            {t('home.scheduleLater')}
+            {createStatus.isPending ? t('home.opening') : t('home.openDoor')}
           </button>
         </div>
-        {/* Scheduled sessions — own + friends, grouped by when they open */}
-        {((upcomingSessions as any[]).length > 0 || scheduledFriendGroups.length > 0) && (() => {
-          const groupLabel = (key: string) => key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
-            : key === 'this_week' ? t('home.scheduledGroupThisWeek')
-            : key === 'next_week' ? t('home.scheduledGroupNextWeek')
-            : key === 'soon' ? t('home.scheduledGroupSoon')
-            : t('home.scheduledGroupLater');
-          const keyOrder = ['tomorrow', 'this_week', 'next_week', 'soon', 'later'];
-          const ownByKey = new Map<string, any[]>();
-          for (const s of upcomingSessions as any[]) {
-            const k = getScheduleGroup(s.starts_at);
-            if (!ownByKey.has(k)) ownByKey.set(k, []);
-            ownByKey.get(k)!.push(s);
-          }
-          const friendByKey = new Map(scheduledFriendGroups.map(g => [g.key, g.doors]));
-          const allKeys = keyOrder.filter(k => ownByKey.has(k) || friendByKey.has(k));
-          return (
-            <div className="mt-6">
-              {allKeys.map(key => (
-                <div key={key} className="mb-4">
-                  <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{groupLabel(key)}</h2>
-                  <div className="space-y-3">
-                    {(ownByKey.get(key) ?? []).map((session: any) => (
-                      <ScheduledSessionCard
-                        key={session.id}
-                        session={session}
-                        friends={friends as any[]}
-                        me={user}
-                        onCancel={() => cancelScheduled.mutate(session.id)}
-                        onSave={data => updateScheduled.mutate({ id: session.id, data })}
-                      />
-                    ))}
-                    {(friendByKey.get(key) ?? []).map((s: any) => (
-                      <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
 
         <TipsSection />
-
 
         <Modal open={notifSheet !== null} onClose={handleNotifSkip}>
           <p className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-2">
@@ -1556,69 +812,6 @@ export default function Home() {
           </button>
         </div>
       </Modal>
-
-      {/* Scheduled sessions — own + friends, grouped by when they open */}
-      {((upcomingSessions as any[]).length > 0 || scheduledFriendGroups.length > 0) && (() => {
-        const groupLabel = (key: string) => key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
-          : key === 'this_week' ? t('home.scheduledGroupThisWeek')
-          : key === 'next_week' ? t('home.scheduledGroupNextWeek')
-          : key === 'soon' ? t('home.scheduledGroupSoon')
-          : t('home.scheduledGroupLater');
-        const keyOrder = ['tomorrow', 'this_week', 'next_week', 'soon', 'later'];
-        const ownByKey = new Map<string, any[]>();
-        for (const s of upcomingSessions as any[]) {
-          const k = getScheduleGroup(s.starts_at);
-          if (!ownByKey.has(k)) ownByKey.set(k, []);
-          ownByKey.get(k)!.push(s);
-        }
-        const friendByKey = new Map(scheduledFriendGroups.map(g => [g.key, g.doors]));
-        const allKeys = keyOrder.filter(k => ownByKey.has(k) || friendByKey.has(k));
-        return (
-          <div className="mt-4">
-            {allKeys.map(key => (
-              <div key={key} className="mb-4">
-                <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{groupLabel(key)}</h2>
-                <div className="space-y-3">
-                  {(ownByKey.get(key) ?? []).map((session: any) => (
-                    <ScheduledSessionCard
-                      key={session.id}
-                      session={session}
-                      friends={friends as any[]}
-                      me={user}
-                      onCancel={() => cancelScheduled.mutate(session.id)}
-                      onSave={data => updateScheduled.mutate({ id: session.id, data })}
-                    />
-                  ))}
-                  {(friendByKey.get(key) ?? []).map((s: any) => (
-                    <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-      })()}
-
-      {/* Open another */}
-      {!showScheduleMore ? (
-        <button
-          onClick={() => setShowScheduleMore(true)}
-          className="mt-4 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
-        >
-          {t('home.openAnother')}
-        </button>
-      ) : (
-        <div className="mt-4">
-          <ScheduleForm
-            friends={friends as any[]}
-            defaultRecipients={myStatus?.recipients.map((r: any) => r.id) ?? []}
-            isPending={createStatus.isPending}
-            onSubmit={data => createStatus.mutate(data)}
-            onOpenNow={data => createStatus.mutate(data)}
-            onCancel={() => setShowScheduleMore(false)}
-          />
-        </div>
-      )}
 
     </div>
   );
