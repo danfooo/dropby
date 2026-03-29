@@ -88,6 +88,7 @@
   "common": {
     "cancel": "Annuler",
     "done": "Terminé",
+    "send": "Envoyer",
     "appBannerText": "Installe l'appli dropby pour savoir quand tes amis ouvrent leur porte ou répondent à une invitation.",
     "appBannerCta": "Obtenir l'appli"
   },
@@ -160,7 +161,7 @@
     "scheduleCancelSession": "Annuler la session",
     "freeUntil": "Libre jusqu'à {{time}}",
     "opensAt": "Ouvre {{time}}",
-    "rsvpGoing": "J'y vais ✅",
+    "rsvpGoing": "J'y vais",
     "rsvpNotePlaceholder": "Ajouter une note (optionnel)",
     "rsvpNoteHint": "C'est une note unidirectionnelle, pas un chat.",
     "addToCalendar": "Ajouter au calendrier",
@@ -231,7 +232,7 @@
     "nameRequired": "Le prénom est obligatoire",
     "weNotifiedThem": "On a envoyé une notification à {{name}} pour lui dire que tu arrives.",
     "yourRsvp": "Votre réponse",
-    "rsvpGoing": "J'y vais ✅",
+    "rsvpGoing": "J'y vais",
     "notePlaceholder": "Quelque chose qu'ils devraient savoir ? (optionnel)",
     "noteDisclaimer": "{{name}} recevra une notification, mais ne la verra peut-être pas tout de suite. Contacte-le directement si tu dois coordonner.",
     "addToCalendar": "Ajouter au calendrier"

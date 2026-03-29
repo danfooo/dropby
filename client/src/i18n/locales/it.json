@@ -88,6 +88,7 @@
   "common": {
     "cancel": "Annulla",
     "done": "Fatto",
+    "send": "Invia",
     "appBannerText": "Scarica l'app dropby per sapere quando i tuoi amici aprono la porta o confermano la disponibilità.",
     "appBannerCta": "Scarica l'app"
   },
@@ -160,7 +161,7 @@
     "scheduleCancelSession": "Annulla sessione",
     "freeUntil": "Libero fino alle {{time}}",
     "opensAt": "Apre alle {{time}}",
-    "rsvpGoing": "Arrivo ✅",
+    "rsvpGoing": "Arrivo",
     "rsvpNotePlaceholder": "Aggiungi una nota (opzionale)",
     "rsvpNoteHint": "Questa è una nota unidirezionale, non una chat.",
     "addToCalendar": "Aggiungi al calendario",
@@ -231,7 +232,7 @@
     "nameRequired": "Il nome è obbligatorio",
     "weNotifiedThem": "Abbiamo inviato una notifica a {{name}} che stai arrivando.",
     "yourRsvp": "Il tuo RSVP",
-    "rsvpGoing": "Arrivo ✅",
+    "rsvpGoing": "Arrivo",
     "notePlaceholder": "Qualcosa che devono sapere? (opzionale)",
     "noteDisclaimer": "{{name}} riceverà una notifica, ma potrebbe non vederla subito. Contattalo direttamente se hai bisogno di coordinare.",
     "addToCalendar": "Aggiungi al calendario"

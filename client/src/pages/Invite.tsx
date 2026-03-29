@@ -258,7 +258,7 @@ export default function Invite() {
 
           {guestRsvp ? (
             <div className="mb-4 text-left">
-              <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 text-center mb-3">{t('invite.rsvpGoing')} — {t('invite.yourRsvp')}</p>
+              <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 text-center mb-3">{t('invite.rsvpGoing')} ✅ — {t('invite.yourRsvp')}</p>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -273,7 +273,7 @@ export default function Invite() {
                   disabled={!guestNote.trim() || guestNoteSaving}
                   className="px-3 py-2.5 bg-emerald-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold"
                 >
-                  {guestNoteSaved ? '✓' : t('home.rsvpNoteSend')}
+                  {guestNoteSaved ? '✓' : t('common.send')}
                 </button>
               </div>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{t('invite.noteDisclaimer', { name: info.inviter.display_name })}</p>

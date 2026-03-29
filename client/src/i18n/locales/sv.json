@@ -88,6 +88,7 @@
   "common": {
     "cancel": "Avbryt",
     "done": "Klar",
+    "send": "Skicka",
     "appBannerText": "Ladda ner dropby-appen för att få veta när vänner öppnar dörren eller svarar på en inbjudan.",
     "appBannerCta": "Skaffa appen"
   },
@@ -160,7 +161,7 @@
     "scheduleCancelSession": "Avbryt session",
     "freeUntil": "Ledig till {{time}}",
     "opensAt": "Öppnar {{time}}",
-    "rsvpGoing": "Jag kommer ✅",
+    "rsvpGoing": "Jag kommer",
     "rsvpNotePlaceholder": "Lägg till en anteckning (valfritt)",
     "rsvpNoteHint": "Det här är en envägsanteckning, inte en chatt.",
     "addToCalendar": "Lägg till i kalender",
@@ -231,7 +232,7 @@
     "nameRequired": "Namn krävs",
     "weNotifiedThem": "Vi skickade ett meddelande till {{name}} om att du är på väg.",
     "yourRsvp": "Din OSA",
-    "rsvpGoing": "Jag kommer ✅",
+    "rsvpGoing": "Jag kommer",
     "notePlaceholder": "Något de borde veta? (valfritt)",
     "noteDisclaimer": "{{name}} får ett meddelande, men kanske inte ser det direkt. Hör av dig direkt om du behöver koordinera.",
     "addToCalendar": "Lägg till i kalender"

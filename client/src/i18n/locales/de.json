@@ -88,6 +88,7 @@
   "common": {
     "cancel": "Abbrechen",
     "done": "Fertig",
+    "send": "Senden",
     "appBannerText": "Hol dir die dropby-App und erfahre, wenn Freunde ihre Tür öffnen oder zusagen.",
     "appBannerCta": "App holen"
   },
@@ -160,7 +161,7 @@
     "scheduleCancelSession": "Sitzung absagen",
     "freeUntil": "Frei bis {{time}}",
     "opensAt": "Öffnet {{time}}",
-    "rsvpGoing": "Ich komme ✅",
+    "rsvpGoing": "Ich komme",
     "rsvpNotePlaceholder": "Notiz hinzufügen (optional)",
     "rsvpNoteHint": "Das ist eine Einwegnotiz, kein Chat.",
     "addToCalendar": "Zum Kalender hinzufügen",
@@ -231,7 +232,7 @@
     "nameRequired": "Name ist erforderlich",
     "weNotifiedThem": "Wir haben {{name}} benachrichtigt, dass du unterwegs bist.",
     "yourRsvp": "Deine Antwort",
-    "rsvpGoing": "Ich komme ✅",
+    "rsvpGoing": "Ich komme",
     "notePlaceholder": "Gibt es etwas, das sie wissen sollten? (optional)",
     "noteDisclaimer": "{{name}} wird benachrichtigt, sieht es aber vielleicht nicht sofort. Melde dich direkt, wenn du koordinieren musst.",
     "addToCalendar": "Zum Kalender hinzufügen"

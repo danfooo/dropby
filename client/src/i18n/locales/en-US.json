@@ -88,6 +88,7 @@
   "common": {
     "cancel": "Cancel",
     "done": "Done",
+    "send": "Send",
     "appBannerText": "Get the dropby app to be notified when friends open the door, or when they RSVP.",
     "appBannerCta": "Get the app"
   },
@@ -160,7 +161,7 @@
     "scheduleCancelSession": "Cancel session",
     "freeUntil": "Free until {{time}}",
     "opensAt": "Opens {{time}}",
-    "rsvpGoing": "Going ✅",
+    "rsvpGoing": "Going",
     "rsvpNotePlaceholder": "Add a note (optional)",
     "rsvpNoteHint": "This is a one-way note, not a chat.",
     "addToCalendar": "Add to Calendar",
@@ -231,7 +232,7 @@
     "nameRequired": "Name is required",
     "weNotifiedThem": "We sent {{name}} a notification that you're on your way.",
     "yourRsvp": "Your RSVP",
-    "rsvpGoing": "Going ✅",
+    "rsvpGoing": "Going",
     "notePlaceholder": "Anything they should know? (optional)",
     "noteDisclaimer": "{{name}} will be notified, but may not see this right away. Reach out separately if you need to coordinate.",
     "addToCalendar": "Add to Calendar"
