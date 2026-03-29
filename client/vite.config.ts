@@ -28,7 +28,16 @@ export default defineConfig({
   ],
   server: {
     proxy: {
+      // API calls
       '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      // Static files served by Express (avatars, uploads, etc.)
+      // Matches any path starting with a slash followed by a segment that
+      // contains no dot (i.e. not a Vite-owned asset like /icon-192.png)
+      // but does eventually contain a dot in a later segment (i.e. a file).
+      '^/[^.]+/.+\\..+': {
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
