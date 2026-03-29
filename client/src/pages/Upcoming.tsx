@@ -535,7 +535,7 @@ export default function Upcoming() {
   const hasAnything = allKeys.length > 0;
 
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pb-24 safe-top">
       {/* Plan something CTA */}
       {!showForm ? (
         <button
