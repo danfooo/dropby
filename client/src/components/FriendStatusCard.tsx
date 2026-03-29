@@ -56,8 +56,8 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
         onClick={handleGoing}
         className={`w-full py-2 rounded-xl text-sm font-semibold transition-colors ${
           myRsvp === 'going'
-            ? 'bg-emerald-500 text-white border border-emerald-500'
-            : 'bg-white dark:bg-gray-900 border border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950'
+            ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+            : 'bg-emerald-500 hover:bg-emerald-600 text-white'
         }`}
       >
         {myRsvp === 'going' ? `${t('home.rsvpGoing')} ✅` : t('home.rsvpGoing')}
