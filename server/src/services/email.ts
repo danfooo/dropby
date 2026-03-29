@@ -9,7 +9,10 @@ const APP_URL = () => process.env.APP_URL || "http://localhost:5173";
 async function send(to: string, subject: string, html: string) {
   if (!resend) {
     console.log(`[EMAIL] To: ${to} | Subject: ${subject}`);
-    const text = html.replace(/<a[^>]+href="([^"]+)"[^>]*>/gi, " $1 ").replace(/<[^>]+>/g, " ");
+    // Replace <a href="url">...</a> with the URL so links are visible in logs
+    const withLinks = html.replace(/<a[^>]+href="([^"]+)"[^>]*>/gi, " $1 ");
+    // Strip all remaining HTML tags
+    const text = withLinks.replace(/<[^>]+>/g, " ");
     console.log(`[EMAIL] ${text}`);
     return;
   }
