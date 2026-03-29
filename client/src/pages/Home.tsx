@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,6 @@ import FriendStatusCard from '../components/FriendStatusCard';
 import UserMenu from '../components/UserMenu';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
-import { UpcomingScheduleForm } from '../components/UpcomingScheduleForm';
 import FeedbackModal from '../components/FeedbackModal';
 import { useToast } from '../contexts/toast';
 import { getSuggestions } from '../i18n/suggestions';
@@ -158,8 +157,8 @@ export default function Home() {
   const setToast = useToast();
   const pendingAction = useRef<(() => void) | null>(null);
 
+  const navigate = useNavigate();
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
-  const [showLaterForm, setShowLaterForm] = useState(false);
 
   const { data: myStatus, isLoading: statusLoading } = useQuery({
     queryKey: ['myStatus'],
@@ -237,22 +236,6 @@ export default function Home() {
     mutationFn: (id: string) => notesApi.setHidden(id, true),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
   });
-
-  const createScheduled = useMutation({
-    mutationFn: (data: Parameters<typeof statusApi.create>[0]) => statusApi.create(data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
-      setShowLaterForm(false);
-    },
-  });
-
-  const handleScheduleSubmit = async (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at?: number; reminder_minutes: number }) => {
-    if (data.note) {
-      await notesApi.save(data.note);
-      qc.invalidateQueries({ queryKey: ['notes'] });
-    }
-    createScheduled.mutate(data);
-  };
 
   const closeStatus = useMutation({
     mutationFn: statusApi.close,
@@ -511,31 +494,21 @@ export default function Home() {
           </div>
         )}
 
-        {/* Open now / Open later */}
-        {showLaterForm ? (
-          <UpcomingScheduleForm
-            friends={friends as any[]}
-            isPending={createScheduled.isPending}
-            onSubmit={handleScheduleSubmit}
-            onCancel={() => setShowLaterForm(false)}
-          />
-        ) : (
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={handleOpen}
-              disabled={createStatus.isPending}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
-            >
-              {createStatus.isPending ? t('home.opening') : t('home.openDoor')}
-            </button>
-            <button
-              onClick={() => setShowLaterForm(true)}
-              className="w-full text-violet-600 dark:text-violet-400 py-2 text-sm font-medium"
-            >
-              {t('home.openLater')}
-            </button>
-          </div>
-        )}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleOpen}
+            disabled={createStatus.isPending}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
+          >
+            {createStatus.isPending ? t('home.opening') : t('home.openDoor')}
+          </button>
+          <button
+            onClick={() => navigate('/upcoming?plan=1')}
+            className="w-full text-violet-600 dark:text-violet-400 py-2 text-sm font-medium"
+          >
+            {t('home.openLater')}
+          </button>
+        </div>
 
         <div className="mt-auto pt-6 -mx-4">
           <TipsSection />

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import { Capacitor } from '@capacitor/core';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -209,7 +210,8 @@ export default function Upcoming() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { user } = useAuthStore();
-  const [showForm, setShowForm] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [showForm, setShowForm] = useState(() => searchParams.get('plan') === '1');
   const [notifSheet, setNotifSheet] = useState(false);
   const pendingAction = useRef<(() => void) | null>(null);
   const setToast = useToast();
