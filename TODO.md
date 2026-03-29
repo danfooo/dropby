@@ -30,6 +30,10 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 
 - [ ] **Tab bar safe area flicker on first load** — `--safe-area-inset-bottom` is injected by Capacitor's `SystemBars` plugin via JS after page render. There may be a brief flash where the tab bar sits too low before the variable is set. If seen, fix by hardcoding a reasonable CSS fallback (e.g. `var(--safe-area-inset-bottom, 24px)`) or by deferring first paint until insets are ready. See `client/src/index.css` `.safe-bottom` and `android/app/src/main/java/cc/dropby/app/MainActivity.java`.
 
+## UI polish
+- [ ] "Going" button looks already-pressed — needs a clearer inactive/resting state so it doesn't look pre-selected
+- [ ] Open form on Home doesn't look enough like a form — needs more visual treatment to feel like an interactive input area
+
 ## Maybe
 - [ ] Don't show the feedback card on Home if the user has submitted feedback within the last month
 
