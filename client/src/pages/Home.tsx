@@ -391,9 +391,18 @@ export default function Home() {
           </div>
         )}
 
+        {showLaterForm ? (
+          <UpcomingScheduleForm
+            friends={friends as any[]}
+            isPending={createScheduled.isPending}
+            onSubmit={handleScheduleSubmit}
+            onCancel={() => setShowLaterForm(false)}
+          />
+        ) : (<>
+
         {/* Note chips: saved notes first (max 2), then suggestions */}
         {(visibleSaved.length > 0 || chips.length > 0) && (
-          <div className="mb-2">
+          <div className="mb-3">
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {visibleSaved.map((n: any) => (
                 <div
@@ -459,69 +468,66 @@ export default function Home() {
           </div>
         )}
 
-        {/* Note input */}
-        <div className="mb-3 relative">
-          <input
-            type="text"
-            placeholder={t('home.customNotePlaceholder')}
-            maxLength={160}
-            value={note}
-            onChange={e => {
-              setNote(e.target.value);
-              if (selectedChip && e.target.value !== selectedChip) {
-                setSelectedChip('');
-                setPreviousNote(null);
-              }
-            }}
-            className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-          />
-          {note.length >= 130 && (
-            <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
-              {160 - note.length}
-            </span>
-          )}
-        </div>
-
-        {/* Recipient selection */}
-        {hasFriends && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 mb-3 shadow-sm border border-gray-100 dark:border-gray-800">
-            <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('home.openDoorTo')}</h2>
-            <div className="relative">
-              <div
-                className={`divide-y divide-gray-50 dark:divide-gray-800 overflow-x-hidden${activeFriends.length >= 5 ? ' h-[192px] overflow-y-auto' : ''}`}
-                onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
-              >
-                {activeFriends.map((f: any) => (
-                  <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 -mx-3 px-3 transition-colors">
-                    <input type="checkbox" checked={selectedRecipients.includes(f.id)}
-                      onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                      className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                    <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
-                  </label>
-                ))}
-              </div>
-              {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none rounded-b-xl" />
-              )}
-            </div>
+        {/* Open door form card */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-3 overflow-hidden">
+          {/* Note input */}
+          <div className="p-3 relative">
+            <input
+              type="text"
+              placeholder={t('home.customNotePlaceholder')}
+              maxLength={160}
+              value={note}
+              onChange={e => {
+                setNote(e.target.value);
+                if (selectedChip && e.target.value !== selectedChip) {
+                  setSelectedChip('');
+                  setPreviousNote(null);
+                }
+              }}
+              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            {note.length >= 130 && (
+              <span className={`absolute right-6 bottom-6 text-xs pointer-events-none ${note.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
+                {160 - note.length}
+              </span>
+            )}
           </div>
-        )}
 
-        {/* Open now / Open later */}
-        {showLaterForm ? (
-          <UpcomingScheduleForm
-            friends={friends as any[]}
-            isPending={createScheduled.isPending}
-            onSubmit={handleScheduleSubmit}
-            onCancel={() => setShowLaterForm(false)}
-          />
-        ) : (
-          <div className="flex flex-col gap-2">
+          {/* Recipient selection */}
+          {hasFriends && (
+            <>
+              <div className="border-t border-gray-100 dark:border-gray-800" />
+              <div className="px-3 py-2">
+                <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('home.openDoorTo')}</h2>
+                <div className="relative">
+                  <div
+                    className={`divide-y divide-gray-50 dark:divide-gray-800 overflow-x-hidden${activeFriends.length >= 5 ? ' h-[192px] overflow-y-auto' : ''}`}
+                    onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
+                  >
+                    {activeFriends.map((f: any) => (
+                      <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 -mx-3 px-3 transition-colors">
+                        <input type="checkbox" checked={selectedRecipients.includes(f.id)}
+                          onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                          className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                        <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {activeFriends.length >= 5 && !friendsAtBottom && (
+                    <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none" />
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Buttons */}
+          <div className="border-t border-gray-100 dark:border-gray-800 p-3 flex flex-col gap-2">
             <button
               onClick={handleOpen}
               disabled={createStatus.isPending}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold text-sm transition-colors"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold text-sm transition-colors"
             >
               {createStatus.isPending ? t('home.opening') : t('home.openDoor')}
             </button>
@@ -532,7 +538,9 @@ export default function Home() {
               {t('home.openLater')}
             </button>
           </div>
-        )}
+        </div>
+
+        </>)}
 
         <div className="mt-auto pt-6 -mx-4">
           <TipsSection />
