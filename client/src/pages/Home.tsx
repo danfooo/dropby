@@ -400,76 +400,76 @@ export default function Home() {
           />
         ) : (<>
 
-        {/* Note chips: saved notes first (max 2), then suggestions */}
-        {(visibleSaved.length > 0 || chips.length > 0) && (
-          <div className="mb-3">
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-              {visibleSaved.map((n: any) => (
-                <div
-                  key={n.id}
-                  className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    selectedChip === n.text
-                      ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
-                  }`}
-                >
+        {/* Open door form card */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-3 overflow-hidden">
+
+          {/* Note chips: saved notes first (max 2), then suggestions */}
+          {(visibleSaved.length > 0 || chips.length > 0) && (
+            <div className="px-3 pt-3 pb-1">
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                {visibleSaved.map((n: any) => (
+                  <div
+                    key={n.id}
+                    className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      selectedChip === n.text
+                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        if (selectedChip === n.text) {
+                          setNote(previousNote ?? '');
+                          setSelectedChip('');
+                          setPreviousNote(null);
+                        } else {
+                          setPreviousNote(selectedChip === '' ? note : null);
+                          setNote(n.text);
+                          setSelectedChip(n.text);
+                        }
+                      }}
+                    >
+                      {n.text}
+                    </button>
+                    <button
+                      onClick={() => hideNote.mutate(n.id)}
+                      className={`ml-1 rounded-full p-0.5 transition-colors ${
+                        selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                      aria-label="Remove"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                {chips.map((chip: string) => (
                   <button
+                    key={chip}
                     onClick={() => {
-                      if (selectedChip === n.text) {
+                      if (selectedChip === chip) {
                         setNote(previousNote ?? '');
                         setSelectedChip('');
                         setPreviousNote(null);
                       } else {
                         setPreviousNote(selectedChip === '' ? note : null);
-                        setNote(n.text);
-                        setSelectedChip(n.text);
+                        setNote(chip);
+                        setSelectedChip(chip);
                       }
                     }}
-                  >
-                    {n.text}
-                  </button>
-                  <button
-                    onClick={() => hideNote.mutate(n.id)}
-                    className={`ml-1 rounded-full p-0.5 transition-colors ${
-                      selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100'
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                      selectedChip === chip
+                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
                     }`}
-                    aria-label="Remove"
                   >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    {chip}
                   </button>
-                </div>
-              ))}
-              {chips.map((chip: string) => (
-                <button
-                  key={chip}
-                  onClick={() => {
-                    if (selectedChip === chip) {
-                      setNote(previousNote ?? '');
-                      setSelectedChip('');
-                      setPreviousNote(null);
-                    } else {
-                      setPreviousNote(selectedChip === '' ? note : null);
-                      setNote(chip);
-                      setSelectedChip(chip);
-                    }
-                  }}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                    selectedChip === chip
-                      ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
-                  }`}
-                >
-                  {chip}
-                </button>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Open door form card */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-3 overflow-hidden">
+          )}
           {/* Note input */}
           <div className="p-3 relative">
             <input
