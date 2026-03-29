@@ -274,7 +274,7 @@ export default function Profile() {
   });
 
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-950 pb-24">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 pt-10 pb-6 safe-top">
         <div className="flex items-center mb-5">

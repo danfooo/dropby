@@ -355,7 +355,7 @@ export default function Home() {
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {
     return (
-      <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24 flex flex-col">
+      <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 flex flex-col">
         <PageHeader className="mb-1" />
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-6 mt-5">{getGreeting(t)}</h1>
 
@@ -538,7 +538,7 @@ export default function Home() {
     const initEndsAt = myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '';
 
     return (
-      <div className="min-h-full bg-gray-50 dark:bg-gray-950 pb-24">
+      <div className="min-h-full bg-gray-50 dark:bg-gray-950">
         {/* Sticky banner */}
         <button
           onClick={handleSaveEdit}
@@ -623,7 +623,7 @@ export default function Home() {
 
   // --- DOOR OPEN VIEW ---
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8 pb-24">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 pt-8">
       {/* Header */}
       <PageHeader />
 
