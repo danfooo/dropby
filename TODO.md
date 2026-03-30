@@ -9,9 +9,6 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 ## Apple / APNs
 - [ ] When testing dev builds: set `fly secrets set APNS_SANDBOX=true`, unset before TestFlight/prod
 
-## Infrastructure
-- [ ] Set up GitHub Actions deploy-on-push
-
 ## Legal
 - [ ] Replace imprint address with a proxy/forwarding address (currently home address in `client/src/pages/About.tsx`)
 
@@ -34,3 +31,6 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 ## Limits & Safety
 - [ ] Rate limiting (none in v1)
 - [ ] User-saved note cap (no limit in v1)
+
+## Not needed for launch
+- [ ] GitHub Actions deploy-on-push (manual `fly deploy` is fine for now)
