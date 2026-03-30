@@ -56,6 +56,20 @@ Source: `server/src/routes/track.ts` (client-side call)
 
 ---
 
+### `chip.selected`
+Emitted when a user selects a suggestion chip (not saved notes — those contain personal text).
+
+| field   | value                                                  |
+|---------|--------------------------------------------------------|
+| `chip`  | `"im_home"` for the "I'm home" chip, `"suggestion"` for contextual ones |
+| `index` | 0-based position in the displayed chip list            |
+
+`user_id` is set if the user is authenticated (they always are when on the home screen).
+
+Source: `client/src/pages/Home.tsx` via `POST /api/track`
+
+---
+
 ### `door.open`
 Emitted when a user opens their door (creates an active status).
 

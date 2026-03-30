@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
-import { statusApi, notesApi, invitesApi, goingApi, friendsApi } from '../api';
+import { statusApi, notesApi, invitesApi, goingApi, friendsApi, trackApi } from '../api';
 import { shouldShowNotifPrompt, requestNotificationPermission } from '../utils/notifications';
 import { useAuthStore } from '../stores/auth';
 import { bigEmojiClass, formatTimeShort } from '../utils/schedule';
@@ -16,7 +16,7 @@ import Modal from '../components/Modal';
 import FeedbackModal from '../components/FeedbackModal';
 import { useToast } from '../contexts/toast';
 import { copyText } from '../utils/clipboard';
-import { getSuggestions } from '../i18n/suggestions';
+import { getSuggestions, IM_HOME_CHIP } from '../i18n/suggestions';
 
 type HomeView = 'closed' | 'open' | 'edit';
 
@@ -401,7 +401,7 @@ export default function Home() {
                   </button>
                 </div>
               ))}
-              {suggestionChips.map((chip: string) => (
+              {suggestionChips.map((chip: string, i: number) => (
                 <button
                   key={chip}
                   onClick={() => {
@@ -413,6 +413,7 @@ export default function Home() {
                       setPreviousNote(selectedChip === '' ? note : null);
                       setNote(chip);
                       setSelectedChip(chip);
+                      trackApi.chipSelected({ chip: chip === IM_HOME_CHIP ? 'im_home' : 'suggestion', index: i });
                     }
                   }}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${

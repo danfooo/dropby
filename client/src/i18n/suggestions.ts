@@ -212,6 +212,8 @@ function getDayType(dayOfWeek: number): 'weekday' | 'weekend' {
   return dayOfWeek === 0 || dayOfWeek === 6 ? 'weekend' : 'weekday';
 }
 
+export const IM_HOME_CHIP = "I'm home";
+
 export function getSuggestions(locale: string): string[] {
   const now = new Date();
   const hour = now.getHours();
@@ -254,5 +256,5 @@ export function getSuggestions(locale: string): string[] {
 
   scored.sort((a, b) => b.score - a.score);
 
-  return scored.slice(0, 7).map(s => s.text);
+  return [IM_HOME_CHIP, ...scored.slice(0, 6).map(s => s.text)];
 }

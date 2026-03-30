@@ -138,3 +138,8 @@ export const feedbackApi = {
   submit: (data: { type: string; message: string; reply_email?: string }) =>
     api.post('/feedback', data).then(r => r.data),
 };
+
+export const trackApi = {
+  chipSelected: (data: { chip: 'im_home' | 'suggestion'; index: number }) =>
+    api.post('/track', { event: 'chip.selected', data }).catch(() => {}),
+};
