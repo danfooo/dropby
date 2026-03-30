@@ -81,7 +81,7 @@ export default function Friends() {
 
   const handleCopyLink = async (url: string) => {
     try {
-      await copyText(`${t('home.friendshipCopyText')}\n${url}`);
+      await copyText(Promise.resolve(`${t('home.friendshipCopyText')}\n${url}`));
       alert(t('home.inviteLinkCopied'));
     } catch {
       alert(t('home.couldNotCopy'));
