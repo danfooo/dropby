@@ -123,6 +123,40 @@ test('Alice changes the auto-close duration — closes_at updates accordingly', 
   }
 });
 
+test('Alice enters edit view and tapping the Now tab returns her to the open view', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+
+  try {
+    await loginUser(alicePage, ALICE);
+
+    // Close any door left open by a prior test
+    const token = await alicePage.evaluate(() => localStorage.getItem('token'));
+    await alicePage.evaluate(async (tok) => {
+      await fetch('http://localhost:3000/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
+    }, token);
+    await alicePage.reload();
+    await alicePage.waitForLoadState('domcontentloaded');
+
+    // Open the door
+    await alicePage.getByRole('button', { name: /open now/i }).click();
+    await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
+
+    // Enter edit view
+    await alicePage.getByRole('button', { name: /add friends.*edit|edit/i }).click();
+    await expect(alicePage.getByRole('button', { name: /save changes/i })).toBeVisible({ timeout: 5_000 });
+
+    // Tap the Now tab (already active)
+    await alicePage.getByRole('navigation').getByRole('link', { name: /now/i }).click();
+
+    // Should return to open view without saving
+    await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 5_000 });
+    await expect(alicePage.getByRole('button', { name: /save changes/i })).not.toBeVisible();
+  } finally {
+    await aliceCtx.close();
+  }
+});
+
 test('Alice closes her door manually — it disappears from Bob\'s feed', async ({ browser }) => {
   const aliceCtx = await browser.newContext();
   const bobCtx = await browser.newContext();
