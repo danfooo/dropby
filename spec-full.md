@@ -120,11 +120,11 @@ Invite links are the sole mechanism for forming friendships. They are multi-use 
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid FK → users | |
-| text | string | Max 60 chars |
+| text | string | Max 160 chars |
 | hidden | boolean | Default false; user can hide without deleting |
 | created_at | unix timestamp | |
 
-Saved automatically when the user submits a custom (hand-typed) note. Synced via backend; visible as chips in the Home screen's saved-note row.
+Saved automatically when the user submits a custom (hand-typed) note. Synced via backend; visible as chips in the Home screen's saved-note row. At most 2 notes are kept per user — when a new one is saved, any beyond the 2 most recent are deleted.
 
 ### Nudge Schedules
 | Field | Type | Notes |
@@ -245,7 +245,7 @@ Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side
   - **Suggestion chips** (row 1): up to 7 contextual suggestions, no delete button
   - **Saved notes** (row 2): user's saved notes, each with an × to hide; only shown when at least one saved note exists
 - Suggestions are curated presets selected contextually by: time of day, day of week (weekday vs weekend), season, and locale. No server round-trip — selected client-side from a locale-specific pool.
-- Free-text input below chips (max 60 chars); placeholder "Or write your own note…"
+- Free-text input below chips (max 160 chars); placeholder "Or write your own note…"
 - Tapping a chip populates the text field with that chip's text; the chip highlights as selected
 - Tapping the selected chip again deselects it and clears the field (restoring any hand-typed text that existed before the chip was selected)
 - Switching directly from one chip to another replaces the field text with the new chip's text; no undo state is preserved

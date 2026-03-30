@@ -30,7 +30,6 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 
 ## Limits & Safety
 - [ ] Rate limiting (none in v1)
-- [ ] User-saved note cap (no limit in v1)
 
 ## Not needed for launch
 - [ ] GitHub Actions deploy-on-push (manual `fly deploy` is fine for now)
