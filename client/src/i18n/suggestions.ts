@@ -237,12 +237,18 @@ export function getSuggestions(locale: string): string[] {
     pool = en_US_suggestions;
   }
 
-  const scored = pool.map(s => {
+  // Exclude suggestions that explicitly mismatch the current context
+  const filtered = pool.filter(s =>
+    (s.dayType === 'any' || s.dayType === currentDayType) &&
+    (s.timeOfDay === 'any' || s.timeOfDay === currentTimeOfDay) &&
+    (s.season === 'any' || s.season === currentSeason)
+  );
+
+  const scored = filtered.map(s => {
     let score = 0;
     if (s.timeOfDay === currentTimeOfDay) score += 2;
     if (s.season === currentSeason) score += 1;
     if (s.dayType === currentDayType) score += 1;
-    // 'any' fields don't add score but don't penalise either
     return { ...s, score };
   });
 
