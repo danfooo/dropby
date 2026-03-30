@@ -86,23 +86,7 @@ export default function Friends() {
     <div className="min-h-full bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 pt-10 pb-4 safe-top">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">{t('friends.title')}</h1>
-          <div className="flex gap-2">
-            <button
-              onClick={handleInvite}
-              className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm font-medium"
-            >
-              {t('friends.copyInviteLink')}
-            </button>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium"
-            >
-              {t('friends.addByEmail')}
-            </button>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold mb-4">{t('friends.title')}</h1>
         {(friends as any[]).length > 0 && (
           <input
             type="text"
@@ -218,6 +202,22 @@ export default function Friends() {
             </div>
           </>
         )}
+
+        {/* Add friends actions */}
+        <div className="flex gap-3 mt-2 mb-6">
+          <button
+            onClick={handleInvite}
+            className="flex-1 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium"
+          >
+            {t('friends.copyInviteLink')}
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium"
+          >
+            {t('friends.addByEmail')}
+          </button>
+        </div>
       </div>
 
       <ConfirmDialog
