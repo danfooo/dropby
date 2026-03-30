@@ -201,6 +201,7 @@
     "muteHint": "× döljer vänner och tystar notiser",
     "removeHint": "× tar bort vänskapet permanent",
     "openLinksTitle": "Öppna inbjudningslänkar",
+    "inviteLinkLabel": "Inbjudningslänk, går ut {{time}}",
     "linkExpiresInDays": "Går ut om {{days}}d",
     "linkExpiresInHours": "Går ut om {{hours}}h",
     "linkExpiresSoon": "Går ut snart"

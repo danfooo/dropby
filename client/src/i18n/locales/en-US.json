@@ -201,6 +201,7 @@
     "muteHint": "× hides friends and mutes notifications",
     "removeHint": "× removes the friendship permanently",
     "openLinksTitle": "Open invite links",
+    "inviteLinkLabel": "Invite link, expires {{time}}",
     "linkExpiresInDays": "Expires in {{days}}d",
     "linkExpiresInHours": "Expires in {{hours}}h",
     "linkExpiresSoon": "Expires soon"

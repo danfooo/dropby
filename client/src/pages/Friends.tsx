@@ -188,78 +188,71 @@ export default function Friends() {
           </>
         )}
 
-        {/* Pending email invites */}
-        {(pendingInvites as any[]).length > 0 && (
-          <>
-            <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 mt-4">
-              {t('friends.pendingTitle')}
-            </h2>
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-4">
-              {(pendingInvites as any[]).map((p: any, i: number) => (
-                <div key={p.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
-                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                    </svg>
-                  </div>
-                  <span className="flex-1 text-sm text-gray-500 dark:text-gray-400">{p.invited_email}</span>
-                  <button
-                    onClick={() => cancelInvite.mutate(p.token)}
-                    className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1"
-                    title={t('friends.cancelInvite')}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        {/* Sent invites — email + link-based, merged by created_at */}
+        {((pendingInvites as any[]).length > 0 || (openLinks as any[]).length > 0) && (() => {
+          const now = Math.floor(Date.now() / 1000);
+          const merged = [
+            ...(pendingInvites as any[]).map(p => ({ ...p, kind: 'email' as const })),
+            ...(openLinks as any[]).map(l => ({ ...l, kind: 'link' as const })),
+          ].sort((a, b) => b.created_at - a.created_at);
 
-        {/* Open invite links */}
-        {(openLinks as any[]).length > 0 && (
-          <>
-            <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 mt-4">
-              {t('friends.openLinksTitle')}
-            </h2>
-            <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
-              {(openLinks as any[]).map((link: any, i: number) => {
-                const secsLeft = link.expires_at - Math.floor(Date.now() / 1000);
-                const timeLeft = secsLeft > 86400
-                  ? t('friends.linkExpiresInDays', { days: Math.floor(secsLeft / 86400) })
-                  : secsLeft > 3600
-                    ? t('friends.linkExpiresInHours', { hours: Math.floor(secsLeft / 3600) })
-                    : t('friends.linkExpiresSoon');
-                return (
-                  <div key={link.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
-                    <button
-                      onClick={() => handleCopyLink(link.url)}
-                      className="flex items-center gap-3 flex-1 min-w-0 text-left"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-                        <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          return (
+            <>
+              <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 mt-4">
+                {t('friends.pendingTitle')}
+              </h2>
+              <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
+                {merged.map((item: any, i: number) => {
+                  const isLink = item.kind === 'link';
+                  const secsLeft = item.expires_at - now;
+                  const timeLeft = secsLeft > 86400
+                    ? t('friends.linkExpiresInDays', { days: Math.floor(secsLeft / 86400) })
+                    : secsLeft > 3600
+                      ? t('friends.linkExpiresInHours', { hours: Math.floor(secsLeft / 3600) })
+                      : t('friends.linkExpiresSoon');
+
+                  return (
+                    <div key={item.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
+                      {isLink ? (
+                        <button
+                          onClick={() => handleCopyLink(item.url)}
+                          className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                          </div>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {t('friends.inviteLinkLabel', { time: timeLeft })}
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                            </svg>
+                          </div>
+                          <span className="text-sm text-gray-500 dark:text-gray-400 truncate">{item.invited_email}</span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => isLink ? revokeLink.mutate(item.token) : cancelInvite.mutate(item.token)}
+                        className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 flex-shrink-0"
+                        title={t('friends.cancelInvite')}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                      </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{timeLeft}</span>
-                    </button>
-                    <button
-                      onClick={() => revokeLink.mutate(link.token)}
-                      className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 flex-shrink-0"
-                      title={t('friends.cancelInvite')}
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
 
         {/* Add friends actions */}
         <div className="flex gap-3 mt-2 mb-6">

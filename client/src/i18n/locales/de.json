@@ -201,6 +201,7 @@
     "muteHint": "× blendet Freunde aus und stummschaltet Benachrichtigungen",
     "removeHint": "× entfernt die Freundschaft dauerhaft",
     "openLinksTitle": "Offene Einladungslinks",
+    "inviteLinkLabel": "Einladungslink, läuft ab {{time}}",
     "linkExpiresInDays": "Läuft in {{days}}T ab",
     "linkExpiresInHours": "Läuft in {{hours}}h ab",
     "linkExpiresSoon": "Läuft bald ab"

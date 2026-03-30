@@ -201,6 +201,7 @@
     "muteHint": "× nasconde gli amici e silenzia le notifiche",
     "removeHint": "× rimuove l'amicizia in modo permanente",
     "openLinksTitle": "Link di invito aperti",
+    "inviteLinkLabel": "Link invito, scade {{time}}",
     "linkExpiresInDays": "Scade in {{days}}g",
     "linkExpiresInHours": "Scade in {{hours}}h",
     "linkExpiresSoon": "Scade presto"
