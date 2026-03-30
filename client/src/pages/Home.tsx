@@ -667,23 +667,35 @@ export default function Home() {
         })()}
       </div>
 
-      {/* Recipients + invite links */}
-      {(myStatus?.recipients.length > 0 || myStatus?.invite_links?.length > 0) && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-2">{t('home.invited')}</h2>
-          {myStatus.recipients.map((r: any) => (
-            <RecipientRow key={r.id} recipient={r} />
-          ))}
-          {myStatus.invite_links?.map((link: any) => (
-            <InviteLinkRow
-              key={link.token}
-              token={link.token}
-              createdAt={link.created_at}
-              onRevoke={() => revokeInvite.mutate(link.token)}
-            />
-          ))}
-        </div>
-      )}
+      {/* Visible to */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-2">{t('home.invited')}</h2>
+        {myStatus?.recipients.map((r: any) => (
+          <RecipientRow key={r.id} recipient={r} />
+        ))}
+        {myStatus?.invite_links?.map((link: any) => (
+          <InviteLinkRow
+            key={link.token}
+            token={link.token}
+            createdAt={link.created_at}
+            onRevoke={() => revokeInvite.mutate(link.token)}
+          />
+        ))}
+        <button
+          onClick={copyInviteLink}
+          className="w-full flex items-center gap-3 pt-2 mt-1 border-t border-gray-100 dark:border-gray-700 hover:opacity-70 transition-opacity"
+        >
+          <div className="w-7 h-7 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{t('home.anyoneWithLink')}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('home.tapToCopyLink')}</p>
+          </div>
+        </button>
+      </div>
 
       {/* Going signals */}
       {myStatus?.going_signals?.length > 0 && (
@@ -702,22 +714,6 @@ export default function Home() {
           ))}
         </div>
       )}
-
-      {/* Invite link row */}
-      <button
-        onClick={copyInviteLink}
-        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 flex items-center gap-3 mb-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-      >
-        <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center">
-          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-        </div>
-        <div className="text-left">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{t('home.anyoneWithLink')}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{t('home.tapToCopyLink')}</p>
-        </div>
-      </button>
 
       {/* Actions */}
       <button
