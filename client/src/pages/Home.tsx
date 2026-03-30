@@ -361,7 +361,19 @@ export default function Home() {
 
         {/* Friend doors open now */}
         {openFriendDoors.length > 0 && (
-          <div data-testid="friends-available" className="mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-100 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-200/60 dark:border-fuchsia-900/60">
+          <div
+            data-testid="friends-available"
+            className="relative overflow-hidden mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-300/50 dark:border-fuchsia-700/50"
+            style={{ boxShadow: '0 1px 0 0 rgba(232,121,249,0.15), 0 -1px 0 0 rgba(232,121,249,0.15)' }}
+          >
+            {/* Shine sweep overlay */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                animation: 'shine-sweep 5s ease-in-out 1s infinite',
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.45) 50%, transparent 60%)',
+              }}
+            />
             <h2 className="text-2xl font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
               {t('home.friendsAvailable')}
             </h2>
