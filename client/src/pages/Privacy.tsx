@@ -62,25 +62,15 @@ export default function Privacy() {
               </div>
               <div>
                 <p className="font-medium text-gray-800 dark:text-gray-200">Usage analytics</p>
-                <p className="text-gray-600 dark:text-gray-400">We log basic in-app events — such as opening your door, sending a going signal, and whether notifications led to an action — to understand how well the product is working. This data is stored on our own servers, never shared with third parties, and deleted after 12 months (or immediately when you delete your account).</p>
+                <p className="text-gray-600 dark:text-gray-400">We log basic in-app events — such as opening your door, sending a going signal, and whether notifications led to an action — to understand how well the product is working. This data is stored on our own servers and deleted after 12 months (or immediately when you delete your account).</p>
               </div>
             </div>
           </section>
 
           <section>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50 mb-2">What we don't do</h2>
-            <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-              <li>We don't sell your data.</li>
-              <li>We don't run ads.</li>
-              <li>We don't use third-party analytics services or tracking cookies.</li>
-              <li>We don't share your data with anyone except where strictly required to run the service (see below).</li>
-            </ul>
-          </section>
-
-          <section>
             <h2 className="font-semibold text-gray-900 dark:text-gray-50 mb-2">Third parties</h2>
             <div className="space-y-3 text-gray-600 dark:text-gray-400">
-              <p><span className="font-medium text-gray-800 dark:text-gray-200">Fly.io</span> — our hosting provider. Your data is stored on their servers. <a href="https://fly.io/legal/privacy-policy/" className="text-emerald-600 dark:text-emerald-400 hover:underline" target="_blank" rel="noopener noreferrer">Their privacy policy</a>.</p>
+              <p><span className="font-medium text-gray-800 dark:text-gray-200">Infrastructure providers</span> — we use third-party services to host and operate the app. Your data is stored on their servers.</p>
               <p><span className="font-medium text-gray-800 dark:text-gray-200">Google</span> — if you sign in with Google, Google processes your sign-in. We only receive your email, name, Google account ID, and profile picture URL. <a href="https://policies.google.com/privacy" className="text-emerald-600 dark:text-emerald-400 hover:underline" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</p>
               <p><span className="font-medium text-gray-800 dark:text-gray-200">Apple / Google (push notifications)</span> — push notifications are delivered via Apple APNs or Google Firebase, which process your device token.</p>
             </div>
@@ -111,12 +101,12 @@ export default function Privacy() {
 
           <section>
             <h2 className="font-semibold text-gray-900 dark:text-gray-50 mb-2">Data retention</h2>
-            <p className="text-gray-600 dark:text-gray-400">We keep your data for as long as your account is active. If you delete your account, all personal data is deleted immediately. Server logs may be retained for up to 30 days for operational reasons.</p>
+            <p className="text-gray-600 dark:text-gray-400">We keep your data for as long as your account is active. If you delete your account, all personal data is deleted immediately.</p>
           </section>
 
           <section>
             <h2 className="font-semibold text-gray-900 dark:text-gray-50 mb-2">Changes to this policy</h2>
-            <p className="text-gray-600 dark:text-gray-400">If we make material changes, we'll let you know via the app. The current version is always at this URL.</p>
+            <p className="text-gray-600 dark:text-gray-400">If we make material changes, we'll let you know. The current version is always at this URL.</p>
           </section>
 
           <section>
