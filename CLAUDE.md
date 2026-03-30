@@ -84,6 +84,22 @@ fly deploy --build-arg VITE_GOOGLE_CLIENT_ID=750398451662-qnfcr5cab59n6fq86dj54i
 
 Always ask before deploying — it requires confirmation.
 
+## APNs sandbox (iOS push notifications on dev builds)
+
+When testing push notifications on a real device with a dev build (not TestFlight), set:
+
+```
+fly secrets set APNS_SANDBOX=true
+```
+
+Unset before TestFlight or production:
+
+```
+fly secrets unset APNS_SANDBOX
+```
+
+In production (`NODE_ENV=production`), the server uses the production APNs host automatically unless `APNS_SANDBOX=true` is explicitly set.
+
 ## Shell
 
 Use `zsh -c "..."` for shell commands (picks up nvm and Node 20).
