@@ -698,7 +698,7 @@ export default function Home() {
                 <span className="text-sm text-emerald-900 dark:text-emerald-200 font-medium">{g.name}</span>
               </div>
               {g.note && (
-                <p className="text-xs text-emerald-700 dark:text-emerald-400 ml-7 mt-0.5 italic">"{g.note}"</p>
+                <p className="text-xs text-emerald-700 dark:text-emerald-400 ml-7 mt-0.5 italic">{g.note}</p>
               )}
             </div>
           ))}
