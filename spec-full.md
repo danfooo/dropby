@@ -11,7 +11,7 @@ dropby is a presence signal app. One tap tells your friends you're open to a spo
 - Web app (React + Vite) wrapped in a native shell (Capacitor) for iOS and Android distribution
 - Also installable as a PWA (Progressive Web App) from the browser — iOS requires Share → Add to Home Screen; Android shows an install prompt automatically
 - Push notifications delivered via APNs (iOS) and FCM (Android)
-- Authentication: email/password and Google OAuth. Apple OAuth is deferred.
+- Authentication: email/password, Google OAuth, and Apple OAuth ("Sign in with Apple")
 
 ---
 
