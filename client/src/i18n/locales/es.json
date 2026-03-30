@@ -127,7 +127,6 @@
     "changeDurationTitle": "Dejar de mostrar",
     "doorDurationClosePreview": "Tu puerta dejará de mostrarse a las {{time}} (en {{minutes}} min)",
     "doorDurationExplainer": "Los invitados no ven hora de cierre — esto solo controla cuándo tu puerta desaparece para tus amigos.",
-    "alsoAvailable": "También disponibles",
     "yourDoorIsOpen": "Tu puerta está abierta — toca para volver",
     "edit": "Editar",
     "notePlaceholder": "Nota",
