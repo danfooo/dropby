@@ -202,9 +202,9 @@
     "removeHint": "× entfernt die Freundschaft dauerhaft",
     "openLinksTitle": "Offene Einladungslinks",
     "inviteLinkLabel": "Einladungslink, läuft ab {{time}}",
-    "linkExpiresInDays": "Läuft in {{days}}T ab",
-    "linkExpiresInHours": "Läuft in {{hours}}h ab",
-    "linkExpiresSoon": "Läuft bald ab"
+    "linkExpiresInDays": "in {{days}}T",
+    "linkExpiresInHours": "in {{hours}}h",
+    "linkExpiresSoon": "bald"
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",

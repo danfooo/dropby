@@ -202,9 +202,9 @@
     "removeHint": "× elimina la amistad de forma permanente",
     "openLinksTitle": "Enlaces de invitación abiertos",
     "inviteLinkLabel": "Enlace de invitación, vence {{time}}",
-    "linkExpiresInDays": "Vence en {{days}}d",
-    "linkExpiresInHours": "Vence en {{hours}}h",
-    "linkExpiresSoon": "Vence pronto"
+    "linkExpiresInDays": "en {{days}}d",
+    "linkExpiresInHours": "en {{hours}}h",
+    "linkExpiresSoon": "pronto"
   },
   "invite": {
     "expiredTitle": "Invitación expirada",

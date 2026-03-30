@@ -202,9 +202,9 @@
     "removeHint": "× supprime l'amitié définitivement",
     "openLinksTitle": "Liens d'invitation actifs",
     "inviteLinkLabel": "Lien d'invitation, expire {{time}}",
-    "linkExpiresInDays": "Expire dans {{days}}j",
-    "linkExpiresInHours": "Expire dans {{hours}}h",
-    "linkExpiresSoon": "Expire bientôt"
+    "linkExpiresInDays": "dans {{days}}j",
+    "linkExpiresInHours": "dans {{hours}}h",
+    "linkExpiresSoon": "bientôt"
   },
   "invite": {
     "expiredTitle": "Invitation expirée",
