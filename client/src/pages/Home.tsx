@@ -363,15 +363,15 @@ export default function Home() {
         {openFriendDoors.length > 0 && (
           <div
             data-testid="friends-available"
-            className="relative overflow-hidden mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-300/50 dark:border-fuchsia-700/50"
-            style={{ boxShadow: '0 1px 0 0 rgba(232,121,249,0.15), 0 -1px 0 0 rgba(232,121,249,0.15)' }}
+            className="relative overflow-hidden mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-300/50 dark:border-transparent"
           >
-            {/* Shine sweep overlay */}
+            {/* Glimmer overlay — blends with gradient, barely touches opaque cards */}
             <div
-              className="pointer-events-none absolute inset-0"
+              className="pointer-events-none absolute -inset-4"
               style={{
-                animation: 'shine-sweep 5s ease-in-out 1s infinite',
-                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.45) 50%, transparent 60%)',
+                animation: 'glimmer 6s ease-in-out infinite',
+                background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.28) 0%, transparent 100%)',
+                mixBlendMode: 'overlay',
               }}
             />
             <h2 className="text-2xl font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">

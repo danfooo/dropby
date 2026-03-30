@@ -29,12 +29,10 @@ input, textarea, select {
   50%       { transform: translateY(-8px); }
 }
 
-/* Diagonal light sweep — sweeps once then pauses before repeating */
-@keyframes shine-sweep {
-  0%        { transform: translateX(-100%) skewX(-20deg); opacity: 0; }
-  5%        { opacity: 1; }
-  20%       { transform: translateX(350%) skewX(-20deg); opacity: 0; }
-  100%      { transform: translateX(350%) skewX(-20deg); opacity: 0; }
+/* Soft radial glimmer — drifts slowly over the background */
+@keyframes glimmer {
+  0%, 100% { transform: translate(-5%, 5%);  opacity: 0.6; }
+  50%       { transform: translate(8%, -8%); opacity: 1;   }
 }
 
 @layer utilities {
