@@ -42,6 +42,17 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
   res.status(201).json({ token, url: `${appUrl}/invite/${token}`, expires_at: expiresAt });
 });
 
+// GET /api/invites/open-links — list active link-based invites created by the current user
+router.get('/open-links', requireAuth, (req: AuthRequest, res) => {
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const links = db.prepare(`
+    SELECT token, created_at, expires_at FROM invite_links
+    WHERE created_by = ? AND invited_email IS NULL AND revoked = 0 AND expires_at > ?
+    ORDER BY created_at DESC
+  `).all(req.userId, nowUnix) as Array<{ token: string; created_at: number; expires_at: number }>;
+  res.json(links);
+});
+
 // GET /api/invites/pending — list pending email invites sent by the current user
 router.get('/pending', requireAuth, (req: AuthRequest, res) => {
   const nowUnix = Math.floor(Date.now() / 1000);

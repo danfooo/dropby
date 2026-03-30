@@ -90,6 +90,7 @@ export const invitesApi = {
   revoke: (token: string) => api.post(`/invites/${token}/revoke`).then(r => r.data),
   sendByEmail: (email: string) => api.post('/invites/email', { email }).then(r => r.data),
   listPending: () => api.get('/invites/pending').then(r => r.data),
+  listOpenLinks: () => api.get('/invites/open-links').then(r => r.data),
 };
 
 // Going

@@ -198,7 +198,11 @@
     "pendingTitle": "En attente",
     "cancelInvite": "Annuler l'invitation",
     "muteHint": "× masque les amis et coupe les notifications",
-    "removeHint": "× supprime l'amitié définitivement"
+    "removeHint": "× supprime l'amitié définitivement",
+    "openLinksTitle": "Liens d'invitation actifs",
+    "linkExpiresInDays": "Expire dans {{days}}j",
+    "linkExpiresInHours": "Expire dans {{hours}}h",
+    "linkExpiresSoon": "Expire bientôt"
   },
   "invite": {
     "expiredTitle": "Invitation expirée",

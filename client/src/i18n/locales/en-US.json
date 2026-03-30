@@ -198,7 +198,11 @@
     "pendingTitle": "Pending",
     "cancelInvite": "Cancel invite",
     "muteHint": "× hides friends and mutes notifications",
-    "removeHint": "× removes the friendship permanently"
+    "removeHint": "× removes the friendship permanently",
+    "openLinksTitle": "Open invite links",
+    "linkExpiresInDays": "Expires in {{days}}d",
+    "linkExpiresInHours": "Expires in {{hours}}h",
+    "linkExpiresSoon": "Expires soon"
   },
   "invite": {
     "expiredTitle": "Invite expired",

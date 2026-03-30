@@ -19,6 +19,7 @@ export default function Friends() {
 
   const { data: friends = [], isLoading } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
   const { data: pendingInvites = [] } = useQuery({ queryKey: ['pending-invites'], queryFn: invitesApi.listPending });
+  const { data: openLinks = [] } = useQuery({ queryKey: ['open-links'], queryFn: invitesApi.listOpenLinks });
 
   const removeFriend = useMutation({
     mutationFn: (id: string) => friendsApi.remove(id),
@@ -44,6 +45,11 @@ export default function Friends() {
   const cancelInvite = useMutation({
     mutationFn: (token: string) => invitesApi.revoke(token),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['pending-invites'] }),
+  });
+
+  const revokeLink = useMutation({
+    mutationFn: (token: string) => invitesApi.revoke(token),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['open-links'] }),
   });
 
   const sendEmailInvite = useMutation({
@@ -199,6 +205,44 @@ export default function Friends() {
                   </button>
                 </div>
               ))}
+            </div>
+          </>
+        )}
+
+        {/* Open invite links */}
+        {(openLinks as any[]).length > 0 && (
+          <>
+            <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 mt-4">
+              {t('friends.openLinksTitle')}
+            </h2>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
+              {(openLinks as any[]).map((link: any, i: number) => {
+                const secsLeft = link.expires_at - Math.floor(Date.now() / 1000);
+                const timeLeft = secsLeft > 86400
+                  ? t('friends.linkExpiresInDays', { days: Math.floor(secsLeft / 86400) })
+                  : secsLeft > 3600
+                    ? t('friends.linkExpiresInHours', { hours: Math.floor(secsLeft / 3600) })
+                    : t('friends.linkExpiresSoon');
+                return (
+                  <div key={link.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
+                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </div>
+                    <span className="flex-1 text-sm text-gray-500 dark:text-gray-400">{timeLeft}</span>
+                    <button
+                      onClick={() => revokeLink.mutate(link.token)}
+                      className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1"
+                      title={t('friends.cancelInvite')}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </>
         )}

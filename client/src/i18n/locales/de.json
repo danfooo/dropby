@@ -198,7 +198,11 @@
     "pendingTitle": "Ausstehend",
     "cancelInvite": "Einladung zurückziehen",
     "muteHint": "× blendet Freunde aus und stummschaltet Benachrichtigungen",
-    "removeHint": "× entfernt die Freundschaft dauerhaft"
+    "removeHint": "× entfernt die Freundschaft dauerhaft",
+    "openLinksTitle": "Offene Einladungslinks",
+    "linkExpiresInDays": "Läuft in {{days}}T ab",
+    "linkExpiresInHours": "Läuft in {{hours}}h ab",
+    "linkExpiresSoon": "Läuft bald ab"
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",

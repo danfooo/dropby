@@ -198,7 +198,11 @@
     "pendingTitle": "In attesa",
     "cancelInvite": "Annulla invito",
     "muteHint": "× nasconde gli amici e silenzia le notifiche",
-    "removeHint": "× rimuove l'amicizia in modo permanente"
+    "removeHint": "× rimuove l'amicizia in modo permanente",
+    "openLinksTitle": "Link di invito aperti",
+    "linkExpiresInDays": "Scade in {{days}}g",
+    "linkExpiresInHours": "Scade in {{hours}}h",
+    "linkExpiresSoon": "Scade presto"
   },
   "invite": {
     "expiredTitle": "Invito scaduto",
