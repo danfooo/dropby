@@ -452,7 +452,7 @@ export default function Home() {
         </div>
 
         {/* Recipient selection */}
-        {hasFriends && (
+        {activeFriends.length > 0 && (
           <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 mb-3 border border-gray-100 dark:border-gray-700">
             <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('home.openDoorTo')}</h2>
             <div className="relative">
@@ -571,7 +571,7 @@ export default function Home() {
             </div>
           )}
 
-          {hasFriends && <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 mb-4">
+          {activeFriends.length > 0 && <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 mb-4">
             <h2 className="text-sm font-semibold mb-3">{t('home.recipients')}</h2>
             {(friends as any[]).filter((f: any) => !f.muted).map((f: any) => (
               <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer">
