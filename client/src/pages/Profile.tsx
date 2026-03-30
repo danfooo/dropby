@@ -7,6 +7,7 @@ import { authApi } from '../api';
 import { deregisterPushToken } from '../utils/notifications';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
+import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import FeedbackModal from '../components/FeedbackModal';
 import { useToast } from '../contexts/toast';
