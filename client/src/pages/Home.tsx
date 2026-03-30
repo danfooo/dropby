@@ -16,6 +16,7 @@ import Modal from '../components/Modal';
 import FeedbackModal from '../components/FeedbackModal';
 import { useToast } from '../contexts/toast';
 import { copyText } from '../utils/clipboard';
+import { getSuggestions } from '../i18n/suggestions';
 
 type HomeView = 'closed' | 'open' | 'edit';
 
@@ -101,7 +102,7 @@ function getGreeting(t: (key: string) => string): string {
 }
 
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const { user } = useAuthStore();
   const [view, setView] = useState<HomeView>('closed');
@@ -150,6 +151,8 @@ export default function Home() {
   });
 
   const savedChips = savedNotes as any[];
+  const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
+  const suggestionChips = suggestions.slice(0, 7);
 
   // Initialize recipient selection from server
   useEffect(() => {
@@ -357,8 +360,8 @@ export default function Home() {
           {getGreeting(t)}
         </h2>
 
-        {/* Saved note chips */}
-        {savedChips.length > 0 && (
+        {/* Note chips: saved first, then suggestions */}
+        {(savedChips.length > 0 || suggestionChips.length > 0) && (
           <div className="mb-2">
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {savedChips.map((n: any) => (
@@ -397,6 +400,29 @@ export default function Home() {
                     </svg>
                   </button>
                 </div>
+              ))}
+              {suggestionChips.map((chip: string) => (
+                <button
+                  key={chip}
+                  onClick={() => {
+                    if (selectedChip === chip) {
+                      setNote(previousNote ?? '');
+                      setSelectedChip('');
+                      setPreviousNote(null);
+                    } else {
+                      setPreviousNote(selectedChip === '' ? note : null);
+                      setNote(chip);
+                      setSelectedChip(chip);
+                    }
+                  }}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                    selectedChip === chip
+                      ? 'bg-emerald-500 text-white border-emerald-500'
+                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
+                  }`}
+                >
+                  {chip}
+                </button>
               ))}
             </div>
           </div>
