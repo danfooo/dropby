@@ -79,6 +79,15 @@ export default function Friends() {
     }
   };
 
+  const handleCopyLink = async (url: string) => {
+    try {
+      await copyText(`${t('home.friendshipCopyText')}\n${url}`);
+      alert(t('home.inviteLinkCopied'));
+    } catch {
+      alert(t('home.couldNotCopy'));
+    }
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     sendEmailInvite.mutate(addInput.trim());
@@ -225,15 +234,20 @@ export default function Friends() {
                     : t('friends.linkExpiresSoon');
                 return (
                   <div key={link.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
-                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                    </div>
-                    <span className="flex-1 text-sm text-gray-500 dark:text-gray-400">{timeLeft}</span>
+                    <button
+                      onClick={() => handleCopyLink(link.url)}
+                      className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{timeLeft}</span>
+                    </button>
                     <button
                       onClick={() => revokeLink.mutate(link.token)}
-                      className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1"
+                      className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 flex-shrink-0"
                       title={t('friends.cancelInvite')}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -253,7 +267,7 @@ export default function Friends() {
             onClick={handleInvite}
             className="flex-1 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium"
           >
-            {t('friends.copyInviteLink')}
+            {(openLinks as any[]).length > 0 ? t('friends.copyAnotherInviteLink') : t('friends.copyInviteLink')}
           </button>
           <button
             onClick={() => setShowAddModal(true)}

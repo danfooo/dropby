@@ -50,7 +50,8 @@ router.get('/open-links', requireAuth, (req: AuthRequest, res) => {
     WHERE created_by = ? AND invited_email IS NULL AND revoked = 0 AND expires_at > ?
     ORDER BY created_at DESC
   `).all(req.userId, nowUnix) as Array<{ token: string; created_at: number; expires_at: number }>;
-  res.json(links);
+  const appUrl = process.env.APP_URL || 'http://localhost:5173';
+  res.json(links.map(l => ({ ...l, url: `${appUrl}/invite/${l.token}` })));
 });
 
 // GET /api/invites/pending — list pending email invites sent by the current user
