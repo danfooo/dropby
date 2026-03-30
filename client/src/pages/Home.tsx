@@ -356,24 +356,26 @@ export default function Home() {
   // --- DOOR CLOSED VIEW ---
   if (view === 'closed') {
     return (
-      <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 safe-top flex flex-col">
+      <div className={`relative overflow-hidden min-h-full px-4 safe-top flex flex-col ${
+        openFriendDoors.length > 0
+          ? 'bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950'
+          : 'bg-gray-50 dark:bg-gray-950'
+      }`}>
+        {openFriendDoors.length > 0 && (
+          <div
+            className="pointer-events-none absolute -inset-4"
+            style={{
+              animation: 'glimmer 6s ease-in-out infinite',
+              background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.28) 0%, transparent 100%)',
+              mixBlendMode: 'overlay',
+            }}
+          />
+        )}
         <PageHeader />
 
         {/* Friend doors open now */}
         {openFriendDoors.length > 0 && (
-          <div
-            data-testid="friends-available"
-            className="relative overflow-hidden mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-300/50 dark:border-transparent"
-          >
-            {/* Glimmer overlay — blends with gradient, barely touches opaque cards */}
-            <div
-              className="pointer-events-none absolute -inset-4"
-              style={{
-                animation: 'glimmer 6s ease-in-out infinite',
-                background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.28) 0%, transparent 100%)',
-                mixBlendMode: 'overlay',
-              }}
-            />
+          <div data-testid="friends-available" className="mb-6">
             <h2 className="text-2xl font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
               {t('home.friendsAvailable')}
             </h2>
@@ -644,24 +646,22 @@ export default function Home() {
 
   // --- DOOR OPEN VIEW ---
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-950 px-4 safe-top">
+    <div className="relative overflow-hidden min-h-full bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 px-4 safe-top">
+      {/* Glimmer overlay — blends with gradient, barely touches opaque cards */}
+      <div
+        className="pointer-events-none absolute -inset-4"
+        style={{
+          animation: 'glimmer 6s ease-in-out infinite',
+          background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.28) 0%, transparent 100%)',
+          mixBlendMode: 'overlay',
+        }}
+      />
       {/* Header */}
       <PageHeader />
 
       {/* Friend doors open now */}
       {openFriendDoors.length > 0 && (
-        <div
-          data-testid="friends-available"
-          className="relative overflow-hidden mb-6 -mx-4 px-4 py-5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 border-y border-fuchsia-300/50 dark:border-transparent"
-        >
-          <div
-            className="pointer-events-none absolute -inset-4"
-            style={{
-              animation: 'glimmer 6s ease-in-out infinite',
-              background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.28) 0%, transparent 100%)',
-              mixBlendMode: 'overlay',
-            }}
-          />
+        <div data-testid="friends-available" className="mb-6">
           <h2 className="text-2xl font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
             {t('home.friendsAvailable')}
           </h2>
