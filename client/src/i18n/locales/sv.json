@@ -277,6 +277,7 @@
     "remindersDesc": "Vi skickar dig en notis för att öppna din dörr.",
     "noReminders": "Inga påminnelser inställda.",
     "autoNudgeTitle": "Påminn mig baserat på tidigare tider",
+    "notifications": "Aviseringar",
     "logout": "Logga ut",
     "deleteAccount": "Radera konto",
     "deleteTitle": "Radera konto",
@@ -311,5 +312,15 @@
       "evening": "18:00",
       "night": "23:00"
     }
+  },
+  "notifications": {
+    "title": "Aviseringar",
+    "remindersTitle": "Påminnelser",
+    "addReminder": "+ Lägg till",
+    "remindersDesc": "Vi skickar dig en notis för att öppna din dörr.",
+    "noReminders": "Inga påminnelser inställda.",
+    "autoNudgeTitle": "Påminn mig baserat på tidigare tider",
+    "doorClosedTitle": "Bekräfta när din dörr stängs",
+    "doorClosedDesc": "En notis efter automatisk stängning, med möjlighet att öppna igen."
   }
 }

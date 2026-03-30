@@ -277,6 +277,7 @@
     "remindersDesc": "Ti invieremo una notifica per aprire la tua porta.",
     "noReminders": "Nessun promemoria impostato.",
     "autoNudgeTitle": "Ricordamelo in base alle volte precedenti",
+    "notifications": "Notifiche",
     "logout": "Esci",
     "deleteAccount": "Elimina account",
     "deleteTitle": "Elimina account",
@@ -311,5 +312,15 @@
       "evening": "18:00",
       "night": "23:00"
     }
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "remindersTitle": "Promemoria",
+    "addReminder": "+ Aggiungi",
+    "remindersDesc": "Ti invieremo una notifica per aprire la tua porta.",
+    "noReminders": "Nessun promemoria impostato.",
+    "autoNudgeTitle": "Ricordamelo in base alle volte precedenti",
+    "doorClosedTitle": "Conferma quando la tua porta si chiude",
+    "doorClosedDesc": "Una notifica dopo la chiusura automatica, con l'opzione di riaprire."
   }
 }

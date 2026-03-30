@@ -303,6 +303,17 @@ export function notifyCalendarUpdate(userId: string, icsUrl: string) {
   );
 }
 
+export function notifyDoorClosed(userId: string) {
+  const tokens = getPushTokens(userId);
+  tokens.forEach(t =>
+    sendPush(userId, t.token, t.platform, {
+      title: 'Your door is closed',
+      body: 'Hope it was a good one. Open again?',
+      data: { type: 'door_closed' },
+    })
+  );
+}
+
 export function notifyCalendarCancel(userId: string, icsUrl: string) {
   const tokens = getPushTokens(userId);
   tokens.forEach(t =>

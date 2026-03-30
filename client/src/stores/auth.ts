@@ -6,6 +6,7 @@ export interface User {
   display_name: string;
   timezone: string | null;
   auto_nudge_enabled: boolean;
+  notif_door_closed: boolean;
   avatar_url: string | null;
   default_door_minutes: number;
 }

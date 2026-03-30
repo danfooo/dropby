@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { db } from './db/index.js';
-import { notifyDoorClosingSoon, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder } from './services/notifications.js';
+import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder } from './services/notifications.js';
 import { broadcastSSE } from './services/sse.js';
 import { randomUUID } from 'crypto';
 import { log } from './services/analytics.js';
@@ -184,6 +184,28 @@ cron.schedule('* * * * *', () => {
     notifyAutoNudge(user.id);
     db.prepare('INSERT INTO auto_nudge_log (id, user_id) VALUES (?, ?)').run(randomUUID(), user.id);
     log('nudge.sent', user.id, { type: 'auto' });
+  }
+});
+
+// Every minute: fire auto-close confirmation to host
+cron.schedule('* * * * *', () => {
+  const now = Math.floor(Date.now() / 1000);
+  // A small grace window (up to 2 min past closes_at) avoids race with explicit close
+  const gracePeriod = now - 120;
+
+  const closed = db.prepare(`
+    SELECT s.id, s.user_id, u.notif_door_closed
+    FROM statuses s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.closed_at IS NULL
+      AND s.closes_at <= ?
+      AND s.closes_at >= ?
+      AND s.auto_close_notification_sent = 0
+  `).all(now, gracePeriod) as Array<{ id: string; user_id: string; notif_door_closed: number }>;
+
+  for (const s of closed) {
+    db.prepare('UPDATE statuses SET auto_close_notification_sent = 1 WHERE id = ?').run(s.id);
+    if (s.notif_door_closed) notifyDoorClosed(s.user_id);
   }
 });
 

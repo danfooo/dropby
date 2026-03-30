@@ -277,6 +277,7 @@
     "remindersDesc": "We'll send you a notification to open your door.",
     "noReminders": "No reminders set.",
     "autoNudgeTitle": "Remind me based on previous times",
+    "notifications": "Notifications",
     "logout": "Log out",
     "deleteAccount": "Delete account",
     "deleteTitle": "Delete account",
@@ -311,5 +312,15 @@
       "evening": "6pm",
       "night": "11pm"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "remindersTitle": "Reminders",
+    "addReminder": "+ Add",
+    "remindersDesc": "We'll send you a nudge to open your door.",
+    "noReminders": "No reminders set.",
+    "autoNudgeTitle": "Remind me based on previous times",
+    "doorClosedTitle": "Confirm when your door closes",
+    "doorClosedDesc": "A nudge after it auto-closes, with an option to open again."
   }
 }

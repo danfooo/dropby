@@ -227,5 +227,12 @@ if (!statusCols.find(c => c.name === 'notify_at')) {
 if (!statusCols.find(c => c.name === 'notifications_sent')) {
   db.exec('ALTER TABLE statuses ADD COLUMN notifications_sent INTEGER NOT NULL DEFAULT 0');
 }
+if (!statusCols.find(c => c.name === 'auto_close_notification_sent')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN auto_close_notification_sent INTEGER NOT NULL DEFAULT 0');
+}
+
+if (!cols.find(c => c.name === 'notif_door_closed')) {
+  db.exec('ALTER TABLE users ADD COLUMN notif_door_closed INTEGER NOT NULL DEFAULT 1');
+}
 
 export default db;

@@ -277,6 +277,7 @@
     "remindersDesc": "On t'enverra une notification pour ouvrir ta porte.",
     "noReminders": "Aucun rappel configuré.",
     "autoNudgeTitle": "Me rappeler selon les fois précédentes",
+    "notifications": "Notifications",
     "logout": "Se déconnecter",
     "deleteAccount": "Supprimer le compte",
     "deleteTitle": "Supprimer le compte",
@@ -311,5 +312,15 @@
       "evening": "18h",
       "night": "23h"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "remindersTitle": "Rappels",
+    "addReminder": "+ Ajouter",
+    "remindersDesc": "On t'enverra une notification pour ouvrir ta porte.",
+    "noReminders": "Aucun rappel configuré.",
+    "autoNudgeTitle": "Me rappeler selon les fois précédentes",
+    "doorClosedTitle": "Confirmer quand ta porte se ferme",
+    "doorClosedDesc": "Une notification après la fermeture automatique, avec l'option de rouvrir."
   }
 }
