@@ -13,7 +13,6 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] Set up `hi@dropby.cc` mailbox — email access for dropby.cc domain not yet configured (needed for imprint contact + support)
 - [ ] Update `rua` in DMARC record once `hello@` or a dedicated address is receiving mail (or remove `rua` if reports aren't needed)
 - [ ] Update Google OAuth consent screen support email to `hi@dropby.cc` — requires creating a Google account for `hi@dropby.cc` (via "use my current email address") so it appears in the dropdown
-- [ ] SMS delivery for Add Friend: currently logs to console, only email delivery is implemented
 
 ## Android
 
@@ -21,6 +20,7 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 
 ## Maybe
 - [ ] New user with no friends: "Open Now" gives no hint that a share link is coming. Needs a solution that doesn't introduce the friends concept prematurely — the right fix probably lives earlier in the onboarding flow, not on the home screen.
+- [ ] SMS delivery for Add Friend: currently logs to console, only email delivery is implemented
 
 
 - [ ] Don't show the feedback card on Home if the user has submitted feedback within the last month
