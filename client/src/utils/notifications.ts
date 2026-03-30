@@ -2,18 +2,30 @@ import { Capacitor } from '@capacitor/core';
 import { authApi } from '../api';
 
 let listenersSetup = false;
+let lastToken: string | null = null;
 
 async function setupListeners() {
   if (listenersSetup) return;
   listenersSetup = true;
   const { PushNotifications } = await import('@capacitor/push-notifications');
   PushNotifications.addListener('registration', async ({ value: token }) => {
+    lastToken = token;
     try { await authApi.registerPushToken(token, Capacitor.getPlatform() as 'ios' | 'android'); }
     catch (e) { console.warn('[Push] Failed to register token', e); }
   });
   PushNotifications.addListener('registrationError', (err) => {
     console.warn('[Push] Registration error', err);
   });
+}
+
+export async function deregisterPushToken(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    await authApi.deregisterPushToken(lastToken ?? undefined);
+    lastToken = null;
+  } catch (e) {
+    console.warn('[Push] Failed to deregister token', e);
+  }
 }
 
 // Returns true if the interstitial should be shown (permission not yet decided)

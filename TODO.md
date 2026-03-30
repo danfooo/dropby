@@ -7,8 +7,6 @@
 All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`) still use the **centered** composition (scale 1.05). If the cropped style is confirmed as the final direction, those should be updated too and Android icons regenerated.
 
 ## Apple / APNs
-- [ ] Finish Apple Developer enrollment (pending approval)
-- [ ] Verify push notifications end-to-end on TestFlight before App Store submission
 - [ ] When testing dev builds: set `fly secrets set APNS_SANDBOX=true`, unset before TestFlight/prod
 
 ## Infrastructure

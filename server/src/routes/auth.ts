@@ -32,6 +32,7 @@ function userResponse(u: any) {
     display_name: u.display_name,
     timezone: u.timezone,
     auto_nudge_enabled: Boolean(u.auto_nudge_enabled),
+    notif_door_closed: u.notif_door_closed !== undefined ? Boolean(u.notif_door_closed) : true,
     avatar_seed: u.avatar_seed ?? 0,
     avatar_url: u.avatar_url ?? null,
     email_verified: Boolean(u.email_verified),
@@ -46,7 +47,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
 
 // PUT /api/auth/me
 router.put('/me', requireAuth, (req: AuthRequest, res) => {
-  const { display_name, auto_nudge_enabled, avatar_seed } = req.body;
+  const { display_name, auto_nudge_enabled, notif_door_closed, avatar_seed } = req.body;
   const updates: string[] = [];
   const values: unknown[] = [];
 
@@ -60,6 +61,10 @@ router.put('/me', requireAuth, (req: AuthRequest, res) => {
   if (auto_nudge_enabled !== undefined) {
     updates.push('auto_nudge_enabled = ?');
     values.push(auto_nudge_enabled ? 1 : 0);
+  }
+  if (notif_door_closed !== undefined) {
+    updates.push('notif_door_closed = ?');
+    values.push(notif_door_closed ? 1 : 0);
   }
   if (avatar_seed !== undefined) {
     updates.push('avatar_seed = ?');
@@ -359,6 +364,17 @@ router.post('/reset-password', async (req, res) => {
   const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
   const jwt = await signJwt(user.id);
   res.json({ token: jwt, user: userResponse(updatedUser) });
+});
+
+// DELETE /api/auth/push-token — deregister current device token on logout
+router.delete('/push-token', requireAuth, (req: AuthRequest, res) => {
+  const { token } = req.body;
+  if (token) {
+    db.prepare('DELETE FROM push_tokens WHERE user_id = ? AND token = ?').run(req.userId, token);
+  } else {
+    db.prepare('DELETE FROM push_tokens WHERE user_id = ?').run(req.userId);
+  }
+  res.json({ ok: true });
 });
 
 // POST /api/auth/push-token

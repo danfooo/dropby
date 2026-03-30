@@ -39,11 +39,13 @@ export const authApi = {
   resendVerification: (email: string, redirect_url?: string) => api.post('/auth/resend-verification', { email, redirect_url }).then(r => r.data),
   forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }).then(r => r.data),
   resetPassword: (token: string, password: string) => api.post('/auth/reset-password', { token, password }).then(r => r.data),
-  updateMe: (data: { display_name?: string; auto_nudge_enabled?: boolean }) =>
+  updateMe: (data: { display_name?: string; auto_nudge_enabled?: boolean; notif_door_closed?: boolean }) =>
     api.put('/auth/me', data).then(r => r.data),
   deleteMe: () => api.delete('/auth/me').then(r => r.data),
   registerPushToken: (token: string, platform: 'ios' | 'android') =>
     api.post('/auth/push-token', { token, platform }).then(r => r.data),
+  deregisterPushToken: (token?: string) =>
+    api.delete('/auth/push-token', { data: token ? { token } : undefined }).then(r => r.data),
   uploadAvatar: (blob: Blob) => {
     const form = new FormData();
     form.append('avatar', blob, 'avatar.jpg');

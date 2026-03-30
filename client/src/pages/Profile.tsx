@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import Cropper from 'react-easy-crop';
 import { authApi, nudgesApi } from '../api';
-import { requestNotificationPermission } from '../utils/notifications';
+import { requestNotificationPermission, deregisterPushToken } from '../utils/notifications';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -455,7 +455,7 @@ export default function Profile() {
         {/* Logout + Delete */}
         <div className="pt-2 space-y-2">
           <button
-            onClick={() => { clearAuth(); navigate('/'); }}
+            onClick={async () => { await deregisterPushToken(); clearAuth(); navigate('/'); }}
             className="w-full py-3 text-gray-600 dark:text-gray-400 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             {t('profile.logout')}
