@@ -26,6 +26,14 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
 
   const id = randomUUID();
   db.prepare('INSERT INTO user_notes (id, user_id, text) VALUES (?, ?, ?)').run(id, req.userId, text.trim());
+
+  // Keep only the 2 most recent notes; delete any older ones
+  db.prepare(`
+    DELETE FROM user_notes WHERE user_id = ? AND id NOT IN (
+      SELECT id FROM user_notes WHERE user_id = ? ORDER BY created_at DESC LIMIT 2
+    )
+  `).run(req.userId, req.userId);
+
   res.status(201).json({ id, text: text.trim(), hidden: false });
 });
 

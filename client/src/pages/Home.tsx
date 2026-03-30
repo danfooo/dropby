@@ -15,7 +15,6 @@ import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import FeedbackModal from '../components/FeedbackModal';
 import { useToast } from '../contexts/toast';
-import { getSuggestions } from '../i18n/suggestions';
 import { copyText } from '../utils/clipboard';
 
 type HomeView = 'closed' | 'open' | 'edit';
@@ -102,7 +101,7 @@ function getGreeting(t: (key: string) => string): string {
 }
 
 export default function Home() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { user } = useAuthStore();
   const [view, setView] = useState<HomeView>('closed');
@@ -150,11 +149,7 @@ export default function Home() {
     queryFn: notesApi.list,
   });
 
-  // Get locale-aware suggestions
-  const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
-
-  const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden).slice(0, 2);
-  const chips = suggestions.slice(0, 7);
+  const savedChips = savedNotes as any[];
 
   // Initialize recipient selection from server
   useEffect(() => {
@@ -202,8 +197,8 @@ export default function Home() {
     },
   });
 
-  const hideNote = useMutation({
-    mutationFn: (id: string) => notesApi.setHidden(id, true),
+  const deleteNote = useMutation({
+    mutationFn: (id: string) => notesApi.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
   });
 
@@ -362,11 +357,11 @@ export default function Home() {
           {getGreeting(t)}
         </h2>
 
-        {/* Note chips: saved notes first (max 2), then suggestions */}
-        {(visibleSaved.length > 0 || chips.length > 0) && (
+        {/* Saved note chips */}
+        {savedChips.length > 0 && (
           <div className="mb-2">
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-              {visibleSaved.map((n: any) => (
+              {savedChips.map((n: any) => (
                 <div
                   key={n.id}
                   className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -391,9 +386,9 @@ export default function Home() {
                     {n.text}
                   </button>
                   <button
-                    onClick={() => hideNote.mutate(n.id)}
+                    onClick={() => deleteNote.mutate(n.id)}
                     className={`ml-1 rounded-full p-0.5 transition-colors ${
-                      selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100'
+                      selectedChip === n.text ? 'hover:bg-emerald-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                     aria-label="Remove"
                   >
@@ -402,29 +397,6 @@ export default function Home() {
                     </svg>
                   </button>
                 </div>
-              ))}
-              {chips.map((chip: string) => (
-                <button
-                  key={chip}
-                  onClick={() => {
-                    if (selectedChip === chip) {
-                      setNote(previousNote ?? '');
-                      setSelectedChip('');
-                      setPreviousNote(null);
-                    } else {
-                      setPreviousNote(selectedChip === '' ? note : null);
-                      setNote(chip);
-                      setSelectedChip(chip);
-                    }
-                  }}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                    selectedChip === chip
-                      ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
-                  }`}
-                >
-                  {chip}
-                </button>
               ))}
             </div>
           </div>
