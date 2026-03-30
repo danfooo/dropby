@@ -357,6 +357,7 @@ export default function Home() {
           </div>
         )}
 
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-sm mb-4">
         <h2 className={`font-bold text-gray-900 dark:text-gray-50 mb-4 ${openFriendDoors.length > 0 ? 'text-lg' : 'text-2xl'}`}>
           {getGreeting(t)}
         </h2>
@@ -454,7 +455,7 @@ export default function Home() {
 
         {/* Recipient selection */}
         {hasFriends && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 mb-3 shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 mb-3 border border-gray-100 dark:border-gray-700">
             <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('home.openDoorTo')}</h2>
             <div className="relative">
               <div
@@ -493,6 +494,7 @@ export default function Home() {
             {t('home.openLater')}
           </button>
         </div>
+        </div>{/* end door card */}
 
         <div className="mt-auto pt-6 -mx-4">
           <TipsSection />
@@ -643,7 +645,8 @@ export default function Home() {
         </div>
       )}
 
-      <div className="text-center mb-6">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-sm">
+      <div className="text-center mb-4">
         <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-4 py-1.5 rounded-full text-sm font-medium">
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
           {t('home.youreOpen')}
@@ -668,7 +671,7 @@ export default function Home() {
 
       {/* Recipients + invite links */}
       {(myStatus?.recipients.length > 0 || myStatus?.invite_links?.length > 0) && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 mb-4 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-2">{t('home.invited')}</h2>
           {myStatus.recipients.map((r: any) => (
             <RecipientRow key={r.id} recipient={r} />
@@ -686,7 +689,7 @@ export default function Home() {
 
       {/* Going signals */}
       {myStatus?.going_signals?.length > 0 && (
-        <div className="bg-emerald-50 dark:bg-emerald-950 rounded-2xl p-4 mb-4 border border-emerald-100 dark:border-emerald-800">
+        <div className="bg-emerald-50 dark:bg-emerald-950/60 rounded-2xl p-4 mb-3 border border-emerald-100 dark:border-emerald-800/50">
           <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2">{t('home.onTheirWay')}</h2>
           {myStatus.going_signals.map((g: any) => (
             <div key={g.id} className="py-1">
@@ -705,9 +708,9 @@ export default function Home() {
       {/* Invite link row */}
       <button
         onClick={copyInviteLink}
-        className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex items-center gap-3 mb-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 flex items-center gap-3 mb-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
-        <div className="w-9 h-9 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center">
+        <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center">
           <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
@@ -726,7 +729,7 @@ export default function Home() {
           setEditEndsAt(myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
           setView('edit');
         }}
-        className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-50 py-3 rounded-2xl font-medium text-sm mb-3 hover:bg-gray-50 dark:hover:bg-gray-800"
+        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-gray-50 py-3 rounded-2xl font-medium text-sm mb-3 hover:bg-gray-100 dark:hover:bg-gray-700"
       >
         {t('home.addMoreEdit')}
       </button>
@@ -759,6 +762,7 @@ export default function Home() {
           {t('home.closeNow')}
         </button>
       </div>
+      </div>{/* end door card */}
 
       {/* Duration picker overlay */}
       <Modal open={showDurationPicker} onClose={() => setShowDurationPicker(false)} title={t('home.changeDurationTitle')}>
