@@ -1,10 +1,12 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { statusApi } from '../api';
 
 export default function TabBar() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: upcoming = [] } = useQuery({
     queryKey: ['upcomingSessions'],
@@ -27,6 +29,12 @@ export default function TabBar() {
         {/* Now tab */}
         <NavLink
           to="/home"
+          onClick={(e) => {
+            if (location.pathname === '/home') {
+              e.preventDefault();
+              navigate('/home', { replace: true, state: { exitEdit: Date.now() } });
+            }
+          }}
           className={({ isActive }) =>
             `flex-1 flex flex-col items-center py-3 text-xs font-medium transition-colors ${
               isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'

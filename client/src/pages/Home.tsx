@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
@@ -21,51 +21,13 @@ import { copyText } from '../utils/clipboard';
 type HomeView = 'closed' | 'open' | 'edit';
 
 // Recipient row in door-open view
-function RecipientRow({ recipient, onRemove }: { recipient: any; onRemove: () => void }) {
-  const { t } = useTranslation();
-  const [removing, setRemoving] = useState(false);
-  const [countdown, setCountdown] = useState(3);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const startRemove = () => {
-    setRemoving(true);
-    setCountdown(3);
-    timerRef.current = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) {
-          clearInterval(timerRef.current!);
-          onRemove();
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-  };
-
-  const undo = () => {
-    setRemoving(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-  };
-
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
-
+function RecipientRow({ recipient }: { recipient: any }) {
   return (
     <div className="flex items-center gap-3 py-2">
       <Avatar name={recipient.display_name} size="sm" />
-      <span className={`flex-1 text-sm ${removing ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-50'}`}>
+      <span className="flex-1 text-sm text-gray-900 dark:text-gray-50">
         {recipient.display_name}
       </span>
-      {removing ? (
-        <button onClick={undo} className="text-xs text-emerald-600 font-medium px-2">
-          {t('home.undo', { seconds: countdown })}
-        </button>
-      ) : (
-        <button onClick={startRemove} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 }
@@ -158,6 +120,7 @@ export default function Home() {
   const pendingAction = useRef<(() => void) | null>(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
 
   const { data: myStatus, isLoading: statusLoading } = useQuery({
@@ -211,6 +174,13 @@ export default function Home() {
       setView(myStatus ? 'open' : 'closed');
     }
   }, [myStatus, statusLoading]);
+
+  // Exit edit when the Now tab is tapped while already on /home
+  useEffect(() => {
+    if (view === 'edit' && location.state?.exitEdit) {
+      setView('open');
+    }
+  }, [location.state?.exitEdit]);
 
   // Countdown timer
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -701,11 +671,7 @@ export default function Home() {
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 mb-4 shadow-sm border border-gray-100 dark:border-gray-800">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-2">{t('home.invited')}</h2>
           {myStatus.recipients.map((r: any) => (
-            <RecipientRow
-              key={r.id}
-              recipient={r}
-              onRemove={() => removeRecipient.mutate(r.id)}
-            />
+            <RecipientRow key={r.id} recipient={r} />
           ))}
           {myStatus.invite_links?.map((link: any) => (
             <InviteLinkRow
