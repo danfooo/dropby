@@ -324,7 +324,7 @@ export default function Home() {
       <div className={`relative overflow-hidden min-h-full px-4 safe-top flex flex-col ${
         openFriendDoors.length > 0
           ? 'bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950'
-          : 'bg-gray-50 dark:bg-gray-950'
+          : 'bg-gray-200 dark:bg-gray-950'
       }`}>
         {openFriendDoors.length > 0 && (
           <div
@@ -505,7 +505,7 @@ export default function Home() {
     const initEndsAt = myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '';
 
     return (
-      <div className="min-h-full bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-full bg-gray-200 dark:bg-gray-950">
         {/* Sticky banner */}
         <button
           onClick={handleSaveEdit}
