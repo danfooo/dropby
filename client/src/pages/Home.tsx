@@ -571,7 +571,7 @@ export default function Home() {
             </div>
           )}
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 mb-4">
+          {hasFriends && <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 mb-4">
             <h2 className="text-sm font-semibold mb-3">{t('home.recipients')}</h2>
             {(friends as any[]).filter((f: any) => !f.muted).map((f: any) => (
               <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer">
@@ -600,7 +600,7 @@ export default function Home() {
                 <Link to="/friends" className="underline text-gray-500 dark:text-gray-400">{t('home.mutedFriendsChange')}</Link>
               </p>
             ) : null}
-          </div>
+          </div>}
 
           <button
             onClick={handleSaveEdit}
