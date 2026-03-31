@@ -3,7 +3,7 @@ import { resetTestUsers, makeFriends } from '../helpers/server';
 import { setupUser, loginUser } from '../helpers/auth';
 import { ALICE, BOB, CAROL } from '../helpers/users';
 
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3001';
 
 // ---------------------------------------------------------------------------
 // Generic friendship invite
@@ -53,7 +53,7 @@ test.describe('Generic friendship invite', () => {
           (res) => res.url().includes('/api/invites') && res.request().method() === 'POST',
           { timeout: 5_000 },
         ),
-        alicePage.getByRole('button', { name: /^Invite$/i }).click(),
+        alicePage.getByRole('button', { name: /copy invite link/i }).first().click(),
       ]);
 
       const { url: inviteUrl } = await inviteResponse.json();
@@ -144,7 +144,7 @@ test.describe('Door-open invite', () => {
       // Alice opens her door with a note
       const doorNote = 'Drop by anytime!';
       await alicePage.getByPlaceholder(/or write your own note/i).fill(doorNote);
-      await alicePage.getByRole('button', { name: /open the door/i }).click();
+      await alicePage.getByRole('button', { name: /open now/i }).click();
       await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
       // Alice taps "Anyone with link" to create a door-specific invite link

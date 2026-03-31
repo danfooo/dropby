@@ -41,7 +41,7 @@ test('Alice opens her door; Bob sees it and taps Going; Alice sees Bob is on the
     // Alice opens her door with a note (fill note first, then click)
     const doorNote = 'Come say hi!';
     await alicePage.getByPlaceholder(/or write your own note/i).fill(doorNote);
-    await alicePage.getByRole('button', { name: /open the door/i }).click();
+    await alicePage.getByRole('button', { name: /open now/i }).click();
     await expect(alicePage.getByText("You're open!")).toBeVisible({ timeout: 10_000 });
 
     // Assert the server has notify_at set on Alice's status

@@ -3,7 +3,7 @@ import { resetTestUsers, makeFriends } from '../helpers/server';
 import { setupUser, loginUser } from '../helpers/auth';
 import { ALICE, BOB } from '../helpers/users';
 
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3001';
 
 // Returns a unix timestamp a given number of days in the future at a given hour
 function futureUnix(daysFromNow: number, hour: number): number {

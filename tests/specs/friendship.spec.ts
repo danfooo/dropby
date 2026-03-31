@@ -28,7 +28,7 @@ test('Alice shares invite link; Bob visits it and they become friends', async ({
         (res) => res.url().includes('/api/invites') && res.request().method() === 'POST',
         { timeout: 5_000 }
       ),
-      alicePage.getByRole('button', { name: /^Invite$/i }).click(),
+      alicePage.getByRole('button', { name: /copy invite link/i }).first().click(),
     ]);
 
     const inviteBody = await inviteResponse.json();

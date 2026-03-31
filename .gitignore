@@ -3,6 +3,7 @@ node_modules/
 dist/
 .env
 server/data/
+server/data-test/
 db-snapshot-*/
 client/dist/
 .DS_Store

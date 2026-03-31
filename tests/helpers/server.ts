@@ -1,4 +1,4 @@
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3001';
 
 export async function resetTestUsers(): Promise<void> {
   const res = await fetch(`${SERVER_URL}/api/test/reset`, { method: 'POST' });

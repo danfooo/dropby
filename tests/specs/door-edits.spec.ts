@@ -3,7 +3,7 @@ import { resetTestUsers, makeFriends, getUserStatus } from '../helpers/server';
 import { setupUser, loginUser } from '../helpers/auth';
 import { ALICE, BOB } from '../helpers/users';
 
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3001';
 
 let aliceId = '';
 let bobId = '';
@@ -39,7 +39,7 @@ test('Alice edits the note on her open door — the note updates in Bob\'s view'
 
     // Alice opens her door with an initial note (fill note first, then click)
     await alicePage.getByPlaceholder(/or write your own note/i).fill('Original note');
-    await alicePage.getByRole('button', { name: /open the door/i }).click();
+    await alicePage.getByRole('button', { name: /open now/i }).click();
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
     // Bob sees Alice's door with the original note
@@ -48,7 +48,7 @@ test('Alice edits the note on her open door — the note updates in Bob\'s view'
     await expect(bobPage.getByText('Original note')).toBeVisible({ timeout: 10_000 });
 
     // Alice edits the note by clicking on it (or the edit button)
-    await alicePage.getByRole('button', { name: /add more.*edit|edit/i }).click();
+    await alicePage.getByRole('button', { name: /add friends.*edit/i }).click();
 
     // The edit view should appear — find the note input and update it
     const noteInput = alicePage.getByPlaceholder(/note/i);
@@ -82,13 +82,13 @@ test('Alice changes the auto-close duration — closes_at updates accordingly', 
     // Close any door left open by a prior test (beforeAll is shared across tests)
     const token = await alicePage.evaluate(() => localStorage.getItem('token'));
     await alicePage.evaluate(async (tok) => {
-      await fetch('http://localhost:3000/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
+      await fetch('http://localhost:3001/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
     }, token);
     await alicePage.reload();
     await alicePage.waitForLoadState('domcontentloaded');
 
     // Alice opens her door (no note needed)
-    await alicePage.getByRole('button', { name: /open the door/i }).click();
+    await alicePage.getByRole('button', { name: /open now/i }).click();
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
     // Get the initial closes_at
@@ -133,7 +133,7 @@ test('Alice enters edit view and tapping the Now tab returns her to the open vie
     // Close any door left open by a prior test
     const token = await alicePage.evaluate(() => localStorage.getItem('token'));
     await alicePage.evaluate(async (tok) => {
-      await fetch('http://localhost:3000/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
+      await fetch('http://localhost:3001/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
     }, token);
     await alicePage.reload();
     await alicePage.waitForLoadState('domcontentloaded');
@@ -143,7 +143,7 @@ test('Alice enters edit view and tapping the Now tab returns her to the open vie
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
     // Enter edit view
-    await alicePage.getByRole('button', { name: /add friends.*edit|edit/i }).click();
+    await alicePage.getByRole('button', { name: /add friends.*edit/i }).click();
     await expect(alicePage.getByRole('button', { name: /save changes/i })).toBeVisible({ timeout: 5_000 });
 
     // Tap the Now tab (already active)
@@ -170,14 +170,14 @@ test('Alice closes her door manually — it disappears from Bob\'s feed', async 
     // Close any door left open by a prior test (beforeAll is shared across tests)
     const token = await alicePage.evaluate(() => localStorage.getItem('token'));
     await alicePage.evaluate(async (tok) => {
-      await fetch('http://localhost:3000/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
+      await fetch('http://localhost:3001/api/status', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
     }, token);
     await alicePage.reload();
     await alicePage.waitForLoadState('domcontentloaded');
 
     // Alice opens her door with a recognisable note (fill note first, then click)
     await alicePage.getByPlaceholder(/or write your own note/i).fill('Closing test');
-    await alicePage.getByRole('button', { name: /open the door/i }).click();
+    await alicePage.getByRole('button', { name: /open now/i }).click();
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
     // Bob sees Alice's door
@@ -190,7 +190,7 @@ test('Alice closes her door manually — it disappears from Bob\'s feed', async 
 
     // Alice's view should return to the closed state (no longer showing "You're open!")
     await expect(alicePage.getByText(/you're open/i)).not.toBeVisible({ timeout: 5_000 });
-    await expect(alicePage.getByRole('button', { name: /open the door/i })).toBeVisible({ timeout: 5_000 });
+    await expect(alicePage.getByRole('button', { name: /open now/i })).toBeVisible({ timeout: 5_000 });
 
     // Bob reloads — Alice's door should no longer appear
     await bobPage.reload();

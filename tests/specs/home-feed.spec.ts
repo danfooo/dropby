@@ -3,7 +3,7 @@ import { resetTestUsers, makeFriends } from '../helpers/server';
 import { setupUser, loginUser } from '../helpers/auth';
 import { ALICE, BOB, CAROL } from '../helpers/users';
 
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3001';
 
 let aliceId = '';
 let bobId = '';
@@ -36,7 +36,7 @@ test.beforeAll(async ({ browser }) => {
 // Helper: close active door via API
 async function closeDoor(page: any, token: string) {
   await page.evaluate(async (tok: string) => {
-    await fetch('http://localhost:3000/api/status', {
+    await fetch('http://localhost:3001/api/status', {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${tok}` },
     });
@@ -123,7 +123,7 @@ test('Scheduled: friend scheduled session appears under its time group heading',
     // Cancel Bob's scheduled session
     const bobToken = await bobPage.evaluate(() => localStorage.getItem('token'));
     await bobPage.evaluate(async (tok: string) => {
-      await fetch('http://localhost:3000/api/status/scheduled', {
+      await fetch('http://localhost:3001/api/status/scheduled', {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${tok}` },
       });

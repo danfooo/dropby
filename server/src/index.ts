@@ -26,7 +26,7 @@ const avatarsDir = join(process.cwd(), 'data', 'avatars');
 mkdirSync(avatarsDir, { recursive: true });
 
 app.use(cors({
-  origin: isDev ? ['http://localhost:5173', 'http://localhost:4173'] : true,
+  origin: isDev ? ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173'] : true,
   credentials: true,
 }));
 

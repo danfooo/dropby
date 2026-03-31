@@ -3,7 +3,7 @@ import { resetTestUsers, makeFriends, getUserStatus } from '../helpers/server';
 import { setupUser, loginUser } from '../helpers/auth';
 import { ALICE, BOB, CAROL } from '../helpers/users';
 
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3001';
 
 let aliceId = '';
 let bobId = '';
@@ -306,7 +306,7 @@ test('Muted friend is excluded from recipient list when host opens door', async 
     await expect(alicePage.getByText('Carol')).toBeVisible({ timeout: 10_000 });
 
     // Alice opens her door (no explicit recipient selection — relies on UI defaults)
-    await alicePage.getByRole('button', { name: /open the door/i }).click();
+    await alicePage.getByRole('button', { name: /open now/i }).click();
     await expect(alicePage.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 
     // Verify via the status API that Bob is NOT a recipient but Carol IS

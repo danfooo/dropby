@@ -41,7 +41,7 @@ test('User changes language preference — language selector updates', async ({ 
 
 test('User adds a reminder — it appears in the reminders list', async ({ page }) => {
   await setupUser(page, ALICE);
-  await page.goto('/profile');
+  await page.goto('/notifications');
   await page.waitForLoadState('domcontentloaded');
 
   // Click the "+ Add" button in the Reminders section header
@@ -73,14 +73,14 @@ test('User removes a reminder — it disappears from the reminders list', async 
   // Add a reminder directly via the API (via page.evaluate) to set up state faster
   await page.evaluate(async () => {
     const token = localStorage.getItem('token');
-    await fetch('http://localhost:3000/api/nudges', {
+    await fetch('/api/nudges', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ day_of_week: 'sat', hour: 11 }),
     });
   });
 
-  await page.goto('/profile');
+  await page.goto('/notifications');
   await page.waitForLoadState('domcontentloaded');
 
   // Saturday reminder should be visible

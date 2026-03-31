@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { getVerificationLink } from './server';
 
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3001';
 
 export interface UserData {
   email: string;

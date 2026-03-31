@@ -30,13 +30,13 @@ export default defineConfig({
     proxy: {
       // API calls
       '/api': {
-        target: 'http://localhost:3000',
+        target: `http://localhost:${process.env.VITE_SERVER_PORT || 3000}`,
         changeOrigin: true,
       },
       // Static files served by Express (avatars, uploads, etc.)
       // Matches /segment/filename.ext but excludes Vite internals (/src, /node_modules, /@)
       '^/(?!src|node_modules|@)[^./]+/[^/]+\\.[^/]+$': {
-        target: 'http://localhost:3000',
+        target: `http://localhost:${process.env.VITE_SERVER_PORT || 3000}`,
         changeOrigin: true,
       },
     },

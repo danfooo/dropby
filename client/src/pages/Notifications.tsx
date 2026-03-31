@@ -177,7 +177,7 @@ export default function Notifications() {
                   <span className="text-sm text-gray-900 dark:text-gray-50">
                     {t(`profile.days.${n.day_of_week}`)} {formatHour(n.hour)}
                   </span>
-                  <button onClick={() => removeNudge.mutate(n.id)} className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1">
+                  <button data-testid="nudge-remove" onClick={() => removeNudge.mutate(n.id)} className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
