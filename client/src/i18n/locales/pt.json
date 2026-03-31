@@ -321,6 +321,17 @@
     "noReminders": "Sem lembretes definidos.",
     "autoNudgeTitle": "Lembrar-me com base em vezes anteriores",
     "doorClosedTitle": "Confirmar quando a tua porta fecha",
-    "doorClosedDesc": "Uma notificação após o fecho automático, com a opção de voltar a abrir."
+    "doorClosedDesc": "Uma notificação após o fecho automático, com a opção de voltar a abrir.",
+    "sessionRemindersTitle": "Lembretes de sessão",
+    "reminder1Label": "Primeiro lembrete",
+    "reminder2Label": "Segundo lembrete",
+    "reminderOptions": {
+      "none": "Nenhum",
+      "day": "Dia anterior",
+      "120m": "2 horas antes",
+      "60m": "1 hora antes",
+      "30m": "30 min antes",
+      "15m": "15 min antes"
+    }
   }
 }

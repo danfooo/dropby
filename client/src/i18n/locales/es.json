@@ -321,6 +321,17 @@
     "noReminders": "Sin recordatorios.",
     "autoNudgeTitle": "Recuérdame según las veces anteriores",
     "doorClosedTitle": "Confirmar cuando tu puerta se cierra",
-    "doorClosedDesc": "Un aviso tras el cierre automático, con la opción de volver a abrir."
+    "doorClosedDesc": "Un aviso tras el cierre automático, con la opción de volver a abrir.",
+    "sessionRemindersTitle": "Recordatorios de sesión",
+    "reminder1Label": "Primer recordatorio",
+    "reminder2Label": "Segundo recordatorio",
+    "reminderOptions": {
+      "none": "Ninguno",
+      "day": "El día anterior",
+      "120m": "2 horas antes",
+      "60m": "1 hora antes",
+      "30m": "30 min antes",
+      "15m": "15 min antes"
+    }
   }
 }

@@ -39,7 +39,7 @@ export const authApi = {
   resendVerification: (email: string, redirect_url?: string) => api.post('/auth/resend-verification', { email, redirect_url }).then(r => r.data),
   forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }).then(r => r.data),
   resetPassword: (token: string, password: string) => api.post('/auth/reset-password', { token, password }).then(r => r.data),
-  updateMe: (data: { display_name?: string; auto_nudge_enabled?: boolean; notif_door_closed?: boolean }) =>
+  updateMe: (data: { display_name?: string; auto_nudge_enabled?: boolean; notif_door_closed?: boolean; going_reminder_1?: string; going_reminder_2?: string }) =>
     api.put('/auth/me', data).then(r => r.data),
   deleteMe: () => api.delete('/auth/me').then(r => r.data),
   registerPushToken: (token: string, platform: 'ios' | 'android') =>

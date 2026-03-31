@@ -61,7 +61,7 @@ Muting is one-way. A muted friend still receives notifications when the muting u
 | id | uuid PK | |
 | user_id | uuid FK → users | |
 | note | string nullable | Max 60 chars |
-| closes_at | unix timestamp | Creation time + 1800 seconds; updated on each prolong (+1800 seconds) |
+| closes_at | unix timestamp | App auto-reset timer: creation time + 1800 seconds; updated on each prolong (+1800 seconds). This is not a visit end time — guests remain welcome after `closes_at` passes. It exists purely to reset the app automatically so users don't have to remember to close their door. |
 | closed_at | unix timestamp nullable | Set when manually closed; null = still active |
 | closing_notification_sent | boolean | Default false; set to true after the 10-min-before-close push is sent |
 | created_at | unix timestamp | |
@@ -500,8 +500,13 @@ Accessible via the back-arrow header of Home.
 - Dropdown: English (US), English (UK), Deutsch, Español, Français
 - Changes app language immediately (stored in i18next's localStorage persistence)
 
+**Notifications link**
+- "Notifications →" row links to `/notifications` sub-page
+
+### Notifications Page (`/notifications`)
+
 **Reminders section**
-- Description: "We'll send you a notification to open your door."
+- Description: "We'll send you a nudge to open your door."
 - "Add +" button top-right → opens Add Reminder modal
 - If no reminders set: shows the suggested time (Saturday 11am) with an inline "+ Add" button for one-tap add
 - If reminders exist: lists each (day + formatted time), each with an × to remove
@@ -514,8 +519,18 @@ Accessible via the back-arrow header of Home.
 - "Add reminder" button
 
 **Auto-nudge toggle**
-- "Remind me when I opened my door this time last week"
+- "Remind me based on previous times"
 - On by default; toggle persisted via `PUT /api/auth/me { auto_nudge_enabled }`
+
+**Session reminders**
+- Two dropdown selects: "First reminder" and "Second reminder"
+- Options: None, Day before, 2 hours before, 1 hour before, 30 min before, 15 min before
+- Defaults: Day before (primary), 30 min before (secondary)
+- Persisted via `PUT /api/auth/me { going_reminder_1, going_reminder_2 }`
+
+**Door closed confirmation toggle**
+- "Confirm when your door closes" with description "A nudge after it auto-closes, with an option to open again."
+- On by default; toggle persisted via `PUT /api/auth/me { notif_door_closed }`
 
 **Feedback & support group**
 - "Share feedback" button — accent-coloured (purple), opens FeedbackModal
@@ -567,6 +582,7 @@ Accessible via the back-arrow header of Home.
 
 - Manual: "Close now" sets `closed_at = now()`
 - Automatic: server-side job expires statuses where `closed_at IS NULL AND closes_at < now()`
+- After auto-close, host receives a confirmation push if `notif_door_closed` is enabled: "Hope it was a good one. Open again?"
 
 ### Recipient Removal (Undo Pattern)
 
@@ -653,9 +669,13 @@ Sent via FCM (Android) and APNs (iOS).
 | Friend opens door | All selected recipients with OS permission | "[Name]'s door is open" |
 | Going signal or note update | Door opener | "[Name] is on their way" / note as body if provided |
 | 10 min before close | Door opener | "Your door closes in 10 minutes" |
+| Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Hope it was a good one. Open again?" |
+| Friend accepted invite | Inviter | "[Name] just joined your dropby!" |
 | Nudge reminder | User themselves | "Hey, got a free [day]? Open your door" |
-| Auto-nudge | User themselves | "You opened your door this time last week — open it again?" |
-| Going reminder | RSVP'd user (logged-in) | "You said you'd drop by [name]'s at [time] — still heading over?" |
+| Auto-nudge | User themselves | "Open your door again? Change nudge timing anytime in Profile." |
+| Going reminder (primary) | RSVP'd user — day-before window | "[Host] is opening their door tomorrow at [time]" |
+| Going reminder (secondary) | RSVP'd user — e.g. 30 min before | "[Host]'s starts at [time]" |
+| Re-engagement | User with friends, no door opened in 7+ days | "It's been a while. Open your door?" |
 
 Muting user A suppresses:
 - A being notified when the muting user opens their door (A is unchecked by default)
@@ -668,13 +688,22 @@ Muting user A suppresses:
 - Suppressed if user already has an active status at the scheduled time
 - No cap on number of slots
 
-### Going Reminder
+### Going Reminders
 
-- Sent to logged-in users who RSVPd "Going" to a **scheduled session**, approximately 30 minutes before it starts
-- Only sent once per going signal (`reminder_sent` flag prevents re-sending)
+- Sent to logged-in users who RSVPd "Going" to a **scheduled session**
 - Not sent to guest (unauthenticated) RSVPs — no push token available
-- Copy: "You said you'd drop by [host name]'s at [time] — still heading over?"
+- Two configurable reminders per user (global settings, not per-session):
+  - **Primary** (`going_reminder_1`): defaults to "day" (fires 20–28 h before start); copy: "[Host] is opening their door tomorrow at [time]"
+  - **Secondary** (`going_reminder_2`): defaults to "30m" (fires 25–35 min before start); copy: "[Host]'s starts at [time]"
+- Options: none, day before, 120 min, 60 min, 30 min, 15 min
+- Flags `reminder_1_sent` and `reminder_sent` on `going_signals` prevent re-sending
 - Complements ICS calendar downloads; no harm in a user receiving both
+
+### Re-engagement
+
+- Daily cron at 12:00 UTC checks for users who have not opened their door in 7+ days and have at least one friend
+- Not sent if a re-engagement notification was already sent in the last 14 days (`last_reengagement_at` on `users`)
+- Copy: "It's been a while. Open your door?"
 
 ### Auto-Nudge (Repeat Behaviour)
 
@@ -793,9 +822,10 @@ All server-side analytics are written to the `event_log` table by `server/src/se
 | `going.sent` | Going signal submitted | `rsvp: string`, `is_guest: boolean` |
 | `invite.viewed` | Invite link opened | `has_active_door: boolean` |
 | `invite.accepted` | Invite link accepted (friendship created) | — |
-| `nudge.sent` | Nudge push notification sent by cron | `type: "scheduled" \| "auto"` |
+| `nudge.sent` | Nudge push notification sent by cron | `type: "scheduled" \| "auto" \| "going_reminder_1" \| "going_reminder_2" \| "reengagement"` |
 | `push.sent` | Door-open push notification delivered | `type: "door_open"` |
 | `push.fail` | Push notification delivery failed | `type`, `platform`, `error` |
+| `chip.selected` | Suggestion chip tapped on Home screen | `chip: "im_home" \| "suggestion"`, `index: number` |
 
 ### Retention
 

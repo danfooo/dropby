@@ -321,6 +321,17 @@
     "noReminders": "Aucun rappel configuré.",
     "autoNudgeTitle": "Me rappeler selon les fois précédentes",
     "doorClosedTitle": "Confirmer quand ta porte se ferme",
-    "doorClosedDesc": "Une notification après la fermeture automatique, avec l'option de rouvrir."
+    "doorClosedDesc": "Une notification après la fermeture automatique, avec l'option de rouvrir.",
+    "sessionRemindersTitle": "Rappels de session",
+    "reminder1Label": "Premier rappel",
+    "reminder2Label": "Deuxième rappel",
+    "reminderOptions": {
+      "none": "Aucun",
+      "day": "La veille",
+      "120m": "2 heures avant",
+      "60m": "1 heure avant",
+      "30m": "30 min avant",
+      "15m": "15 min avant"
+    }
   }
 }

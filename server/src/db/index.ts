@@ -234,5 +234,18 @@ if (!statusCols.find(c => c.name === 'auto_close_notification_sent')) {
 if (!cols.find(c => c.name === 'notif_door_closed')) {
   db.exec('ALTER TABLE users ADD COLUMN notif_door_closed INTEGER NOT NULL DEFAULT 1');
 }
+if (!cols.find(c => c.name === 'going_reminder_1')) {
+  db.exec("ALTER TABLE users ADD COLUMN going_reminder_1 TEXT NOT NULL DEFAULT 'day'");
+}
+if (!cols.find(c => c.name === 'going_reminder_2')) {
+  db.exec("ALTER TABLE users ADD COLUMN going_reminder_2 TEXT NOT NULL DEFAULT '30m'");
+}
+if (!cols.find(c => c.name === 'last_reengagement_at')) {
+  db.exec('ALTER TABLE users ADD COLUMN last_reengagement_at INTEGER');
+}
+
+if (!goingCols.find(c => c.name === 'reminder_1_sent')) {
+  db.exec('ALTER TABLE going_signals ADD COLUMN reminder_1_sent INTEGER NOT NULL DEFAULT 0');
+}
 
 export default db;

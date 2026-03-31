@@ -321,6 +321,17 @@
     "noReminders": "No reminders set.",
     "autoNudgeTitle": "Remind me based on previous times",
     "doorClosedTitle": "Confirm when your door closes",
-    "doorClosedDesc": "A nudge after it auto-closes, with an option to open again."
+    "doorClosedDesc": "A nudge after it auto-closes, with an option to open again.",
+    "sessionRemindersTitle": "Session reminders",
+    "reminder1Label": "First reminder",
+    "reminder2Label": "Second reminder",
+    "reminderOptions": {
+      "none": "None",
+      "day": "Day before",
+      "120m": "2 hours before",
+      "60m": "1 hour before",
+      "30m": "30 min before",
+      "15m": "15 min before"
+    }
   }
 }

@@ -321,6 +321,17 @@
     "noReminders": "Inga påminnelser inställda.",
     "autoNudgeTitle": "Påminn mig baserat på tidigare tider",
     "doorClosedTitle": "Bekräfta när din dörr stängs",
-    "doorClosedDesc": "En notis efter automatisk stängning, med möjlighet att öppna igen."
+    "doorClosedDesc": "En notis efter automatisk stängning, med möjlighet att öppna igen.",
+    "sessionRemindersTitle": "Sessionspåminnelser",
+    "reminder1Label": "Första påminnelse",
+    "reminder2Label": "Andra påminnelse",
+    "reminderOptions": {
+      "none": "Ingen",
+      "day": "Dagen innan",
+      "120m": "2 timmar innan",
+      "60m": "1 timme innan",
+      "30m": "30 min innan",
+      "15m": "15 min innan"
+    }
   }
 }

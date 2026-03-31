@@ -216,15 +216,40 @@ export function notifyGoingSignal(hostId: string, guestName: string, note?: stri
   );
 }
 
-export function notifyGoingReminder(userId: string, hostName: string, startsAt: number) {
+export function notifyGoingReminder(userId: string, hostName: string, startsAt: number, type: 'day' | 'soon' = 'soon') {
   const tokens = getPushTokens(userId);
   const date = new Date(startsAt * 1000);
   const timeStr = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const body = type === 'day'
+    ? `${hostName} is opening their door tomorrow at ${timeStr}`
+    : `${hostName}'s starts at ${timeStr}`;
   tokens.forEach(t =>
     sendPush(userId, t.token, t.platform, {
       title: 'dropby',
-      body: `You said you'd drop by ${hostName}'s at ${timeStr} — still heading over?`,
+      body,
       data: { type: 'going_reminder' },
+    })
+  );
+}
+
+export function notifyFriendJoined(inviterId: string, newFriendName: string) {
+  const tokens = getPushTokens(inviterId);
+  tokens.forEach(t =>
+    sendPush(inviterId, t.token, t.platform, {
+      title: 'dropby',
+      body: `${newFriendName} just joined your dropby!`,
+      data: { type: 'friend_joined' },
+    })
+  );
+}
+
+export function notifyReengagement(userId: string) {
+  const tokens = getPushTokens(userId);
+  tokens.forEach(t =>
+    sendPush(userId, t.token, t.platform, {
+      title: 'dropby',
+      body: "It's been a while. Open your door?",
+      data: { type: 'reengagement' },
     })
   );
 }

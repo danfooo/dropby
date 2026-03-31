@@ -113,9 +113,11 @@ export default function Notifications() {
   const { data: nudges = [] } = useQuery({ queryKey: ['nudges'], queryFn: nudgesApi.list });
 
   const updateMe = useMutation({
-    mutationFn: (data: { auto_nudge_enabled?: boolean; notif_door_closed?: boolean }) => authApi.updateMe(data),
+    mutationFn: (data: { auto_nudge_enabled?: boolean; notif_door_closed?: boolean; going_reminder_1?: string; going_reminder_2?: string }) => authApi.updateMe(data),
     onSuccess: updated => setUser(updated),
   });
+
+  const REMINDER_OPTIONS = ['none', 'day', '120m', '60m', '30m', '15m'] as const;
 
   const removeNudge = useMutation({
     mutationFn: (id: string) => nudgesApi.remove(id),
@@ -197,6 +199,35 @@ export default function Notifications() {
                 updateMe.mutate({ auto_nudge_enabled: !user?.auto_nudge_enabled });
               }}
             />
+          </div>
+        </div>
+
+        {/* Session reminders */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-50">{t('notifications.sessionRemindersTitle')}</h2>
+          <div className="flex items-center justify-between">
+            <label className="text-sm text-gray-700 dark:text-gray-300">{t('notifications.reminder1Label')}</label>
+            <select
+              value={user?.going_reminder_1 ?? 'day'}
+              onChange={e => updateMe.mutate({ going_reminder_1: e.target.value })}
+              className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 outline-none"
+            >
+              {REMINDER_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{t(`notifications.reminderOptions.${opt}`)}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center justify-between">
+            <label className="text-sm text-gray-700 dark:text-gray-300">{t('notifications.reminder2Label')}</label>
+            <select
+              value={user?.going_reminder_2 ?? '30m'}
+              onChange={e => updateMe.mutate({ going_reminder_2: e.target.value })}
+              className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 outline-none"
+            >
+              {REMINDER_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{t(`notifications.reminderOptions.${opt}`)}</option>
+              ))}
+            </select>
           </div>
         </div>
 

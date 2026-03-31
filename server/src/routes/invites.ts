@@ -5,6 +5,7 @@ import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.js';
 import { areFriends } from './friends.js';
 import { sendInviteEmail } from '../services/email.js';
 import { log } from '../services/analytics.js';
+import { notifyFriendJoined } from '../services/notifications.js';
 
 const router = Router();
 
@@ -183,6 +184,10 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
   const [a, b] = [userId, inviterId].sort();
   db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
   log('invite.accepted', userId);
+
+  // Notify the inviter that their new friend joined
+  const acceptor = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+  if (acceptor) notifyFriendJoined(inviterId, acceptor.display_name);
 
   // If inviter has active status, auto-add new friend as recipient (silently)
   if (invite.status_id) {

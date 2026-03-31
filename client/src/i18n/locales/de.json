@@ -321,6 +321,17 @@
     "noReminders": "Keine Erinnerungen gesetzt.",
     "autoNudgeTitle": "Erinnere mich anhand früherer Zeiten",
     "doorClosedTitle": "Bestätige, wenn deine Tür schließt",
-    "doorClosedDesc": "Eine kurze Meldung nach dem automatischen Schließen, mit der Option, wieder zu öffnen."
+    "doorClosedDesc": "Eine kurze Meldung nach dem automatischen Schließen, mit der Option, wieder zu öffnen.",
+    "sessionRemindersTitle": "Sitzungserinnerungen",
+    "reminder1Label": "Erste Erinnerung",
+    "reminder2Label": "Zweite Erinnerung",
+    "reminderOptions": {
+      "none": "Keine",
+      "day": "Tag vorher",
+      "120m": "2 Stunden vorher",
+      "60m": "1 Stunde vorher",
+      "30m": "30 Min. vorher",
+      "15m": "15 Min. vorher"
+    }
   }
 }

@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { db } from './db/index.js';
-import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder } from './services/notifications.js';
+import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder, notifyReengagement } from './services/notifications.js';
 import { broadcastSSE } from './services/sse.js';
 import { randomUUID } from 'crypto';
 import { log } from './services/analytics.js';
@@ -247,29 +247,84 @@ setInterval(() => {
   }
 }, 10_000);
 
-// Every minute: fire "you said you were going" reminders for upcoming scheduled sessions
+// Helper: compute the seconds-before-start window for a reminder setting
+function getReminderWindow(setting: string): { min: number; max: number } | null {
+  if (!setting || setting === 'none') return null;
+  if (setting === 'day') return { min: 20 * 3600, max: 28 * 3600 };
+  const m = setting.match(/^(\d+)m$/);
+  if (!m) return null;
+  const secs = parseInt(m[1]) * 60;
+  return { min: secs - 5 * 60, max: secs + 5 * 60 };
+}
+
+// Every minute: fire going reminders (primary + secondary) for upcoming scheduled sessions
 cron.schedule('* * * * *', () => {
   const now = Math.floor(Date.now() / 1000);
-  const windowStart = now + 25 * 60;
-  const windowEnd = now + 35 * 60;
+
+  type GoingRow = { id: string; user_id: string; starts_at: number; host_name: string; going_reminder_1: string; going_reminder_2: string; reminder_1_sent: number; reminder_sent: number };
 
   const signals = db.prepare(`
-    SELECT gs.id, gs.user_id, s.starts_at, u.display_name as host_name
+    SELECT gs.id, gs.user_id, s.starts_at,
+           u2.display_name as host_name,
+           u1.going_reminder_1, u1.going_reminder_2,
+           gs.reminder_1_sent, gs.reminder_sent
     FROM going_signals gs
     JOIN statuses s ON s.id = gs.status_id
-    JOIN users u ON u.id = s.user_id
+    JOIN users u1 ON u1.id = gs.user_id
+    JOIN users u2 ON u2.id = s.user_id
     WHERE gs.rsvp = 'going'
-      AND gs.reminder_sent = 0
       AND gs.user_id IS NOT NULL
       AND s.starts_at IS NOT NULL
-      AND s.starts_at > ? AND s.starts_at <= ?
       AND s.closed_at IS NULL
-  `).all(windowStart, windowEnd) as Array<{ id: string; user_id: string; starts_at: number; host_name: string }>;
+      AND (gs.reminder_1_sent = 0 OR gs.reminder_sent = 0)
+  `).all() as GoingRow[];
 
   for (const signal of signals) {
-    notifyGoingReminder(signal.user_id, signal.host_name, signal.starts_at);
-    db.prepare('UPDATE going_signals SET reminder_sent = 1 WHERE id = ?').run(signal.id);
-    log('nudge.sent', signal.user_id, { type: 'going_reminder' });
+    const secondsUntil = signal.starts_at - now;
+
+    // Primary reminder (reminder_1)
+    if (!signal.reminder_1_sent) {
+      const w1 = getReminderWindow(signal.going_reminder_1 ?? 'day');
+      if (w1 && secondsUntil >= w1.min && secondsUntil <= w1.max) {
+        const type = signal.going_reminder_1 === 'day' ? 'day' : 'soon';
+        notifyGoingReminder(signal.user_id, signal.host_name, signal.starts_at, type);
+        db.prepare('UPDATE going_signals SET reminder_1_sent = 1 WHERE id = ?').run(signal.id);
+        log('nudge.sent', signal.user_id, { type: 'going_reminder_1' });
+      }
+    }
+
+    // Secondary reminder (reminder_sent)
+    if (!signal.reminder_sent) {
+      const w2 = getReminderWindow(signal.going_reminder_2 ?? '30m');
+      if (w2 && secondsUntil >= w2.min && secondsUntil <= w2.max) {
+        notifyGoingReminder(signal.user_id, signal.host_name, signal.starts_at, 'soon');
+        db.prepare('UPDATE going_signals SET reminder_sent = 1 WHERE id = ?').run(signal.id);
+        log('nudge.sent', signal.user_id, { type: 'going_reminder_2' });
+      }
+    }
+  }
+});
+
+// Daily at 12:00 UTC: re-engagement nudge for users who haven't opened in 7+ days
+cron.schedule('0 12 * * *', () => {
+  const now = Math.floor(Date.now() / 1000);
+  const sevenDaysAgo = now - 7 * 86400;
+  const fourteenDaysAgo = now - 14 * 86400;
+
+  const candidates = db.prepare(`
+    SELECT u.id
+    FROM users u
+    WHERE EXISTS (SELECT 1 FROM friendships WHERE user_a_id = u.id OR user_b_id = u.id)
+      AND (u.last_reengagement_at IS NULL OR u.last_reengagement_at < ?)
+      AND NOT EXISTS (
+        SELECT 1 FROM statuses WHERE user_id = u.id AND created_at >= ?
+      )
+  `).all(fourteenDaysAgo, sevenDaysAgo) as Array<{ id: string }>;
+
+  for (const u of candidates) {
+    notifyReengagement(u.id);
+    db.prepare('UPDATE users SET last_reengagement_at = ? WHERE id = ?').run(now, u.id);
+    log('nudge.sent', u.id, { type: 'reengagement' });
   }
 });
 

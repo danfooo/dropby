@@ -321,6 +321,17 @@
     "noReminders": "Nessun promemoria impostato.",
     "autoNudgeTitle": "Ricordamelo in base alle volte precedenti",
     "doorClosedTitle": "Conferma quando la tua porta si chiude",
-    "doorClosedDesc": "Una notifica dopo la chiusura automatica, con l'opzione di riaprire."
+    "doorClosedDesc": "Una notifica dopo la chiusura automatica, con l'opzione di riaprire.",
+    "sessionRemindersTitle": "Promemoria sessione",
+    "reminder1Label": "Primo promemoria",
+    "reminder2Label": "Secondo promemoria",
+    "reminderOptions": {
+      "none": "Nessuno",
+      "day": "Il giorno prima",
+      "120m": "2 ore prima",
+      "60m": "1 ora prima",
+      "30m": "30 min prima",
+      "15m": "15 min prima"
+    }
   }
 }
