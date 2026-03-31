@@ -11,7 +11,6 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 
 ## Email
 - [ ] Set up `hi@dropby.cc` mailbox — email access for dropby.cc domain not yet configured (needed for imprint contact + support)
-- [ ] Update `rua` in DMARC record once `hello@` or a dedicated address is receiving mail (or remove `rua` if reports aren't needed)
 - [ ] Update Google OAuth consent screen support email to `hi@dropby.cc` — requires creating a Google account for `hi@dropby.cc` (via "use my current email address") so it appears in the dropdown
 
 ## Android
@@ -29,4 +28,5 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] Rate limiting (none in v1)
 
 ## Not needed for launch
+- [ ] Remove or update `rua` in DMARC record (currently no mailbox receiving aggregate reports)
 - [ ] GitHub Actions deploy-on-push (manual `fly deploy` is fine for now)
