@@ -200,7 +200,7 @@
     "hide": "Nascondi",
     "notifTitle": "Notifiche",
     "notifAll": "Tutte le notifiche",
-    "notifDefault": "Occasionalmente",
+    "notifDefault": "Predefinito",
     "notifNone": "Silenzia",
     "openLinksTitle": "Link di invito aperti",
     "inviteLinkLabel": "Link invito, {{time}}",

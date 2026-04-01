@@ -200,7 +200,7 @@
     "hide": "Ocultar",
     "notifTitle": "Notificações",
     "notifAll": "Todas as notificações",
-    "notifDefault": "Ocasionalmente",
+    "notifDefault": "Padrão",
     "notifNone": "Silenciá-los",
     "openLinksTitle": "Links de convite abertos",
     "inviteLinkLabel": "Link de convite, {{time}}",

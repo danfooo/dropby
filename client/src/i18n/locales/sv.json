@@ -200,7 +200,7 @@
     "hide": "Dölj",
     "notifTitle": "Notiser",
     "notifAll": "Alla notiser",
-    "notifDefault": "Ibland",
+    "notifDefault": "Standard",
     "notifNone": "Tysta dem",
     "openLinksTitle": "Öppna inbjudningslänkar",
     "inviteLinkLabel": "Inbjudningslänk, {{time}}",

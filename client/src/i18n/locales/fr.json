@@ -200,7 +200,7 @@
     "hide": "Masquer",
     "notifTitle": "Notifications",
     "notifAll": "Toutes les notifications",
-    "notifDefault": "Occasionnellement",
+    "notifDefault": "Par défaut",
     "notifNone": "Les mettre en sourdine",
     "openLinksTitle": "Liens d'invitation actifs",
     "inviteLinkLabel": "Lien d'invitation, {{time}}",

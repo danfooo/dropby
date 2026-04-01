@@ -172,7 +172,7 @@ export default function Friends() {
           <>
             {/* Active friends */}
             {activeFriends.length > 0 && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
                 {activeFriends.map((f: any, i: number) => {
                   const pref: NotifPref = f.notif_pref ?? 'default';
                   const pickerOpen = notifPickerFor === f.id;

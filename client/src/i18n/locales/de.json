@@ -200,7 +200,7 @@
     "hide": "Ausblenden",
     "notifTitle": "Benachrichtigungen",
     "notifAll": "Alle Benachrichtigungen",
-    "notifDefault": "Gelegentlich",
+    "notifDefault": "Standard",
     "notifNone": "Stummschalten",
     "openLinksTitle": "Offene Einladungslinks",
     "inviteLinkLabel": "Einladungslink, {{time}}",
