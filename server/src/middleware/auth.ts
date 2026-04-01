@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { jwtVerify } from 'jose';
 import { db } from '../db/index.js';
 
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET env var must be set in production');
+}
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'dev-secret-change-in-production'
 );

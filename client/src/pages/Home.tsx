@@ -700,7 +700,7 @@ export default function Home() {
 
       {/* Going signals */}
       {myStatus?.going_signals?.length > 0 && (
-        <div className="bg-emerald-50 dark:bg-emerald-950/60 rounded-2xl p-4 mb-3 border border-emerald-100 dark:border-emerald-800/50">
+        <div data-testid="going-signals" className="bg-emerald-50 dark:bg-emerald-950/60 rounded-2xl p-4 mb-3 border border-emerald-100 dark:border-emerald-800/50">
           <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2">{t('home.onTheirWay')}</h2>
           {myStatus.going_signals.map((g: any) => (
             <div key={g.id} className="py-1">

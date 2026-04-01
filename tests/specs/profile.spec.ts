@@ -52,13 +52,13 @@ test('User adds a reminder — it appears in the reminders list', async ({ page 
   await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5_000 });
 
   // Click the "Sat" day button
-  await page.getByRole('dialog').getByRole('button', { name: /sat/i }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /^sat$/i }).click();
 
-  // Select hour 11
-  await page.getByRole('dialog').getByRole('button', { name: /11/i }).first().click();
+  // Set the time to 11:00 using the time input
+  await page.getByRole('dialog').locator('input[type="time"]').fill('11:00');
 
   // Click the "Add reminder" confirm button inside the modal
-  await page.getByRole('dialog').getByRole('button', { name: /add reminder/i }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /^add reminder$/i }).click();
 
   // Modal should close and the reminder should appear in the list
   await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5_000 });

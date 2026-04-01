@@ -10,7 +10,7 @@ import { notifyFriendJoined } from '../services/notifications.js';
 const router = Router();
 
 function generateToken(): string {
-  return randomUUID().replace(/-/g, '').slice(0, 16);
+  return randomUUID().replace(/-/g, '');
 }
 
 // POST /api/invites — generate invite link

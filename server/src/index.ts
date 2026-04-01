@@ -25,10 +25,24 @@ const isDev = process.env.NODE_ENV !== 'production';
 const avatarsDir = join(process.cwd(), 'data', 'avatars');
 mkdirSync(avatarsDir, { recursive: true });
 
+const allowedOrigins = isDev
+  ? ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173']
+  : [process.env.APP_URL ?? 'https://drop-by.fly.dev'];
+
 app.use(cors({
-  origin: isDev ? ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173'] : true,
+  origin: allowedOrigins,
   credentials: true,
 }));
+
+// Security headers
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  if (!isDev) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
 
 app.use(express.json());
 

@@ -64,8 +64,8 @@ test('Alice opens her door; Bob sees it and taps Going; Alice sees Bob is on the
     await alicePage.waitForLoadState('domcontentloaded');
 
     // Alice should see the going signals section with Bob listed
-    await expect(alicePage.getByText(/on their way/i)).toBeVisible({ timeout: 10_000 });
-    await expect(alicePage.getByText('Bob').first()).toBeVisible();
+    await expect(alicePage.getByTestId('going-signals')).toBeVisible({ timeout: 10_000 });
+    await expect(alicePage.getByTestId('going-signals').getByText('Bob')).toBeVisible();
   } finally {
     await aliceCtx.close();
     await bobCtx.close();
