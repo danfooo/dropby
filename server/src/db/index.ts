@@ -10,11 +10,13 @@ export const db = new Database(join(DATA_DIR, 'drop-by.db'));
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
-// Must run before CREATE TABLE block: if friend_mutes exists, rename it before
-// CREATE TABLE IF NOT EXISTS friend_hides would create an empty table with that name.
+// Must run before CREATE TABLE block: rename friend_mutes → friend_hides.
+// If a previous failed run already created an empty friend_hides via CREATE TABLE,
+// drop it first so the rename can proceed.
 {
-  const oldTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='friend_mutes'").get();
-  if (oldTable) {
+  const hasMutes = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='friend_mutes'").get();
+  if (hasMutes) {
+    db.exec('DROP TABLE IF EXISTS friend_hides');
     db.exec('ALTER TABLE friend_mutes RENAME TO friend_hides');
     db.exec('ALTER TABLE friend_hides RENAME COLUMN muted_user_id TO hidden_user_id');
   }
