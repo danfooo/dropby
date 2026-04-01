@@ -18,7 +18,6 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
   const handleGoing = async () => {
     const next = myRsvp === 'going' ? null : 'going';
     setMyRsvp(next);
-    if (next === null) { setNoteText(''); lastSentNote.current = ''; }
     await onGoing(status.id, next);
   };
 
@@ -51,33 +50,29 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
         </p>
       )}
 
-      {/* RSVP button */}
-      <button
-        onClick={handleGoing}
-        className={`w-full py-2 rounded-xl text-sm font-semibold transition-colors ${
-          myRsvp === 'going'
-            ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-            : 'bg-emerald-500 hover:bg-emerald-600 text-white'
-        }`}
-      >
-        {myRsvp === 'going' ? `${t('home.rsvpGoing')} ✅` : t('home.rsvpGoing')}
-      </button>
+      {/* I'm going checkbox */}
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={myRsvp === 'going'}
+          onChange={handleGoing}
+          className="w-5 h-5 rounded accent-emerald-500 cursor-pointer"
+        />
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{t('home.rsvpGoing')}</span>
+      </label>
 
-      {/* Note field — shown after Going is confirmed */}
-      {myRsvp === 'going' && (
-        <div className="mt-3">
-          <input
-            type="text"
-            value={noteText}
-            onChange={e => setNoteText(e.target.value)}
-            onBlur={handleNoteBlur}
-            onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-            placeholder={t('home.rsvpNotePlaceholder')}
-            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-          />
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">{t('home.rsvpNoteHint')}</p>
-        </div>
-      )}
+      {/* Note field — always visible */}
+      <div className="mt-3">
+        <input
+          type="text"
+          value={noteText}
+          onChange={e => setNoteText(e.target.value)}
+          onBlur={handleNoteBlur}
+          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          placeholder={t('home.rsvpNotePlaceholder')}
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        />
+      </div>
     </div>
   );
 }

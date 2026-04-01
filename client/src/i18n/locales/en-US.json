@@ -160,7 +160,7 @@
     "scheduleCancelSession": "Cancel session",
     "freeUntil": "Free until {{time}}",
     "opensAt": "Opens {{time}}",
-    "rsvpGoing": "Going",
+    "rsvpGoing": "I'm going",
     "rsvpNotePlaceholder": "Add a note (optional)",
     "rsvpNoteHint": "This is a one-way note, not a chat.",
     "addToCalendar": "Add to Calendar",
