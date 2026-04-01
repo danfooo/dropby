@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { copyText } from '../utils/clipboard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +40,18 @@ export default function Friends() {
   const [addMsg, setAddMsg] = useState('');
   const [error, setError] = useState('');
   const [notifPickerFor, setNotifPickerFor] = useState<string | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!notifPickerFor) return;
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setNotifPickerFor(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [notifPickerFor]);
 
   const { data: friends = [], isLoading } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
   const { data: pendingInvites = [] } = useQuery({ queryKey: ['pending-invites'], queryFn: invitesApi.listPending });
@@ -165,7 +177,7 @@ export default function Friends() {
                   const pref: NotifPref = f.notif_pref ?? 'default';
                   const pickerOpen = notifPickerFor === f.id;
                   return (
-                    <div key={f.id}>
+                    <div key={f.id} className="relative">
                       <div className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
                         <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                         <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
@@ -184,20 +196,35 @@ export default function Friends() {
                           {t('friends.hide')}
                         </button>
                       </div>
-                      {/* Inline notif picker */}
+                      {/* Floating notif picker */}
                       {pickerOpen && (
-                        <div className="border-t border-gray-50 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-4 py-2 flex gap-2">
-                          {(['none', 'default', 'all'] as NotifPref[]).map(option => (
+                        <div ref={pickerRef} className="absolute right-3 bottom-full mb-1 z-20 w-48 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+                          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-800">
+                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('friends.notifTitle')}</span>
+                          </div>
+                          {([
+                            { value: 'all' as NotifPref, label: t('friends.notifAll') },
+                            { value: 'default' as NotifPref, label: t('friends.notifDefault') },
+                            { value: 'none' as NotifPref, label: t('friends.notifNone') },
+                          ]).map(({ value, label }) => (
                             <button
-                              key={option}
-                              onClick={() => setNotifPref.mutate({ friendId: f.id, pref: option })}
-                              className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                                pref === option
-                                  ? 'bg-emerald-500 text-white'
-                                  : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+                              key={value}
+                              onClick={() => setNotifPref.mutate({ friendId: f.id, pref: value })}
+                              className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between ${
+                                pref === value
+                                  ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+                                  : 'text-gray-700 dark:text-gray-300'
                               }`}
                             >
-                              {t(`friends.notif${option.charAt(0).toUpperCase()}${option.slice(1)}`)}
+                              {label}
+                              {pref === value && (
+                                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                              )}
                             </button>
                           ))}
                         </div>
