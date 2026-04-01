@@ -146,4 +146,6 @@ export const feedbackApi = {
 export const trackApi = {
   chipSelected: (data: { chip: 'im_home' | 'suggestion'; index: number }) =>
     api.post('/track', { event: 'chip.selected', data }).catch(() => {}),
+  event: (event: string, data?: Record<string, unknown>) =>
+    api.post('/track', { event, data }).catch(() => {}),
 };

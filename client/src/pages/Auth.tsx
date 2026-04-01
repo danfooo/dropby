@@ -4,7 +4,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { Capacitor } from '@capacitor/core';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import { authApi, invitesApi, associatePendingGuest } from '../api';
+import { authApi, invitesApi, associatePendingGuest, trackApi } from '../api';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
 
@@ -35,11 +35,7 @@ export default function Auth() {
     // Track auth page views for signup funnel analysis.
     // Intent = signup if arriving via invite redirect, login otherwise.
     const intent = redirect.startsWith('/invite/') ? 'signup' : 'login';
-    fetch('/api/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event: 'page.auth_viewed', data: { intent } }),
-    }).catch(() => {});
+    trackApi.event('page.auth_viewed', { intent });
   }, []);
 
   useEffect(() => {
