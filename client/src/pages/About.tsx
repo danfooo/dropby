@@ -6,7 +6,7 @@ export default function About() {
   const backTo = user ? '/profile' : '/';
 
   return (
-    <div className="min-h-full bg-white dark:bg-gray-950 px-6 py-10">
+    <div className="min-h-full bg-white dark:bg-gray-950 px-6 pb-10 safe-top">
       <div className="max-w-lg mx-auto">
         <Link to={backTo} className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mb-8 block">
           ← Back
