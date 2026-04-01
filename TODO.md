@@ -6,6 +6,9 @@
 
 All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`) still use the **centered** composition (scale 1.05). If the cropped style is confirmed as the final direction, those should be updated too and Android icons regenerated.
 
+## Apple Sign In
+- [ ] Register domain in Apple Developer Console under **Sign in with Apple for Email Communication** (Certificates, Identifiers & Profiles → More) — required for "Hide My Email" to work on web. Without it, Apple shows "Sign-Up Not Completed" inside its popup.
+
 ## Legal
 - [ ] Replace imprint address with a proxy/forwarding address (currently home address in `client/src/pages/About.tsx`)
 
