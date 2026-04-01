@@ -35,12 +35,12 @@ db.exec(`
     UNIQUE(user_a_id, user_b_id)
   );
 
-  CREATE TABLE IF NOT EXISTS friend_mutes (
+  CREATE TABLE IF NOT EXISTS friend_hides (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    muted_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    hidden_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at INTEGER NOT NULL DEFAULT (unixepoch()),
-    UNIQUE(user_id, muted_user_id)
+    UNIQUE(user_id, hidden_user_id)
   );
 
   CREATE TABLE IF NOT EXISTS statuses (
@@ -166,6 +166,14 @@ db.exec(`
 `);
 
 // Migrations for existing databases
+
+// Rename friend_mutes → friend_hides (terminology: hide = excluded from UI, mute = notification setting)
+const oldHideTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='friend_mutes'").get();
+if (oldHideTable) {
+  db.exec('ALTER TABLE friend_mutes RENAME TO friend_hides');
+  db.exec('ALTER TABLE friend_hides RENAME COLUMN muted_user_id TO hidden_user_id');
+}
+
 const cols = db.pragma('table_info(users)') as { name: string }[];
 if (!cols.find(c => c.name === 'apple_id')) {
   db.exec('ALTER TABLE users ADD COLUMN apple_id TEXT');

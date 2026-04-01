@@ -39,7 +39,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
   const [editNote, setEditNote] = useState(session.note || '');
   const [editRecipients, setEditRecipients] = useState<string[]>((session.recipients || []).map((r: any) => r.id));
 
-  const activeFriends = friends.filter((f: any) => !f.muted);
+  const activeFriends = friends.filter((f: any) => !f.hidden);
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
 
   if (editing) {

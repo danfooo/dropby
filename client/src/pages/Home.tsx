@@ -158,11 +158,11 @@ export default function Home() {
   useEffect(() => {
     if (!lastSelection || !friends.length) return;
     const unselected: string[] = lastSelection.unselected_ids ?? [];
-    const mutedIds = (friends as any[]).filter((f: any) => f.muted).map((f: any) => f.id);
+    const hiddenIds = (friends as any[]).filter((f: any) => f.hidden).map((f: any) => f.id);
     setSelectedRecipients(
       (friends as any[])
         .map((f: any) => f.id)
-        .filter((id: string) => !unselected.includes(id) && !mutedIds.includes(id))
+        .filter((id: string) => !unselected.includes(id) && !hiddenIds.includes(id))
     );
   }, [lastSelection, friends]);
 
@@ -310,7 +310,7 @@ export default function Home() {
   const hasFriends = (friends as any[]).length > 0;
   const activeFriends = useMemo(() => {
     return (friends as any[])
-      .filter((f: any) => !f.muted)
+      .filter((f: any) => !f.hidden)
       .sort((a: any, b: any) => {
         const aChecked = selectedRecipients.includes(a.id);
         const bChecked = selectedRecipients.includes(b.id);
@@ -574,7 +574,7 @@ export default function Home() {
 
           {activeFriends.length > 0 && <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 mb-4">
             <h2 className="text-sm font-semibold mb-3">{t('home.recipients')}</h2>
-            {(friends as any[]).filter((f: any) => !f.muted).map((f: any) => (
+            {(friends as any[]).filter((f: any) => !f.hidden).map((f: any) => (
               <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -590,14 +590,14 @@ export default function Home() {
                 <span className="text-sm">{f.display_name}</span>
               </label>
             ))}
-            {(friends as any[]).some((f: any) => f.muted) ? (
+            {(friends as any[]).some((f: any) => f.hidden) ? (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                {t('home.mutedFriendsHidden')}{' '}
+                {t('home.hiddenFriendsNote')}{' '}
                 <Link to="/friends" className="underline text-gray-500 dark:text-gray-400">{t('home.mutedFriendsChange')}</Link>
               </p>
-            ) : (friends as any[]).filter((f: any) => !f.muted).length >= 5 && (friends as any[]).filter((f: any) => !f.muted).some((f: any) => !editRecipients.includes(f.id)) ? (
+            ) : (friends as any[]).filter((f: any) => !f.hidden).length >= 5 && (friends as any[]).filter((f: any) => !f.hidden).some((f: any) => !editRecipients.includes(f.id)) ? (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                {t('home.muteFriendsHint')}{' '}
+                {t('home.hideFriendsHint')}{' '}
                 <Link to="/friends" className="underline text-gray-500 dark:text-gray-400">{t('home.mutedFriendsChange')}</Link>
               </p>
             ) : null}

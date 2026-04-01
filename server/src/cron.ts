@@ -227,11 +227,11 @@ setInterval(() => {
   for (const status of pending) {
     const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?')
       .all(status.id).map((r: any) => r.user_id);
-    const mutedByHost = db.prepare('SELECT muted_user_id FROM friend_mutes WHERE user_id = ?')
-      .all(status.user_id).map((r: any) => r.muted_user_id);
+    const hiddenByHost = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ?')
+      .all(status.user_id).map((r: any) => r.hidden_user_id);
 
     for (const rid of recipients) {
-      if (mutedByHost.includes(rid)) continue;
+      if (hiddenByHost.includes(rid)) continue;
 
       // Check per-friend notification preference and throttle
       const prefRow = db.prepare(

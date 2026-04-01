@@ -15,24 +15,24 @@ function areFriends(userA: string, userB: string): boolean {
 function getFriendsOf(userId: string) {
   return db.prepare(`
     SELECT u.id, u.display_name, u.email, u.avatar_url,
-      CASE WHEN fm.id IS NOT NULL THEN 1 ELSE 0 END AS muted,
+      CASE WHEN fh.id IS NOT NULL THEN 1 ELSE 0 END AS hidden,
       f.created_at AS friendship_created_at,
       COALESCE(fnp.pref, 'default') AS notif_pref
     FROM friendships f
     JOIN users u ON u.id = CASE WHEN f.user_a_id = ? THEN f.user_b_id ELSE f.user_a_id END
-    LEFT JOIN friend_mutes fm ON fm.user_id = ? AND fm.muted_user_id = u.id
+    LEFT JOIN friend_hides fh ON fh.user_id = ? AND fh.hidden_user_id = u.id
     LEFT JOIN friend_notif_prefs fnp ON fnp.user_id = ? AND fnp.friend_user_id = u.id
     WHERE f.user_a_id = ? OR f.user_b_id = ?
     ORDER BY u.display_name
   `).all(userId, userId, userId, userId, userId) as Array<{
-    id: string; display_name: string; email: string; avatar_url: string | null; muted: number; friendship_created_at: number; notif_pref: string;
+    id: string; display_name: string; email: string; avatar_url: string | null; hidden: number; friendship_created_at: number; notif_pref: string;
   }>;
 }
 
 // GET /api/friends
 router.get('/', requireAuth, (req: AuthRequest, res) => {
   const friends = getFriendsOf(req.userId!);
-  res.json(friends.map(f => ({ ...f, muted: Boolean(f.muted) })));
+  res.json(friends.map(f => ({ ...f, hidden: Boolean(f.hidden) })));
 });
 
 // DELETE /api/friends/:friendId
@@ -60,8 +60,8 @@ router.delete('/:friendId', requireAuth, (req: AuthRequest, res) => {
   res.json({ ok: true });
 });
 
-// POST /api/friends/:friendId/mute
-router.post('/:friendId/mute', requireAuth, (req: AuthRequest, res) => {
+// POST /api/friends/:friendId/hide
+router.post('/:friendId/hide', requireAuth, (req: AuthRequest, res) => {
   const { friendId } = req.params;
   const userId = req.userId!;
 
@@ -70,7 +70,7 @@ router.post('/:friendId/mute', requireAuth, (req: AuthRequest, res) => {
   }
 
   db.prepare(`
-    INSERT OR IGNORE INTO friend_mutes (id, user_id, muted_user_id) VALUES (?, ?, ?)
+    INSERT OR IGNORE INTO friend_hides (id, user_id, hidden_user_id) VALUES (?, ?, ?)
   `).run(randomUUID(), userId, friendId);
 
   // Also mark as unselected in recipient sessions
@@ -87,10 +87,10 @@ router.post('/:friendId/mute', requireAuth, (req: AuthRequest, res) => {
   res.json({ ok: true });
 });
 
-// DELETE /api/friends/:friendId/mute
-router.delete('/:friendId/mute', requireAuth, (req: AuthRequest, res) => {
+// DELETE /api/friends/:friendId/hide
+router.delete('/:friendId/hide', requireAuth, (req: AuthRequest, res) => {
   const { friendId } = req.params;
-  db.prepare('DELETE FROM friend_mutes WHERE user_id = ? AND muted_user_id = ?').run(req.userId, friendId);
+  db.prepare('DELETE FROM friend_hides WHERE user_id = ? AND hidden_user_id = ?').run(req.userId, friendId);
   res.json({ ok: true });
 });
 

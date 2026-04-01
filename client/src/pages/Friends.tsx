@@ -62,8 +62,8 @@ export default function Friends() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['friends'] }),
   });
 
-  const muteFriend = useMutation({
-    mutationFn: (id: string) => friendsApi.mute(id),
+  const hideFriend = useMutation({
+    mutationFn: (id: string) => friendsApi.hide(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['friends'] });
       qc.invalidateQueries({ queryKey: ['friendStatuses'] });
@@ -104,8 +104,8 @@ export default function Friends() {
   const filtered = (friends as any[]).filter((f: any) =>
     f.display_name.toLowerCase().includes(search.toLowerCase())
   );
-  const activeFriends = filtered.filter((f: any) => !f.muted);
-  const mutedFriends = filtered.filter((f: any) => f.muted);
+  const activeFriends = filtered.filter((f: any) => !f.hidden);
+  const hiddenFriends = filtered.filter((f: any) => f.hidden);
 
   const handleInvite = async () => {
     try {
@@ -190,7 +190,7 @@ export default function Friends() {
                         </button>
                         {/* Hide button */}
                         <button
-                          onClick={() => muteFriend.mutate(f.id)}
+                          onClick={() => hideFriend.mutate(f.id)}
                           className="text-sm font-medium text-gray-400 dark:text-gray-500 px-2 py-1"
                         >
                           {t('friends.hide')}
@@ -236,13 +236,13 @@ export default function Friends() {
             )}
 
             {/* Hidden friends */}
-            {mutedFriends.length > 0 && (
+            {hiddenFriends.length > 0 && (
               <>
                 <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
-                  {t('friends.muted')}
+                  {t('friends.hidden')}
                 </h2>
                 <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
-                  {mutedFriends.map((f: any, i: number) => (
+                  {hiddenFriends.map((f: any, i: number) => (
                     <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
                       <Avatar name={f.display_name} url={f.avatar_url} size="sm" className="opacity-60" />
                       <span className="flex-1 text-sm font-medium text-gray-500 dark:text-gray-400">{f.display_name}</span>

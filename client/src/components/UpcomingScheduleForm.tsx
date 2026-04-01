@@ -17,7 +17,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
   const [note, setNote] = useState('');
   const [selectedChip, setSelectedChip] = useState('');
   const [previousNote, setPreviousNote] = useState<string | null>(null);
-  const [recipients, setRecipients] = useState<string[]>(friends.filter((f: any) => !f.muted).map((f: any) => f.id));
+  const [recipients, setRecipients] = useState<string[]>(friends.filter((f: any) => !f.hidden).map((f: any) => f.id));
   const [date, setDate] = useState(todayStr);
   const [start, setStart] = useState(defaultStartTime);
   const [end, setEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
@@ -51,7 +51,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
     setEnd(addHours(date, start, 2));
   }, [date, start]);
 
-  const activeFriends = friends.filter((f: any) => !f.muted);
+  const activeFriends = friends.filter((f: any) => !f.hidden);
   const trimmedNote = note.trim() || undefined;
 
   return (
