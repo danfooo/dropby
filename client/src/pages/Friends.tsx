@@ -72,7 +72,10 @@ export default function Friends() {
 
   const handleInvite = async () => {
     try {
-      await copyText(invitesApi.generate().then(data => `${t('home.friendshipCopyText')}\n${data.url}`));
+      await copyText(invitesApi.generate().then(data => {
+        qc.invalidateQueries({ queryKey: ['open-links'] });
+        return `${t('home.friendshipCopyText')}\n${data.url}`;
+      }));
       alert(t('home.inviteLinkCopied'));
     } catch {
       alert(t('home.couldNotCopy'));
@@ -261,7 +264,7 @@ export default function Friends() {
             onClick={handleInvite}
             className="flex-1 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium"
           >
-            {(openLinks as any[]).length > 0 ? t('friends.copyAnotherInviteLink') : t('friends.copyInviteLink')}
+            {t('friends.copyInviteLink')}
           </button>
           <button
             onClick={() => setShowAddModal(true)}
