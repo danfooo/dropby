@@ -201,10 +201,11 @@
     "muteHint": "× döljer vänner och tystar notiser",
     "removeHint": "× tar bort vänskapet permanent",
     "openLinksTitle": "Öppna inbjudningslänkar",
-    "inviteLinkLabel": "Inbjudningslänk, går ut {{time}}",
-    "linkExpiresInDays": "om {{days}}d",
-    "linkExpiresInHours": "om {{hours}}h",
-    "linkExpiresSoon": "snart"
+    "inviteLinkLabel": "Inbjudningslänk, {{time}}",
+    "linkCreatedDaysAgo": "för {{days}}d sedan",
+    "linkCreatedHoursAgo": "för {{hours}}h sedan",
+    "linkCreatedJustNow": "just nu",
+    "linkExpiryNote": "Länkar upphör efter 7 dagar."
   },
   "invite": {
     "expiredTitle": "Inbjudan utgången",

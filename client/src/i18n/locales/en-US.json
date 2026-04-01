@@ -89,7 +89,7 @@
     "cancel": "Cancel",
     "done": "Done",
     "send": "Send",
-    "appBannerText": "Get the dropby app to be notified when friends open the door, or when they RSVP.",
+    "appBannerText": "Get the dropby app to be notified when friends open the door, or when they respond.",
     "appBannerCta": "Get the app"
   },
   "home": {
@@ -201,10 +201,11 @@
     "muteHint": "× hides friends and mutes notifications",
     "removeHint": "× removes the friendship permanently",
     "openLinksTitle": "Open invite links",
-    "inviteLinkLabel": "Invite link, expires {{time}}",
-    "linkExpiresInDays": "in {{days}}d",
-    "linkExpiresInHours": "in {{hours}}h",
-    "linkExpiresSoon": "soon"
+    "inviteLinkLabel": "Invite link, {{time}}",
+    "linkCreatedDaysAgo": "{{days}}d ago",
+    "linkCreatedHoursAgo": "{{hours}}h ago",
+    "linkCreatedJustNow": "just now",
+    "linkExpiryNote": "Links expire after 7 days."
   },
   "invite": {
     "expiredTitle": "Invite expired",

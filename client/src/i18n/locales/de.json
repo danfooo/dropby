@@ -201,10 +201,11 @@
     "muteHint": "× blendet Freunde aus und stummschaltet Benachrichtigungen",
     "removeHint": "× entfernt die Freundschaft dauerhaft",
     "openLinksTitle": "Offene Einladungslinks",
-    "inviteLinkLabel": "Einladungslink, läuft ab {{time}}",
-    "linkExpiresInDays": "in {{days}}T",
-    "linkExpiresInHours": "in {{hours}}h",
-    "linkExpiresSoon": "bald"
+    "inviteLinkLabel": "Einladungslink, {{time}}",
+    "linkCreatedDaysAgo": "vor {{days}}T",
+    "linkCreatedHoursAgo": "vor {{hours}}h",
+    "linkCreatedJustNow": "gerade eben",
+    "linkExpiryNote": "Links laufen nach 7 Tagen ab."
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",

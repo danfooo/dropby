@@ -204,12 +204,12 @@ export default function Friends() {
               <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
                 {merged.map((item: any, i: number) => {
                   const isLink = item.kind === 'link';
-                  const secsLeft = item.expires_at - now;
-                  const timeLeft = secsLeft > 86400
-                    ? t('friends.linkExpiresInDays', { days: Math.floor(secsLeft / 86400) })
-                    : secsLeft > 3600
-                      ? t('friends.linkExpiresInHours', { hours: Math.floor(secsLeft / 3600) })
-                      : t('friends.linkExpiresSoon');
+                  const ageSecs = now - item.created_at;
+                  const createdAgo = ageSecs < 3600
+                    ? t('friends.linkCreatedJustNow')
+                    : ageSecs < 86400
+                      ? t('friends.linkCreatedHoursAgo', { hours: Math.floor(ageSecs / 3600) })
+                      : t('friends.linkCreatedDaysAgo', { days: Math.floor(ageSecs / 86400) });
 
                   return (
                     <div key={item.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
@@ -224,7 +224,7 @@ export default function Friends() {
                             </svg>
                           </div>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {t('friends.inviteLinkLabel', { time: timeLeft })}
+                            {t('friends.inviteLinkLabel', { time: createdAgo })}
                           </span>
                         </button>
                       ) : (
@@ -250,6 +250,7 @@ export default function Friends() {
                   );
                 })}
               </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 px-1 mt-2 mb-4">{t('friends.linkExpiryNote')}</p>
             </>
           );
         })()}

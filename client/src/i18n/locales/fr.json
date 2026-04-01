@@ -201,10 +201,11 @@
     "muteHint": "× masque les amis et coupe les notifications",
     "removeHint": "× supprime l'amitié définitivement",
     "openLinksTitle": "Liens d'invitation actifs",
-    "inviteLinkLabel": "Lien d'invitation, expire {{time}}",
-    "linkExpiresInDays": "dans {{days}}j",
-    "linkExpiresInHours": "dans {{hours}}h",
-    "linkExpiresSoon": "bientôt"
+    "inviteLinkLabel": "Lien d'invitation, {{time}}",
+    "linkCreatedDaysAgo": "il y a {{days}}j",
+    "linkCreatedHoursAgo": "il y a {{hours}}h",
+    "linkCreatedJustNow": "à l'instant",
+    "linkExpiryNote": "Les liens expirent après 7 jours."
   },
   "invite": {
     "expiredTitle": "Invitation expirée",

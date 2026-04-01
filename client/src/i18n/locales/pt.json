@@ -201,10 +201,11 @@
     "muteHint": "× esconde amigos e silencia notificações",
     "removeHint": "× remove a amizade permanentemente",
     "openLinksTitle": "Links de convite abertos",
-    "inviteLinkLabel": "Link de convite, expira {{time}}",
-    "linkExpiresInDays": "em {{days}}d",
-    "linkExpiresInHours": "em {{hours}}h",
-    "linkExpiresSoon": "em breve"
+    "inviteLinkLabel": "Link de convite, {{time}}",
+    "linkCreatedDaysAgo": "há {{days}}d",
+    "linkCreatedHoursAgo": "há {{hours}}h",
+    "linkCreatedJustNow": "agora mesmo",
+    "linkExpiryNote": "Links expiram após 7 dias."
   },
   "invite": {
     "expiredTitle": "Convite expirado",
