@@ -182,6 +182,7 @@
     "copyInviteLink": "Nouveau lien d'invitation",
     "addByEmail": "Ajouter par e-mail",
     "hidden": "Masqué",
+    "unhide": "Afficher",
     "removeTitle": "Supprimer un ami",
     "removeMessage": "Supprimer {{name}} de tes amis ? Cette action est irréversible.",
     "removeConfirm": "Supprimer",

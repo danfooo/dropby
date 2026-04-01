@@ -71,6 +71,14 @@ export default function Friends() {
     },
   });
 
+  const unhideFriend = useMutation({
+    mutationFn: (id: string) => friendsApi.unhide(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['friends'] });
+      qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    },
+  });
+
   const setNotifPref = useMutation({
     mutationFn: ({ friendId, pref }: { friendId: string; pref: NotifPref }) =>
       friendsApi.setNotifPref(friendId, pref),
@@ -253,10 +261,13 @@ export default function Friends() {
                     <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
                       <Avatar name={f.display_name} url={f.avatar_url} size="sm" className="opacity-60" />
                       <span className="flex-1 text-sm font-medium text-gray-500 dark:text-gray-400">{f.display_name}</span>
-                      {/* Greyed-out bell (not interactive) */}
-                      <span className="p-1.5 opacity-40 text-gray-400 dark:text-gray-500">
-                        <BellIcon pref="none" />
-                      </span>
+                      {/* Unhide button */}
+                      <button
+                        onClick={() => unhideFriend.mutate(f.id)}
+                        className="text-sm font-medium text-gray-400 dark:text-gray-500 px-2 py-1"
+                      >
+                        {t('friends.unhide')}
+                      </button>
                       {/* Red Remove button */}
                       <button
                         onClick={() => setConfirmRemove({ id: f.id, name: f.display_name })}

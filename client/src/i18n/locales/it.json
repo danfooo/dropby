@@ -182,6 +182,7 @@
     "copyInviteLink": "Nuovo link invito",
     "addByEmail": "Aggiungi via email",
     "hidden": "Nascosto",
+    "unhide": "Mostra",
     "removeTitle": "Rimuovi amico",
     "removeMessage": "Rimuovere {{name}} come amico? Non è possibile annullare.",
     "removeConfirm": "Rimuovi",

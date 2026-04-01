@@ -182,6 +182,7 @@
     "copyInviteLink": "New invite link",
     "addByEmail": "Add by email",
     "hidden": "Hidden",
+    "unhide": "Unhide",
     "removeTitle": "Remove friend",
     "removeMessage": "Remove {{name}} as a friend? This cannot be undone.",
     "removeConfirm": "Remove",

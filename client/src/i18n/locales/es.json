@@ -182,6 +182,7 @@
     "copyInviteLink": "Nuevo enlace de invitación",
     "addByEmail": "Añadir por correo",
     "hidden": "Oculto",
+    "unhide": "Mostrar",
     "removeTitle": "Eliminar amigo",
     "removeMessage": "¿Eliminar a {{name}} como amigo? No se puede deshacer.",
     "removeConfirm": "Eliminar",

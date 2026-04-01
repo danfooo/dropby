@@ -182,6 +182,7 @@
     "copyInviteLink": "Neuer Einladungslink",
     "addByEmail": "Per E-Mail hinzufügen",
     "hidden": "Ausgeblendet",
+    "unhide": "Einblenden",
     "removeTitle": "Freund entfernen",
     "removeMessage": "{{name}} als Freund entfernen? Das kann nicht rückgängig gemacht werden.",
     "removeConfirm": "Entfernen",

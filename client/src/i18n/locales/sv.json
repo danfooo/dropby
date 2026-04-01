@@ -182,6 +182,7 @@
     "copyInviteLink": "Ny inbjudningslänk",
     "addByEmail": "Lägg till via e-post",
     "hidden": "Dold",
+    "unhide": "Visa",
     "removeTitle": "Ta bort vän",
     "removeMessage": "Ta bort {{name}} som vän? Det kan inte ångras.",
     "removeConfirm": "Ta bort",
