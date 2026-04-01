@@ -7,6 +7,29 @@ import Avatar from '../components/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
 
+type NotifPref = 'none' | 'default' | 'all';
+
+function BellIcon({ pref }: { pref: NotifPref }) {
+  if (pref === 'none') {
+    // Bell with slash
+    return (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.143 17.082a24.248 24.248 0 003.844.148m-3.844-.148a23.856 23.856 0 01-5.455-1.31A8.967 8.967 0 013 12a9 9 0 012.252-5.979M9.143 17.082C9.048 16.764 9 16.432 9 16c0-1.657 1.343-3 3-3s3 1.343 3 3c0 .432-.048.764-.143 1.082m0 0a23.78 23.78 0 003.143-.617M15 10a3 3 0 00-3-3M3 3l18 18" />
+      </svg>
+    );
+  }
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+  );
+}
+
+function bellColor(pref: NotifPref) {
+  if (pref === 'all') return 'text-emerald-500 dark:text-emerald-400';
+  return 'text-gray-400 dark:text-gray-500';
+}
+
 export default function Friends() {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -16,6 +39,7 @@ export default function Friends() {
   const [addInput, setAddInput] = useState('');
   const [addMsg, setAddMsg] = useState('');
   const [error, setError] = useState('');
+  const [notifPickerFor, setNotifPickerFor] = useState<string | null>(null);
 
   const { data: friends = [], isLoading } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
   const { data: pendingInvites = [] } = useQuery({ queryKey: ['pending-invites'], queryFn: invitesApi.listPending });
@@ -34,11 +58,12 @@ export default function Friends() {
     },
   });
 
-  const unmuteFriend = useMutation({
-    mutationFn: (id: string) => friendsApi.unmute(id),
+  const setNotifPref = useMutation({
+    mutationFn: ({ friendId, pref }: { friendId: string; pref: NotifPref }) =>
+      friendsApi.setNotifPref(friendId, pref),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['friends'] });
-      qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+      setNotifPickerFor(null);
     },
   });
 
@@ -135,57 +160,79 @@ export default function Friends() {
           <>
             {/* Active friends */}
             {activeFriends.length > 0 && (
-              <>
-                <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-1">
-                  {activeFriends.map((f: any, i: number) => (
-                    <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
-                      <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
-                      <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
-                      <button
-                        onClick={() => muteFriend.mutate(f.id)}
-                        className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 p-1 ml-1"
-                        title="Mute"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+              <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
+                {activeFriends.map((f: any, i: number) => {
+                  const pref: NotifPref = f.notif_pref ?? 'default';
+                  const pickerOpen = notifPickerFor === f.id;
+                  return (
+                    <div key={f.id}>
+                      <div className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
+                        <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
+                        <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
+                        {/* Bell button */}
+                        <button
+                          onClick={() => setNotifPickerFor(pickerOpen ? null : f.id)}
+                          className={`p-1.5 rounded-lg ${pickerOpen ? 'bg-gray-100 dark:bg-gray-800' : ''} ${bellColor(pref)}`}
+                        >
+                          <BellIcon pref={pref} />
+                        </button>
+                        {/* Hide button */}
+                        <button
+                          onClick={() => muteFriend.mutate(f.id)}
+                          className="text-sm font-medium text-gray-400 dark:text-gray-500 px-2 py-1"
+                        >
+                          {t('friends.hide')}
+                        </button>
+                      </div>
+                      {/* Inline notif picker */}
+                      {pickerOpen && (
+                        <div className="border-t border-gray-50 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-4 py-2 flex gap-2">
+                          {(['none', 'default', 'all'] as NotifPref[]).map(option => (
+                            <button
+                              key={option}
+                              onClick={() => setNotifPref.mutate({ friendId: f.id, pref: option })}
+                              className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                pref === option
+                                  ? 'bg-emerald-500 text-white'
+                                  : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+                              }`}
+                            >
+                              {t(`friends.notif${option.charAt(0).toUpperCase()}${option.slice(1)}`)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 px-1 mb-4 text-right">{t('friends.muteHint')}</p>
-              </>
+                  );
+                })}
+              </div>
             )}
 
-            {/* Muted friends */}
+            {/* Hidden friends */}
             {mutedFriends.length > 0 && (
               <>
                 <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
                   {t('friends.muted')}
                 </h2>
-                <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-1">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
                   {mutedFriends.map((f: any, i: number) => (
                     <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
                       <Avatar name={f.display_name} url={f.avatar_url} size="sm" className="opacity-60" />
                       <span className="flex-1 text-sm font-medium text-gray-500 dark:text-gray-400">{f.display_name}</span>
-                      <button
-                        onClick={() => unmuteFriend.mutate(f.id)}
-                        className="text-emerald-600 dark:text-emerald-400 text-xs font-medium px-2"
-                      >
-                        {t('friends.unmute')}
-                      </button>
+                      {/* Greyed-out bell (not interactive) */}
+                      <span className="p-1.5 opacity-40 text-gray-400 dark:text-gray-500">
+                        <BellIcon pref="none" />
+                      </span>
+                      {/* Red Remove button */}
                       <button
                         onClick={() => setConfirmRemove({ id: f.id, name: f.display_name })}
-                        className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1"
+                        className="text-sm font-medium text-red-500 border border-red-300 dark:border-red-700 rounded-lg px-2 py-1"
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        {t('friends.removeConfirm')}
                       </button>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 px-1 mb-4 text-right">{t('friends.removeHint')}</p>
               </>
             )}
           </>

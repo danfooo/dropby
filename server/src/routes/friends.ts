@@ -16,14 +16,16 @@ function getFriendsOf(userId: string) {
   return db.prepare(`
     SELECT u.id, u.display_name, u.email, u.avatar_url,
       CASE WHEN fm.id IS NOT NULL THEN 1 ELSE 0 END AS muted,
-      f.created_at AS friendship_created_at
+      f.created_at AS friendship_created_at,
+      COALESCE(fnp.pref, 'default') AS notif_pref
     FROM friendships f
     JOIN users u ON u.id = CASE WHEN f.user_a_id = ? THEN f.user_b_id ELSE f.user_a_id END
     LEFT JOIN friend_mutes fm ON fm.user_id = ? AND fm.muted_user_id = u.id
+    LEFT JOIN friend_notif_prefs fnp ON fnp.user_id = ? AND fnp.friend_user_id = u.id
     WHERE f.user_a_id = ? OR f.user_b_id = ?
     ORDER BY u.display_name
-  `).all(userId, userId, userId, userId) as Array<{
-    id: string; display_name: string; email: string; avatar_url: string | null; muted: number; friendship_created_at: number;
+  `).all(userId, userId, userId, userId, userId) as Array<{
+    id: string; display_name: string; email: string; avatar_url: string | null; muted: number; friendship_created_at: number; notif_pref: string;
   }>;
 }
 
@@ -89,6 +91,28 @@ router.post('/:friendId/mute', requireAuth, (req: AuthRequest, res) => {
 router.delete('/:friendId/mute', requireAuth, (req: AuthRequest, res) => {
   const { friendId } = req.params;
   db.prepare('DELETE FROM friend_mutes WHERE user_id = ? AND muted_user_id = ?').run(req.userId, friendId);
+  res.json({ ok: true });
+});
+
+// POST /api/friends/:friendId/notif-pref
+router.post('/:friendId/notif-pref', requireAuth, (req: AuthRequest, res) => {
+  const { friendId } = req.params;
+  const userId = req.userId!;
+  const { pref } = req.body;
+
+  if (!['none', 'default', 'all'].includes(pref)) {
+    return res.status(400).json({ error: 'pref must be none, default, or all' });
+  }
+  if (!areFriends(userId, friendId)) {
+    return res.status(404).json({ error: 'Not friends' });
+  }
+
+  db.prepare(`
+    INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref)
+    VALUES (?, ?, ?)
+    ON CONFLICT(user_id, friend_user_id) DO UPDATE SET pref = excluded.pref
+  `).run(userId, friendId, pref);
+
   res.json({ ok: true });
 });
 

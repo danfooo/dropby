@@ -61,6 +61,14 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
 
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
   notifyGoingSignal(status.user_id, user.display_name, trimmedNote);
+
+  // Visiting resets the throttle so the next door open will notify again
+  db.prepare(`
+    INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref, last_notified_at)
+    VALUES (?, ?, 'default', 0)
+    ON CONFLICT(user_id, friend_user_id) DO UPDATE SET last_notified_at = 0
+  `).run(userId, status.user_id);
+
   log('going.sent', userId, { rsvp: 'going', is_guest: false });
 
   res.status(201).json({ ok: true });

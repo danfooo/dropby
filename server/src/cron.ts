@@ -232,7 +232,28 @@ setInterval(() => {
 
     for (const rid of recipients) {
       if (mutedByHost.includes(rid)) continue;
+
+      // Check per-friend notification preference and throttle
+      const prefRow = db.prepare(
+        'SELECT pref, last_notified_at FROM friend_notif_prefs WHERE user_id = ? AND friend_user_id = ?'
+      ).get(rid, status.user_id) as { pref: string; last_notified_at: number | null } | undefined;
+
+      const pref = prefRow?.pref ?? 'default';
+      if (pref === 'none') continue;
+      if (pref === 'default') {
+        const lastNotified = prefRow?.last_notified_at ?? 0;
+        if (lastNotified > now - 86400) continue; // 24h throttle
+      }
+      // pref === 'all': always send
+
       notifyFriendDoorOpen(rid, status.display_name, status.note || null);
+
+      // Record notification time for throttle
+      db.prepare(`
+        INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref, last_notified_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(user_id, friend_user_id) DO UPDATE SET last_notified_at = excluded.last_notified_at
+      `).run(rid, status.user_id, pref, now);
     }
 
     broadcastSSE(recipients, 'status:open', {

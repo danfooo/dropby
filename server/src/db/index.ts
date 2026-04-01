@@ -145,6 +145,14 @@ db.exec(`
     PRIMARY KEY (status_id, token)
   );
 
+  CREATE TABLE IF NOT EXISTS friend_notif_prefs (
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    friend_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pref TEXT NOT NULL DEFAULT 'default',
+    last_notified_at INTEGER,
+    PRIMARY KEY (user_id, friend_user_id)
+  );
+
   CREATE TABLE IF NOT EXISTS event_log (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
     ts      INTEGER NOT NULL DEFAULT (unixepoch()),

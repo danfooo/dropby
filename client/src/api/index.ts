@@ -60,6 +60,8 @@ export const friendsApi = {
   remove: (friendId: string) => api.delete(`/friends/${friendId}`).then(r => r.data),
   mute: (friendId: string) => api.post(`/friends/${friendId}/mute`).then(r => r.data),
   unmute: (friendId: string) => api.delete(`/friends/${friendId}/mute`).then(r => r.data),
+  setNotifPref: (friendId: string, pref: 'none' | 'default' | 'all') =>
+    api.post(`/friends/${friendId}/notif-pref`, { pref }).then(r => r.data),
 };
 
 // Status
