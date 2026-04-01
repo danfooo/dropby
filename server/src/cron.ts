@@ -235,25 +235,41 @@ setInterval(() => {
 
       // Check per-friend notification preference and throttle
       const prefRow = db.prepare(
-        'SELECT pref, last_notified_at FROM friend_notif_prefs WHERE user_id = ? AND friend_user_id = ?'
-      ).get(rid, status.user_id) as { pref: string; last_notified_at: number | null } | undefined;
+        'SELECT pref, last_notified_at, notif_window_start, notif_count FROM friend_notif_prefs WHERE user_id = ? AND friend_user_id = ?'
+      ).get(rid, status.user_id) as {
+        pref: string; last_notified_at: number | null;
+        notif_window_start: number; notif_count: number;
+      } | undefined;
 
       const pref = prefRow?.pref ?? 'default';
       if (pref === 'none') continue;
       if (pref === 'default') {
-        const lastNotified = prefRow?.last_notified_at ?? 0;
-        if (lastNotified > now - 86400) continue; // 24h throttle
+        // Rolling 72-hour window: max 2 notifications per window.
+        // Window resets once 72h have elapsed since notif_window_start.
+        const windowStart = prefRow?.notif_window_start ?? 0;
+        const count = prefRow?.notif_count ?? 0;
+        const inWindow = now - windowStart <= 72 * 3600;
+        if (inWindow && count >= 2) continue;
       }
       // pref === 'all': always send
 
       notifyFriendDoorOpen(rid, status.display_name, status.note || null);
 
-      // Record notification time for throttle
+      // Update throttle state
+      const windowStart = prefRow?.notif_window_start ?? 0;
+      const count = prefRow?.notif_count ?? 0;
+      const windowExpired = now - windowStart > 72 * 3600;
+      const newWindowStart = windowExpired ? now : windowStart;
+      const newCount = windowExpired ? 1 : count + 1;
+
       db.prepare(`
-        INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref, last_notified_at)
-        VALUES (?, ?, ?, ?)
-        ON CONFLICT(user_id, friend_user_id) DO UPDATE SET last_notified_at = excluded.last_notified_at
-      `).run(rid, status.user_id, pref, now);
+        INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref, last_notified_at, notif_window_start, notif_count)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id, friend_user_id) DO UPDATE SET
+          last_notified_at = excluded.last_notified_at,
+          notif_window_start = excluded.notif_window_start,
+          notif_count = excluded.notif_count
+      `).run(rid, status.user_id, pref, now, newWindowStart, newCount);
     }
 
     broadcastSSE(recipients, 'status:open', {

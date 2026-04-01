@@ -256,4 +256,10 @@ if (!goingCols.find(c => c.name === 'reminder_1_sent')) {
   db.exec('ALTER TABLE going_signals ADD COLUMN reminder_1_sent INTEGER NOT NULL DEFAULT 0');
 }
 
+const notifPrefCols = db.pragma('table_info(friend_notif_prefs)') as { name: string }[];
+if (!notifPrefCols.find(c => c.name === 'notif_window_start')) {
+  db.exec('ALTER TABLE friend_notif_prefs ADD COLUMN notif_window_start INTEGER NOT NULL DEFAULT 0');
+  db.exec('ALTER TABLE friend_notif_prefs ADD COLUMN notif_count INTEGER NOT NULL DEFAULT 0');
+}
+
 export default db;

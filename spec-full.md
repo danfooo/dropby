@@ -55,6 +55,24 @@ Stored as a single bidirectional row with a `UNIQUE(user_a_id, user_b_id)` const
 
 Muting is one-way. A muted friend still receives notifications when the muting user opens their door. Muted friends are excluded from the default recipient selection when opening the door. The muting user does not receive push notifications when the muted friend opens their door.
 
+### Friend Notification Preferences
+| Field | Type | Notes |
+|---|---|---|
+| user_id | uuid FK → users PK | The notification recipient |
+| friend_user_id | uuid FK → users PK | The friend whose door opens trigger notifications |
+| pref | text | `'none'` \| `'default'` \| `'all'` — default: `'default'` |
+| last_notified_at | unix timestamp nullable | When the last notification was sent |
+| notif_window_start | unix timestamp | Start of the current 72-hour throttle window |
+| notif_count | integer | Notifications sent within the current window |
+
+Per-friend notification throttling. Controls how often a user is notified when a specific friend opens their door:
+
+- **`none`** — never notify
+- **`default`** — rolling 72-hour window, max 2 notifications per window. When 72 hours elapse since `notif_window_start`, the window resets and the count restarts from 0
+- **`all`** — notify on every door open
+
+Sending a "going" signal to a friend's status resets the window entirely (`notif_window_start = 0`, `notif_count = 0`), so the next door open always notifies regardless of how recently the previous notifications were sent. The intent: if you've visited, the throttle no longer applies — the relationship is active.
+
 ### Statuses
 | Field | Type | Notes |
 |---|---|---|
@@ -381,14 +399,13 @@ All future/scheduled content lives here. Home (Now tab) is present-only.
 **Friend list**
 
 Active friends:
-- Each row: avatar, display name, mute button (🔇), remove button (×)
-- Mute: moves friend to Muted section
-- Remove: shows confirmation dialog
+- Each row: avatar, display name, bell button, Hide button
+- Bell button: opens a floating notification picker (All notifications / Default / Mute them); active option shown with checkmark; closes on selection or tap outside
+- Hide: moves friend to Hidden section (creates a `friend_mutes` row)
 
-Muted friends (below active, only if non-empty):
-- Each row: avatar, display name, "Unmute" button, remove button (×)
-- Unmute: moves back to active section
-- Remove: shows confirmation dialog
+Hidden friends (below active, labelled "Muted", only if non-empty):
+- Each row: avatar + name at reduced opacity, struck-through bell (non-interactive), red outline Remove button
+- Remove: shows confirmation dialog; deletes the friendship permanently
 
 Remove confirmation: "Remove [name] as a friend? This cannot be undone." — Confirm / Cancel
 
@@ -595,12 +612,20 @@ Accessible via the back-arrow header of Home.
 - Deletes the `friendships` row
 - Immediately removes the ex-friend from all active `status_recipients` rows for both users
 
-### Muting a Friend
+### Hiding a Friend
 
 - Creates a `friend_mutes` row
-- Muted friend is unchecked by default in recipient selection
-- The muting user does not receive push notifications when the muted friend opens their door
-- Muted friend still receives notifications when the muting user opens their door (unless that friend also muted the opener)
+- Hidden friend is unchecked by default in recipient selection
+- The hiding user does not receive push notifications when the hidden friend opens their door (enforced via `friend_mutes` check in the notification cron, independently of `friend_notif_prefs`)
+- Hidden friend still receives notifications when the hiding user opens their door (unless that friend also hid the opener)
+
+### Setting Notification Preferences for a Friend
+
+- `POST /api/friends/:friendId/notif-pref` with `{ pref: 'none' | 'default' | 'all' }` upserts a `friend_notif_prefs` row
+- `pref = 'none'`: same suppression effect as hiding, but friendship remains visible/active; friend stays in the active section
+- `pref = 'default'`: rolling 72-hour window, max 2 notifications (see data model)
+- `pref = 'all'`: every door open notifies regardless of recency
+- Sending a "going" signal resets `notif_window_start` and `notif_count` to 0 for the `(going_sender, status_owner)` pair
 
 ### Connection Patterns — Invite Links
 
