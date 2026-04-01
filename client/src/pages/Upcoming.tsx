@@ -138,61 +138,57 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
             {t('common.cancel')}
           </button>
         </div>
+        <button
+          onClick={onCancel}
+          className="w-full text-xs text-red-400 dark:text-red-500 hover:text-red-600 dark:hover:text-red-400 py-1 transition-colors"
+        >
+          {t('home.scheduleCancelSession')}
+        </button>
       </div>
     );
   }
 
+  const goingNames = new Set((session.going_signals ?? []).map((g: any) => g.name));
+
   return (
-    <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl p-4">
-      {me && (
-        <div className="flex items-center gap-3 mb-3">
-          <Avatar name={me.display_name} url={me.avatar_url} size="md" />
-          <p className="font-semibold text-violet-900 dark:text-violet-100">{me.display_name}</p>
-        </div>
-      )}
-      <div className="flex items-center gap-1.5 mb-1">
-        <svg className="w-3.5 h-3.5 text-violet-400 dark:text-violet-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p className="text-sm text-violet-700 dark:text-violet-300 font-medium">
+    <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl overflow-hidden">
+      <div className="px-4 pt-4 pb-3">
+        <p className="text-xl font-semibold text-violet-900 dark:text-violet-100 mb-1">
           {formatTime(session.starts_at)}{session.ends_at ? ` – ${formatTimeShort(session.ends_at)}` : ''}
         </p>
+        {session.note && (
+          <p className={bigNote ? `${bigNote} leading-none` : 'text-sm text-violet-600 dark:text-violet-400'}>
+            {session.note}
+          </p>
+        )}
       </div>
-      {session.note && (
-        <p className={bigNote ? `${bigNote} leading-none mb-2` : 'text-sm text-violet-600 dark:text-violet-400 mb-2'}>
-          {session.note}
-        </p>
-      )}
       {session.recipients?.length > 0 && (
-        <p className="text-xs text-violet-500 dark:text-violet-400 mb-2 truncate">
-          {session.recipients.map((r: any) => r.display_name).join(', ')}…
-        </p>
-      )}
-      {session.going_signals?.length > 0 && (
-        <p className="text-xs text-violet-500 dark:text-violet-400 mb-2">
-          {session.going_signals.map((g: any) => g.name).join(', ')} {session.going_signals.length === 1 ? 'is' : 'are'} coming
-        </p>
-      )}
-      <div className="mt-3 pt-3 border-t border-violet-100 dark:border-violet-900 flex items-center justify-between">
-        <div className="flex gap-1">
-          <button
-            onClick={() => setEditing(true)}
-            className="px-3 py-1.5 text-sm text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-lg font-medium transition-colors"
-          >
-            {t('home.edit')}
-          </button>
-          <button
-            onClick={onCancel}
-            className="px-3 py-1.5 text-sm text-violet-500 dark:text-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-lg transition-colors"
-          >
-            {t('home.scheduleCancelSession')}
-          </button>
+        <div className={`divide-y divide-violet-100 dark:divide-violet-900 border-t border-violet-100 dark:border-violet-900 ${session.recipients.length >= 5 ? 'max-h-44 overflow-y-auto' : ''}`}>
+          {session.recipients.map((r: any) => (
+            <div key={r.id} className="flex items-center justify-between px-4 py-2">
+              <div className="flex items-center gap-2.5">
+                <Avatar name={r.display_name} size="sm" />
+                <span className="text-sm text-violet-900 dark:text-violet-100">{r.display_name}</span>
+              </div>
+              {goingNames.has(r.display_name) && (
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">going</span>
+              )}
+            </div>
+          ))}
         </div>
+      )}
+      <div className="px-4 py-3 border-t border-violet-100 dark:border-violet-900 flex items-center justify-between">
+        <button
+          onClick={() => setEditing(true)}
+          className="px-3 py-1.5 text-sm text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-lg font-medium transition-colors -ml-3"
+        >
+          {t('home.edit')}
+        </button>
         <a
           href={`${Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : ''}/api/status/${session.id}/calendar.ics`}
           download
           onClick={() => localStorage.setItem(icsKey, '1')}
-          className="flex items-center gap-1 text-xs text-violet-400 dark:text-violet-500 hover:text-violet-600 dark:hover:text-violet-300"
+          className="flex items-center gap-1.5 text-xs text-violet-400 dark:text-violet-500 hover:text-violet-600 dark:hover:text-violet-300"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
