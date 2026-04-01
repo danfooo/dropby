@@ -10,6 +10,16 @@ export const db = new Database(join(DATA_DIR, 'drop-by.db'));
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
+// Must run before CREATE TABLE block: if friend_mutes exists, rename it before
+// CREATE TABLE IF NOT EXISTS friend_hides would create an empty table with that name.
+{
+  const oldTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='friend_mutes'").get();
+  if (oldTable) {
+    db.exec('ALTER TABLE friend_mutes RENAME TO friend_hides');
+    db.exec('ALTER TABLE friend_hides RENAME COLUMN muted_user_id TO hidden_user_id');
+  }
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
@@ -166,14 +176,6 @@ db.exec(`
 `);
 
 // Migrations for existing databases
-
-// Rename friend_mutes → friend_hides (terminology: hide = excluded from UI, mute = notification setting)
-const oldHideTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='friend_mutes'").get();
-if (oldHideTable) {
-  db.exec('ALTER TABLE friend_mutes RENAME TO friend_hides');
-  db.exec('ALTER TABLE friend_hides RENAME COLUMN muted_user_id TO hidden_user_id');
-}
-
 const cols = db.pragma('table_info(users)') as { name: string }[];
 if (!cols.find(c => c.name === 'apple_id')) {
   db.exec('ALTER TABLE users ADD COLUMN apple_id TEXT');
