@@ -23,7 +23,8 @@
     "mockOpened": "a ouvert sa porte 👋",
     "mockNote": "café et une balade, des volontaires ?",
     "mockGoing": "J'y vais 🏃",
-    "mockGoing2": "J'arrive dans 20 min"
+    "mockGoing2": "J'arrive dans 20 min",
+    "mockMaybe": "Peut-être"
   },
   "landing": {
     "tagline": "Vois tes amis plus souvent.",
