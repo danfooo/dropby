@@ -3,7 +3,7 @@ primary_region = 'fra'
 
 [build]
   [build.args]
-    VITE_GOOGLE_CLIENT_ID = ""
+    VITE_GOOGLE_CLIENT_ID = "750398451662-qnfcr5cab59n6fq86dj54ibnsu69mj15.apps.googleusercontent.com"
 
 [env]
   NODE_ENV = "production"

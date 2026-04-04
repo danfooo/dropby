@@ -79,8 +79,10 @@ Commit after every change, without being asked. Push immediately too unless it r
 Deploy command:
 
 ```
-fly deploy --build-arg VITE_GOOGLE_CLIENT_ID=750398451662-qnfcr5cab59n6fq86dj54ibnsu69mj15.apps.googleusercontent.com
+fly deploy
 ```
+
+`VITE_GOOGLE_CLIENT_ID` is hardcoded in `fly.toml` under `[build.args]` so no `--build-arg` is needed. All other production secrets are stored in Fly and injected at runtime — set them once with `fly secrets set KEY=value`.
 
 Always ask before deploying — it requires confirmation.
 
