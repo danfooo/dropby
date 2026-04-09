@@ -14,6 +14,14 @@ npm run dev
 
 Client runs at http://localhost:5173, server at http://localhost:3000. The client proxies `/api` to the server automatically.
 
+If you hit native-module errors (e.g. `NODE_MODULE_VERSION` mismatch), clean and reinstall:
+
+```
+nvm use
+rm -rf node_modules client/node_modules server/node_modules
+npm install
+```
+
 Copy `.env.example` to `.env` and fill in any values you need locally. Most features work without any API keys in development.
 
 ## Stack
