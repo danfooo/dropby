@@ -268,6 +268,11 @@ if (!goingCols.find(c => c.name === 'reminder_1_sent')) {
   db.exec('ALTER TABLE going_signals ADD COLUMN reminder_1_sent INTEGER NOT NULL DEFAULT 0');
 }
 
+const hideCols = db.pragma('table_info(friend_hides)') as { name: string }[];
+if (!hideCols.find(c => c.name === 'expires_at')) {
+  db.exec('ALTER TABLE friend_hides ADD COLUMN expires_at INTEGER');
+}
+
 const notifPrefCols = db.pragma('table_info(friend_notif_prefs)') as { name: string }[];
 if (!notifPrefCols.find(c => c.name === 'notif_window_start')) {
   db.exec('ALTER TABLE friend_notif_prefs ADD COLUMN notif_window_start INTEGER NOT NULL DEFAULT 0');

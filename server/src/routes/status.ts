@@ -107,6 +107,7 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
       (f.user_a_id = ? AND f.user_b_id = s.user_id) OR
       (f.user_b_id = ? AND f.user_a_id = s.user_id)
     LEFT JOIN friend_hides fh ON fh.user_id = ? AND fh.hidden_user_id = s.user_id
+      AND (fh.expires_at IS NULL OR fh.expires_at > unixepoch())
     WHERE s.closed_at IS NULL AND fh.id IS NULL AND (
       ((s.starts_at IS NULL OR s.starts_at <= ?) AND s.closes_at > ?)
       OR s.starts_at > ?
@@ -194,7 +195,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   `).run(userId, JSON.stringify(validRecipients), JSON.stringify(unselectedOnCreate), nowUnix);
 
   const userFull = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
-  const hiddenByMe = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ?').all(userId).map((r: any) => r.hidden_user_id);
+  const hiddenByMe = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ? AND (expires_at IS NULL OR expires_at > unixepoch())').all(userId).map((r: any) => r.hidden_user_id);
 
   if (isScheduled) {
     // Notify invitees about the upcoming scheduled session immediately
@@ -234,11 +235,11 @@ router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
   // Notify recipients that door is now open
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
   const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?').all(statusId).map((r: any) => r.user_id);
-  const hiddenByMe = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ?').all(userId).map((r: any) => r.hidden_user_id);
+  const hiddenByMe = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ? AND (expires_at IS NULL OR expires_at > unixepoch())').all(userId).map((r: any) => r.hidden_user_id);
 
   for (const rid of recipients) {
     if (hiddenByMe.includes(rid)) continue;
-    notifyFriendDoorOpen(rid, user.display_name, scheduled.note || null);
+    notifyFriendDoorOpen(rid, user.display_name, scheduled.note || null, statusId, userId);
   }
 
   broadcastSSE(recipients, 'status:open', {

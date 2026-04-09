@@ -51,9 +51,12 @@ Stored as a single bidirectional row with a `UNIQUE(user_a_id, user_b_id)` const
 | id | uuid PK | |
 | user_id | uuid FK → users | The user doing the muting |
 | muted_user_id | uuid FK → users | The friend being muted |
+| expires_at | unix timestamp nullable | When the mute expires; null = permanent |
 | created_at | unix timestamp | |
 
 Muting is one-way. A muted friend still receives notifications when the muting user opens their door. Muted friends are excluded from the default recipient selection when opening the door. The muting user does not receive push notifications when the muted friend opens their door.
+
+Mutes support an optional duration: `POST /api/friends/:friendId/hide` accepts `{ duration_days }`. If provided, `expires_at` is set to now + duration_days. If omitted, the mute is permanent (`expires_at = null`). The endpoint upserts, so a temporary mute can be promoted to permanent by calling again without `duration_days`. Expired mutes (where `expires_at <= now`) are treated as inactive in all queries and cleaned up daily by cron.
 
 ### Friend Notification Preferences
 | Field | Type | Notes |
@@ -689,18 +692,23 @@ The redirect destination must survive signup → email verification → login:
 
 Sent via FCM (Android) and APNs (iOS).
 
-| Event | Recipient | Copy |
-|---|---|---|
-| Friend opens door | All selected recipients with OS permission | "[Name]'s door is open" |
-| Going signal or note update | Door opener | "[Name] is on their way" / note as body if provided |
-| 10 min before close | Door opener | "Your door closes in 10 minutes" |
-| Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Hope it was a good one. Open again?" |
-| Friend accepted invite | Inviter | "[Name] just joined your dropby!" |
-| Nudge reminder | User themselves | "Hey, got a free [day]? Open your door" |
-| Auto-nudge | User themselves | "Open your door again? Change nudge timing anytime in Profile." |
-| Going reminder (primary) | RSVP'd user — day-before window | "[Host] is opening their door tomorrow at [time]" |
-| Going reminder (secondary) | RSVP'd user — e.g. 30 min before | "[Host]'s starts at [time]" |
-| Re-engagement | User with friends, no door opened in 7+ days | "It's been a while. Open your door?" |
+| Event | Recipient | Copy | Actions (iOS) |
+|---|---|---|---|
+| Friend opens door | All selected recipients with OS permission | "[Name]'s door is open" | "Mark as Going", "Mute for 3 days", "Mute permanently" |
+| Going signal or note update | Door opener | "[Name] is on their way" / note as body if provided | — |
+| 10 min before close | Door opener | "Your door closes in 10 minutes" | "Keep open", "Close now" |
+| Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Hope it was a good one. Open again?" | — |
+| Friend accepted invite | Inviter | "[Name] just joined your dropby!" | — |
+| Nudge reminder | User themselves | "Hey, got a free [day]? Open your door" | "Open now" |
+| Auto-nudge | User themselves | "Open your door again? Change nudge timing anytime in Profile." | "Open now" |
+| Going reminder (primary) | RSVP'd user — day-before window | "[Host] is opening their door tomorrow at [time]" | — |
+| Going reminder (secondary) | RSVP'd user — e.g. 30 min before | "[Host]'s starts at [time]" | — |
+| Re-engagement | User with friends, no door opened in 7+ days | "It's been a while. Open your door?" | — |
+
+**Notification action behaviour:**
+- "Open now" (nudge/auto-nudge): foregrounds the app and navigates to `/home`
+- "Mark as Going" (door open): foregrounds the app and sends a going signal for that status
+- "Mute for 3 days" / "Mute permanently" (door open): handled natively in background without foregrounding the app; calls `POST /api/friends/:friendId/hide` with `duration_days: 3` or no duration respectively
 
 Muting user A suppresses:
 - A being notified when the muting user opens their door (A is unchecked by default)

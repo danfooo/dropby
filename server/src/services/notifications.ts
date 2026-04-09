@@ -128,11 +128,16 @@ async function sendApns(token: string, payload: PushPayload): Promise<void> {
   const host = sandbox ? 'api.sandbox.push.apple.com' : 'api.push.apple.com';
   console.log(`[APNs] Sending to ${host} — token=${token.slice(0, 20)}… | ${payload.title}`);
 
+  const aps: Record<string, unknown> = {
+    alert: { title: payload.title, body: payload.body },
+    sound: 'default',
+  };
+  // Use the notification type as the category ID so iOS shows registered actions
+  if (payload.actions?.length && payload.data?.type) {
+    aps.category = payload.data.type;
+  }
   const apnsBody = JSON.stringify({
-    aps: {
-      alert: { title: payload.title, body: payload.body },
-      sound: 'default',
-    },
+    aps,
     ...payload.data,
   });
 
@@ -188,17 +193,25 @@ function getPushTokens(userId: string) {
 }
 
 // ── Public notification functions ─────────────────────────────
-export function notifyFriendDoorOpen(recipientId: string, openerName: string, note: string | null) {
+export function notifyFriendDoorOpen(recipientId: string, openerName: string, note: string | null, statusId?: string, openerUserId?: string) {
   const tokens = getPushTokens(recipientId);
   if (!tokens.length) return;
   // Log once per recipient — used to measure door_open push → going conversion
   log('push.sent', recipientId, { type: 'door_open' });
   const body = note ? `"${note}"` : 'Come drop by!';
+  const data: Record<string, string> = { type: 'door_open' };
+  if (statusId) data.statusId = statusId;
+  if (openerUserId) data.openerUserId = openerUserId;
   tokens.forEach(t =>
     sendPush(recipientId, t.token, t.platform, {
       title: `${openerName} opened their door`,
       body,
-      data: { type: 'door_open' },
+      data,
+      actions: [
+        { id: 'going', title: 'Mark as Going' },
+        { id: 'mute_3d', title: 'Mute for 3 days' },
+        { id: 'mute_forever', title: 'Mute permanently' },
+      ],
     })
   );
 }
@@ -276,6 +289,7 @@ export function notifyNudge(userId: string, dayName: string) {
       title: 'dropby',
       body: `Hey, got a free ${dayName}? Open your door`,
       data: { type: 'nudge' },
+      actions: [{ id: 'open_now', title: 'Open now' }],
     })
   );
 }
@@ -313,6 +327,7 @@ export function notifyAutoNudge(userId: string) {
       title: 'dropby',
       body: 'Open your door again? Change nudge timing anytime in Profile.',
       data: { type: 'auto_nudge' },
+      actions: [{ id: 'open_now', title: 'Open now' }],
     })
   );
 }

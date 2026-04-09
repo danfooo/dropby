@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { syncAuthTokenToNative } from '../utils/notifications';
 
 export interface User {
   id: string;
@@ -29,11 +30,13 @@ export const useAuthStore = create<AuthState>(set => ({
   isLoading: true,
   setAuth: (user, token) => {
     localStorage.setItem('token', token);
+    syncAuthTokenToNative();
     set({ user, token });
   },
   setUser: user => set({ user }),
   clearAuth: () => {
     localStorage.removeItem('token');
+    syncAuthTokenToNative();
     set({ user: null, token: null });
   },
   setLoading: v => set({ isLoading: v }),

@@ -227,7 +227,7 @@ setInterval(() => {
   for (const status of pending) {
     const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?')
       .all(status.id).map((r: any) => r.user_id);
-    const hiddenByHost = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ?')
+    const hiddenByHost = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ? AND (expires_at IS NULL OR expires_at > unixepoch())')
       .all(status.user_id).map((r: any) => r.hidden_user_id);
 
     for (const rid of recipients) {
@@ -253,7 +253,7 @@ setInterval(() => {
       }
       // pref === 'all': always send
 
-      notifyFriendDoorOpen(rid, status.display_name, status.note || null);
+      notifyFriendDoorOpen(rid, status.display_name, status.note || null, status.id, status.user_id);
 
       // Update throttle state
       const windowStart = prefRow?.notif_window_start ?? 0;
@@ -362,6 +362,15 @@ cron.schedule('0 12 * * *', () => {
     notifyReengagement(u.id);
     db.prepare('UPDATE users SET last_reengagement_at = ? WHERE id = ?').run(now, u.id);
     log('nudge.sent', u.id, { type: 'reengagement' });
+  }
+});
+
+// Daily at 03:00 UTC: purge expired temporary mutes
+cron.schedule('0 3 * * *', () => {
+  const now = Math.floor(Date.now() / 1000);
+  const result = db.prepare('DELETE FROM friend_hides WHERE expires_at IS NOT NULL AND expires_at <= ?').run(now);
+  if (result.changes > 0) {
+    console.log(`[cron] purged ${result.changes} expired friend mutes`);
   }
 });
 

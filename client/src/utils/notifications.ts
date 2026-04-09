@@ -1,8 +1,48 @@
 import { Capacitor } from '@capacitor/core';
-import { authApi } from '../api';
+import { authApi, friendsApi, goingApi } from '../api';
 
 let listenersSetup = false;
 let lastToken: string | null = null;
+
+// Persist auth token so native iOS code can access it for background notification actions
+export function syncAuthTokenToNative() {
+  if (!Capacitor.isNativePlatform()) return;
+  const token = localStorage.getItem('token');
+  try {
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      if (token) Preferences.set({ key: 'auth_token', value: token });
+      else Preferences.remove({ key: 'auth_token' });
+    });
+  } catch {}
+}
+
+async function handleNotificationAction(actionId: string, data: Record<string, string>) {
+  const type = data?.type;
+
+  if (actionId === 'open_now' && (type === 'nudge' || type === 'auto_nudge')) {
+    // Foreground action — navigate to /home
+    window.location.href = '/home';
+    return;
+  }
+
+  if (actionId === 'going' && type === 'door_open' && data.statusId) {
+    try { await goingApi.send(data.statusId); }
+    catch (e) { console.warn('[Push] Failed to mark as going', e); }
+    return;
+  }
+
+  if (actionId === 'mute_3d' && type === 'door_open' && data.openerUserId) {
+    try { await friendsApi.hide(data.openerUserId, 3); }
+    catch (e) { console.warn('[Push] Failed to mute friend', e); }
+    return;
+  }
+
+  if (actionId === 'mute_forever' && type === 'door_open' && data.openerUserId) {
+    try { await friendsApi.hide(data.openerUserId); }
+    catch (e) { console.warn('[Push] Failed to mute friend', e); }
+    return;
+  }
+}
 
 async function setupListeners() {
   if (listenersSetup) return;
@@ -15,6 +55,13 @@ async function setupListeners() {
   });
   PushNotifications.addListener('registrationError', (err) => {
     console.warn('[Push] Registration error', err);
+  });
+  PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+    const actionId = notification.actionId;
+    const data = notification.notification?.data ?? {};
+    // 'tap' is the default action (user tapped the notification body, not a button)
+    if (actionId === 'tap') return;
+    handleNotificationAction(actionId, data);
   });
 }
 

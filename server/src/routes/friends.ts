@@ -21,6 +21,7 @@ function getFriendsOf(userId: string) {
     FROM friendships f
     JOIN users u ON u.id = CASE WHEN f.user_a_id = ? THEN f.user_b_id ELSE f.user_a_id END
     LEFT JOIN friend_hides fh ON fh.user_id = ? AND fh.hidden_user_id = u.id
+      AND (fh.expires_at IS NULL OR fh.expires_at > unixepoch())
     LEFT JOIN friend_notif_prefs fnp ON fnp.user_id = ? AND fnp.friend_user_id = u.id
     WHERE f.user_a_id = ? OR f.user_b_id = ?
     ORDER BY u.display_name
@@ -64,14 +65,23 @@ router.delete('/:friendId', requireAuth, (req: AuthRequest, res) => {
 router.post('/:friendId/hide', requireAuth, (req: AuthRequest, res) => {
   const { friendId } = req.params;
   const userId = req.userId!;
+  const { duration_days } = req.body ?? {};
 
   if (!areFriends(userId, friendId)) {
     return res.status(404).json({ error: 'Not friends' });
   }
 
+  const expiresAt = typeof duration_days === 'number' && duration_days > 0
+    ? Math.floor(Date.now() / 1000) + duration_days * 86400
+    : null;
+
   db.prepare(`
-    INSERT OR IGNORE INTO friend_hides (id, user_id, hidden_user_id) VALUES (?, ?, ?)
-  `).run(randomUUID(), userId, friendId);
+    INSERT INTO friend_hides (id, user_id, hidden_user_id, expires_at)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(user_id, hidden_user_id) DO UPDATE SET
+      expires_at = excluded.expires_at,
+      created_at = (unixepoch())
+  `).run(randomUUID(), userId, friendId, expiresAt);
 
   // Also mark as unselected in recipient sessions
   const sessionRow = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(userId) as { unselected_ids: string } | undefined;
