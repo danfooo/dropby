@@ -83,6 +83,7 @@ export const statusApi = {
   getUpcoming: () => api.get('/status/upcoming').then(r => r.data),
   activate: (statusId: string) => api.post(`/status/${statusId}/activate`).then(r => r.data),
   prolong: () => api.post('/status/prolong').then(r => r.data),
+  quickOpen: () => api.post('/status/quick-open').then(r => r.data),
   setDuration: (minutes: number) => api.post('/status/duration', { minutes }).then(r => r.data),
   removeRecipient: (recipientId: string) => api.delete(`/status/recipients/${recipientId}`).then(r => r.data),
 };

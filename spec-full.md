@@ -706,7 +706,7 @@ Sent via FCM (Android) and APNs (iOS).
 | Re-engagement | User with friends, no door opened in 7+ days | "It's been a while. Open your door?" | — |
 
 **Notification action behaviour:**
-- "Open now" (nudge/auto-nudge): foregrounds the app and navigates to `/home`
+- "Open now" (nudge/auto-nudge): opens the door using the last recipient selection and default duration (`POST /api/status/quick-open`), then foregrounds the app to `/home` where the open door is visible. If the door is already open, returns the existing status. Notifications to invitees are sent with the standard delay, so the user can close again immediately if needed.
 - "Mark as Going" (door open): foregrounds the app and sends a going signal for that status
 - "Mute for 3 days" / "Mute permanently" (door open): handled natively in background without foregrounding the app; calls `POST /api/friends/:friendId/hide` with `duration_days: 3` or no duration respectively
 

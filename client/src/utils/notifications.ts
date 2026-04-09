@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { authApi, friendsApi, goingApi } from '../api';
+import { authApi, friendsApi, goingApi, statusApi } from '../api';
 
 let listenersSetup = false;
 let lastToken: string | null = null;
@@ -20,7 +20,9 @@ async function handleNotificationAction(actionId: string, data: Record<string, s
   const type = data?.type;
 
   if (actionId === 'open_now' && (type === 'nudge' || type === 'auto_nudge')) {
-    // Foreground action — navigate to /home
+    // Actually open the door with last selection, then show /home
+    try { await statusApi.quickOpen(); }
+    catch (e) { console.warn('[Push] Failed to quick-open', e); }
     window.location.href = '/home';
     return;
   }

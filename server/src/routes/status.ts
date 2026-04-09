@@ -447,6 +447,46 @@ router.post('/prolong', requireAuth, (req: AuthRequest, res) => {
   res.json({ closes_at: newClosesAt });
 });
 
+// POST /api/status/quick-open — open with last selection + default duration (for notification actions)
+router.post('/quick-open', requireAuth, (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  // Already open? Just return it
+  const existing = getActiveStatus(userId);
+  if (existing) return res.json(formatStatus(existing, userId));
+
+  const user = db.prepare('SELECT default_door_minutes FROM users WHERE id = ?').get(userId) as any;
+  const doorMinutes = user?.default_door_minutes ?? 60;
+  const closesAt = nowUnix + doorMinutes * 60;
+
+  // Get all friends, then subtract unselected to get recipients
+  const friendIds = (db.prepare(`
+    SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
+    FROM friendships WHERE user_a_id = ? OR user_b_id = ?
+  `).all(userId, userId, userId) as Array<{ fid: string }>).map(r => r.fid);
+
+  const sessionRow = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(userId) as { unselected_ids: string } | undefined;
+  const unselected: string[] = sessionRow ? JSON.parse(sessionRow.unselected_ids) : [];
+  const recipientIds = friendIds.filter(id => !unselected.includes(id));
+
+  const statusId = randomUUID();
+  const notifyAt = nowUnix + 2;
+
+  db.prepare(`
+    INSERT INTO statuses (id, user_id, closes_at, notify_at)
+    VALUES (?, ?, ?, ?)
+  `).run(statusId, userId, closesAt, notifyAt);
+
+  for (const rid of recipientIds) {
+    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, rid);
+  }
+
+  log('door.open', userId, { recipients: recipientIds.length, has_note: false, source: 'quick_open' });
+
+  res.status(201).json(formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId));
+});
+
 // DELETE /api/status/recipients/:userId — remove a recipient
 router.delete('/recipients/:recipientId', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
