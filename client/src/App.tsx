@@ -16,6 +16,7 @@ import Friends from './pages/Friends';
 import Invite from './pages/Invite';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
+import Story from './pages/Story';
 import About from './pages/About';
 import Privacy from './pages/Privacy';
 import Admin from './pages/Admin';
@@ -57,6 +58,7 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/invite/:token" element={<Invite />} />
+      <Route path="/story" element={<Story />} />
       <Route path="/about" element={<About />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route element={user ? <Layout /> : <Navigate to="/auth" />}>
