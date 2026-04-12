@@ -4,9 +4,10 @@ import { GoogleLogin } from '@react-oauth/google';
 import { Capacitor } from '@capacitor/core';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import { authApi, invitesApi, associatePendingGuest, trackApi } from '../api';
+import { authApi, invitesApi, waitlistApi, associatePendingGuest, trackApi } from '../api';
 import { useAuthStore } from '../stores/auth';
 import Avatar from '../components/Avatar';
+import Turnstile from '../components/Turnstile';
 
 type Tab = 'login' | 'signup';
 
@@ -29,7 +30,19 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/home';
 
-  const inviteToken = redirect.match(/^\/invite\/([^/?]+)/)?.[1] ?? null;
+  // Invite token can come from either the redirect URL (?redirect=/invite/:token)
+  // or from localStorage if the user previously visited /invite/:token.
+  const inviteToken =
+    redirect.match(/^\/invite\/([^/?]+)/)?.[1] ??
+    (typeof window !== 'undefined' ? localStorage.getItem('dropby_invite_token') : null);
+
+  // Waitlist state (used when no invite token)
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [waitlistDone, setWaitlistDone] = useState(false);
+  const [waitlistError, setWaitlistError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [honeypot, setHoneypot] = useState(''); // hidden field — bots fill, humans don't
 
   useEffect(() => {
     // Track auth page views for signup funnel analysis.
@@ -61,7 +74,7 @@ export default function Auth() {
     setError(''); setMessage(''); setLoading(true);
     try {
       if (tab === 'signup') {
-        await authApi.signup(email, password, displayName, i18n.language, redirect !== '/home' ? redirect : undefined);
+        await authApi.signup(email, password, displayName, i18n.language, redirect !== '/home' ? redirect : undefined, inviteToken);
         setMessage(t('auth.verifyEmailSent'));
         setTab('login');
       } else {
@@ -73,6 +86,8 @@ export default function Auth() {
       if (code === 'EMAIL_NOT_VERIFIED' || code === 'EMAIL_EXISTS_UNVERIFIED') {
         setError(t('auth.verifyEmailSent'));
         setShowResend(true);
+      } else if (code === 'INVITE_REQUIRED') {
+        setError(t('auth.inviteRequired'));
       } else if (err.response?.status === 409) {
         setTab('login');
         setMessage('Looks like you already have an account — log in below.');
@@ -81,6 +96,24 @@ export default function Auth() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWaitlistError('');
+    if (!turnstileToken) { setWaitlistError(t('waitlist.captchaPending')); return; }
+    setWaitlistLoading(true);
+    try {
+      await waitlistApi.join(waitlistEmail.trim(), i18n.language, turnstileToken, honeypot);
+      setWaitlistDone(true);
+    } catch (err: any) {
+      const code = err.response?.data?.error;
+      if (code === 'RATE_LIMITED') setWaitlistError(t('waitlist.rateLimited'));
+      else if (code === 'INVALID_EMAIL') setWaitlistError(t('waitlist.invalidEmail'));
+      else setWaitlistError(t('auth.somethingWentWrong'));
+    } finally {
+      setWaitlistLoading(false);
     }
   };
 
@@ -109,7 +142,7 @@ export default function Auth() {
         const { identityToken, givenName, familyName } = result.response;
         if (!identityToken) throw new Error('No identity token');
         const fullName = (givenName || familyName) ? { givenName: givenName ?? undefined, familyName: familyName ?? undefined } : undefined;
-        const data = await authApi.apple(identityToken, fullName);
+        const data = await authApi.apple(identityToken, fullName, inviteToken);
         handleSuccess(data);
       } else {
         // Web: use Apple JS SDK
@@ -135,13 +168,15 @@ export default function Auth() {
         const firstName = result.user?.name?.firstName;
         const lastName = result.user?.name?.lastName;
         const fullName = (firstName || lastName) ? { givenName: firstName ?? undefined, familyName: lastName ?? undefined } : undefined;
-        const data = await authApi.apple(identityToken, fullName);
+        const data = await authApi.apple(identityToken, fullName, inviteToken);
         handleSuccess(data);
       }
     } catch (err: any) {
       // Ignore user cancellation
       const msg = String(err?.message ?? err?.error ?? '');
-      if (err?.code !== '1001' && !msg.includes('1001') && err?.error !== 'popup_closed_by_user') {
+      if (err?.response?.data?.error === 'INVITE_REQUIRED') {
+        setError(t('auth.inviteRequired'));
+      } else if (err?.code !== '1001' && !msg.includes('1001') && err?.error !== 'popup_closed_by_user') {
         setError(t('auth.appleFailed'));
       }
     } finally {
@@ -153,10 +188,12 @@ export default function Auth() {
     if (!credentialResponse.credential) { setError(t('auth.googleFailed')); return; }
     setLoading(true);
     try {
-      const data = await authApi.google(credentialResponse.credential);
+      const data = await authApi.google(credentialResponse.credential, inviteToken);
       handleSuccess(data);
     } catch (err: any) {
-      setError(err.response?.data?.error || t('auth.googleFailed'));
+      const code = err.response?.data?.error;
+      if (code === 'INVITE_REQUIRED') setError(t('auth.inviteRequired'));
+      else setError(code || t('auth.googleFailed'));
     } finally {
       setLoading(false);
     }
@@ -255,6 +292,54 @@ export default function Auth() {
               </div>
             )}
 
+            {tab === 'signup' && !inviteToken ? (
+              waitlistDone ? (
+                <div className="bg-emerald-50 dark:bg-emerald-950 border border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 rounded-xl p-4 text-sm text-center">
+                  {t('waitlist.success')}
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-1">{t('waitlist.title')}</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('waitlist.subtitle')}</p>
+                  </div>
+                  {waitlistError && (
+                    <div className="bg-red-50 dark:bg-red-950 border border-red-100 dark:border-red-900 text-red-700 rounded-xl p-3 text-sm mb-3">
+                      {waitlistError}
+                    </div>
+                  )}
+                  <form onSubmit={handleWaitlistSubmit} className="space-y-3">
+                    <input
+                      type="email"
+                      required
+                      placeholder={t('auth.email')}
+                      value={waitlistEmail}
+                      onChange={e => setWaitlistEmail(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                    {/* Honeypot — hidden from humans, bots auto-fill */}
+                    <input
+                      type="text"
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={honeypot}
+                      onChange={e => setHoneypot(e.target.value)}
+                      style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', opacity: 0 }}
+                      aria-hidden="true"
+                    />
+                    <Turnstile onToken={setTurnstileToken} />
+                    <button
+                      type="submit"
+                      disabled={waitlistLoading}
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-colors"
+                    >
+                      {waitlistLoading ? t('auth.pleaseWait') : t('waitlist.cta')}
+                    </button>
+                  </form>
+                </>
+              )
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
               {tab === 'signup' && (
                 <input
@@ -297,6 +382,7 @@ export default function Auth() {
                 {loading ? t('auth.pleaseWait') : tab === 'login' ? t('auth.login') : t('auth.createAccount')}
               </button>
             </form>
+            )}
 
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">

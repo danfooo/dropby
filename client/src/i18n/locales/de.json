@@ -74,7 +74,17 @@
     "googleFailed": "Google-Anmeldung fehlgeschlagen",
     "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuch es erneut.",
     "appleFailed": "Apple-Anmeldung fehlgeschlagen",
-    "continueWithApple": "Mit Apple fortfahren"
+    "continueWithApple": "Mit Apple fortfahren",
+    "inviteRequired": "dropby ist gerade nur mit Einladung. Frag einen Freund nach seinem Einladungslink oder trag dich auf die Warteliste ein."
+  },
+  "waitlist": {
+    "title": "dropby ist gerade nur mit Einladung",
+    "subtitle": "Hinterlass deine E-Mail — wir melden uns, sobald es losgeht.",
+    "cta": "Auf die Warteliste",
+    "success": "Du stehst auf der Liste — wir melden uns.",
+    "invalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein.",
+    "rateLimited": "Zu viele Versuche. Bitte versuch es später erneut.",
+    "captchaPending": "Bitte schließ die Prüfung oben ab."
   },
   "nav": {
     "now": "Jetzt",

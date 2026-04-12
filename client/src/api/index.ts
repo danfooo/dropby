@@ -28,13 +28,14 @@ api.interceptors.response.use(
 // Auth
 export const authApi = {
   me: () => api.get('/auth/me').then(r => r.data),
-  signup: (email: string, password: string, display_name?: string, locale?: string, redirect_url?: string) =>
-    api.post('/auth/signup', { email, password, display_name, locale, redirect_url }).then(r => r.data),
+  signup: (email: string, password: string, display_name?: string, locale?: string, redirect_url?: string, invite_token?: string | null) =>
+    api.post('/auth/signup', { email, password, display_name, locale, redirect_url, invite_token }).then(r => r.data),
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }).then(r => r.data),
-  google: (credential: string) => api.post('/auth/google', { credential }).then(r => r.data),
-  apple: (identityToken: string, fullName?: { givenName?: string; familyName?: string }) =>
-    api.post('/auth/apple', { identityToken, fullName }).then(r => r.data),
+  google: (credential: string, invite_token?: string | null) =>
+    api.post('/auth/google', { credential, invite_token }).then(r => r.data),
+  apple: (identityToken: string, fullName?: { givenName?: string; familyName?: string }, invite_token?: string | null) =>
+    api.post('/auth/apple', { identityToken, fullName, invite_token }).then(r => r.data),
   verifyEmail: (token: string) => api.post('/auth/verify-email', { token }).then(r => r.data),
   resendVerification: (email: string, redirect_url?: string) => api.post('/auth/resend-verification', { email, redirect_url }).then(r => r.data),
   forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }).then(r => r.data),
@@ -143,6 +144,12 @@ export const nudgesApi = {
 export const feedbackApi = {
   submit: (data: { type: string; message: string; reply_email?: string }) =>
     api.post('/feedback', data).then(r => r.data),
+};
+
+// Waitlist
+export const waitlistApi = {
+  join: (email: string, locale: string, turnstile_token: string, website: string) =>
+    api.post('/waitlist', { email, locale, turnstile_token, website }).then(r => r.data),
 };
 
 export const trackApi = {

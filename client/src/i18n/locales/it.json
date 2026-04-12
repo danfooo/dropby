@@ -74,7 +74,17 @@
     "googleFailed": "Accesso con Google fallito",
     "somethingWentWrong": "Qualcosa è andato storto. Riprova.",
     "appleFailed": "Accesso Apple non riuscito",
-    "continueWithApple": "Continua con Apple"
+    "continueWithApple": "Continua con Apple",
+    "inviteRequired": "dropby è solo su invito in questo momento. Chiedi a un amico il suo link di invito, oppure iscriviti alla lista d'attesa."
+  },
+  "waitlist": {
+    "title": "dropby è solo su invito in questo momento",
+    "subtitle": "Lasciaci la tua email — ti avviseremo quando c'è posto.",
+    "cta": "Iscriviti alla lista d'attesa",
+    "success": "Sei nella lista — ci sentiamo presto.",
+    "invalidEmail": "Inserisci un'email valida.",
+    "rateLimited": "Troppi tentativi. Riprova più tardi.",
+    "captchaPending": "Completa la verifica qui sopra."
   },
   "nav": {
     "now": "Ora",

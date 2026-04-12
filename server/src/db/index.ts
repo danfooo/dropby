@@ -165,6 +165,16 @@ db.exec(`
     PRIMARY KEY (user_id, friend_user_id)
   );
 
+  CREATE TABLE IF NOT EXISTS waitlist (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    locale TEXT,
+    ip TEXT,
+    user_agent TEXT,
+    notified_admin_at INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
+
   CREATE TABLE IF NOT EXISTS event_log (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
     ts      INTEGER NOT NULL DEFAULT (unixepoch()),

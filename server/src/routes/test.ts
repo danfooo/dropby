@@ -13,7 +13,29 @@ router.post('/reset', (_req, res) => {
     db.prepare('DELETE FROM event_log WHERE user_id = ?').run(id);
   }
   db.prepare("DELETE FROM users WHERE email LIKE '%@dropby.test'").run();
+  db.prepare("DELETE FROM waitlist WHERE email LIKE '%@dropby.test'").run();
   res.json({ ok: true });
+});
+
+// POST /api/test/seed-invite — creates a bootstrap invite token used by tests
+// to bypass the invite-only signup gate. Returns a valid token that any test
+// user can present at signup.
+router.post('/seed-invite', (_req, res) => {
+  let admin = db.prepare("SELECT id FROM users WHERE email = 'test-seed@dropby.test'").get() as { id: string } | undefined;
+  if (!admin) {
+    const id = randomUUID();
+    db.prepare(`
+      INSERT INTO users (id, email, display_name, email_verified)
+      VALUES (?, 'test-seed@dropby.test', 'Test Seed', 1)
+    `).run(id);
+    admin = { id };
+  }
+  const token = randomUUID().replace(/-/g, '');
+  const expiresAt = Math.floor(Date.now() / 1000) + 30 * 86400;
+  db.prepare(
+    'INSERT INTO invite_links (id, token, created_by, expires_at) VALUES (?, ?, ?, ?)'
+  ).run(randomUUID(), token, admin.id, expiresAt);
+  res.json({ token });
 });
 
 // GET /api/test/verification-link/:email — returns the full verification URL for a test user

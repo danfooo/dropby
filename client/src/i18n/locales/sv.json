@@ -74,7 +74,17 @@
     "googleFailed": "Google-inloggning misslyckades",
     "somethingWentWrong": "Något gick fel. Försök igen.",
     "appleFailed": "Apple-inloggning misslyckades",
-    "continueWithApple": "Fortsätt med Apple"
+    "continueWithApple": "Fortsätt med Apple",
+    "inviteRequired": "dropby är bara för inbjudna just nu. Be en kompis om deras inbjudningslänk, eller ställ dig i kön."
+  },
+  "waitlist": {
+    "title": "dropby är bara för inbjudna just nu",
+    "subtitle": "Lämna din mejl så hör vi av oss när det finns plats.",
+    "cta": "Ställ mig i kön",
+    "success": "Du är på listan — vi hör av oss.",
+    "invalidEmail": "Ange en giltig mejladress.",
+    "rateLimited": "För många försök. Försök igen senare.",
+    "captchaPending": "Slutför verifieringen ovan."
   },
   "nav": {
     "now": "Nu",

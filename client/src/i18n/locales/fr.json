@@ -74,7 +74,17 @@
     "googleFailed": "Échec de la connexion Google",
     "somethingWentWrong": "Quelque chose s'est mal passé. Réessaie.",
     "appleFailed": "Connexion Apple échouée",
-    "continueWithApple": "Continuer avec Apple"
+    "continueWithApple": "Continuer avec Apple",
+    "inviteRequired": "dropby est sur invitation pour l'instant. Demande son lien à un ami, ou rejoins la liste d'attente."
+  },
+  "waitlist": {
+    "title": "dropby est sur invitation pour l'instant",
+    "subtitle": "Laisse ton e-mail et on te prévient quand il y a de la place.",
+    "cta": "Rejoindre la liste d'attente",
+    "success": "Tu es sur la liste — on te fait signe.",
+    "invalidEmail": "Merci de saisir un e-mail valide.",
+    "rateLimited": "Trop de tentatives. Réessaie plus tard.",
+    "captchaPending": "Merci de valider la vérification au-dessus."
   },
   "nav": {
     "now": "Maintenant",

@@ -74,7 +74,17 @@
     "googleFailed": "Falha no início de sessão com Google",
     "somethingWentWrong": "Algo correu mal. Tenta novamente.",
     "appleFailed": "Falha no login com Apple",
-    "continueWithApple": "Continuar com Apple"
+    "continueWithApple": "Continuar com Apple",
+    "inviteRequired": "O dropby é só por convite neste momento. Pede o link de convite a um amigo ou entra para a lista de espera."
+  },
+  "waitlist": {
+    "title": "O dropby é só por convite neste momento",
+    "subtitle": "Deixa o teu email — avisamos-te quando houver espaço.",
+    "cta": "Entrar para a lista",
+    "success": "Estás na lista — entraremos em contacto.",
+    "invalidEmail": "Por favor, introduz um email válido.",
+    "rateLimited": "Demasiadas tentativas. Tenta novamente mais tarde.",
+    "captchaPending": "Por favor, completa a verificação acima."
   },
   "nav": {
     "now": "Agora",

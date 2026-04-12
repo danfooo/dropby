@@ -25,6 +25,17 @@ const upload = multer({
 
 const router = Router();
 
+// Validate an invite token exists, is not revoked, and is not expired.
+// Returns the inviter's user id, or null if the token is invalid.
+function validateInviteToken(token: unknown): string | null {
+  if (typeof token !== 'string' || !token) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const row = db.prepare(
+    'SELECT created_by FROM invite_links WHERE token = ? AND revoked = 0 AND expires_at > ?'
+  ).get(token, now) as { created_by: string } | undefined;
+  return row?.created_by ?? null;
+}
+
 function userResponse(u: any) {
   return {
     id: u.id,
@@ -114,9 +125,12 @@ router.delete('/me', requireAuth, (req: AuthRequest, res) => {
 
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
-  const { email, password, display_name, locale, redirect_url } = req.body;
+  const { email, password, display_name, locale, redirect_url, invite_token } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   if (!display_name?.trim()) return res.status(400).json({ error: 'Display name required' });
+  if (!validateInviteToken(invite_token)) {
+    return res.status(403).json({ error: 'INVITE_REQUIRED' });
+  }
 
   const emailLower = email.toLowerCase().trim();
   const name = display_name.trim();
@@ -213,7 +227,7 @@ router.post('/login', async (req, res) => {
 
 // POST /api/auth/google
 router.post('/google', async (req, res) => {
-  const { credential } = req.body;
+  const { credential, invite_token } = req.body;
   if (!credential) return res.status(400).json({ error: 'Google credential required' });
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -242,6 +256,10 @@ router.post('/google', async (req, res) => {
     ) as any;
 
     if (!user) {
+      // Invite-only: new Google accounts must present a valid invite token
+      if (!validateInviteToken(invite_token)) {
+        return res.status(403).json({ error: 'INVITE_REQUIRED' });
+      }
       const id = randomUUID();
       const displayName = name || emailLower.split('@')[0];
       db.prepare(`
@@ -271,7 +289,7 @@ router.post('/google', async (req, res) => {
 
 // POST /api/auth/apple
 router.post('/apple', async (req, res) => {
-  const { identityToken, fullName } = req.body;
+  const { identityToken, fullName, invite_token } = req.body;
   if (!identityToken) return res.status(400).json({ error: 'Apple identity token required' });
 
   const bundleId = process.env.APPLE_BUNDLE_ID;
@@ -299,6 +317,10 @@ router.post('/apple', async (req, res) => {
     }
 
     if (!user) {
+      // Invite-only: new Apple accounts must present a valid invite token
+      if (!validateInviteToken(invite_token)) {
+        return res.status(403).json({ error: 'INVITE_REQUIRED' });
+      }
       // New user — Apple only gives us a name on the very first sign-in
       const givenName = fullName?.givenName;
       const familyName = fullName?.familyName;

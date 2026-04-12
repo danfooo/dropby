@@ -155,6 +155,29 @@ export async function sendPasswordResetEmail(
   `);
 }
 
+export async function sendWaitlistDigest(
+  to: string,
+  entries: Array<{ email: string; locale: string | null; created_at: number }>
+) {
+  if (!entries.length) return;
+  const rows = entries
+    .map(e => {
+      const when = new Date(e.created_at * 1000).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+      const locale = e.locale || '—';
+      return `<li><code>${e.email}</code> — ${locale} — ${when}</li>`;
+    })
+    .join('');
+  const subject = `dropby waitlist — ${entries.length} new`;
+  await send(
+    to,
+    subject,
+    `
+    <p>${entries.length} new waitlist ${entries.length === 1 ? 'entry' : 'entries'}:</p>
+    <ul>${rows}</ul>
+  `
+  );
+}
+
 export async function sendWelcomeMessage(contact: string, downloadUrl: string) {
   const isPhone = /^\+?[\d\s\-()]+$/.test(contact) && !contact.includes("@");
   if (isPhone) {

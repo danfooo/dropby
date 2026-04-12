@@ -224,6 +224,17 @@ Shown to unauthenticated users visiting the root.
 ### Auth Page (`/auth`)
 
 - Login / Sign up tabs (defaults to Login; switches to Sign Up automatically when arriving via an invite link)
+- **Invite-only signup gate**: signup requires a valid invite token (from an existing user's invite link). The token is read from the redirect URL (`?redirect=/invite/:token`) or from `localStorage` (set when visiting `/invite/:token`). All signup paths (email/password, Google, Apple) enforce this server-side — `INVITE_REQUIRED` error if missing or invalid.
+- **Waitlist** (no invite token): the Sign Up tab shows a waitlist form instead of the signup fields:
+  - Title: "dropby is invite-only right now"
+  - Subtitle: "Leave your email and we'll let you know when there's room at the door."
+  - Email field + "Join the waitlist" button
+  - Cloudflare Turnstile widget for bot protection (invisible challenge)
+  - Hidden honeypot field (bots fill it; humans never see it)
+  - Server applies per-IP rate limits (5/hour, 20/day) and email deduplication (silent no-op on repeat)
+  - Success state: "You're on the list — we'll be in touch."
+  - Waitlist entries stored in `waitlist` table: email, locale (auto-detected), signup date, IP, user-agent
+  - Daily digest (09:00 UTC) emails new waitlist entries to `hi@dropby.cc` — skipped when there's nothing new
 - If arriving via an invite link (i.e. `?redirect=/invite/:token`), the inviter's avatar and name are shown above the form with the prompt "Sign up to connect with [name]"
 - Tabs: Login / Sign up
 - Google OAuth button ("Continue with Google")
@@ -839,6 +850,25 @@ Sections:
 
 ---
 
+### Data Model — `waitlist` table
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| email | text unique | Lowercase, trimmed |
+| locale | text nullable | Browser locale at signup time (max 16 chars) |
+| ip | text nullable | Client IP for rate limiting / spam analysis |
+| user_agent | text nullable | Truncated to 255 chars |
+| notified_admin_at | integer nullable | Set when the daily digest email is sent |
+| created_at | integer | Unix epoch |
+
+### API
+`POST /api/waitlist` — public, no auth. Body: `{ email, locale?, turnstile_token, website }`. The `website` field is a honeypot — any non-empty value silently returns `{ ok: true }` without storing. Server validates Turnstile token (skipped when `TURNSTILE_SECRET_KEY` not set), enforces per-IP rate limits, and deduplicates by email. Returns `{ ok: true }` on success.
+
+### Cron — Waitlist Digest
+Daily at 09:00 UTC, emails `hi@dropby.cc` (override via `WAITLIST_DIGEST_TO` env var) with all new waitlist entries since the last digest. Skipped when there are no new entries.
+
+---
+
 ## 10. Analytics
 
 All server-side analytics are written to the `event_log` table by `server/src/services/analytics.ts`. The full event catalogue with data fields is in `logging.md`.
@@ -855,6 +885,7 @@ All server-side analytics are written to the `event_log` table by `server/src/se
 | `going.sent` | Going signal submitted | `rsvp: string`, `is_guest: boolean` |
 | `invite.viewed` | Invite link opened | `has_active_door: boolean` |
 | `invite.accepted` | Invite link accepted (friendship created) | — |
+| `waitlist.joined` | New email added to waitlist | `locale` |
 | `nudge.sent` | Nudge push notification sent by cron | `type: "scheduled" \| "auto" \| "going_reminder_1" \| "going_reminder_2" \| "reengagement"` |
 | `push.sent` | Door-open push notification delivered | `type: "door_open"` |
 | `push.fail` | Push notification delivery failed | `type`, `platform`, `error` |

@@ -27,8 +27,13 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 
 - [ ] Don't show the feedback card on Home if the user has submitted feedback within the last month
 
+## Waitlist & Invite-Only
+- [ ] Set up `TURNSTILE_SECRET_KEY` on Fly + `VITE_TURNSTILE_SITE_KEY` as build arg — get keys from Cloudflare dashboard → Turnstile → Add site
+- [ ] Ensure `hi@dropby.cc` mailbox is configured before relying on daily waitlist digest (see Email TODO above)
+- [ ] Admin UI to promote waitlist entries to invites (deferred — for now copy an invite link manually)
+
 ## Limits & Safety
-- [ ] Rate limiting (none in v1)
+- [x] Rate limiting — waitlist endpoint has per-IP limits (5/hour, 20/day); broader API rate limiting still TODO
 
 ## Not needed for launch
 - [ ] Remove or update `rua` in DMARC record (currently no mailbox receiving aggregate reports)

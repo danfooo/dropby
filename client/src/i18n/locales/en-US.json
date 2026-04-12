@@ -74,7 +74,17 @@
     "googleFailed": "Google sign-in failed",
     "appleFailed": "Apple sign-in failed",
     "continueWithApple": "Continue with Apple",
-    "somethingWentWrong": "Something went wrong. Please try again."
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "inviteRequired": "dropby is invite-only right now. Ask a friend for their invite link, or join the waitlist."
+  },
+  "waitlist": {
+    "title": "dropby is invite-only right now",
+    "subtitle": "Leave your email and we'll let you know when there's room at the door.",
+    "cta": "Join the waitlist",
+    "success": "You're on the list — we'll be in touch.",
+    "invalidEmail": "Please enter a valid email.",
+    "rateLimited": "Too many attempts. Please try again later.",
+    "captchaPending": "Please complete the check above."
   },
   "nav": {
     "now": "Now",

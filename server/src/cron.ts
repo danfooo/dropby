@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { db } from './db/index.js';
 import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder, notifyReengagement } from './services/notifications.js';
 import { broadcastSSE } from './services/sse.js';
+import { sendWaitlistDigest } from './services/email.js';
 import { randomUUID } from 'crypto';
 import { log } from './services/analytics.js';
 
@@ -371,6 +372,29 @@ cron.schedule('0 3 * * *', () => {
   const result = db.prepare('DELETE FROM friend_hides WHERE expires_at IS NOT NULL AND expires_at <= ?').run(now);
   if (result.changes > 0) {
     console.log(`[cron] purged ${result.changes} expired friend mutes`);
+  }
+});
+
+// Daily at 09:00 UTC: email a digest of new waitlist entries to the admin address.
+// Skipped entirely when there's nothing new — satisfies "up to once a day".
+cron.schedule('0 9 * * *', async () => {
+  const entries = db.prepare(`
+    SELECT email, locale, created_at
+    FROM waitlist
+    WHERE notified_admin_at IS NULL
+    ORDER BY created_at ASC
+  `).all() as Array<{ email: string; locale: string | null; created_at: number }>;
+
+  if (!entries.length) return;
+
+  const to = process.env.WAITLIST_DIGEST_TO || 'hi@dropby.cc';
+  try {
+    await sendWaitlistDigest(to, entries);
+    const now = Math.floor(Date.now() / 1000);
+    db.prepare('UPDATE waitlist SET notified_admin_at = ? WHERE notified_admin_at IS NULL').run(now);
+    console.log(`[cron] waitlist digest sent to ${to} (${entries.length} entries)`);
+  } catch (err) {
+    console.error('[cron] waitlist digest failed:', err);
   }
 });
 

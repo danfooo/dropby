@@ -74,7 +74,17 @@
     "googleFailed": "Error al iniciar sesión con Google",
     "somethingWentWrong": "Algo salió mal. Por favor, inténtalo de nuevo.",
     "appleFailed": "Error con Apple",
-    "continueWithApple": "Continuar con Apple"
+    "continueWithApple": "Continuar con Apple",
+    "inviteRequired": "dropby es solo por invitación ahora mismo. Pide a un amigo su enlace de invitación o apúntate a la lista de espera."
+  },
+  "waitlist": {
+    "title": "dropby es solo por invitación ahora mismo",
+    "subtitle": "Déjanos tu correo y te avisamos cuando haya sitio.",
+    "cta": "Apuntarme a la lista",
+    "success": "Estás en la lista — te escribiremos.",
+    "invalidEmail": "Por favor, introduce un correo válido.",
+    "rateLimited": "Demasiados intentos. Por favor, prueba más tarde.",
+    "captchaPending": "Por favor, completa la verificación de arriba."
   },
   "nav": {
     "now": "Ahora",

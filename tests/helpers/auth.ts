@@ -3,6 +3,13 @@ import { getVerificationLink } from './server';
 
 const SERVER_URL = 'http://localhost:3001';
 
+async function seedInviteToken(): Promise<string> {
+  const res = await fetch(`${SERVER_URL}/api/test/seed-invite`, { method: 'POST' });
+  if (!res.ok) throw new Error(`seed-invite failed: ${res.status}`);
+  const data = await res.json();
+  return data.token;
+}
+
 export interface UserData {
   email: string;
   password: string;
@@ -14,7 +21,13 @@ export interface UserData {
  * "check your email" confirmation message.
  */
 export async function registerUser(page: Page, { email, password, displayName }: UserData): Promise<void> {
+  // Signup is gated on an invite token. Seed one and inject it into localStorage,
+  // which the auth page picks up as the invite context. Cleaned up after signup so
+  // verification flow doesn't auto-accept a test-seed friendship.
+  const inviteToken = await seedInviteToken();
   await page.goto('/auth');
+  await page.evaluate(t => localStorage.setItem('dropby_invite_token', t), inviteToken);
+  await page.reload();
 
   // Switch to the signup tab
   await page.getByRole('button', { name: /sign up/i }).click();
@@ -26,6 +39,9 @@ export async function registerUser(page: Page, { email, password, displayName }:
 
   // Wait for the green "check your email" success message
   await page.waitForSelector('.bg-emerald-50', { timeout: 15_000 });
+
+  // Clear the seeded token so the post-verify flow doesn't auto-friend test-seed
+  await page.evaluate(() => localStorage.removeItem('dropby_invite_token'));
 }
 
 /**
