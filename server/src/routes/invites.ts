@@ -180,12 +180,14 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
   const acceptor = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
   if (acceptor) notifyFriendJoined(inviterId, acceptor.display_name);
 
-  // If inviter has active status, auto-add new friend as recipient (silently)
-  if (invite.status_id) {
-    const active = db.prepare('SELECT id FROM statuses WHERE id = ? AND closed_at IS NULL AND closes_at > ?').get(invite.status_id, nowUnix);
-    if (active) {
-      db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), invite.status_id, userId);
-    }
+  // Mutually add each other to any active doors (silently)
+  const inviterActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(inviterId, nowUnix) as any;
+  if (inviterActive) {
+    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), inviterActive.id, userId);
+  }
+  const acceptorActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(userId, nowUnix) as any;
+  if (acceptorActive) {
+    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), acceptorActive.id, inviterId);
   }
 
   const inviter = db.prepare('SELECT display_name FROM users WHERE id = ?').get(inviterId) as any;
