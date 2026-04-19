@@ -289,8 +289,4 @@ if (!notifPrefCols.find(c => c.name === 'notif_window_start')) {
   db.exec('ALTER TABLE friend_notif_prefs ADD COLUMN notif_count INTEGER NOT NULL DEFAULT 0');
 }
 
-if (!cols.find(c => c.name === 'pending_invite_token')) {
-  db.exec('ALTER TABLE users ADD COLUMN pending_invite_token TEXT');
-}
-
 export default db;
