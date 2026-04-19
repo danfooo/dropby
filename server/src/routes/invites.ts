@@ -13,6 +13,35 @@ function generateToken(): string {
   return randomUUID().replace(/-/g, '');
 }
 
+// Shared logic: create friendship from an invite token, used by accept endpoint and email verification
+export function acceptInviteToken(token: string, acceptorId: string): { ok: boolean; inviterName?: string } {
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const invite = db.prepare('SELECT * FROM invite_links WHERE token = ? AND revoked = 0 AND expires_at > ?').get(token, nowUnix) as any;
+  if (!invite) return { ok: false };
+
+  const inviterId = invite.created_by;
+  if (acceptorId === inviterId) return { ok: true };
+  if (areFriends(acceptorId, inviterId)) return { ok: true };
+
+  const [a, b] = [acceptorId, inviterId].sort();
+  db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
+
+  const acceptor = db.prepare('SELECT display_name FROM users WHERE id = ?').get(acceptorId) as any;
+  if (acceptor) notifyFriendJoined(inviterId, acceptor.display_name);
+
+  const inviterActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(inviterId, nowUnix) as any;
+  if (inviterActive) {
+    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), inviterActive.id, acceptorId);
+  }
+  const acceptorActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(acceptorId, nowUnix) as any;
+  if (acceptorActive) {
+    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), acceptorActive.id, inviterId);
+  }
+
+  const inviter = db.prepare('SELECT display_name FROM users WHERE id = ?').get(inviterId) as any;
+  return { ok: true, inviterName: inviter?.display_name };
+}
+
 // POST /api/invites — generate invite link
 router.post('/', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
@@ -160,38 +189,18 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
 
   const inviterId = invite.created_by;
 
-  // Self-invite: no-op
   if (userId === inviterId) {
     return res.json({ ok: true, alreadyFriends: false, isSelf: true });
   }
 
-  // Already friends: return current status
   if (areFriends(userId, inviterId)) {
     const activeStatus = db.prepare('SELECT * FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(inviterId, nowUnix) as any;
     return res.json({ ok: true, alreadyFriends: true, status: activeStatus ? { id: activeStatus.id, note: activeStatus.note, closes_at: activeStatus.closes_at } : null });
   }
 
-  // Create friendship (canonical: lower UUID first)
-  const [a, b] = [userId, inviterId].sort();
-  db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
   log('invite.accepted', userId);
-
-  // Notify the inviter that their new friend joined
-  const acceptor = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
-  if (acceptor) notifyFriendJoined(inviterId, acceptor.display_name);
-
-  // Mutually add each other to any active doors (silently)
-  const inviterActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(inviterId, nowUnix) as any;
-  if (inviterActive) {
-    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), inviterActive.id, userId);
-  }
-  const acceptorActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(userId, nowUnix) as any;
-  if (acceptorActive) {
-    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), acceptorActive.id, inviterId);
-  }
-
-  const inviter = db.prepare('SELECT display_name FROM users WHERE id = ?').get(inviterId) as any;
-  res.json({ ok: true, alreadyFriends: false, inviterName: inviter.display_name });
+  const result = acceptInviteToken(token, userId);
+  res.json({ ok: true, alreadyFriends: false, inviterName: result.inviterName });
 });
 
 // POST /api/invites/email — send an email invite (30-day link)

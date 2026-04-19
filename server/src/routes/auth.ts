@@ -7,6 +7,7 @@ import multer from 'multer';
 import { db } from '../db/index.js';
 import { requireAuth, signJwt, AuthRequest } from '../middleware/auth.js';
 import { sendVerificationEmail } from '../services/email.js';
+import { acceptInviteToken } from './invites.js';
 import { log } from '../services/analytics.js';
 
 const avatarsDir = join(process.cwd(), 'data', 'avatars');
@@ -128,7 +129,8 @@ router.post('/signup', async (req, res) => {
   const { email, password, display_name, locale, redirect_url, invite_token } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   if (!display_name?.trim()) return res.status(400).json({ error: 'Display name required' });
-  if (!validateInviteToken(invite_token)) {
+  const inviterId = validateInviteToken(invite_token);
+  if (!inviterId) {
     return res.status(403).json({ error: 'INVITE_REQUIRED' });
   }
 
@@ -147,9 +149,9 @@ router.post('/signup', async (req, res) => {
   const verificationExpires = Math.floor(Date.now() / 1000) + 24 * 3600;
 
   db.prepare(`
-    INSERT INTO users (id, email, display_name, password_hash, email_verified, email_verification_token, email_verification_expires_at, locale)
-    VALUES (?, ?, ?, ?, 0, ?, ?, ?)
-  `).run(id, emailLower, name, hash, verificationToken, verificationExpires, locale ?? null);
+    INSERT INTO users (id, email, display_name, password_hash, email_verified, email_verification_token, email_verification_expires_at, locale, pending_invite_token)
+    VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?)
+  `).run(id, emailLower, name, hash, verificationToken, verificationExpires, locale ?? null, invite_token as string);
 
   sendVerificationEmail(emailLower, name, verificationToken, locale, redirect_url);
   log('user.signup', id, { method: 'email' });
@@ -180,10 +182,14 @@ router.post('/verify-email', async (req, res) => {
   if (!user) return res.status(400).json({ error: 'INVALID_OR_EXPIRED' });
 
   db.prepare(`
-    UPDATE users SET email_verified = 1, email_verification_token = NULL, email_verification_expires_at = NULL
+    UPDATE users SET email_verified = 1, email_verification_token = NULL, email_verification_expires_at = NULL, pending_invite_token = NULL
     WHERE id = ?
   `).run(user.id);
   log('user.verify', user.id);
+
+  if (user.pending_invite_token) {
+    acceptInviteToken(user.pending_invite_token, user.id);
+  }
 
   const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
   const jwt = await signJwt(user.id);
