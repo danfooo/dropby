@@ -16,7 +16,7 @@ function generateToken(): string {
 // POST /api/invites — generate invite link
 router.post('/', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
-  const { status_id } = req.body;
+  const { status_id, friend_only } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
   const expiresAt = nowUnix + 7 * 86400; // 7 days
 
@@ -24,7 +24,7 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
   if (status_id) {
     const status = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND closes_at > ?').get(status_id, userId, nowUnix);
     if (status) resolvedStatusId = status_id;
-  } else {
+  } else if (!friend_only) {
     // Check if user has active or scheduled status, auto-attach
     const active = db.prepare(`
       SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL

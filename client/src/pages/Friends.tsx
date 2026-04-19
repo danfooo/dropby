@@ -118,7 +118,7 @@ export default function Friends() {
 
   const handleInvite = async () => {
     try {
-      await copyText(invitesApi.generate().then(data => {
+      await copyText(invitesApi.generate(undefined, true).then(data => {
         qc.invalidateQueries({ queryKey: ['open-links'] });
         return `${t('home.friendshipCopyText')}\n${data.url}`;
       }));
