@@ -102,6 +102,17 @@ router.post('/make-friends', (req, res) => {
   res.json({ ok: true, userAId: userA.id, userBId: userB.id });
 });
 
+// GET /api/test/are-friends?emailA=...&emailB=...
+router.get('/are-friends', (req, res) => {
+  const { emailA, emailB } = req.query as { emailA: string; emailB: string };
+  const userA = db.prepare('SELECT id FROM users WHERE email = ?').get(emailA?.toLowerCase()) as { id: string } | undefined;
+  const userB = db.prepare('SELECT id FROM users WHERE email = ?').get(emailB?.toLowerCase()) as { id: string } | undefined;
+  if (!userA || !userB) return res.json({ friends: false });
+  const [a, b] = [userA.id, userB.id].sort();
+  const row = db.prepare('SELECT id FROM friendships WHERE user_a_id = ? AND user_b_id = ?').get(a, b);
+  res.json({ friends: !!row });
+});
+
 // GET /api/test/events/:userId — returns recent event_log rows for a user, newest first
 router.get('/events/:userId', (req, res) => {
   const { userId } = req.params;

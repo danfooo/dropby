@@ -37,6 +37,13 @@ export async function makeFriends(emailA: string, emailB: string): Promise<{ use
   return res.json();
 }
 
+export async function areFriends(emailA: string, emailB: string): Promise<boolean> {
+  const res = await fetch(`${SERVER_URL}/api/test/are-friends?emailA=${encodeURIComponent(emailA)}&emailB=${encodeURIComponent(emailB)}`);
+  if (!res.ok) throw new Error(`areFriends failed: ${res.status}`);
+  const data = await res.json();
+  return data.friends as boolean;
+}
+
 export async function getEvents(userId: string, since = 0): Promise<Array<{ ts: number; event: string; [key: string]: unknown }>> {
   const url = `${SERVER_URL}/api/test/events/${userId}?since=${since}`;
   const res = await fetch(url);
