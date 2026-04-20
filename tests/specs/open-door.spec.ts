@@ -56,8 +56,8 @@ test('Alice opens her door; Bob sees it and taps Going; Alice sees Bob is on the
     // Bob sees Alice's door with the note
     await expect(bobPage.getByText(doorNote)).toBeVisible({ timeout: 10_000 });
 
-    // Bob taps "Going ✅"
-    await bobPage.getByRole('button', { name: /Going/i }).first().click();
+    // Bob checks "I'm going"
+    await bobPage.getByRole('checkbox', { name: /I'm going/i }).first().check();
 
     // Alice's view: go back to home, should show "On their way" with Bob's name
     await alicePage.reload();

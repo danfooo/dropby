@@ -146,10 +146,10 @@ test('Muted friend: open door from muted friend does not appear in feed', async 
     const aliceToken = await alicePage.evaluate(() => localStorage.getItem('token'));
     const bobToken = await bobPage.evaluate(() => localStorage.getItem('token'));
 
-    // Alice mutes Bob
+    // Alice hides Bob
     await alicePage.evaluate(
       async ({ serverUrl, token, bobId }) => {
-        await fetch(`${serverUrl}/api/friends/${bobId}/mute`, {
+        await fetch(`${serverUrl}/api/friends/${bobId}/hide`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -179,7 +179,7 @@ test('Muted friend: open door from muted friend does not appear in feed', async 
     // Alice goes to Friends and unmutes Bob
     await alicePage.goto('/friends');
     await alicePage.waitForLoadState('domcontentloaded');
-    await alicePage.getByRole('button', { name: /unmute/i }).click();
+    await alicePage.getByRole('button', { name: /unhide/i }).click();
 
     // Alice navigates back to home — Bob's door should now appear without a reload
     await alicePage.goto('/');
@@ -192,7 +192,7 @@ test('Muted friend: open door from muted friend does not appear in feed', async 
     const aliceToken = await alicePage.evaluate(() => localStorage.getItem('token'));
     await alicePage.evaluate(
       async ({ serverUrl, token, bobId }) => {
-        await fetch(`${serverUrl}/api/friends/${bobId}/mute`, {
+        await fetch(`${serverUrl}/api/friends/${bobId}/hide`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         });

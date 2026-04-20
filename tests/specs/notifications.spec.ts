@@ -291,7 +291,7 @@ test('Muted friend is excluded from recipient list when host opens door', async 
     await alicePage.evaluate(
       async ({ serverUrl, token, bobId }) => {
         await fetch(`${serverUrl}/api/status`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-        await fetch(`${serverUrl}/api/friends/${bobId}/mute`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+        await fetch(`${serverUrl}/api/friends/${bobId}/hide`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
       },
       { serverUrl: SERVER_URL, token: aliceToken, bobId },
     );
@@ -334,7 +334,7 @@ test('Muted friend is excluded from recipient list when host opens door', async 
     // Unmute Bob and close Alice's door
     await alicePage.evaluate(
       async ({ serverUrl, token, bobId }) => {
-        await fetch(`${serverUrl}/api/friends/${bobId}/mute`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        await fetch(`${serverUrl}/api/friends/${bobId}/hide`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
         await fetch(`${serverUrl}/api/status`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       },
       { serverUrl: SERVER_URL, token: aliceToken, bobId },

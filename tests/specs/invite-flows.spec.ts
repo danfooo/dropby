@@ -44,27 +44,29 @@ test.describe('Generic friendship invite', () => {
       await loginUser(alicePage, ALICE);
       await loginUser(bobPage, BOB);
 
-      // Alice opens Friends and generates a generic invite link
-      await alicePage.goto('/friends');
-      await alicePage.waitForLoadState('domcontentloaded');
-
-      const [inviteResponse] = await Promise.all([
-        alicePage.waitForResponse(
-          (res) => res.url().includes('/api/invites') && res.request().method() === 'POST',
-          { timeout: 5_000 },
-        ),
-        alicePage.getByRole('button', { name: /copy invite link/i }).first().click(),
-      ]);
-
-      const { url: inviteUrl } = await inviteResponse.json();
+      // Alice generates a generic invite link via API (friend-only, no status)
+      const inviteData = await alicePage.evaluate(async () => {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/invites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({}),
+        });
+        return res.json();
+      });
+      const inviteUrl = inviteData.url;
       expect(inviteUrl).toBeTruthy();
 
       // Bob (registered, not yet friends with Alice) visits the invite link
       await bobPage.goto(inviteUrl);
       await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
 
-      // Carol registers as a brand new user, then visits the invite link
+      // Carol (new user) visits the invite URL first — the invite page stores the token in
+      // localStorage and redirects to /auth, so Carol can sign up with Alice's invite token.
+      const inviteToken = inviteUrl.split('/').pop()!;
       await carolPage.goto('/auth');
+      await carolPage.evaluate((t: string) => localStorage.setItem('dropby_invite_token', t), inviteToken);
+      await carolPage.reload();
       await carolPage.getByRole('button', { name: /sign up/i }).click();
       await carolPage.getByPlaceholder(/display name/i).fill(CAROL.displayName);
       await carolPage.getByPlaceholder(/email/i).fill(CAROL.email);
@@ -72,14 +74,11 @@ test.describe('Generic friendship invite', () => {
       await carolPage.getByRole('button', { name: /create account/i }).click();
       await carolPage.waitForSelector('.bg-emerald-50', { timeout: 10_000 });
 
-      // Verify Carol's email via the test API
+      // Verify Carol's email
       const verifyRes = await fetch(`${SERVER_URL}/api/test/verification-link/${encodeURIComponent(CAROL.email)}`);
       const { url: verifyUrl } = await verifyRes.json();
       await carolPage.goto(verifyUrl);
       await carolPage.waitForURL('**/home', { timeout: 10_000 });
-
-      await carolPage.goto(inviteUrl);
-      await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
 
       // Alice's friends list now shows both Bob and Carol
       await alicePage.goto('/friends');

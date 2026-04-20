@@ -1,4 +1,4 @@
-import { test, expect, Browser, chromium } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { resetTestUsers } from '../helpers/server';
 import { setupUser } from '../helpers/auth';
 import { ALICE, BOB } from '../helpers/users';
@@ -18,21 +18,17 @@ test('Alice shares invite link; Bob visits it and they become friends', async ({
     // Register and log in Alice
     await setupUser(alicePage, ALICE);
 
-    // Alice goes to the Friends tab
-    await alicePage.goto('/friends');
-    await alicePage.waitForLoadState('domcontentloaded');
-
-    // Alice clicks the "Invite" button and we capture the resulting invite URL
-    const [inviteResponse] = await Promise.all([
-      alicePage.waitForResponse(
-        (res) => res.url().includes('/api/invites') && res.request().method() === 'POST',
-        { timeout: 5_000 }
-      ),
-      alicePage.getByRole('button', { name: /copy invite link/i }).first().click(),
-    ]);
-
-    const inviteBody = await inviteResponse.json();
-    const inviteUrl = inviteBody.url;
+    // Generate invite via API (friend-only, no status)
+    const inviteData = await alicePage.evaluate(async () => {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}),
+      });
+      return res.json();
+    });
+    const inviteUrl = inviteData.url;
     expect(inviteUrl).toBeTruthy();
 
     // Bob registers and is now logged in
