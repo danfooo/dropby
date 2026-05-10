@@ -458,7 +458,7 @@ export default function Home() {
             <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('home.openDoorTo')}</h2>
             <div className="relative">
               <div
-                className={`divide-y divide-gray-50 dark:divide-gray-800 overflow-x-hidden${activeFriends.length >= 5 ? ' h-[192px] overflow-y-auto' : ''}`}
+                className={`divide-y divide-gray-50 dark:divide-gray-800 overflow-x-hidden rounded-xl${activeFriends.length >= 5 ? ' h-[192px] overflow-y-auto' : ' overflow-hidden'}`}
                 onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
               >
                 {activeFriends.map((f: any) => (
