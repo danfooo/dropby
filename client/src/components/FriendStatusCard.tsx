@@ -33,7 +33,7 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
     <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl overflow-hidden">
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-center gap-2.5 mb-3">
-          <Avatar name={status.owner_name} size="sm" />
+          <Avatar name={status.owner_name} url={status.owner_avatar_url} size="sm" />
           <p className="text-sm font-medium text-violet-700 dark:text-violet-300">{status.owner_name}</p>
         </div>
         {isScheduled && (

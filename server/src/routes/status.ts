@@ -99,7 +99,7 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
 
   const friendStatuses = db.prepare(`
-    SELECT s.*, u.display_name, u.id as owner_id
+    SELECT s.*, u.display_name, u.avatar_url, u.id as owner_id
     FROM statuses s
     JOIN users u ON u.id = s.user_id
     JOIN status_recipients sr ON sr.status_id = s.id AND sr.user_id = ?
@@ -124,6 +124,7 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
     id: s.id,
     owner_id: s.owner_id,
     owner_name: s.display_name,
+    owner_avatar_url: s.avatar_url || null,
     note: s.note,
     closes_at: s.closes_at,
     starts_at: s.starts_at || null,
