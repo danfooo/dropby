@@ -6,6 +6,14 @@ const resend = process.env.RESEND_API_KEY
 const FROM = process.env.EMAIL_FROM || "dropby <noreply@drop-by.app>";
 const APP_URL = () => process.env.APP_URL || "http://localhost:5173";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 async function send(to: string, subject: string, html: string) {
   if (!resend) {
     console.log(`[EMAIL] To: ${to} | Subject: ${subject}`);
@@ -70,7 +78,7 @@ export async function sendVerificationEmail(
   if (redirectUrl) params.set('redirect', redirectUrl);
   const link = `${APP_URL()}/verify-email?${params}`;
   await send(to, copy.subject, `
-    <p>${copy.greeting(displayName)}</p>
+    <p>${copy.greeting(escapeHtml(displayName))}</p>
     <p>${copy.body}</p>
     <p><a href="${link}">${copy.linkText}</a></p>
     <p>${copy.expiry}</p>
@@ -82,11 +90,12 @@ export async function sendInviteEmail(
   fromName: string,
   inviteUrl: string
 ) {
+  const safeName = escapeHtml(fromName);
   await send(
     to,
-    `${fromName} invited you to dropby`,
+    `${safeName} invited you to dropby`,
     `
-    <p>${fromName} wants to connect with you on dropby.</p>
+    <p>${safeName} wants to connect with you on dropby.</p>
     <p><a href="${inviteUrl}">Accept invite</a></p>
   `
   );
@@ -148,7 +157,7 @@ export async function sendPasswordResetEmail(
   const copy = resetCopy[lang] ?? defaultResetCopy;
   const link = `${APP_URL()}/reset-password?token=${token}`;
   await send(to, copy.subject, `
-    <p>${copy.greeting(displayName)}</p>
+    <p>${copy.greeting(escapeHtml(displayName))}</p>
     <p>${copy.body}</p>
     <p><a href="${link}">${copy.linkText}</a></p>
     <p>${copy.expiry}</p>
