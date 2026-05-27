@@ -153,9 +153,12 @@ export default function Get() {
         >
           {t('marketing.tagline2')}
         </p>
+        <p className={`mt-8 text-sm text-gray-400 dark:text-gray-500 ${fx(mounted)}`} style={{ transitionDelay: '400ms' }}>
+          {t('marketing.appStoreSoon')}
+        </p>
         <Link
           to="/auth"
-          className={`mt-8 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ${fx(mounted)}`}
+          className={`mt-2 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ${fx(mounted)}`}
           style={{ transitionDelay: '500ms' }}
         >
           {t('marketing.webFallback')} →
@@ -221,9 +224,7 @@ export default function Get() {
             style={{ animation: cardIn ? 'float 4s ease-in-out 0.8s infinite' : undefined }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                S
-              </div>
+              <img src="/avatar-sarah.jpg" alt="Sarah" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
               <div className="min-w-0">
                 <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">Sarah {t('marketing.mockOpened')}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('marketing.mockNote')}</p>
@@ -249,9 +250,12 @@ export default function Get() {
         <h2 className={`text-3xl md:text-4xl font-bold text-white mb-10 ${fx(bottomIn)}`}>
           {t('marketing.bottomHeadline')}
         </h2>
+        <p className={`mt-8 text-sm text-emerald-100 ${fx(bottomIn)}`} style={{ transitionDelay: '200ms' }}>
+          {t('marketing.appStoreSoon')}
+        </p>
         <Link
           to="/auth"
-          className={`mt-8 inline-block text-sm text-emerald-100 hover:text-white transition-colors ${fx(bottomIn)}`}
+          className={`mt-2 inline-block text-sm text-emerald-100 hover:text-white transition-colors ${fx(bottomIn)}`}
           style={{ transitionDelay: '300ms' }}
         >
           {t('marketing.webFallback')} →
