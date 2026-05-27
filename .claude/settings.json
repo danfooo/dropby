@@ -1,3 +1,27 @@
 {
-  "allowedTools": ["*"]
+  "allowedTools": ["*"],
+  "permissions": {
+    "allow": [
+      "Bash(npx playwright test:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git stash:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__get_page_text",
+      "mcp__claude-in-chrome__read_page"
+    ]
+  }
 }
