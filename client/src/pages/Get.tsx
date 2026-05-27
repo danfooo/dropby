@@ -29,22 +29,6 @@ function fx(visible: boolean) {
 
 // ── Icons ─────────────────────────────────────────────────────
 
-function AppleIcon() {
-  return (
-    <svg className="w-5 h-5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-    </svg>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg className="w-5 h-5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5a1 1 0 0 1 0 1.6l-14 8.5c-.66.5-1.6.03-1.6-.8z" />
-    </svg>
-  );
-}
-
 function GlobeIcon() {
   return (
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -117,131 +101,6 @@ function LanguageSwitcher() {
   );
 }
 
-// ── Hero store buttons with QR reveal ────────────────────────
-
-const STORE_LINKS = {
-  ios:     '#', // TODO: replace with App Store URL
-  android: '#', // TODO: replace with Google Play URL
-};
-
-// null = desktop; show both stores
-const mobilePlatform: 'ios' | 'android' | null = (() => {
-  const ua = navigator.userAgent;
-  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
-  if (/android/i.test(ua)) return 'android';
-  return null;
-})();
-
-function HeroStoreButtons({ mounted }: { mounted: boolean }) {
-  const { t } = useTranslation();
-  const [activeStore, setActiveStore] = useState<'ios' | 'android' | null>(null);
-
-  const showIos     = mobilePlatform !== 'android';
-  const showAndroid = mobilePlatform !== 'ios';
-
-  const toggle = (store: 'ios' | 'android') => (e: React.MouseEvent) => {
-    e.preventDefault();
-    setActiveStore(prev => prev === store ? null : store);
-  };
-
-  const btnBase = 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full font-semibold text-sm transition-[background-color,transform,box-shadow] duration-150 hover:scale-105 active:scale-95';
-  const btnActive = `${btnBase} bg-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-emerald-900`;
-  const btnIdle   = `${btnBase} bg-emerald-500 hover:bg-emerald-400 text-white`;
-
-  return (
-    <div className={fx(mounted)} style={{ transitionDelay: '350ms' }}>
-      {/* Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        {showIos && (
-          <a href={STORE_LINKS.ios} onClick={toggle('ios')}
-            className={activeStore === 'ios' ? btnActive : btnIdle}>
-            <AppleIcon />
-            {t('marketing.downloadAppStore')}
-          </a>
-        )}
-        {showAndroid && (
-          <a href={STORE_LINKS.android} onClick={toggle('android')}
-            className={activeStore === 'android' ? btnActive : btnIdle}>
-            <PlayIcon />
-            {t('marketing.downloadGooglePlay')}
-          </a>
-        )}
-      </div>
-
-      {/* QR reveal panel — expands below the buttons */}
-      <div
-        className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-out ${
-          activeStore ? 'max-h-56 opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <img
-            src={activeStore === 'ios' ? '/qr-ios.svg' : '/qr-android.svg'}
-            alt="QR code"
-            className="w-28 h-28 rounded-xl shadow-md"
-          />
-          <p className="text-xs text-gray-400 dark:text-gray-500">
-            {t('marketing.scanWithPhone')}
-          </p>
-          <a
-            href={activeStore === 'ios' ? STORE_LINKS.ios : STORE_LINKS.android}
-            className="text-sm font-medium text-emerald-500 hover:text-emerald-400 transition-colors"
-          >
-            {activeStore === 'ios'
-              ? t('marketing.downloadAppStore')
-              : t('marketing.downloadGooglePlay')
-            } →
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Bottom store buttons (with always-visible QR) ─────────────
-
-function BottomStoreButtons({ visible }: { visible: boolean }) {
-  const { t } = useTranslation();
-  const btn = 'inline-flex items-center gap-2.5 px-5 py-3 rounded-full bg-white hover:bg-gray-50 active:scale-95 text-gray-900 font-semibold text-sm transition-[background-color,transform] duration-150 hover:scale-105';
-
-  const showIos     = mobilePlatform !== 'android';
-  const showAndroid = mobilePlatform !== 'ios';
-
-  return (
-    <div className={`${fx(visible)}`} style={{ transitionDelay: '150ms' }}>
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        {showIos && (
-          <a href={STORE_LINKS.ios} className={btn}>
-            <AppleIcon />
-            {t('marketing.downloadAppStore')}
-          </a>
-        )}
-        {showAndroid && (
-          <a href={STORE_LINKS.android} className={btn}>
-            <PlayIcon />
-            {t('marketing.downloadGooglePlay')}
-          </a>
-        )}
-      </div>
-      {/* QR codes — always visible */}
-      <div className="flex justify-center gap-10 mt-8">
-        {showIos && (
-          <div className="flex flex-col items-center gap-2">
-            <img src="/qr-ios.svg" alt="iOS QR code" className="w-20 h-20 rounded-xl" />
-            <p className="text-xs text-emerald-100">{t('marketing.downloadAppStore')}</p>
-          </div>
-        )}
-        {showAndroid && (
-          <div className="flex flex-col items-center gap-2">
-            <img src="/qr-android.svg" alt="Android QR code" className="w-20 h-20 rounded-xl" />
-            <p className="text-xs text-emerald-100">{t('marketing.downloadGooglePlay')}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────
 
 export default function Get() {
@@ -294,7 +153,6 @@ export default function Get() {
         >
           {t('marketing.tagline2')}
         </p>
-        <HeroStoreButtons mounted={mounted} />
         <Link
           to="/auth"
           className={`mt-8 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ${fx(mounted)}`}
@@ -391,7 +249,6 @@ export default function Get() {
         <h2 className={`text-3xl md:text-4xl font-bold text-white mb-10 ${fx(bottomIn)}`}>
           {t('marketing.bottomHeadline')}
         </h2>
-        <BottomStoreButtons visible={bottomIn} />
         <Link
           to="/auth"
           className={`mt-8 inline-block text-sm text-emerald-100 hover:text-white transition-colors ${fx(bottomIn)}`}
