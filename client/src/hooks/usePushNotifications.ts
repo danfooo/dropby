@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { reRegisterIfPermitted } from '../utils/notifications';
+import { reRegisterIfPermitted, requestPermissionIfHasFriends } from '../utils/notifications';
 
 export function usePushNotifications(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     reRegisterIfPermitted();
+    // Existing user on a new device: prompt if permission not yet decided and they have friends
+    requestPermissionIfHasFriends();
 
     if (!Capacitor.isNativePlatform()) return;
     let cleanup: (() => void) | undefined;

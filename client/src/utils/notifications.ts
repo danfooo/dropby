@@ -102,6 +102,17 @@ export async function requestNotificationPermission(): Promise<void> {
   }
 }
 
+// For existing users logging in on a new device: request permission immediately if they have friends
+export async function requestPermissionIfHasFriends(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  const shouldPrompt = await shouldShowNotifPrompt();
+  if (!shouldPrompt) return;
+  try {
+    const friends = await friendsApi.list();
+    if ((friends as any[]).length > 0) await requestNotificationPermission();
+  } catch {}
+}
+
 export async function reRegisterIfPermitted(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   try {
