@@ -40,6 +40,8 @@ interface Metrics {
     fails_24h: number;
     recent: Array<{ ts: number; type: string; platform: string; error: string }>;
   };
+  push_subscriptions: Array<{ platform: string; users: number; tokens: number }>;
+  push_recent_sent: Array<{ ts: number; user_id: string; type: string; platform: string }>;
 }
 
 function pct(n: number, of: number) {
@@ -128,7 +130,7 @@ export default function Admin() {
     );
   }
 
-  const { weekly, weeks, funnel, invite_funnel: inv, push_effectiveness: pe, push_alarms } = metrics;
+  const { weekly, weeks, funnel, invite_funnel: inv, push_effectiveness: pe, push_alarms, push_subscriptions, push_recent_sent } = metrics;
   const tw = weekly.this_week;
   const lw = weekly.last_week;
 
@@ -264,6 +266,43 @@ export default function Admin() {
           ))}
         </div>
       </section>
+
+      {/* Push subscriptions */}
+      <section>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          Push subscriptions
+        </h2>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
+          {push_subscriptions.length === 0 ? (
+            <div className="px-4 py-3 text-sm text-gray-400">No registered tokens</div>
+          ) : push_subscriptions.map(s => (
+            <div key={s.platform} className="flex items-center gap-3 px-4 py-3">
+              <div className="flex-1 text-sm text-gray-800 capitalize">{s.platform}</div>
+              <div className="text-xs text-gray-400">{s.tokens} token{s.tokens !== 1 ? 's' : ''}</div>
+              <div className="text-sm font-medium text-gray-900 w-16 text-right">{s.users} user{s.users !== 1 ? 's' : ''}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Recent push activity */}
+      {push_recent_sent.length > 0 && (
+        <section>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            Recent push sent — last 48h ({push_recent_sent.length})
+          </h2>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
+            {push_recent_sent.map((n, i) => (
+              <div key={i} className="px-4 py-2 text-xs text-gray-600 flex items-center gap-2">
+                <span className="text-gray-400 w-16 shrink-0">{new Date(n.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="font-medium">{n.type}</span>
+                <span className="text-gray-400">{n.platform}</span>
+                <span className="text-gray-300 ml-auto font-mono">{n.user_id.slice(0, 8)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Push alarms */}
       {push_alarms.fails_24h > 0 && (

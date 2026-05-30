@@ -193,7 +193,21 @@ router.get('/metrics', requireAuth, (req: AuthRequest, res) => {
     recent: recentFails.map(r => ({ ts: r.ts, ...JSON.parse(r.data ?? '{}') })),
   };
 
-  res.json({ weekly, weeks, funnel, invite_funnel, push_effectiveness, push_alarms });
+  // ── Push subscriptions ────────────────────────────────────────
+  const pushSubscriptions = db.prepare(`
+    SELECT platform, COUNT(DISTINCT user_id) as users, COUNT(*) as tokens
+    FROM push_tokens GROUP BY platform
+  `).all() as Array<{ platform: string; users: number; tokens: number }>;
+
+  // ── Recent push activity (last 48h) ──────────────────────────
+  const recentPushSent = db.prepare(`
+    SELECT el.ts, el.user_id, el.data
+    FROM event_log el
+    WHERE el.event = 'push.sent' AND el.ts >= ?
+    ORDER BY el.ts DESC LIMIT 40
+  `).all(now - 2 * DAY) as Array<{ ts: number; user_id: string; data: string }>;
+
+  res.json({ weekly, weeks, funnel, invite_funnel, push_effectiveness, push_alarms, push_subscriptions: pushSubscriptions, push_recent_sent: recentPushSent.map(r => ({ ts: r.ts, user_id: r.user_id, ...JSON.parse(r.data ?? '{}') })) });
 });
 
 export default router;

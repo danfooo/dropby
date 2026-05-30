@@ -175,14 +175,16 @@ async function sendApns(token: string, payload: PushPayload): Promise<void> {
 
 // ── Router ────────────────────────────────────────────────────
 async function sendPush(userId: string, token: string, platform: string, payload: PushPayload) {
+  const type = payload.data?.type ?? 'unknown';
   try {
     if (platform === 'android') {
       await sendFcm(token, payload);
     } else if (platform === 'ios') {
       await sendApns(token, payload);
     }
+    log('push.sent', userId, { type, platform });
   } catch (err: any) {
-    log('push.fail', userId, { type: payload.data?.type ?? 'unknown', platform, error: err.message });
+    log('push.fail', userId, { type, platform, error: err.message });
   }
 }
 
@@ -196,8 +198,6 @@ function getPushTokens(userId: string) {
 export function notifyFriendDoorOpen(recipientId: string, openerName: string, note: string | null, statusId?: string, openerUserId?: string) {
   const tokens = getPushTokens(recipientId);
   if (!tokens.length) return;
-  // Log once per recipient — used to measure door_open push → going conversion
-  log('push.sent', recipientId, { type: 'door_open' });
   const body = note ? `"${note}"` : 'Come drop by!';
   const data: Record<string, string> = { type: 'door_open' };
   if (statusId) data.statusId = statusId;
@@ -218,7 +218,7 @@ export function notifyFriendDoorOpen(recipientId: string, openerName: string, no
 
 export function notifyGoingSignal(hostId: string, guestName: string, note?: string | null) {
   const tokens = getPushTokens(hostId);
-  console.log(`[Push] notifyGoingSignal — hostId=${hostId} tokens=${tokens.length}`);
+  if (!tokens.length) return;
   const body = note ? `"${note}"` : 'See you soon!';
   tokens.forEach(t =>
     sendPush(hostId, t.token, t.platform, {
