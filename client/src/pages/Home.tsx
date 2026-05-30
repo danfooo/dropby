@@ -829,7 +829,7 @@ function TipsSection() {
   const { data: everReceived } = useQuery({ queryKey: ['everReceived'], queryFn: async () => { const { goingApi } = await import('../api'); return goingApi.everReceived(); } });
 
   const showAppBanner = !Capacitor.isNativePlatform() && !appBannerDismissed;
-  const showInviteTip = !inviteDismissed && !showAppBanner;
+  const showInviteTip = !inviteDismissed && !showAppBanner && (friends as any[]).length <= 3;
   const showFeedbackTip = !feedbackDismissed && !showInviteTip && !showAppBanner;
 
   const tipContent = showAppBanner ? (
