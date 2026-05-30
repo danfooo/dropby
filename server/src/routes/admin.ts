@@ -199,6 +199,15 @@ router.get('/metrics', requireAuth, (req: AuthRequest, res) => {
     FROM push_tokens GROUP BY platform
   `).all() as Array<{ platform: string; users: number; tokens: number }>;
 
+  // ── Push registration attempts (last 7 days) ──────────────────
+  const pushRegisterOk = (db.prepare(`
+    SELECT COUNT(*) as n FROM event_log WHERE event = 'push.register.ok' AND ts >= ?
+  `).get(now - 7 * DAY) as any).n as number;
+  const pushRegisterFail = db.prepare(`
+    SELECT ts, user_id, data FROM event_log WHERE event = 'push.register.fail' AND ts >= ?
+    ORDER BY ts DESC LIMIT 10
+  `).all(now - 7 * DAY) as Array<{ ts: number; user_id: string; data: string }>;
+
   // ── Recent push activity (last 48h) ──────────────────────────
   const recentPushSent = db.prepare(`
     SELECT el.ts, el.user_id, el.data
@@ -207,7 +216,20 @@ router.get('/metrics', requireAuth, (req: AuthRequest, res) => {
     ORDER BY el.ts DESC LIMIT 40
   `).all(now - 2 * DAY) as Array<{ ts: number; user_id: string; data: string }>;
 
-  res.json({ weekly, weeks, funnel, invite_funnel, push_effectiveness, push_alarms, push_subscriptions: pushSubscriptions, push_recent_sent: recentPushSent.map(r => ({ ts: r.ts, user_id: r.user_id, ...JSON.parse(r.data ?? '{}') })) });
+  res.json({
+    weekly,
+    weeks,
+    funnel,
+    invite_funnel,
+    push_effectiveness,
+    push_alarms,
+    push_subscriptions: pushSubscriptions,
+    push_recent_sent: recentPushSent.map(r => ({ ts: r.ts, user_id: r.user_id, ...JSON.parse(r.data ?? '{}') })),
+    push_register: {
+      ok_7d: pushRegisterOk,
+      recent_fails: pushRegisterFail.map(r => ({ ts: r.ts, user_id: r.user_id, ...JSON.parse(r.data ?? '{}') })),
+    },
+  });
 });
 
 export default router;

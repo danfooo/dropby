@@ -42,6 +42,10 @@ interface Metrics {
   };
   push_subscriptions: Array<{ platform: string; users: number; tokens: number }>;
   push_recent_sent: Array<{ ts: number; user_id: string; type: string; platform: string }>;
+  push_register: {
+    ok_7d: number;
+    recent_fails: Array<{ ts: number; user_id: string; platform: string; reason: string }>;
+  };
 }
 
 function pct(n: number, of: number) {
@@ -130,7 +134,7 @@ export default function Admin() {
     );
   }
 
-  const { weekly, weeks, funnel, invite_funnel: inv, push_effectiveness: pe, push_alarms, push_subscriptions, push_recent_sent } = metrics;
+  const { weekly, weeks, funnel, invite_funnel: inv, push_effectiveness: pe, push_alarms, push_subscriptions, push_recent_sent, push_register } = metrics;
   const tw = weekly.this_week;
   const lw = weekly.last_week;
 
@@ -269,9 +273,13 @@ export default function Admin() {
 
       {/* Push subscriptions */}
       <section>
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
           Push subscriptions
         </h2>
+        <p className="text-xs text-gray-400 mb-3">
+          Registered tokens — last 7 days: {push_register.ok_7d} registration{push_register.ok_7d !== 1 ? 's' : ''} succeeded
+          {push_register.recent_fails.length > 0 && <span className="text-red-500 ml-1">· {push_register.recent_fails.length} failed</span>}
+        </p>
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
           {push_subscriptions.length === 0 ? (
             <div className="px-4 py-3 text-sm text-gray-400">No registered tokens</div>
@@ -283,6 +291,18 @@ export default function Admin() {
             </div>
           ))}
         </div>
+        {push_register.recent_fails.length > 0 && (
+          <div className="mt-2 bg-red-50 rounded-xl border border-red-100 divide-y divide-red-50">
+            {push_register.recent_fails.map((f, i) => (
+              <div key={i} className="px-4 py-2 text-xs text-gray-600 flex items-center gap-2">
+                <span className="text-gray-400 w-16 shrink-0">{new Date(f.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="text-red-500">{f.reason}</span>
+                <span className="text-gray-400">{f.platform}</span>
+                <span className="text-gray-300 ml-auto font-mono">{f.user_id?.slice(0, 8)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Recent push activity */}

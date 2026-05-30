@@ -420,6 +420,8 @@ router.delete('/push-token', requireAuth, (req: AuthRequest, res) => {
 router.post('/push-token', requireAuth, (req: AuthRequest, res) => {
   const { token, platform } = req.body;
   if (!token || !['ios', 'android'].includes(platform)) {
+    console.warn(`[Push] Token registration rejected — user=${req.userId} platform=${platform} token=${String(token).slice(0, 20)}`);
+    log('push.register.fail', req.userId!, { platform: platform ?? 'missing', reason: 'invalid_platform' });
     return res.status(400).json({ error: 'token and platform (ios|android) required' });
   }
   const now = Math.floor(Date.now() / 1000);
@@ -428,6 +430,7 @@ router.post('/push-token', requireAuth, (req: AuthRequest, res) => {
     VALUES (?, ?, ?, ?, ?)
     ON CONFLICT(user_id, token) DO UPDATE SET updated_at = excluded.updated_at
   `).run(randomUUID(), req.userId, token, platform, now);
+  log('push.register.ok', req.userId!, { platform });
   console.log(`[Push] Token registered — user=${req.userId} platform=${platform} token=${token.slice(0, 20)}…`);
   res.json({ ok: true });
 });
