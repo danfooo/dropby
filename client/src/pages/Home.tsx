@@ -827,6 +827,7 @@ function TipsSection() {
   const [showFeedback, setShowFeedback] = useState(false);
 
   const { data: everReceived } = useQuery({ queryKey: ['everReceived'], queryFn: async () => { const { goingApi } = await import('../api'); return goingApi.everReceived(); } });
+  const { data: friends = [] } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
 
   const showAppBanner = !Capacitor.isNativePlatform() && !appBannerDismissed;
   const showInviteTip = !inviteDismissed && !showAppBanner && (friends as any[]).length < 3;
