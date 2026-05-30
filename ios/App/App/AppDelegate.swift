@@ -105,11 +105,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         // For all other actions (going, open_now, prolong, close), let Capacitor handle via JS
-        ApplicationDelegateProxy.shared.application(
-            UIApplication.shared,
-            didReceiveRemoteNotification: userInfo,
-            fetchCompletionHandler: { _ in }
-        )
         NotificationCenter.default.post(
             name: .capacitorPushNotificationActionPerformed,
             object: nil,
