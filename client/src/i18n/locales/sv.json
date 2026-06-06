@@ -129,7 +129,7 @@
     "inviteFriendsText": "Ta med dina vänner.",
     "copyInviteLink": "Skicka dem en länk →",
     "youreOpen": "Du är öppen!",
-    "closesIn": "Försvinner om {{minutes}} min",
+    "closesIn": "Stänger om {{minutes}} min",
     "closesAt": "Stänger kl. {{time}}",
     "keepItOpen": "Håll öppen +30 min",
     "invited": "Synlig för",

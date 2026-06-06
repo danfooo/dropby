@@ -129,7 +129,7 @@
     "inviteFriendsText": "Trae a tus amigos.",
     "copyInviteLink": "Mándales un enlace →",
     "youreOpen": "¡Estás abierto!",
-    "closesIn": "Deja de mostrarse en {{minutes}} min",
+    "closesIn": "Cierra en {{minutes}} min",
     "closesAt": "Cierra a las {{time}}",
     "keepItOpen": "Mantener abierto +30 min",
     "invited": "Visible para",

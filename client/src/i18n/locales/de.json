@@ -129,7 +129,7 @@
     "inviteFriendsText": "Hol deine Freunde rein.",
     "copyInviteLink": "Schick ihnen einen Link →",
     "youreOpen": "Du bist offen!",
-    "closesIn": "Wird in {{minutes}} Min. ausgeblendet",
+    "closesIn": "Schließt in {{minutes}} Min.",
     "closesAt": "Schließt um {{time}}",
     "keepItOpen": "Weitere +30 Min. offen",
     "invited": "Sichtbar für",
