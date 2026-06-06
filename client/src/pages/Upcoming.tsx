@@ -7,6 +7,8 @@ import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { statusApi, notesApi, goingApi, friendsApi } from '../api';
 import { shouldShowNotifPrompt, requestNotificationPermission } from '../utils/notifications';
+import DeniedNotifModal from '../components/DeniedNotifModal';
+import { useDeniedNotifModal } from '../hooks/useDeniedNotifModal';
 import { useAuthStore } from '../stores/auth';
 import {
   bigEmojiClass, formatTime, formatTimeShort,
@@ -210,6 +212,7 @@ export default function Upcoming() {
   const [showForm, setShowForm] = useState(() => searchParams.get('plan') === '1');
   const [notifSheet, setNotifSheet] = useState(false);
   const pendingAction = useRef<(() => void) | null>(null);
+  const deniedNotif = useDeniedNotifModal();
   const setToast = useToast();
 
   const { data: upcomingSessions = [] } = useQuery({
@@ -267,6 +270,7 @@ export default function Upcoming() {
       setNotifSheet(true);
       return;
     }
+    if (rsvp !== null && await deniedNotif.check()) return;
     if (rsvp === null) {
       await goingApi.remove(statusId);
     } else {
@@ -373,6 +377,7 @@ export default function Upcoming() {
         </div>
       ) : null}
 
+      <DeniedNotifModal open={deniedNotif.open} onDismiss={deniedNotif.dismiss} onSnooze={deniedNotif.snooze} onOpenSettings={deniedNotif.goToSettings} />
       <Modal open={notifSheet} onClose={handleNotifSkip}>
         <p className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-2">
           {t('home.notifGoingTitle')}

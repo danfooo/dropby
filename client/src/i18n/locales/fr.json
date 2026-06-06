@@ -1,4 +1,11 @@
 {
+  "notif": {
+    "deniedTitle": "Les notifications sont désactivées",
+    "deniedDesc": "Active-les dans les Réglages pour savoir quand un ami ouvre sa porte ou est en route.",
+    "deniedOpenSettings": "Ouvrir les réglages",
+    "deniedDismiss": "Compris",
+    "deniedSnooze": "Ne plus afficher"
+  },
   "marketing": {
     "tagline": "Avant, tu passais simplement.",
     "tagline2": "Nous avons créé quelque chose pour ça.",

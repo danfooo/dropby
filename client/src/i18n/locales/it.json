@@ -1,4 +1,11 @@
 {
+  "notif": {
+    "deniedTitle": "Le notifiche sono disattivate",
+    "deniedDesc": "Attivale nelle Impostazioni per sapere quando un amico apre la porta o è in arrivo.",
+    "deniedOpenSettings": "Apri impostazioni",
+    "deniedDismiss": "Capito",
+    "deniedSnooze": "Non mostrare più"
+  },
   "marketing": {
     "tagline": "Prima passavi semplicemente.",
     "tagline2": "Abbiamo costruito qualcosa per questo.",

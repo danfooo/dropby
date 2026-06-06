@@ -1,4 +1,11 @@
 {
+  "notif": {
+    "deniedTitle": "Las notificaciones están desactivadas",
+    "deniedDesc": "Actívalas en Configuración para saber cuando un amigo abre su puerta o está de camino.",
+    "deniedOpenSettings": "Abrir configuración",
+    "deniedDismiss": "Entendido",
+    "deniedSnooze": "No mostrar esto"
+  },
   "marketing": {
     "tagline": "Antes simplemente aparecías.",
     "tagline2": "Hemos creado algo para eso.",

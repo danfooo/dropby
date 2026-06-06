@@ -7,6 +7,8 @@ import { invitesApi, goingApi } from '../api';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
 import { copyText } from '../utils/clipboard';
+import DeniedNotifModal from '../components/DeniedNotifModal';
+import { useDeniedNotifModal } from '../hooks/useDeniedNotifModal';
 
 function formatScheduledTime(startsAt: number, endsAt?: number | null): string {
   const start = format(new Date(startsAt * 1000), 'EEE, MMM d · h:mm a');
@@ -27,6 +29,7 @@ export default function Invite() {
   const [inviteBackCopied, setInviteBackCopied] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [acceptedName, setAcceptedName] = useState('');
+  const deniedNotif = useDeniedNotifModal();
   const [showGoingForm, setShowGoingForm] = useState(false);
   const [guestRsvp, setGuestRsvp] = useState<{ signalId: string } | null>(null);
   const [guestNote, setGuestNote] = useState('');
@@ -85,6 +88,11 @@ export default function Invite() {
       setAccepted(true);
     }
   }, [info, user]);
+
+  // After friendship forms, nudge the user to enable notifications if they've denied them
+  useEffect(() => {
+    if (accepted && user) deniedNotif.check();
+  }, [accepted, user]);
 
   // Redirect not-logged-in users only when there's no status at all (not even scheduled)
   useEffect(() => {
@@ -210,6 +218,7 @@ export default function Invite() {
         <Link to="/home" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
           {info.status ? t('invite.doorOpenCta') : t('invite.hurray')}
         </Link>
+        <DeniedNotifModal open={deniedNotif.open} onDismiss={deniedNotif.dismiss} onSnooze={deniedNotif.snooze} onOpenSettings={deniedNotif.goToSettings} />
       </div>
     );
   }

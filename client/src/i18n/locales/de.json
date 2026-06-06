@@ -1,4 +1,11 @@
 {
+  "notif": {
+    "deniedTitle": "Benachrichtigungen sind deaktiviert",
+    "deniedDesc": "Aktiviere sie in den Einstellungen, um zu erfahren, wenn ein Freund die Tür öffnet oder unterwegs ist.",
+    "deniedOpenSettings": "Einstellungen öffnen",
+    "deniedDismiss": "Verstanden",
+    "deniedSnooze": "Nicht mehr anzeigen"
+  },
   "marketing": {
     "tagline": "Früher bist du einfach vorbeigekommen.",
     "tagline2": "Wir haben etwas dafür gebaut.",

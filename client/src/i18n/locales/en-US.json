@@ -1,4 +1,11 @@
 {
+  "notif": {
+    "deniedTitle": "Notifications are off",
+    "deniedDesc": "Turn them on in Settings to hear when a friend opens their door or is on their way.",
+    "deniedOpenSettings": "Open Settings",
+    "deniedDismiss": "Got it",
+    "deniedSnooze": "Don't show this"
+  },
   "marketing": {
     "tagline": "You used to just show up.",
     "tagline2": "We built something for that.",

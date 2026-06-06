@@ -77,6 +77,46 @@ export async function deregisterPushToken(): Promise<void> {
   }
 }
 
+const DENIED_SNOOZE_KEY = 'dropby_notif_denied_snooze';
+const SNOOZE_DAYS = [5, 7, 13];
+
+// Returns true if the denied-notifications modal should be shown
+export async function shouldShowDeniedPrompt(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  try {
+    const { PushNotifications } = await import('@capacitor/push-notifications');
+    const { receive } = await PushNotifications.checkPermissions();
+    if (receive !== 'denied') return false;
+    const stored = localStorage.getItem(DENIED_SNOOZE_KEY);
+    if (!stored) return true;
+    const { until } = JSON.parse(stored) as { level: number; until: number };
+    return Math.floor(Date.now() / 1000) >= until;
+  } catch {
+    return false;
+  }
+}
+
+// Records a "don't show this" tap, applying the increasing snooze schedule
+export function snoozeDeniedPrompt(): void {
+  const stored = localStorage.getItem(DENIED_SNOOZE_KEY);
+  const current: { level: number; until: number } = stored
+    ? JSON.parse(stored)
+    : { level: 0, until: 0 };
+  const days = SNOOZE_DAYS[current.level];
+  const until = Math.floor(Date.now() / 1000) + days * 86400;
+  const newLevel = Math.min(current.level + 1, SNOOZE_DAYS.length - 1);
+  localStorage.setItem(DENIED_SNOOZE_KEY, JSON.stringify({ level: newLevel, until }));
+}
+
+// Opens the iOS system settings page for this app
+export async function openNotificationSettings(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const { App } = await import('@capacitor/app');
+    await App.openUrl({ url: 'app-settings:' });
+  } catch {}
+}
+
 // Returns true if the interstitial should be shown (permission not yet decided)
 export async function shouldShowNotifPrompt(): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) return false;

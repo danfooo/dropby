@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
 import { statusApi, notesApi, invitesApi, goingApi, friendsApi, trackApi } from '../api';
 import { shouldShowNotifPrompt, requestNotificationPermission } from '../utils/notifications';
+import DeniedNotifModal from '../components/DeniedNotifModal';
+import { useDeniedNotifModal } from '../hooks/useDeniedNotifModal';
 import { useAuthStore } from '../stores/auth';
 import { bigEmojiClass, formatTimeShort } from '../utils/schedule';
 import Avatar from '../components/Avatar';
@@ -116,6 +118,7 @@ export default function Home() {
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(60);
   const [notifSheet, setNotifSheet] = useState<'open' | 'going' | null>(null);
+  const deniedNotif = useDeniedNotifModal();
   const setToast = useToast();
   const pendingAction = useRef<(() => void) | null>(null);
 
@@ -236,6 +239,7 @@ export default function Home() {
       setNotifSheet('going');
       return;
     }
+    if (rsvp !== null && await deniedNotif.check()) return;
     if (rsvp === null) {
       await goingApi.remove(statusId);
     } else {
@@ -264,6 +268,7 @@ export default function Home() {
       setNotifSheet('open');
       return;
     }
+    if (await deniedNotif.check()) return;
     await doOpen();
   };
 
@@ -499,6 +504,7 @@ export default function Home() {
           <TipsSection />
         </div>
 
+        <DeniedNotifModal open={deniedNotif.open} onDismiss={deniedNotif.dismiss} onSnooze={deniedNotif.snooze} onOpenSettings={deniedNotif.goToSettings} />
         <Modal open={notifSheet !== null} onClose={handleNotifSkip}>
           <p className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-2">
             {notifSheet === 'going' ? t('home.notifGoingTitle') : t('home.notifOpenTitle')}

@@ -1,4 +1,11 @@
 {
+  "notif": {
+    "deniedTitle": "Aviseringar är avstängda",
+    "deniedDesc": "Slå på dem i Inställningar för att höra när en vän öppnar sin dörr eller är på väg.",
+    "deniedOpenSettings": "Öppna inställningar",
+    "deniedDismiss": "Okej",
+    "deniedSnooze": "Visa inte detta"
+  },
   "marketing": {
     "tagline": "Förr dök man bara upp.",
     "tagline2": "Vi har byggt något för det.",
