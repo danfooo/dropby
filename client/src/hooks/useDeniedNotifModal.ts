@@ -19,7 +19,7 @@ export function useDeniedNotifModal() {
   }, []);
 
   const goToSettings = useCallback(async () => {
-    await openNotificationSettings();
+    openNotificationSettings();
     setOpen(false);
   }, []);
 

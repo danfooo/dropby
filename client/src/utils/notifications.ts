@@ -109,12 +109,9 @@ export function snoozeDeniedPrompt(): void {
 }
 
 // Opens the iOS system settings page for this app
-export async function openNotificationSettings(): Promise<void> {
+export function openNotificationSettings(): void {
   if (!Capacitor.isNativePlatform()) return;
-  try {
-    const { App } = await import('@capacitor/app');
-    await App.openUrl({ url: 'app-settings:' });
-  } catch {}
+  window.open('app-settings:', '_system');
 }
 
 // Returns true if the interstitial should be shown (permission not yet decided)
