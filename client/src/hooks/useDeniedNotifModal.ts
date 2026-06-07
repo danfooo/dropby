@@ -12,7 +12,6 @@ export function useDeniedNotifModal() {
   // Use for actions that are valuable on their own (door open, going, friendship).
   const check = useCallback(async () => {
     if (await shouldShowDeniedPrompt()) {
-      clearTimeout(showTimeout.current);
       showTimeout.current = setTimeout(() => setOpen(true), 500);
     }
   }, []);
