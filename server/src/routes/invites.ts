@@ -6,6 +6,7 @@ import { areFriends } from './friends.js';
 import { sendInviteEmail } from '../services/email.js';
 import { log } from '../services/analytics.js';
 import { notifyFriendJoined } from '../services/notifications.js';
+import { sendSSE } from '../services/sse.js';
 
 const router = Router();
 
@@ -27,7 +28,10 @@ export function acceptInviteToken(token: string, acceptorId: string): { ok: bool
   db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
 
   const acceptor = db.prepare('SELECT display_name FROM users WHERE id = ?').get(acceptorId) as any;
-  if (acceptor) notifyFriendJoined(inviterId, acceptor.display_name);
+  if (acceptor) {
+    notifyFriendJoined(inviterId, acceptor.display_name);
+    sendSSE(inviterId, 'friend:joined', { name: acceptor.display_name });
+  }
 
   const inviterActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(inviterId, nowUnix) as any;
   if (inviterActive) {

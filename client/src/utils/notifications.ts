@@ -61,8 +61,10 @@ async function setupListeners() {
   PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
     const actionId = notification.actionId;
     const data = notification.notification?.data ?? {};
-    // 'tap' is the default action (user tapped the notification body, not a button)
-    if (actionId === 'tap') return;
+    if (actionId === 'tap') {
+      if (data.type === 'friend_joined') window.location.href = '/friends';
+      return;
+    }
     handleNotificationAction(actionId, data);
   });
 }

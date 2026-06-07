@@ -26,6 +26,10 @@ export function useSSE() {
       queryClient.invalidateQueries({ queryKey: ['myStatus'] });
     });
 
+    es.addEventListener('friend:joined', () => {
+      queryClient.invalidateQueries({ queryKey: ['friends'] });
+    });
+
     es.onerror = () => {
       // EventSource auto-reconnects; no action needed
     };
