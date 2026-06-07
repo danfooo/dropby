@@ -74,18 +74,20 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
         />
       </div>
 
-      <div className="px-4 py-3 border-t border-violet-100 dark:border-violet-900 flex justify-end">
-        <a
-          href={`${Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : ''}/api/status/${status.id}/calendar.ics`}
-          download
-          className="flex items-center gap-1.5 text-xs text-violet-400 dark:text-violet-500 hover:text-violet-600 dark:hover:text-violet-300"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
-          </svg>
-          {t('home.addToCalendar')}
-        </a>
-      </div>
+      {isScheduled && (
+        <div className="px-4 py-3 border-t border-violet-100 dark:border-violet-900 flex justify-end">
+          <a
+            href={`${Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : ''}/api/status/${status.id}/calendar.ics`}
+            download
+            className="flex items-center gap-1.5 text-xs text-violet-400 dark:text-violet-500 hover:text-violet-600 dark:hover:text-violet-300"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+            </svg>
+            {t('home.addToCalendar')}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
