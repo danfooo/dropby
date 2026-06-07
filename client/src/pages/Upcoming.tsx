@@ -270,13 +270,13 @@ export default function Upcoming() {
       setNotifSheet(true);
       return;
     }
-    if (rsvp !== null && await deniedNotif.check()) return;
     if (rsvp === null) {
       await goingApi.remove(statusId);
     } else {
       await goingApi.send(statusId);
     }
     qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    if (rsvp !== null) deniedNotif.check();
   };
 
   const updateGoingNote = async (statusId: string, note: string) => {

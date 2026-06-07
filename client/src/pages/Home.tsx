@@ -239,13 +239,13 @@ export default function Home() {
       setNotifSheet('going');
       return;
     }
-    if (rsvp !== null && await deniedNotif.check()) return;
     if (rsvp === null) {
       await goingApi.remove(statusId);
     } else {
       await goingApi.send(statusId);
     }
     qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    if (rsvp !== null) deniedNotif.check();
   };
 
   const updateGoingNote = async (statusId: string, note: string) => {
@@ -268,8 +268,8 @@ export default function Home() {
       setNotifSheet('open');
       return;
     }
-    if (await deniedNotif.check()) return;
     await doOpen();
+    deniedNotif.check();
   };
 
   const handleNotifOk = async () => {

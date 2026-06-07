@@ -4,11 +4,14 @@ import { shouldShowDeniedPrompt, snoozeDeniedPrompt, openNotificationSettings } 
 export function useDeniedNotifModal() {
   const [open, setOpen] = useState(false);
 
-  // Call at a key moment. Returns true if the modal was shown (caller should abort its action).
-  const check = useCallback(async (): Promise<boolean> => {
-    const denied = await shouldShowDeniedPrompt();
-    if (denied) setOpen(true);
-    return denied;
+  // Call after a key action completes. Never blocks the action — just nudges,
+  // delayed so the user notices the action's result before the modal appears.
+  const check = useCallback(() => {
+    void (async () => {
+      if (await shouldShowDeniedPrompt()) {
+        setTimeout(() => setOpen(true), 500);
+      }
+    })();
   }, []);
 
   const dismiss = useCallback(() => setOpen(false), []);
