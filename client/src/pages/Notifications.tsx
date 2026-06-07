@@ -152,7 +152,7 @@ export default function Notifications() {
           <div className="flex items-center justify-between mb-1">
             <h2 className="font-semibold text-gray-900 dark:text-gray-50">{t('notifications.remindersTitle')}</h2>
             <button
-              onClick={() => { requestNotificationPermission(); setShowAddNudge(true); deniedNotif.check(); }}
+              onClick={async () => { if (await deniedNotif.checkBeforeAction()) return; requestNotificationPermission(); setShowAddNudge(true); }}
               className="text-sm text-emerald-600 dark:text-emerald-400 font-medium"
             >
               {t('notifications.addReminder')}
@@ -166,7 +166,7 @@ export default function Notifications() {
                 {t(`profile.days.${suggestNextNudge([]).day}`)} {formatHour(suggestNextNudge([]).hour)}
               </span>
               <button
-                onClick={() => { requestNotificationPermission(); addNudgeInline.mutate({ d: suggestNextNudge([]).day, h: suggestNextNudge([]).hour }); deniedNotif.check(); }}
+                onClick={async () => { if (await deniedNotif.checkBeforeAction()) return; requestNotificationPermission(); addNudgeInline.mutate({ d: suggestNextNudge([]).day, h: suggestNextNudge([]).hour }); }}
                 disabled={addNudgeInline.isPending}
                 className="text-sm text-emerald-600 dark:text-emerald-400 font-medium px-3 py-1 bg-emerald-50 dark:bg-emerald-950 rounded-lg disabled:opacity-50"
               >
@@ -197,10 +197,10 @@ export default function Notifications() {
             <p className="font-medium text-gray-900 dark:text-gray-50 text-sm flex-1 pr-4">{t('notifications.autoNudgeTitle')}</p>
             <Toggle
               on={!!user?.auto_nudge_enabled}
-              onToggle={() => {
+              onToggle={async () => {
+                if (await deniedNotif.checkBeforeAction()) return;
                 requestNotificationPermission();
                 updateMe.mutate({ auto_nudge_enabled: !user?.auto_nudge_enabled });
-                deniedNotif.check();
               }}
             />
           </div>
