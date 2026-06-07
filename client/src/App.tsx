@@ -5,6 +5,7 @@ import { useAuthStore } from './stores/auth';
 import { authApi } from './api';
 import { useSSE } from './hooks/useSSE';
 import { usePushNotifications } from './hooks/usePushNotifications';
+import { useUniversalLinks } from './hooks/useUniversalLinks';
 import Landing from './pages/Landing';
 import Get from './pages/Get';
 import Auth from './pages/Auth';
@@ -26,6 +27,7 @@ function AppRoutes() {
   const { user, token, isLoading, setAuth, clearAuth, setLoading } = useAuthStore();
   useSSE();
   usePushNotifications(!!user);
+  useUniversalLinks();
 
   useEffect(() => {
     if (!token) {

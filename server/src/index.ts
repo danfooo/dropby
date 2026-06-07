@@ -50,6 +50,21 @@ app.use(express.json());
 // Serve uploaded avatars
 app.use('/avatars', express.static(avatarsDir));
 
+// iOS Universal Links — tells the OS which dropby.cc paths should open the app
+app.get('/.well-known/apple-app-site-association', (_req, res) => {
+  res.json({
+    applinks: {
+      apps: [],
+      details: [
+        {
+          appID: 'PD486B4Z2Q.cc.dropby.app',
+          paths: ['/invite/*', '/verify-email', '/reset-password'],
+        },
+      ],
+    },
+  });
+});
+
 // API routes
 app.use('/api/auth', authRouter);
 app.use('/api/friends', friendsRouter);

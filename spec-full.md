@@ -12,6 +12,7 @@ dropby is a presence signal app. One tap tells your friends you're open to a spo
 - Also installable as a PWA (Progressive Web App) from the browser — iOS requires Share → Add to Home Screen; Android shows an install prompt automatically
 - Push notifications delivered via APNs (iOS) and FCM (Android)
 - Authentication: email/password, Google OAuth, and Apple OAuth ("Sign in with Apple")
+- iOS Universal Links: tapping a `dropby.cc/invite/*`, `/verify-email`, or `/reset-password` link opens the relevant screen directly in the app (when installed) instead of Safari, via an `apple-app-site-association` file served at `/.well-known/apple-app-site-association`
 
 ---
 
