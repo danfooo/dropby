@@ -1,15 +1,19 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { shouldShowDeniedPrompt, snoozeDeniedPrompt, openNotificationSettings } from '../utils/notifications';
 
 export function useDeniedNotifModal() {
   const [open, setOpen] = useState(false);
+  const showTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  // Call after a key action completes. Never blocks the action — just nudges,
-  // delayed so the user notices the action's result before the modal appears.
+  useEffect(() => () => clearTimeout(showTimeout.current), []);
+
+  // Call after a key action (or state change) completes. Never blocks the
+  // action — just nudges, delayed so the user notices the result first.
   // Use for actions that are valuable on their own (door open, going, friendship).
   const check = useCallback(async () => {
     if (await shouldShowDeniedPrompt()) {
-      setTimeout(() => setOpen(true), 500);
+      clearTimeout(showTimeout.current);
+      showTimeout.current = setTimeout(() => setOpen(true), 500);
     }
   }, []);
 
