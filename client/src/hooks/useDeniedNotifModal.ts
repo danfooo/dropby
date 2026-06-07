@@ -7,12 +7,10 @@ export function useDeniedNotifModal() {
   // Call after a key action completes. Never blocks the action — just nudges,
   // delayed so the user notices the action's result before the modal appears.
   // Use for actions that are valuable on their own (door open, going, friendship).
-  const check = useCallback(() => {
-    void (async () => {
-      if (await shouldShowDeniedPrompt()) {
-        setTimeout(() => setOpen(true), 500);
-      }
-    })();
+  const check = useCallback(async () => {
+    if (await shouldShowDeniedPrompt()) {
+      setTimeout(() => setOpen(true), 500);
+    }
   }, []);
 
   // Gate: shows the modal immediately and returns true if it was shown, so the
