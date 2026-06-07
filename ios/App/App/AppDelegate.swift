@@ -51,9 +51,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             intentIdentifiers: [],
             options: []
         )
+        let snoozeAutoNudgeAction = UNNotificationAction(
+            identifier: "snooze_auto_nudge",
+            title: "Don't show this",
+            options: [.foreground]
+        )
         let autoNudgeCategory = UNNotificationCategory(
             identifier: "auto_nudge",
-            actions: [openNowAction],
+            actions: [openNowAction, snoozeAutoNudgeAction],
             intentIdentifiers: [],
             options: []
         )

@@ -27,6 +27,11 @@ async function handleNotificationAction(actionId: string, data: Record<string, s
     return;
   }
 
+  if (actionId === 'snooze_auto_nudge' && type === 'auto_nudge') {
+    window.location.href = '/notifications';
+    return;
+  }
+
   if (actionId === 'going' && type === 'door_open' && data.statusId) {
     try { await goingApi.send(data.statusId); }
     catch (e) { console.warn('[Push] Failed to mark as going', e); }
