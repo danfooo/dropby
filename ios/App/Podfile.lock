@@ -1,16 +1,19 @@
 PODS:
-  - Capacitor (8.2.0):
+  - Capacitor (8.3.4):
     - CapacitorCordova
   - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
-  - CapacitorCordova (8.2.0)
-  - CapacitorPushNotifications (8.0.2):
+  - CapacitorCordova (8.3.4)
+  - CapacitorPreferences (8.0.1):
+    - Capacitor
+  - CapacitorPushNotifications (8.1.1):
     - Capacitor
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorCommunityAppleSignIn (from `../../node_modules/@capacitor-community/apple-sign-in`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorPreferences (from `../../node_modules/@capacitor/preferences`)"
   - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
 
 EXTERNAL SOURCES:
@@ -20,15 +23,18 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor-community/apple-sign-in"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorPreferences:
+    :path: "../../node_modules/@capacitor/preferences"
   CapacitorPushNotifications:
     :path: "../../node_modules/@capacitor/push-notifications"
 
 SPEC CHECKSUMS:
-  Capacitor: 49a454e1cdbd520bc106a220adca7913536a4933
+  Capacitor: d13cad5fa09155679672808cc4ca9fbc2997e1b4
   CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
-  CapacitorCordova: a9ac88d84a1f5280f33b349fe50fce1902683ac0
-  CapacitorPushNotifications: 5a1de4191a9fdbeacc84907313eede0bd59d2eb0
+  CapacitorCordova: c07921bdcfec6f691bae22274446b4d606ebf6a4
+  CapacitorPreferences: cca2021f386efb75947c850334447d9ff22b14f1
+  CapacitorPushNotifications: ec08d589c226a2c0db7c032ec1bf5b044ec85f8e
 
-PODFILE CHECKSUM: 7b283a94ebb6fcbd549d05d5ae18bd39350bd770
+PODFILE CHECKSUM: 580f075bc4f6c3d0ef9431fe5daf56546cf5e819
 
 COCOAPODS: 1.16.2
