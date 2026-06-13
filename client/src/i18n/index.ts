@@ -8,6 +8,7 @@ import fr from './locales/fr.json';
 import it from './locales/it.json';
 import pt from './locales/pt.json';
 import sv from './locales/sv.json';
+import zhCN from './locales/zh-CN.json';
 
 const langMap: Record<string, string> = {
   'en-US': 'en-US',
@@ -19,6 +20,10 @@ const langMap: Record<string, string> = {
   it: 'it',
   pt: 'pt',
   sv: 'sv',
+  'zh-CN': 'zh-CN',
+  'zh-SG': 'zh-CN',
+  'zh-Hans': 'zh-CN',
+  zh: 'zh-CN',
 };
 
 const navLang = navigator?.language || 'en-US';
@@ -36,6 +41,7 @@ i18n
       it: { translation: it },
       pt: { translation: pt },
       sv: { translation: sv },
+      'zh-CN': { translation: zhCN },
     },
     fallbackLng: 'en-US',
     interpolation: {

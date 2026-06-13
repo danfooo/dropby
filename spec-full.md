@@ -682,7 +682,7 @@ The redirect destination must survive signup → email verification → login:
 
 ### Contextual Note Suggestions
 
-- Curated locale-specific presets, selected client-side from a pool per locale (en-US, en-GB, de, es, fr)
+- Curated locale-specific presets, selected client-side from a pool per locale (en-US, de, es, fr, sv, zh-CN); it/pt fall back to the en-US pool
 - No server round-trip; no AI
 - Selection factors: hour of day (morning / afternoon / evening), season (spring / summer / autumn / winter), day type (weekday / weekend)
 - Up to 7 suggestions shown in the first chip row
@@ -796,11 +796,11 @@ No polling; the Home screen reflects friend state changes immediately.
 
 ## 8. Internationalisation
 
-- 5 locales: `en-US`, `en-GB`, `de`, `es`, `fr`
+- 8 locales: `en-US`, `de`, `es`, `fr`, `it`, `pt`, `sv`, `zh-CN`
 - Language stored in i18next's localStorage persistence
 - Language selector on the Profile page
-- Transactional emails (verification, invite) sent in the user's stored locale
-- Time display: 12h for en-US/en-GB, 24h for de/es/fr
+- Transactional emails (verification, invite) sent in the user's stored locale (de/es/fr have dedicated copy; other locales fall back to English)
+- Time display: 24h for de/es/fr/zh-CN, 12h for the rest
 - Note suggestions are locale-specific pools (see Contextual Note Suggestions)
 
 ---

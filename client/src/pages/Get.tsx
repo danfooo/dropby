@@ -48,6 +48,7 @@ const LANGUAGES = [
   { code: 'it',    label: 'Italiano',  short: 'IT' },
   { code: 'pt',    label: 'Português', short: 'PT' },
   { code: 'sv',    label: 'Svenska',   short: 'SV' },
+  { code: 'zh-CN', label: '简体中文',   short: '中文' },
 ];
 
 function LanguageSwitcher() {

@@ -258,6 +258,7 @@ export default function Profile() {
             <option value="it">Italiano</option>
             <option value="pt">Português</option>
             <option value="sv">Svenska</option>
+            <option value="zh-CN">简体中文</option>
           </select>
         </div>
 

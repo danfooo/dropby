@@ -105,7 +105,7 @@ export default function Notifications() {
   const [showAddNudge, setShowAddNudge] = useState(false);
   const deniedNotif = useDeniedNotifModal();
 
-  const use24h = ['de', 'es', 'fr'].includes((i18n.language ?? '').split('-')[0]);
+  const use24h = ['de', 'es', 'fr', 'zh'].includes((i18n.language ?? '').split('-')[0]);
   const formatHour = (h: number) => {
     if (use24h) return `${h}:00`;
     const ampm = h < 12 ? 'am' : 'pm';

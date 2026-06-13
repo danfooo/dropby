@@ -195,6 +195,59 @@ export const sv_suggestions: Suggestion[] = [
   { text: 'Lagar mat 🍝', timeOfDay: 'evening', season: 'any', dayType: 'any' },
 ];
 
+export const zh_CN_suggestions: Suggestion[] = [
+  // Any time
+  { text: '来坐坐 🫶', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: '门开着 👋', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: '来打个招呼 👋', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: '来玩呀', timeOfDay: 'any', season: 'any', dayType: 'any' },
+  { text: '我在家 🏠', timeOfDay: 'any', season: 'any', dayType: 'any' },
+
+  // Morning
+  { text: '咖啡煮好了 ☕', timeOfDay: 'morning', season: 'any', dayType: 'any' },
+  { text: '在家办公 💻', timeOfDay: 'morning', season: 'any', dayType: 'weekday' },
+  { text: '今天居家办公', timeOfDay: 'morning', season: 'any', dayType: 'weekday' },
+
+  // Morning — weekend
+  { text: '周末懒人模式', timeOfDay: 'morning', season: 'any', dayType: 'weekend' },
+
+  // Afternoon — general
+  { text: '在做午饭 🍱', timeOfDay: 'afternoon', season: 'any', dayType: 'any' },
+  { text: '喝茶聊聊？🍵', timeOfDay: 'afternoon', season: 'any', dayType: 'any' },
+  { text: '小零食准备好了', timeOfDay: 'afternoon', season: 'any', dayType: 'any' },
+  { text: '来一起学习？📚', timeOfDay: 'afternoon', season: 'any', dayType: 'weekday' },
+  { text: '终于到周末啦 🎉', timeOfDay: 'afternoon', season: 'any', dayType: 'weekend' },
+  { text: '放空一下 🧘', timeOfDay: 'afternoon', season: 'any', dayType: 'weekend' },
+  { text: '在看比赛', timeOfDay: 'afternoon', season: 'any', dayType: 'weekend' },
+
+  // Afternoon — summer
+  { text: '后院开放中', timeOfDay: 'afternoon', season: 'summer', dayType: 'weekend' },
+  { text: '泳池开放啦 🏊', timeOfDay: 'afternoon', season: 'summer', dayType: 'weekend' },
+  { text: '烤肉时间 🔥', timeOfDay: 'afternoon', season: 'summer', dayType: 'weekend' },
+
+  // Afternoon — spring/summer
+  { text: '花园里坐坐？🌿', timeOfDay: 'afternoon', season: 'spring', dayType: 'any' },
+
+  // Afternoon — autumn/winter
+  { text: '热可可？☕', timeOfDay: 'afternoon', season: 'autumn', dayType: 'any' },
+  { text: '在烤点心 🍪', timeOfDay: 'afternoon', season: 'autumn', dayType: 'any' },
+
+  // Evening — general
+  { text: '宅家放松 🛋️', timeOfDay: 'evening', season: 'any', dayType: 'any' },
+  { text: '窝在沙发 📺', timeOfDay: 'evening', season: 'any', dayType: 'any' },
+  { text: '今晚不出门', timeOfDay: 'evening', season: 'any', dayType: 'any' },
+  { text: '在做晚饭 🍝', timeOfDay: 'evening', season: 'any', dayType: 'any' },
+  { text: '来看电影？🎬', timeOfDay: 'evening', season: 'any', dayType: 'any' },
+
+  // Evening — weekend
+  { text: '游戏之夜？🎮', timeOfDay: 'evening', season: 'any', dayType: 'weekend' },
+  { text: '桌游走起？🎲', timeOfDay: 'evening', season: 'any', dayType: 'weekend' },
+  { text: '披萨之夜？🍕', timeOfDay: 'evening', season: 'any', dayType: 'weekend' },
+
+  // Evening — winter
+  { text: '追剧夜', timeOfDay: 'evening', season: 'winter', dayType: 'any' },
+];
+
 function getSeason(month: number): 'spring' | 'summer' | 'autumn' | 'winter' {
   if (month >= 3 && month <= 5) return 'spring';
   if (month >= 6 && month <= 8) return 'summer';
@@ -235,6 +288,8 @@ export function getSuggestions(locale: string): string[] {
     pool = fr_suggestions;
   } else if (lang === 'sv') {
     pool = sv_suggestions;
+  } else if (lang === 'zh') {
+    pool = zh_CN_suggestions;
   } else {
     pool = en_US_suggestions;
   }
