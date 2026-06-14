@@ -11,7 +11,7 @@ dropby is a presence signal app. One tap tells your friends you're open to a spo
 - Web app (React + Vite) wrapped in a native shell (Capacitor) for iOS and Android distribution
 - Also installable as a PWA (Progressive Web App) from the browser — iOS requires Share → Add to Home Screen; Android shows an install prompt automatically
 - Push notifications delivered via APNs (iOS) and FCM (Android)
-- Authentication: email/password, Google OAuth, and Apple OAuth ("Sign in with Apple")
+- Authentication: email/password, Google OAuth, and Apple OAuth ("Sign in with Apple"). On iOS and Android, Google sign-in uses the platform's native account picker (GoogleSignIn SDK / Credential Manager) instead of the web OAuth popup, via separate iOS/Android OAuth clients in the same Google Cloud project
 - iOS Universal Links: tapping a `dropby.cc/invite/*`, `/verify-email`, or `/reset-password` link opens the relevant screen directly in the app (when installed) instead of Safari, via an `apple-app-site-association` file served at `/.well-known/apple-app-site-association`
 
 ---
@@ -238,7 +238,7 @@ Shown to unauthenticated users visiting the root.
   - Daily digest (09:00 UTC) emails new waitlist entries to `hi@dropby.cc` — skipped when there's nothing new
 - If arriving via an invite link (i.e. `?redirect=/invite/:token`), the inviter's avatar and name are shown above the form with the prompt "Sign up to connect with [name]"
 - Tabs: Login / Sign up
-- Google OAuth button ("Continue with Google")
+- Google OAuth button ("Continue with Google") — on iOS/Android this opens the native Google account picker; on web it's the `@react-oauth/google` popup
 - Email + password form:
   - Sign up fields: display name (required), email, password
   - Login fields: email, password
@@ -790,6 +790,7 @@ No polling; the Home screen reflects friend state changes immediately.
 - Sent on every request via `Authorization: Bearer <token>` header
 - No server-side session; logout is purely client-side (clear token + auth store, redirect to `/`)
 - Google OAuth: credential verified server-side via `google-auth-library`; account created on first use or linked to existing account by email
+- The server accepts ID tokens audienced to either the web OAuth client (`GOOGLE_CLIENT_ID`, used by web and Android) or the iOS OAuth client (`GOOGLE_IOS_CLIENT_ID`) — both are part of the same Google Cloud project, so `sub`/email identity is consistent across platforms
 - Email not verified for Google accounts (Google guarantees ownership)
 
 ---
