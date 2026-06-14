@@ -11,9 +11,10 @@ import Turnstile from '../components/Turnstile';
 
 type Tab = 'login' | 'signup';
 
-// Separate "iOS" OAuth client registered in the same Google Cloud project as
-// VITE_GOOGLE_CLIENT_ID — required because Google's native sign-in SDK issues
-// ID tokens audienced to a platform-specific client ID. Not a secret.
+// Same values as VITE_GOOGLE_CLIENT_ID / GOOGLE_IOS_CLIENT_ID server-side. Hardcoded
+// here (rather than read from import.meta.env) because native builds don't pick up
+// the root .env file. Not secrets — these are public OAuth client identifiers.
+const GOOGLE_WEB_CLIENT_ID = '750398451662-qnfcr5cab59n6fq86dj54ibnsu69mj15.apps.googleusercontent.com';
 const GOOGLE_IOS_CLIENT_ID = '750398451662-g5fq6ec5lh9cffrlgcavv41j6ub8igo1.apps.googleusercontent.com';
 
 export default function Auth() {
@@ -210,10 +211,10 @@ export default function Auth() {
     try {
       const { SocialLogin } = await import('@capgo/capacitor-social-login');
       await SocialLogin.initialize({
-        google: {
-          iOSClientId: GOOGLE_IOS_CLIENT_ID,
-          iOSServerClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        },
+        google:
+          Capacitor.getPlatform() === 'ios'
+            ? { iOSClientId: GOOGLE_IOS_CLIENT_ID, iOSServerClientId: GOOGLE_WEB_CLIENT_ID }
+            : { webClientId: GOOGLE_WEB_CLIENT_ID },
       });
       const { result } = await SocialLogin.login({ provider: 'google', options: {} });
       const idToken = 'idToken' in result ? result.idToken : null;
@@ -425,7 +426,7 @@ export default function Auth() {
               <div className="relative flex justify-center text-xs text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-950 px-2">{t('auth.or')}</div>
             </div>
 
-            {Capacitor.getPlatform() === 'ios' ? (
+            {Capacitor.isNativePlatform() ? (
               <button
                 type="button"
                 onClick={handleGoogleSignInNative}
