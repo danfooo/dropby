@@ -10,6 +10,23 @@ interface PushPayload {
   actions?: Array<{ id: string; title: string }>;
 }
 
+// Quiet hours: suppress "friend opened their door" pushes between 22:00–08:00
+// in the recipient's local time (falls back to UTC if no timezone is stored).
+const QUIET_HOURS_START = 22;
+const QUIET_HOURS_END = 8;
+
+export function isQuietHours(userId: string): boolean {
+  const user = db.prepare('SELECT timezone FROM users WHERE id = ?').get(userId) as { timezone: string | null } | undefined;
+  const tz = user?.timezone || 'UTC';
+  let hour: number;
+  try {
+    hour = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', hour12: false }).format(new Date()));
+  } catch {
+    hour = new Date().getUTCHours();
+  }
+  return hour >= QUIET_HOURS_START || hour < QUIET_HOURS_END;
+}
+
 // ── FCM (Android) ─────────────────────────────────────────────
 let fcmAccessToken: { token: string; expires: number } | null = null;
 

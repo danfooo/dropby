@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { db } from './db/index.js';
-import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder, notifyReengagement } from './services/notifications.js';
+import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder, notifyReengagement, isQuietHours } from './services/notifications.js';
 import { broadcastSSE } from './services/sse.js';
 import { sendWaitlistDigest } from './services/email.js';
 import { randomUUID } from 'crypto';
@@ -233,6 +233,10 @@ setInterval(() => {
 
     for (const rid of recipients) {
       if (hiddenByHost.includes(rid)) continue;
+
+      // Quiet hours: don't push "door opened" overnight in the recipient's timezone.
+      // The status remains unread in-app; SSE still updates the Home screen below.
+      if (isQuietHours(rid)) continue;
 
       // Check per-friend notification preference and throttle
       const prefRow = db.prepare(

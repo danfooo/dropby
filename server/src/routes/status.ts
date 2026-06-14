@@ -2,12 +2,27 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
-import { notifyFriendDoorOpen, notifyScheduledSession, notifyScheduledReminder, notifyCalendarUpdate, notifyCalendarCancel } from '../services/notifications.js';
+import { notifyFriendDoorOpen, notifyScheduledSession, notifyScheduledReminder, notifyCalendarUpdate, notifyCalendarCancel, isQuietHours } from '../services/notifications.js';
 import { broadcastSSE } from '../services/sse.js';
 import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 import { log } from '../services/analytics.js';
 
 const router = Router();
+
+// If friends were already pinged "X opened their door" within this window and the
+// door has since closed, don't send another push for a fresh open (e.g. the user
+// opened, closed, and reopened in quick succession). The new status is still created
+// and broadcast over SSE so the Home screen stays accurate.
+const DOOR_REOPEN_NOTIFY_SUPPRESS_SECONDS = 120;
+
+function recentlyNotifiedDoorOpen(userId: string, nowUnix: number): boolean {
+  const recent = db.prepare(`
+    SELECT id FROM statuses
+    WHERE user_id = ? AND notifications_sent = 1 AND closed_at >= ?
+    ORDER BY closed_at DESC LIMIT 1
+  `).get(userId, nowUnix - DOOR_REOPEN_NOTIFY_SUPPRESS_SECONDS);
+  return !!recent;
+}
 
 function getActiveStatus(userId: string) {
   const nowUnix = Math.floor(Date.now() / 1000);
@@ -169,7 +184,8 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
 
   const statusId = randomUUID();
 
-  const notifyAt = isScheduled ? null : nowUnix + 2;
+  const suppressDuplicateNotify = !isScheduled && recentlyNotifiedDoorOpen(userId, nowUnix);
+  const notifyAt = (isScheduled || suppressDuplicateNotify) ? null : nowUnix + 2;
 
   db.prepare(`
     INSERT INTO statuses (id, user_id, note, closes_at, starts_at, ends_at, reminder_minutes, notify_at)
@@ -204,8 +220,19 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
       if (hiddenByMe.includes(rid)) continue;
       notifyScheduledSession(rid, userFull.display_name, startsAt!);
     }
+  } else if (suppressDuplicateNotify) {
+    // Friends were already pinged "opened their door" moments ago — just sync
+    // the Home screen over SSE, skip a duplicate push.
+    db.prepare('UPDATE statuses SET notifications_sent = 1 WHERE id = ?').run(statusId);
+    broadcastSSE(validRecipients, 'status:open', {
+      status_id: statusId,
+      owner_id: userId,
+      owner_name: userFull.display_name,
+      note: note || null,
+      closes_at: closesAt,
+    });
   }
-  // Spontaneous: notifications are sent after 90s by the cron job
+  // Spontaneous: notifications are sent within ~10s by the cron job
 
   log('door.open', userId, { recipients: validRecipients.length, has_note: !!note });
 
@@ -240,6 +267,7 @@ router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
 
   for (const rid of recipients) {
     if (hiddenByMe.includes(rid)) continue;
+    if (isQuietHours(rid)) continue;
     notifyFriendDoorOpen(rid, user.display_name, scheduled.note || null, statusId, userId);
   }
 
@@ -472,7 +500,8 @@ router.post('/quick-open', requireAuth, (req: AuthRequest, res) => {
   const recipientIds = friendIds.filter(id => !unselected.includes(id));
 
   const statusId = randomUUID();
-  const notifyAt = nowUnix + 2;
+  const suppressDuplicateNotify = recentlyNotifiedDoorOpen(userId, nowUnix);
+  const notifyAt = suppressDuplicateNotify ? null : nowUnix + 2;
 
   db.prepare(`
     INSERT INTO statuses (id, user_id, closes_at, notify_at)
@@ -481,6 +510,20 @@ router.post('/quick-open', requireAuth, (req: AuthRequest, res) => {
 
   for (const rid of recipientIds) {
     db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, rid);
+  }
+
+  if (suppressDuplicateNotify) {
+    // Friends were already pinged "opened their door" moments ago — just sync
+    // the Home screen over SSE, skip a duplicate push.
+    db.prepare('UPDATE statuses SET notifications_sent = 1 WHERE id = ?').run(statusId);
+    const userFull = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+    broadcastSSE(recipientIds, 'status:open', {
+      status_id: statusId,
+      owner_id: userId,
+      owner_name: userFull.display_name,
+      note: null,
+      closes_at: closesAt,
+    });
   }
 
   log('door.open', userId, { recipients: recipientIds.length, has_note: false, source: 'quick_open' });

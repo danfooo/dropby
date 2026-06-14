@@ -726,6 +726,10 @@ Muting user A suppresses:
 - A being notified when the muting user opens their door (A is unchecked by default)
 - The muting user receiving notifications when A opens their door
 
+**Quiet hours:** "Friend opens door" pushes are not sent between 22:00–08:00 in the recipient's local time (based on their stored `timezone`, falling back to UTC). The door-open event itself, and the Home screen's real-time SSE update, are unaffected — only the push is skipped, so the recipient sees it next time they open the app.
+
+**Duplicate-open suppression:** If a user's friends were already pushed "opened their door" within the last 2 minutes and the door has since closed, reopening (spontaneous open or quick-open) does not send another push — the new session is created and synced to friends' Home screens via SSE only. This covers quick open → close → reopen toggling.
+
 ### Nudge Reminders
 
 - Set per user on the Profile page (day + hour, stored in `nudge_schedules`)
