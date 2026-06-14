@@ -82,6 +82,7 @@
     "googleFailed": "Google 登录失败",
     "appleFailed": "Apple 登录失败",
     "continueWithApple": "通过 Apple 继续",
+    "continueWithGoogle": "通过 Google 继续",
     "somethingWentWrong": "出了点问题，请重试。",
     "inviteRequired": "dropby 目前仅限受邀加入。请向朋友索取邀请链接，或加入等待名单。"
   },

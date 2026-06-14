@@ -82,6 +82,7 @@
     "googleFailed": "Google sign-in failed",
     "appleFailed": "Apple sign-in failed",
     "continueWithApple": "Continue with Apple",
+    "continueWithGoogle": "Continue with Google",
     "somethingWentWrong": "Something went wrong. Please try again.",
     "inviteRequired": "dropby is invite-only right now. Ask a friend for their invite link, or join the waitlist."
   },

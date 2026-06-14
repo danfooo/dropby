@@ -83,6 +83,7 @@
     "somethingWentWrong": "Algo correu mal. Tenta novamente.",
     "appleFailed": "Falha no login com Apple",
     "continueWithApple": "Continuar com Apple",
+    "continueWithGoogle": "Continuar com Google",
     "inviteRequired": "O dropby é só por convite neste momento. Pede o link de convite a um amigo ou entra para a lista de espera."
   },
   "waitlist": {

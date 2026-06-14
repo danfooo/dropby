@@ -237,10 +237,14 @@ router.post('/google', async (req, res) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) return res.status(500).json({ error: 'Google OAuth not configured' });
 
+  // The iOS app signs in with a separate "iOS" OAuth client (same Google Cloud
+  // project), so its ID tokens carry that client ID as the audience instead.
+  const audience = [clientId, process.env.GOOGLE_IOS_CLIENT_ID].filter((id): id is string => !!id);
+
   try {
     const { OAuth2Client } = await import('google-auth-library');
     const client = new OAuth2Client(clientId);
-    const ticket = await client.verifyIdToken({ idToken: credential, audience: clientId });
+    const ticket = await client.verifyIdToken({ idToken: credential, audience });
     const payload = ticket.getPayload();
     if (!payload || !payload.email) throw new Error('Invalid Google token');
 

@@ -83,6 +83,7 @@
     "somethingWentWrong": "Något gick fel. Försök igen.",
     "appleFailed": "Apple-inloggning misslyckades",
     "continueWithApple": "Fortsätt med Apple",
+    "continueWithGoogle": "Fortsätt med Google",
     "inviteRequired": "dropby är bara för inbjudna just nu. Be en kompis om deras inbjudningslänk, eller ställ dig i kön."
   },
   "waitlist": {

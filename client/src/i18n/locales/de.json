@@ -83,6 +83,7 @@
     "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuch es erneut.",
     "appleFailed": "Apple-Anmeldung fehlgeschlagen",
     "continueWithApple": "Mit Apple fortfahren",
+    "continueWithGoogle": "Mit Google fortfahren",
     "inviteRequired": "dropby ist gerade nur mit Einladung. Frag einen Freund nach seinem Einladungslink oder trag dich auf die Warteliste ein."
   },
   "waitlist": {

@@ -11,6 +11,11 @@ import Turnstile from '../components/Turnstile';
 
 type Tab = 'login' | 'signup';
 
+// Separate "iOS" OAuth client registered in the same Google Cloud project as
+// VITE_GOOGLE_CLIENT_ID — required because Google's native sign-in SDK issues
+// ID tokens audienced to a platform-specific client ID. Not a secret.
+const GOOGLE_IOS_CLIENT_ID = '750398451662-g5fq6ec5lh9cffrlgcavv41j6ub8igo1.apps.googleusercontent.com';
+
 export default function Auth() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('login');
@@ -194,6 +199,35 @@ export default function Auth() {
       const code = err.response?.data?.error;
       if (code === 'INVITE_REQUIRED') setError(t('auth.inviteRequired'));
       else setError(code || t('auth.googleFailed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignInNative = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const { SocialLogin } = await import('@capgo/capacitor-social-login');
+      await SocialLogin.initialize({
+        google: {
+          iOSClientId: GOOGLE_IOS_CLIENT_ID,
+          iOSServerClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        },
+      });
+      const { result } = await SocialLogin.login({ provider: 'google', options: {} });
+      const idToken = 'idToken' in result ? result.idToken : null;
+      if (!idToken) throw new Error('No ID token');
+      const data = await authApi.google(idToken, inviteToken);
+      handleSuccess(data);
+    } catch (err: any) {
+      if (err?.code === 'USER_CANCELLED') {
+        // user dismissed the sign-in sheet — no error message needed
+      } else if (err?.response?.data?.error === 'INVITE_REQUIRED') {
+        setError(t('auth.inviteRequired'));
+      } else {
+        setError(t('auth.googleFailed'));
+      }
     } finally {
       setLoading(false);
     }
@@ -391,16 +425,35 @@ export default function Auth() {
               <div className="relative flex justify-center text-xs text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-950 px-2">{t('auth.or')}</div>
             </div>
 
-            <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setError(t('auth.googleFailed'))}
-                width={340}
-                shape="rectangular"
-                text="continue_with"
-                theme="filled_black"
-              />
-            </div>
+            {Capacitor.getPlatform() === 'ios' ? (
+              <button
+                type="button"
+                onClick={handleGoogleSignInNative}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 bg-black hover:bg-gray-900 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-colors"
+              >
+                <span className="flex items-center justify-center w-5 h-5 bg-white rounded-sm flex-shrink-0">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 18 18" aria-hidden="true">
+                    <path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.4673-.806 5.9564-2.1818l-2.9087-2.2581c-.7959.5346-1.8159.8455-3.0477.8455-2.3454 0-4.3282-1.5836-5.0359-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"/>
+                    <path fill="#FBBC05" d="M3.9641 10.71c-.1818-.5455-.2864-1.1264-.2864-1.71s.1046-1.1645.2864-1.71V4.9582H.9573C.3477 6.1732 0 7.5477 0 9s.3477 2.8268.9573 4.0418L3.9641 10.71z"/>
+                    <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.8918 11.43 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.9641 7.29C4.6718 5.1632 6.6546 3.5795 9 3.5795z"/>
+                  </svg>
+                </span>
+                {t('auth.continueWithGoogle')}
+              </button>
+            ) : (
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError(t('auth.googleFailed'))}
+                  width={340}
+                  shape="rectangular"
+                  text="continue_with"
+                  theme="filled_black"
+                />
+              </div>
+            )}
 
             {(Capacitor.getPlatform() === 'ios' || (Capacitor.getPlatform() === 'web' && import.meta.env.VITE_APPLE_SERVICE_ID)) && (
               <button
