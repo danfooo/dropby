@@ -27,6 +27,28 @@ export function isQuietHours(userId: string): boolean {
   return hour >= QUIET_HOURS_START || hour < QUIET_HOURS_END;
 }
 
+// Once-per-day cap: check whether this recipient was already notified about this
+// host's door opening today (in the recipient's local timezone).
+export function alreadyNotifiedToday(recipientId: string, lastNotifiedAt: number | null): boolean {
+  if (!lastNotifiedAt) return false;
+  const tz = (db.prepare('SELECT timezone FROM users WHERE id = ?').get(recipientId) as { timezone: string | null } | undefined)?.timezone || 'UTC';
+  try {
+    const fmt = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
+    return fmt.format(new Date()) === fmt.format(new Date(lastNotifiedAt * 1000));
+  } catch {
+    return new Date().toISOString().slice(0, 10) === new Date(lastNotifiedAt * 1000).toISOString().slice(0, 10);
+  }
+}
+
+// Record that a "door open" notification was sent, for the once-per-day cap.
+export function recordDoorOpenNotified(recipientId: string, hostUserId: string, nowUnix: number): void {
+  db.prepare(`
+    INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref, last_notified_at)
+    VALUES (?, ?, 'default', ?)
+    ON CONFLICT(user_id, friend_user_id) DO UPDATE SET last_notified_at = excluded.last_notified_at
+  `).run(recipientId, hostUserId, nowUnix);
+}
+
 // ── FCM (Android) ─────────────────────────────────────────────
 let fcmAccessToken: { token: string; expires: number } | null = null;
 

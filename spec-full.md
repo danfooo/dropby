@@ -65,17 +65,13 @@ Mutes support an optional duration: `POST /api/friends/:friendId/hide` accepts `
 | user_id | uuid FK → users PK | The notification recipient |
 | friend_user_id | uuid FK → users PK | The friend whose door opens trigger notifications |
 | pref | text | `'none'` \| `'default'` \| `'all'` — default: `'default'` |
-| last_notified_at | unix timestamp nullable | When the last notification was sent |
-| notif_window_start | unix timestamp | Start of the current 72-hour throttle window |
-| notif_count | integer | Notifications sent within the current window |
+| last_notified_at | unix timestamp nullable | When the last "door open" push was sent to this recipient for this friend |
 
 Per-friend notification throttling. Controls how often a user is notified when a specific friend opens their door:
 
 - **`none`** — never notify
-- **`default`** — rolling 72-hour window, max 2 notifications per window. When 72 hours elapse since `notif_window_start`, the window resets and the count restarts from 0
-- **`all`** — notify on every door open
-
-Sending a "going" signal to a friend's status resets the window entirely (`notif_window_start = 0`, `notif_count = 0`), so the next door open always notifies regardless of how recently the previous notifications were sent. The intent: if you've visited, the throttle no longer applies — the relationship is active.
+- **`default`** — at most once per calendar day in the recipient's local timezone (tracked via `last_notified_at`)
+- **`all`** — notify on every door open, no daily cap
 
 ### Statuses
 | Field | Type | Notes |
@@ -638,9 +634,8 @@ Accessible via the back-arrow header of Home.
 
 - `POST /api/friends/:friendId/notif-pref` with `{ pref: 'none' | 'default' | 'all' }` upserts a `friend_notif_prefs` row
 - `pref = 'none'`: same suppression effect as hiding, but friendship remains visible/active; friend stays in the active section
-- `pref = 'default'`: rolling 72-hour window, max 2 notifications (see data model)
-- `pref = 'all'`: every door open notifies regardless of recency
-- Sending a "going" signal resets `notif_window_start` and `notif_count` to 0 for the `(going_sender, status_owner)` pair
+- `pref = 'default'`: at most once per calendar day in the recipient's local timezone
+- `pref = 'all'`: every door open notifies, no daily cap
 
 ### Connection Patterns — Invite Links
 
@@ -728,7 +723,7 @@ Muting user A suppresses:
 
 **Quiet hours:** "Friend opens door" pushes are not sent between 22:00–08:00 in the recipient's local time (based on their stored `timezone`, falling back to UTC). The door-open event itself, and the Home screen's real-time SSE update, are unaffected — only the push is skipped, so the recipient sees it next time they open the app.
 
-**Duplicate-open suppression:** If a user's friends were already pushed "opened their door" within the last 2 minutes and the door has since closed, reopening (spontaneous open or quick-open) does not send another push — the new session is created and synced to friends' Home screens via SSE only. This covers quick open → close → reopen toggling.
+**Once-per-day cap:** For the `default` notification preference, a recipient receives at most one "door opened" push per calendar day per host, in the recipient's local timezone. The `all` preference bypasses this cap. Brief door openings that close within 2 minutes never trigger a push regardless (the `notify_at` fires 2 minutes after creation and the cron excludes statuses with `closed_at` set), so only genuine openings count against the daily cap. Custom-set nudge schedules are unaffected by this cap.
 
 ### Nudge Reminders
 

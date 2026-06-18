@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { db } from './db/index.js';
-import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder, notifyReengagement, isQuietHours } from './services/notifications.js';
+import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder, notifyReengagement, isQuietHours, alreadyNotifiedToday, recordDoorOpenNotified } from './services/notifications.js';
 import { broadcastSSE } from './services/sse.js';
 import { sendWaitlistDigest } from './services/email.js';
 import { randomUUID } from 'crypto';
@@ -235,46 +235,20 @@ setInterval(() => {
       if (hiddenByHost.includes(rid)) continue;
 
       // Quiet hours: don't push "door opened" overnight in the recipient's timezone.
-      // The status remains unread in-app; SSE still updates the Home screen below.
       if (isQuietHours(rid)) continue;
 
-      // Check per-friend notification preference and throttle
       const prefRow = db.prepare(
-        'SELECT pref, last_notified_at, notif_window_start, notif_count FROM friend_notif_prefs WHERE user_id = ? AND friend_user_id = ?'
-      ).get(rid, status.user_id) as {
-        pref: string; last_notified_at: number | null;
-        notif_window_start: number; notif_count: number;
-      } | undefined;
+        'SELECT pref, last_notified_at FROM friend_notif_prefs WHERE user_id = ? AND friend_user_id = ?'
+      ).get(rid, status.user_id) as { pref: string; last_notified_at: number | null } | undefined;
 
       const pref = prefRow?.pref ?? 'default';
       if (pref === 'none') continue;
-      if (pref === 'default') {
-        // Rolling 72-hour window: max 2 notifications per window.
-        // Window resets once 72h have elapsed since notif_window_start.
-        const windowStart = prefRow?.notif_window_start ?? 0;
-        const count = prefRow?.notif_count ?? 0;
-        const inWindow = now - windowStart <= 72 * 3600;
-        if (inWindow && count >= 2) continue;
-      }
-      // pref === 'all': always send
+      // Once per calendar day per recipient per host (in recipient's local timezone).
+      // pref === 'all' bypasses this cap.
+      if (pref === 'default' && alreadyNotifiedToday(rid, prefRow?.last_notified_at ?? null)) continue;
 
       notifyFriendDoorOpen(rid, status.display_name, status.note || null, status.id, status.user_id);
-
-      // Update throttle state
-      const windowStart = prefRow?.notif_window_start ?? 0;
-      const count = prefRow?.notif_count ?? 0;
-      const windowExpired = now - windowStart > 72 * 3600;
-      const newWindowStart = windowExpired ? now : windowStart;
-      const newCount = windowExpired ? 1 : count + 1;
-
-      db.prepare(`
-        INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref, last_notified_at, notif_window_start, notif_count)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON CONFLICT(user_id, friend_user_id) DO UPDATE SET
-          last_notified_at = excluded.last_notified_at,
-          notif_window_start = excluded.notif_window_start,
-          notif_count = excluded.notif_count
-      `).run(rid, status.user_id, pref, now, newWindowStart, newCount);
+      recordDoorOpenNotified(rid, status.user_id, now);
     }
 
     broadcastSSE(recipients, 'status:open', {
