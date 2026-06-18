@@ -336,7 +336,8 @@ export function notifyNudge(userId: string, dayName: string) {
 export function notifyScheduledSession(recipientId: string, hostName: string, startsAt: number) {
   const tokens = getPushTokens(recipientId);
   const date = new Date(startsAt * 1000);
-  const dayTime = date.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true });
+  const tz = (db.prepare('SELECT timezone FROM users WHERE id = ?').get(recipientId) as { timezone: string | null } | undefined)?.timezone || 'UTC';
+  const dayTime = date.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz });
   tokens.forEach(t =>
     sendPush(recipientId, t.token, t.platform, {
       title: `${hostName} scheduled a session`,
@@ -349,7 +350,8 @@ export function notifyScheduledSession(recipientId: string, hostName: string, st
 export function notifyScheduledReminder(userId: string, startsAt: number) {
   const tokens = getPushTokens(userId);
   const date = new Date(startsAt * 1000);
-  const timeStr = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const tz = (db.prepare('SELECT timezone FROM users WHERE id = ?').get(userId) as { timezone: string | null } | undefined)?.timezone || 'UTC';
+  const timeStr = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz });
   tokens.forEach(t =>
     sendPush(userId, t.token, t.platform, {
       title: 'dropby',
