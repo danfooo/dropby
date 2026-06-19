@@ -150,7 +150,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
     );
   }
 
-  const goingByUserId = new Map((session.going_signals ?? []).map((g: any) => [g.user_id, g]));
+  const goingByUserId = new Map<string, { note: string | null }>((session.going_signals ?? []).map((g: any) => [g.user_id as string, g as { note: string | null }]));
 
   return (
     <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl overflow-hidden">
