@@ -260,7 +260,13 @@ export function notifyGoingSignal(hostId: string, guestName: string, note?: stri
   const tokens = getPushTokens(hostId);
   if (!tokens.length) return;
   const isScheduled = startsAt && startsAt > Math.floor(Date.now() / 1000);
-  const title = isScheduled ? `${guestName} is going` : `${guestName} is on their way`;
+  let title: string;
+  if (isScheduled) {
+    const tz = (db.prepare('SELECT timezone FROM users WHERE id = ?').get(hostId) as { timezone: string | null } | undefined)?.timezone || 'UTC';
+    title = `${guestName} is going to your event on ${formatScheduledDayTime(startsAt!, tz)}`;
+  } else {
+    title = `${guestName} is on their way`;
+  }
   const body = note ? `"${note}"` : (isScheduled ? 'See you then!' : 'See you soon!');
   tokens.forEach(t =>
     sendPush(hostId, t.token, t.platform, {
