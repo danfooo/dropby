@@ -60,7 +60,7 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
   `).run(randomUUID(), statusId, userId, trimmedNote);
 
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
-  notifyGoingSignal(status.user_id, user.display_name, trimmedNote);
+  notifyGoingSignal(status.user_id, user.display_name, trimmedNote, status.starts_at);
 
   // Visiting resets the daily cap so the next door open always notifies
   db.prepare(`
@@ -88,10 +88,10 @@ router.patch('/:statusId', requireAuth, (req: AuthRequest, res) => {
   db.prepare('UPDATE going_signals SET note = ? WHERE id = ?').run(trimmedNote, signal.id);
 
   // Notify host of note update
-  const status = db.prepare('SELECT user_id FROM statuses WHERE id = ?').get(statusId) as any;
+  const status = db.prepare('SELECT user_id, starts_at FROM statuses WHERE id = ?').get(statusId) as any;
   if (status) {
     const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
-    notifyGoingSignal(status.user_id, user.display_name, trimmedNote);
+    notifyGoingSignal(status.user_id, user.display_name, trimmedNote, status.starts_at);
   }
 
   res.json({ ok: true });
@@ -137,7 +137,7 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
     signalId, statusId, guestContactId, trimmedNote
   );
 
-  notifyGoingSignal(status.user_id, name.trim(), trimmedNote);
+  notifyGoingSignal(status.user_id, name.trim(), trimmedNote, status.starts_at);
   log('going.sent', null, { rsvp: 'going', is_guest: true });
 
   res.status(201).json({ ok: true, signal_id: signalId, status_id: statusId });
@@ -150,7 +150,7 @@ router.patch('/guest/:signalId', (req, res) => {
   const trimmedNote = note?.trim() || null;
 
   const signal = db.prepare(`
-    SELECT gs.id, s.user_id as host_id, gc.name as guest_name
+    SELECT gs.id, s.user_id as host_id, s.starts_at, gc.name as guest_name
     FROM going_signals gs
     JOIN statuses s ON s.id = gs.status_id
     LEFT JOIN guest_contacts gc ON gc.id = gs.guest_contact_id
@@ -162,7 +162,7 @@ router.patch('/guest/:signalId', (req, res) => {
   db.prepare('UPDATE going_signals SET note = ? WHERE id = ?').run(trimmedNote, signalId);
 
   // Notify host of note update
-  notifyGoingSignal(signal.host_id, signal.guest_name || 'Guest', trimmedNote);
+  notifyGoingSignal(signal.host_id, signal.guest_name || 'Guest', trimmedNote, signal.starts_at);
 
   res.json({ ok: true });
 });

@@ -256,13 +256,15 @@ export function notifyFriendDoorOpen(recipientId: string, openerName: string, no
   );
 }
 
-export function notifyGoingSignal(hostId: string, guestName: string, note?: string | null) {
+export function notifyGoingSignal(hostId: string, guestName: string, note?: string | null, startsAt?: number | null) {
   const tokens = getPushTokens(hostId);
   if (!tokens.length) return;
-  const body = note ? `"${note}"` : 'See you soon!';
+  const isScheduled = startsAt && startsAt > Math.floor(Date.now() / 1000);
+  const title = isScheduled ? `${guestName} is going` : `${guestName} is on their way`;
+  const body = note ? `"${note}"` : (isScheduled ? 'See you then!' : 'See you soon!');
   tokens.forEach(t =>
     sendPush(hostId, t.token, t.platform, {
-      title: `${guestName} is on their way`,
+      title,
       body,
       data: { type: 'going_signal' },
     })
