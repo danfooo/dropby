@@ -70,6 +70,7 @@ function formatStatus(status: any, userId: string) {
     invite_links: inviteLinks,
     going_signals: goingSignals.map(g => ({
       id: g.id,
+      user_id: g.user_id || null,
       name: g.display_name || g.guest_name || 'Guest',
       rsvp: g.rsvp || 'going',
       note: g.note || null,

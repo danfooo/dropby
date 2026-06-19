@@ -150,7 +150,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
     );
   }
 
-  const goingNames = new Set((session.going_signals ?? []).map((g: any) => g.name));
+  const goingByUserId = new Map((session.going_signals ?? []).map((g: any) => [g.user_id, g]));
 
   return (
     <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl overflow-hidden">
@@ -166,17 +166,25 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
       </div>
       {session.recipients?.length > 0 && (
         <div className={`divide-y divide-violet-100 dark:divide-violet-900 border-t border-violet-100 dark:border-violet-900 ${session.recipients.length >= 5 ? 'max-h-44 overflow-y-auto' : ''}`}>
-          {session.recipients.map((r: any) => (
-            <div key={r.id} className="flex items-center justify-between px-4 py-2">
-              <div className="flex items-center gap-2.5">
-                <Avatar name={r.display_name} size="sm" />
-                <span className="text-sm text-violet-900 dark:text-violet-100">{r.display_name}</span>
+          {session.recipients.map((r: any) => {
+            const signal = goingByUserId.get(r.id);
+            return (
+              <div key={r.id} className="px-4 py-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Avatar name={r.display_name} size="sm" />
+                    <span className="text-sm text-violet-900 dark:text-violet-100">{r.display_name}</span>
+                  </div>
+                  {signal && (
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">going</span>
+                  )}
+                </div>
+                {signal?.note && (
+                  <p className="text-xs text-violet-500 dark:text-violet-400 mt-1 ml-[34px]">{signal.note}</p>
+                )}
               </div>
-              {goingNames.has(r.display_name) && (
-                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">going</span>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       <div className="px-4 py-3 border-t border-violet-100 dark:border-violet-900 flex items-center justify-between">
