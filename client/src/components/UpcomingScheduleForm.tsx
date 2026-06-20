@@ -25,6 +25,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
   const [showReminder, setShowReminder] = useState(false);
   const [hasEndTime, setHasEndTime] = useState(false);
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
+  const [hasEditedDateTime, setHasEditedDateTime] = useState(false);
 
   const { data: savedNotes = [] } = useQuery({ queryKey: ['notes'], queryFn: notesApi.list });
   const hideNote = useMutation({
@@ -53,6 +54,15 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
 
   const activeFriends = friends.filter((f: any) => !f.hidden);
   const trimmedNote = note.trim() || undefined;
+
+  const dateTimeWarning: string | null = (() => {
+    if (!hasEditedDateTime) return null;
+    const startsMs = new Date(`${date}T${start}`).getTime();
+    const now = Date.now();
+    if (startsMs < now) return t('home.scheduleWarnPast');
+    if (startsMs < now + 15 * 60 * 1000) return t('home.scheduleWarnSoon');
+    return null;
+  })();
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 space-y-3">
@@ -123,12 +133,12 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
       <div className="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800">
         <div className="flex-[2] px-3 py-2 border-r border-gray-200 dark:border-gray-700">
           <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">Date</label>
-          <input type="date" value={date} min={todayStr()} onChange={e => setDate(e.target.value)}
+          <input type="date" value={date} min={todayStr()} onChange={e => { setDate(e.target.value); setHasEditedDateTime(true); }}
             className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
         </div>
         <div className={`flex-1 px-3 py-2 ${hasEndTime ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}>
           <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
-          <input type="time" value={start} onChange={e => setStart(e.target.value)}
+          <input type="time" value={start} onChange={e => { setStart(e.target.value); setHasEditedDateTime(true); }}
             className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
         </div>
         {hasEndTime && (
@@ -140,6 +150,9 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
           </div>
         )}
       </div>
+      {dateTimeWarning && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">{dateTimeWarning}</p>
+      )}
       {!hasEndTime && (
         <button onClick={() => setHasEndTime(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
           + end time

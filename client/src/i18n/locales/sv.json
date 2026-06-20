@@ -168,6 +168,8 @@
     "scheduleEndTime": "Sluttid",
     "scheduleReminderText": "Vi påminner dig {{minutes}} min innan",
     "scheduleReminderChange": "Ändra",
+    "scheduleWarnPast": "Den tidpunkten har redan passerat",
+    "scheduleWarnSoon": "Det är väldigt snart — bara för att kolla att det stämmer",
     "scheduledSessionTitle": "Kommande sessioner",
     "scheduledGroupTomorrow": "Imorgon",
     "scheduledGroupThisWeek": "Den här veckan",

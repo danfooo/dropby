@@ -168,6 +168,8 @@
     "scheduleEndTime": "结束时间",
     "scheduleReminderText": "我们会在 {{minutes}} 分钟前提醒你",
     "scheduleReminderChange": "更改",
+    "scheduleWarnPast": "那个时间已经过去了",
+    "scheduleWarnSoon": "时间很快就到了——只是确认一下这是对的",
     "scheduledSessionTitle": "即将到来的安排",
     "scheduledGroupTomorrow": "明天",
     "scheduledGroupThisWeek": "本周",

@@ -168,6 +168,8 @@
     "scheduleEndTime": "Hora de fin",
     "scheduleReminderText": "Te avisaremos {{minutes}} min antes",
     "scheduleReminderChange": "Cambiar",
+    "scheduleWarnPast": "Esa hora ya ha pasado",
+    "scheduleWarnSoon": "Eso es muy pronto — solo confirmando que es correcto",
     "scheduledSessionTitle": "Sesiones programadas",
     "scheduledGroupTomorrow": "Mañana",
     "scheduledGroupThisWeek": "Esta semana",
