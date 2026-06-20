@@ -27,7 +27,7 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] Wrong avatars shown for invitees in the scheduling flow
 - [ ] "Scheduled a session" notification copy sounds too technical — find something warmer that fits the door metaphor
 - [ ] Show "Today" instead of today's date in the scheduling UI
-- [ ] RSVP note UX: add a submit button when typing a note; also allow submitting a note without ticking "I'm going" — not a guided flow, but a nice gesture (e.g. "Can't make it, sorry")
+- [ ] RSVP note UX: add a submit button when adding or changing a note; also allow submitting a note without ticking "I'm going" — not a guided flow, but a nice gesture (e.g. "Can't make it, sorry")
 
 ## Maybe
 - [ ] New user with no friends: "Open Now" gives no hint that a share link is coming. Needs a solution that doesn't introduce the friends concept prematurely — the right fix probably lives earlier in the onboarding flow, not on the home screen.
