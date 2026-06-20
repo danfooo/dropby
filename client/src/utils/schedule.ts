@@ -52,6 +52,7 @@ export function getScheduleGroup(startsAt: number): string {
   const now = new Date();
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const ts = new Date(startsAt * 1000).getTime();
+  if (ts < todayMidnight + msDay) return 'today';
   if (ts < todayMidnight + 2 * msDay) return 'tomorrow';
   const dow = new Date(todayMidnight).getDay();
   const nextMon = todayMidnight + (dow === 0 ? 1 : 8 - dow) * msDay;

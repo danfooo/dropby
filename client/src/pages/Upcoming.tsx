@@ -319,13 +319,14 @@ export default function Upcoming() {
     createStatus.mutate(data);
   };
 
-  const groupLabel = (key: string) => key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
+  const groupLabel = (key: string) => key === 'today' ? t('home.scheduledGroupToday')
+    : key === 'tomorrow' ? t('home.scheduledGroupTomorrow')
     : key === 'this_week' ? t('home.scheduledGroupThisWeek')
     : key === 'next_week' ? t('home.scheduledGroupNextWeek')
     : key === 'soon' ? t('home.scheduledGroupSoon')
     : t('home.scheduledGroupLater');
 
-  const keyOrder = ['tomorrow', 'this_week', 'next_week', 'soon', 'later'];
+  const keyOrder = ['today', 'tomorrow', 'this_week', 'next_week', 'soon', 'later'];
   const ownByKey = new Map<string, any[]>();
   for (const s of upcomingSessions as any[]) {
     const k = getScheduleGroup(s.starts_at);

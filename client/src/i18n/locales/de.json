@@ -171,6 +171,7 @@
     "scheduleWarnPast": "Dieser Zeitpunkt liegt bereits in der Vergangenheit",
     "scheduleWarnSoon": "Das ist sehr bald — nur zur Sicherheit: ist das richtig?",
     "scheduledSessionTitle": "Geplante Sitzungen",
+    "scheduledGroupToday": "Heute",
     "scheduledGroupTomorrow": "Morgen",
     "scheduledGroupThisWeek": "Diese Woche",
     "scheduledGroupNextWeek": "Nächste Woche",

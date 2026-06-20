@@ -171,6 +171,7 @@
     "scheduleWarnPast": "That time has already passed",
     "scheduleWarnSoon": "That's very soon — just double-checking this is right",
     "scheduledSessionTitle": "Upcoming sessions",
+    "scheduledGroupToday": "Today",
     "scheduledGroupTomorrow": "Tomorrow",
     "scheduledGroupThisWeek": "This week",
     "scheduledGroupNextWeek": "Next week",
