@@ -348,8 +348,8 @@ export function notifyScheduledSession(recipientId: string, hostName: string, st
   const dayTime = formatScheduledDayTime(startsAt, tz);
   tokens.forEach(t =>
     sendPush(recipientId, t.token, t.platform, {
-      title: `${hostName} scheduled a session`,
-      body: `Opening ${dayTime}`,
+      title: `${hostName} is opening their door`,
+      body: dayTime,
       data: { type: 'scheduled_session' },
     })
   );
