@@ -26,7 +26,6 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] SMS delivery for Add Friend: currently logs to console, only email delivery is implemented
 
 
-- [ ] Don't show the feedback card on Home if the user has submitted feedback within the last month
 
 ## Waitlist & Invite-Only
 - [ ] Set up `TURNSTILE_SECRET_KEY` on Fly + `VITE_TURNSTILE_SITE_KEY` as build arg — get keys from Cloudflare dashboard → Turnstile → Add site

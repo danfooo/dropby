@@ -51,6 +51,7 @@ function userResponse(u: any) {
     avatar_url: u.avatar_url ?? null,
     email_verified: Boolean(u.email_verified),
     default_door_minutes: u.default_door_minutes ?? 60,
+    created_at: u.created_at,
   };
 }
 

@@ -12,6 +12,7 @@ export interface User {
   going_reminder_2: string;
   avatar_url: string | null;
   default_door_minutes: number;
+  created_at: number;
 }
 
 interface AuthState {

@@ -826,6 +826,7 @@ function usePermanentDismiss(key: string): [boolean, () => void] {
 function TipsSection() {
   const { t } = useTranslation();
   const setToast = useToast();
+  const { user } = useAuthStore();
   const [appBannerDismissed, dismissAppBanner] = usePermanentDismiss('app_banner_dismissed');
   const [inviteDismissed, dismissInvite] = usePermanentDismiss('tip_invite_dismissed');
   const [feedbackDismissed, dismissFeedback] = usePermanentDismiss('tip_feedback_dismissed');
@@ -835,9 +836,13 @@ function TipsSection() {
   const { data: everReceived } = useQuery({ queryKey: ['everReceived'], queryFn: async () => { const { goingApi } = await import('../api'); return goingApi.everReceived(); } });
   const { data: friends = [] } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
 
+  const isFirstDay = user ? new Date(user.created_at * 1000).toDateString() === new Date().toDateString() : false;
+  const recentFeedbackTs = Number(localStorage.getItem('feedback_last_submitted') ?? 0);
+  const submittedFeedbackRecently = recentFeedbackTs > 0 && Date.now() - recentFeedbackTs < 30 * 24 * 60 * 60 * 1000;
+
   const showAppBanner = !Capacitor.isNativePlatform() && !appBannerDismissed;
   const showInviteTip = !inviteDismissed && !showAppBanner && (friends as any[]).length < 3;
-  const showFeedbackTip = !feedbackDismissed && !showInviteTip && !showAppBanner;
+  const showFeedbackTip = !feedbackDismissed && !showInviteTip && !showAppBanner && !isFirstDay && !submittedFeedbackRecently;
 
   const tipContent = showAppBanner ? (
     <div className="bg-white dark:bg-gray-900 px-4 py-4">

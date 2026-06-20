@@ -42,6 +42,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
         reply_email: wantsReply ? replyEmail : undefined,
       });
       setSubmitted(true);
+      localStorage.setItem('feedback_last_submitted', String(Date.now()));
     } finally {
       setLoading(false);
     }
