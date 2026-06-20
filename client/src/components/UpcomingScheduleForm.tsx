@@ -1,10 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { notesApi } from '../api';
 import { todayStr, defaultStartTime, addHours, toUnix, REMINDER_OPTIONS } from '../utils/schedule';
 import Avatar from './Avatar';
 import { getSuggestions } from '../i18n/suggestions';
+
+export const SCHEDULE_DRAFT_KEY = 'dropby_schedule_draft';
+
+export function clearScheduleDraft() {
+  try { sessionStorage.removeItem(SCHEDULE_DRAFT_KEY); } catch {}
+}
 
 export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }: {
   friends: any[];
@@ -14,18 +20,35 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
 }) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
-  const [note, setNote] = useState('');
-  const [selectedChip, setSelectedChip] = useState('');
+
+  const draft = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem(SCHEDULE_DRAFT_KEY);
+      return raw ? (JSON.parse(raw) as Record<string, any>) : {};
+    } catch { return {}; }
+  }, []);
+  const hasDraft = Object.keys(draft).length > 0;
+
+  const [note, setNote] = useState<string>(draft.note ?? '');
+  const [selectedChip, setSelectedChip] = useState<string>(draft.selectedChip ?? '');
   const [previousNote, setPreviousNote] = useState<string | null>(null);
-  const [recipients, setRecipients] = useState<string[]>(friends.filter((f: any) => !f.hidden).map((f: any) => f.id));
-  const [date, setDate] = useState(todayStr);
-  const [start, setStart] = useState(defaultStartTime);
-  const [end, setEnd] = useState(() => addHours(todayStr(), defaultStartTime(), 2));
-  const [reminder, setReminder] = useState(30);
+  const [recipients, setRecipients] = useState<string[]>(() => {
+    const allIds = friends.filter((f: any) => !f.hidden).map((f: any) => f.id);
+    if (hasDraft && Array.isArray(draft.recipients)) {
+      const validIds = new Set(allIds);
+      const restored = (draft.recipients as string[]).filter(id => validIds.has(id));
+      if (restored.length) return restored;
+    }
+    return allIds;
+  });
+  const [date, setDate] = useState<string>(() => draft.date ?? todayStr());
+  const [start, setStart] = useState<string>(() => draft.start ?? defaultStartTime());
+  const [end, setEnd] = useState<string>(() => draft.end ?? addHours(todayStr(), defaultStartTime(), 2));
+  const [reminder, setReminder] = useState<number>(draft.reminder ?? 30);
   const [showReminder, setShowReminder] = useState(false);
-  const [hasEndTime, setHasEndTime] = useState(false);
+  const [hasEndTime, setHasEndTime] = useState<boolean>(draft.hasEndTime ?? false);
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
-  const [hasEditedDateTime, setHasEditedDateTime] = useState(false);
+  const [hasEditedDateTime, setHasEditedDateTime] = useState<boolean>(draft.hasEditedDateTime ?? false);
 
   const { data: savedNotes = [] } = useQuery({ queryKey: ['notes'], queryFn: notesApi.list });
   const hideNote = useMutation({
@@ -48,9 +71,21 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
     }
   };
 
+  // Skip end-time recalculation on first render when restoring a saved draft
+  const skipEndEffect = useRef(hasDraft);
   useEffect(() => {
+    if (skipEndEffect.current) { skipEndEffect.current = false; return; }
     setEnd(addHours(date, start, 2));
   }, [date, start]);
+
+  // Persist draft to sessionStorage so tab switches don't discard in-progress state
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SCHEDULE_DRAFT_KEY, JSON.stringify({
+        note, selectedChip, date, start, end, hasEndTime, reminder, recipients, hasEditedDateTime,
+      }));
+    } catch {}
+  }, [note, selectedChip, date, start, end, hasEndTime, reminder, recipients, hasEditedDateTime]);
 
   const activeFriends = friends.filter((f: any) => !f.hidden);
   const trimmedNote = note.trim() || undefined;

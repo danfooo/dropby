@@ -22,9 +22,6 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] **Tab bar safe area flicker on first load** — `--safe-area-inset-bottom` is injected by Capacitor's `SystemBars` plugin via JS after page render. There may be a brief flash where the tab bar sits too low before the variable is set. If seen, fix by hardcoding a reasonable CSS fallback (e.g. `var(--safe-area-inset-bottom, 24px)`) or by deferring first paint until insets are ready. See `client/src/index.css` `.safe-bottom` and `android/app/src/main/java/cc/dropby/app/MainActivity.java`.
 
 ## Scheduling
-- [ ] Warn when the user picks a date/time in the past or in the very near future (e.g. within the next ~15 minutes) when creating a scheduled session
-- [ ] Preserve in-progress form state (e.g. a partially filled scheduled session form) when the user switches tabs — don't silently discard it
-- [ ] Show "Today" instead of today's date in the scheduling UI
 - [ ] RSVP note UX: add a submit button when adding or changing a note; also allow submitting a note without ticking "I'm going" — not a guided flow, but a nice gesture (e.g. "Can't make it, sorry")
 
 ## Maybe

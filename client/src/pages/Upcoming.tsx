@@ -17,7 +17,7 @@ import {
 import Avatar from '../components/Avatar';
 import FriendStatusCard from '../components/FriendStatusCard';
 import Modal from '../components/Modal';
-import { UpcomingScheduleForm } from '../components/UpcomingScheduleForm';
+import { UpcomingScheduleForm, clearScheduleDraft, SCHEDULE_DRAFT_KEY } from '../components/UpcomingScheduleForm';
 import { useToast } from '../contexts/toast';
 
 // --- ScheduledSessionCard ---
@@ -217,7 +217,10 @@ export default function Upcoming() {
   const qc = useQueryClient();
   const { user } = useAuthStore();
   const [searchParams] = useSearchParams();
-  const [showForm, setShowForm] = useState(() => searchParams.get('plan') === '1');
+  const [showForm, setShowForm] = useState(() => {
+    if (searchParams.get('plan') === '1') return true;
+    try { return !!sessionStorage.getItem(SCHEDULE_DRAFT_KEY); } catch { return false; }
+  });
   const [notifSheet, setNotifSheet] = useState(false);
   const pendingAction = useRef<(() => void) | null>(null);
   const deniedNotif = useDeniedNotifModal();
@@ -248,6 +251,7 @@ export default function Upcoming() {
   const createStatus = useMutation({
     mutationFn: (data: Parameters<typeof statusApi.create>[0]) => statusApi.create(data),
     onSuccess: () => {
+      clearScheduleDraft();
       qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
       setShowForm(false);
     },
@@ -349,7 +353,7 @@ export default function Upcoming() {
             friends={friends as any[]}
             isPending={createStatus.isPending}
             onSubmit={handleScheduleSubmit}
-            onCancel={() => setShowForm(false)}
+            onCancel={() => { clearScheduleDraft(); setShowForm(false); }}
           />
         </div>
       )}

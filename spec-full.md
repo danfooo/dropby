@@ -382,7 +382,8 @@ All future/scheduled content lives here. Home (Now tab) is present-only.
 
 **Plan something CTA**
 - "Plan something" button always visible at top
-- Tapping expands the schedule creation form; tapping Cancel collapses it
+- Tapping expands the schedule creation form; tapping Cancel collapses it and discards any in-progress state
+- Form state (note, date, time, recipients, reminder) is persisted in sessionStorage — switching tabs and returning restores the form in its in-progress state; Cancel clears the draft
 
 **Schedule creation form** (always in schedule mode)
 - Note chips + free-text note input (same as Home)
