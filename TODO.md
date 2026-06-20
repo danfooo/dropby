@@ -23,6 +23,7 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 
 ## Scheduling
 - [ ] Warn when the user picks a date/time in the past or in the very near future (e.g. within the next ~15 minutes) when creating a scheduled session
+- [ ] Preserve in-progress form state (e.g. a partially filled scheduled session form) when the user switches tabs — don't silently discard it
 
 ## Maybe
 - [ ] New user with no friends: "Open Now" gives no hint that a share link is coming. Needs a solution that doesn't introduce the friends concept prematurely — the right fix probably lives earlier in the onboarding flow, not on the home screen.
