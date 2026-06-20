@@ -6,7 +6,7 @@ import { bigEmojiClass, formatTime, formatTimeShort } from '../utils/schedule';
 
 export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
   status: any;
-  onGoing: (id: string, rsvp: 'going' | null) => void;
+  onGoing: (id: string, rsvp: 'going' | null, note?: string) => void;
   onNoteUpdate: (id: string, note: string) => void;
 }) {
   const { t } = useTranslation();
@@ -19,13 +19,14 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
   const handleGoing = async () => {
     const next = myRsvp === 'going' ? null : 'going';
     setMyRsvp(next);
-    await onGoing(status.id, next);
+    await onGoing(status.id, next, next === 'going' ? noteText.trim() || undefined : undefined);
   };
 
   const handleNoteBlur = async () => {
     const trimmed = noteText.trim();
     if (trimmed === lastSentNote.current) return;
     lastSentNote.current = trimmed;
+    if (myRsvp !== 'going') return; // note will be included when they RSVP
     await onNoteUpdate(status.id, trimmed);
   };
 

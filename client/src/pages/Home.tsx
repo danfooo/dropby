@@ -233,16 +233,16 @@ export default function Home() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
   });
 
-  const sendGoing = async (statusId: string, rsvp: 'going' | null = 'going') => {
+  const sendGoing = async (statusId: string, rsvp: 'going' | null = 'going', note?: string) => {
     if (rsvp !== null && await shouldShowNotifPrompt()) {
-      pendingAction.current = () => sendGoing(statusId, rsvp);
+      pendingAction.current = () => sendGoing(statusId, rsvp, note);
       setNotifSheet('going');
       return;
     }
     if (rsvp === null) {
       await goingApi.remove(statusId);
     } else {
-      await goingApi.send(statusId);
+      await goingApi.send(statusId, note);
     }
     qc.invalidateQueries({ queryKey: ['friendStatuses'] });
     if (rsvp !== null) deniedNotif.check();

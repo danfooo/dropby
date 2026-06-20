@@ -365,8 +365,10 @@ Shown at the top of the Home screen when one or more friends have an active stat
   - Sends push notification to host: "[name] is on their way"
   - On first tap ever (across the whole app): triggers OS notification permission prompt
   - After tapping: button stays active (tap again to cancel RSVP); an optional note field appears below the button
-- **Optional note**: After tapping Going, a text input appears with placeholder "Add a note (optional)"; no send button — note is sent on blur or Enter
-  - Sends `PATCH /api/going/:statusId` with the note; host receives a push notification
+- **Optional note**: A text input is always visible with placeholder "Add a note (optional)"; no send button — note is sent on blur or Enter
+  - If the user ticks Going with a note already typed, the note is sent with the initial `POST /api/going/:statusId` request
+  - If the user ticks Going first and then adds a note, sends `PATCH /api/going/:statusId` on blur; host receives a push notification
+  - If the note field is blurred before Going is ticked, no request is made — the note is held in state and included when Going is ticked
   - A hint below reads "This is a one-way note, not a chat."
   - Tapping Going again to cancel RSVP clears the note field
 
@@ -390,7 +392,7 @@ All future/scheduled content lives here. Home (Now tab) is present-only.
 - "Schedule" submit button → `POST /api/statuses` with `starts_at`; invalidates upcoming sessions list
 
 **Grouped sessions list** (grouped by time bucket: Tomorrow / This week / Next week / Soon / Later)
-- Own scheduled sessions shown as `ScheduledSessionCard`s (edit + cancel)
+- Own scheduled sessions shown as `ScheduledSessionCard`s (edit + cancel); each invitee row shows their name, "going" label if RSVPd, and their note (if any) beneath their name
 - Friends' scheduled sessions shown as `FriendStatusCard`s (Going RSVP + note)
 - Own sessions appear first within each group, then friends'
 
