@@ -68,6 +68,7 @@ async function setupListeners() {
     const data = notification.notification?.data ?? {};
     if (actionId === 'tap') {
       if (data.type === 'friend_joined') window.location.href = '/friends';
+      if (data.type === 'scheduled_session' || data.type === 'scheduled_reminder' || data.type === 'going_signal') window.location.href = '/upcoming';
       return;
     }
     handleNotificationAction(actionId, data);
