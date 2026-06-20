@@ -55,14 +55,9 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
   const activeFriends = friends.filter((f: any) => !f.hidden);
   const trimmedNote = note.trim() || undefined;
 
-  const dateTimeWarning: string | null = (() => {
-    if (!hasEditedDateTime) return null;
-    const startsMs = new Date(`${date}T${start}`).getTime();
-    const now = Date.now();
-    if (startsMs < now) return t('home.scheduleWarnPast');
-    if (startsMs < now + 15 * 60 * 1000) return t('home.scheduleWarnSoon');
-    return null;
-  })();
+  const startsMs = new Date(`${date}T${start}`).getTime();
+  const isPast = startsMs < Date.now();
+  const isSoon = !isPast && startsMs < Date.now() + 15 * 60 * 1000;
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 space-y-3">
@@ -150,8 +145,11 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
           </div>
         )}
       </div>
-      {dateTimeWarning && (
-        <p className="text-xs text-amber-600 dark:text-amber-400">{dateTimeWarning}</p>
+      {isPast && (
+        <p className="text-xs text-red-500 dark:text-red-400">{t('home.scheduleWarnPast')}</p>
+      )}
+      {!isPast && hasEditedDateTime && isSoon && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">{t('home.scheduleWarnSoon')}</p>
       )}
       {!hasEndTime && (
         <button onClick={() => setHasEndTime(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
@@ -213,7 +211,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
       <div className="flex gap-2">
         <button
           onClick={() => onSubmit({ note: trimmedNote, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: hasEndTime ? toUnix(date, end) : undefined, reminder_minutes: reminder })}
-          disabled={isPending}
+          disabled={isPending || isPast}
           className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-2xl font-semibold text-sm disabled:opacity-50 transition-colors"
         >
           {t('home.scheduleToggle')}
