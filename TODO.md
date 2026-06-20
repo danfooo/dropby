@@ -26,6 +26,7 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] Preserve in-progress form state (e.g. a partially filled scheduled session form) when the user switches tabs — don't silently discard it
 - [ ] Wrong avatars shown for invitees in the scheduling flow
 - [ ] "Scheduled a session" notification copy sounds too technical — find something warmer that fits the door metaphor
+- [ ] Show "Today" instead of today's date in the scheduling UI
 
 ## Maybe
 - [ ] New user with no friends: "Open Now" gives no hint that a share link is coming. Needs a solution that doesn't introduce the friends concept prematurely — the right fix probably lives earlier in the onboarding flow, not on the home screen.
