@@ -182,6 +182,7 @@
     "rsvpGoing": "Arrivo",
     "rsvpNotePlaceholder": "Aggiungi una nota (opzionale)",
     "rsvpNoteHint": "Questa è una nota unidirezionale, non una chat.",
+    "saveNote": "Salva nota",
     "addToCalendar": "Aggiungi al calendario",
     "updateCalendar": "Sessione modificata — riscarica il .ics per sincronizzare il calendario",
     "removeFromCalendar": "Sessione annullata",

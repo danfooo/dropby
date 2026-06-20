@@ -182,6 +182,7 @@
     "rsvpGoing": "我会去",
     "rsvpNotePlaceholder": "添加备注（可选）",
     "rsvpNoteHint": "这是单向留言，不是聊天。",
+    "saveNote": "保存备注",
     "addToCalendar": "添加到日历",
     "updateCalendar": "安排有变动——请重新下载 .ics 文件以同步日历",
     "removeFromCalendar": "安排已取消",

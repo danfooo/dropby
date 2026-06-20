@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
 import Avatar from './Avatar';
@@ -13,20 +13,40 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
   const isScheduled = status.starts_at && status.starts_at > Math.floor(Date.now() / 1000);
   const [myRsvp, setMyRsvp] = useState<'going' | null>(status.my_rsvp === 'going' ? 'going' : null);
   const [noteText, setNoteText] = useState(status.my_note || '');
-  const lastSentNote = useRef(status.my_note || '');
+  const [savedNote, setSavedNote] = useState(status.my_note || '');
   const bigNote = status.note ? bigEmojiClass(status.note) : null;
+
+  const hasPendingChanges = noteText.trim() !== savedNote;
 
   const handleGoing = async () => {
     const next = myRsvp === 'going' ? null : 'going';
     setMyRsvp(next);
-    await onGoing(status.id, next, next === 'going' ? noteText.trim() || undefined : undefined);
+    if (next === 'going') {
+      const trimmed = noteText.trim();
+      setSavedNote(trimmed);
+      await onGoing(status.id, 'going', trimmed || undefined);
+    } else {
+      await onGoing(status.id, null);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    const trimmed = noteText.trim();
+    if (trimmed === savedNote) return;
+    setSavedNote(trimmed);
+    if (myRsvp === 'going') {
+      await onNoteUpdate(status.id, trimmed);
+    } else {
+      setMyRsvp('going');
+      await onGoing(status.id, 'going', trimmed || undefined);
+    }
   };
 
   const handleNoteBlur = async () => {
+    if (myRsvp !== 'going') return;
     const trimmed = noteText.trim();
-    if (trimmed === lastSentNote.current) return;
-    lastSentNote.current = trimmed;
-    if (myRsvp !== 'going') return; // note will be included when they RSVP
+    if (trimmed === savedNote) return;
+    setSavedNote(trimmed);
     await onNoteUpdate(status.id, trimmed);
   };
 
@@ -69,10 +89,21 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
           value={noteText}
           onChange={e => setNoteText(e.target.value)}
           onBlur={handleNoteBlur}
-          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSaveNote(); (e.target as HTMLInputElement).blur(); } }}
           placeholder={t('home.rsvpNotePlaceholder')}
           className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-violet-200 dark:border-violet-800 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
         />
+        {hasPendingChanges && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleSaveNote}
+              className="text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 px-1"
+            >
+              {t('home.saveNote')}
+            </button>
+          </div>
+        )}
       </div>
 
       {isScheduled && (
