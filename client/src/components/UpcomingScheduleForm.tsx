@@ -185,7 +185,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
                   <input type="checkbox" checked={recipients.includes(f.id)}
                     onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
                     className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
-                  <Avatar name={f.display_name} size="sm" />
+                  <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
                 </label>
               ))}

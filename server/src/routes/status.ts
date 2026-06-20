@@ -29,10 +29,10 @@ function getScheduledStatus(userId: string) {
 function formatStatus(status: any, userId: string) {
   if (!status) return null;
   const recipients = db.prepare(`
-    SELECT u.id, u.display_name FROM status_recipients sr
+    SELECT u.id, u.display_name, u.avatar_url FROM status_recipients sr
     JOIN users u ON u.id = sr.user_id
     WHERE sr.status_id = ?
-  `).all(status.id) as Array<{ id: string; display_name: string }>;
+  `).all(status.id) as Array<{ id: string; display_name: string; avatar_url: string | null }>;
 
   const goingSignals = db.prepare(`
     SELECT gs.id, gs.created_at, gs.rsvp, gs.note,

@@ -107,7 +107,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
                     <input type="checkbox" checked={editRecipients.includes(f.id)}
                       onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
                       className="w-4 h-4 accent-violet-600 flex-shrink-0" />
-                    <Avatar name={f.display_name} size="sm" />
+                    <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                     <span className="text-sm font-medium text-violet-900 dark:text-violet-100">{f.display_name}</span>
                   </label>
                 ))}
@@ -172,7 +172,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
               <div key={r.id} className="px-4 py-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Avatar name={r.display_name} size="sm" />
+                    <Avatar name={r.display_name} url={r.avatar_url} size="sm" />
                     <span className="text-sm text-violet-900 dark:text-violet-100">{r.display_name}</span>
                   </div>
                   {signal && (
