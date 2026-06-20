@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import { sendFeedbackNotification } from '../services/email.js';
 
 const router = Router();
 
@@ -24,6 +25,19 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
   db.prepare(
     'INSERT INTO feedback (id, user_id, type, message, reply_email) VALUES (?, ?, ?, ?, ?)'
   ).run(id, req.userId, type, message.trim(), reply_email?.trim() || null);
+
+  const adminEmail = process.env.ADMIN_EMAIL || 'daniel.herzog@gmail.com';
+  const sender = db.prepare('SELECT display_name, email FROM users WHERE id = ?').get(req.userId) as { display_name: string; email: string } | undefined;
+  if (sender) {
+    sendFeedbackNotification({
+      to: adminEmail,
+      type,
+      message: message.trim(),
+      fromName: sender.display_name,
+      fromEmail: sender.email,
+      replyEmail: reply_email?.trim() || null,
+    }).catch(err => console.error('[feedback] email failed', err));
+  }
 
   res.status(201).json({ id });
 });

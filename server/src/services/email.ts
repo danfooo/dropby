@@ -187,6 +187,34 @@ export async function sendWaitlistDigest(
   );
 }
 
+export async function sendFeedbackNotification(opts: {
+  to: string;
+  type: string;
+  message: string;
+  fromName: string;
+  fromEmail: string;
+  replyEmail: string | null;
+}) {
+  const { to, type, message, fromName, fromEmail, replyEmail } = opts;
+  const safeName = escapeHtml(fromName);
+  const safeEmail = escapeHtml(fromEmail);
+  const safeMessage = escapeHtml(message);
+  const replyLine = replyEmail
+    ? `<p><strong>Reply to:</strong> ${escapeHtml(replyEmail)}</p>`
+    : '';
+  await send(
+    to,
+    `dropby feedback — ${type} from ${fromName}`,
+    `
+    <p><strong>From:</strong> ${safeName} (${safeEmail})</p>
+    <p><strong>Type:</strong> ${escapeHtml(type)}</p>
+    ${replyLine}
+    <p><strong>Message:</strong></p>
+    <p>${safeMessage.replace(/\n/g, '<br>')}</p>
+    `
+  );
+}
+
 export async function sendWelcomeMessage(contact: string, downloadUrl: string) {
   const isPhone = /^\+?[\d\s\-()]+$/.test(contact) && !contact.includes("@");
   if (isPhone) {
