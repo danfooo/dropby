@@ -1,4 +1,5 @@
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import type { MouseEvent } from 'react';
+import { NavLink, useNavigate, useLocation, type NavLinkRenderProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { statusApi } from '../api';
@@ -29,13 +30,13 @@ export default function TabBar() {
         {/* Now tab */}
         <NavLink
           to="/home"
-          onClick={(e) => {
+          onClick={(e: MouseEvent<HTMLAnchorElement>) => {
             if (location.pathname === '/home') {
               e.preventDefault();
               navigate('/home', { replace: true, state: { exitEdit: Date.now() } });
             }
           }}
-          className={({ isActive }) =>
+          className={({ isActive }: NavLinkRenderProps) =>
             `flex-1 flex flex-col items-center py-3 text-xs font-medium transition-colors ${
               isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'
             }`
@@ -50,7 +51,7 @@ export default function TabBar() {
         {/* Later tab */}
         <NavLink
           to="/upcoming"
-          className={({ isActive }) =>
+          className={({ isActive }: NavLinkRenderProps) =>
             `flex-1 flex flex-col items-center py-3 text-xs font-medium transition-colors ${
               isActive ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'
             }`
@@ -72,7 +73,7 @@ export default function TabBar() {
         {/* Friends tab */}
         <NavLink
           to="/friends"
-          className={({ isActive }) =>
+          className={({ isActive }: NavLinkRenderProps) =>
             `flex-1 flex flex-col items-center py-3 text-xs font-medium transition-colors ${
               isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'
             }`

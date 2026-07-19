@@ -1,8 +1,17 @@
 import { useState, useCallback, useRef } from 'react';
+import type { ComponentType } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import Cropper from 'react-easy-crop';
+// react-easy-crop's class component predates React 19's JSX typing —
+// its types haven't caught up yet (known upstream, affects several libs).
+// The cast also has to restore the optionality that static defaultProps
+// normally gives these fields, since bypassing the class type loses it.
+import CropperUntyped, { type CropperProps } from 'react-easy-crop';
+type CropperDefaultedProps = 'zoom' | 'rotation' | 'aspect' | 'maxZoom' | 'minZoom' | 'cropShape' | 'objectFit' | 'showGrid' | 'style' | 'classes' | 'mediaProps' | 'cropperProps' | 'zoomSpeed' | 'restrictPosition' | 'zoomWithScroll' | 'keyboardStep';
+const Cropper = CropperUntyped as unknown as ComponentType<
+  Omit<CropperProps, CropperDefaultedProps> & Partial<Pick<CropperProps, CropperDefaultedProps>>
+>;
 import { authApi } from '../api';
 import { deregisterPushToken } from '../utils/notifications';
 import { useAuthStore } from '../stores/auth';

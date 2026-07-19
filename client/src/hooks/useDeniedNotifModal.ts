@@ -3,7 +3,7 @@ import { shouldShowDeniedPrompt, snoozeDeniedPrompt, openNotificationSettings } 
 
 export function useDeniedNotifModal() {
   const [open, setOpen] = useState(false);
-  const showTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const showTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(showTimeout.current), []);
 
