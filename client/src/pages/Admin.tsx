@@ -66,7 +66,7 @@ function delta(now: number, prev: number) {
 
 function MetricCard({ label, value, prev }: { label: string; value: number; prev: number }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-xs px-4 py-3">
       <div className="text-xs text-gray-400 mb-1">{label}</div>
       <div className="text-2xl font-semibold text-gray-900">
         {value}
@@ -168,7 +168,7 @@ export default function Admin() {
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           8-week trend
         </h2>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-gray-100">
@@ -207,7 +207,7 @@ export default function Admin() {
         <p className="text-xs text-gray-400 mb-3">
           From first contact to realising value. Each row shows drop-off from the step above.
         </p>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50 px-4">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-xs divide-y divide-gray-50 px-4">
           <FunnelStep label="Auth page viewed with signup intent" count={funnel.auth_page_views} prevCount={null} />
           <FunnelStep label="Signup submitted" count={funnel.signups} prevCount={funnel.auth_page_views} />
           <FunnelStep label="Email verified" count={funnel.verifies} prevCount={funnel.signups} />
@@ -224,7 +224,7 @@ export default function Admin() {
         <p className="text-xs text-gray-400 mb-3">
           Views with a live door convert much better — that split tells you whether the invite timing problem is real.
         </p>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50 px-4">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-xs divide-y divide-gray-50 px-4">
           <FunnelStep label="Invite link viewed" count={inv.views} prevCount={null} />
           <FunnelStep label="↳ with host door open" count={inv.views_with_live_door} prevCount={inv.views} />
           <FunnelStep label="Guest going signal sent" count={inv.guest_goings} prevCount={inv.views_with_live_door} note="no account needed" />
@@ -240,7 +240,7 @@ export default function Admin() {
         <p className="text-xs text-gray-400 mb-3">
           Only tracked for notifications where a follow-on action proves the push worked.
         </p>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-xs divide-y divide-gray-50">
           {[
             {
               label: 'Nudge → door opened within 4h',
@@ -280,7 +280,7 @@ export default function Admin() {
           Registered tokens — last 7 days: {push_register.ok_7d} registration{push_register.ok_7d !== 1 ? 's' : ''} succeeded
           {push_register.recent_fails.length > 0 && <span className="text-red-500 ml-1">· {push_register.recent_fails.length} failed</span>}
         </p>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-xs divide-y divide-gray-50">
           {push_subscriptions.length === 0 ? (
             <div className="px-4 py-3 text-sm text-gray-400">No registered tokens</div>
           ) : push_subscriptions.map(s => (
@@ -311,7 +311,7 @@ export default function Admin() {
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Recent push sent — last 48h ({push_recent_sent.length})
           </h2>
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-xs divide-y divide-gray-50">
             {push_recent_sent.map((n, i) => (
               <div key={i} className="px-4 py-2 text-xs text-gray-600 flex items-center gap-2">
                 <span className="text-gray-400 w-16 shrink-0">{new Date(n.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -330,7 +330,7 @@ export default function Admin() {
           <h2 className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-3">
             Push failures — last 24h ({push_alarms.fails_24h})
           </h2>
-          <div className="bg-white rounded-xl border border-red-100 shadow-sm divide-y divide-red-50">
+          <div className="bg-white rounded-xl border border-red-100 shadow-xs divide-y divide-red-50">
             {push_alarms.recent.map((f, i) => (
               <div key={i} className="px-4 py-2 text-xs text-gray-600">
                 <span className="text-gray-400 mr-2">{new Date(f.ts * 1000).toLocaleTimeString()}</span>

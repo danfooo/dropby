@@ -191,7 +191,7 @@ export default function Profile() {
           <div className="w-5" />
         </div>
         <div className="flex flex-col items-center gap-2">
-          <button onClick={() => setShowAvatarCrop(true)} className="relative group flex-shrink-0">
+          <button onClick={() => setShowAvatarCrop(true)} className="relative group shrink-0">
             <Avatar name={user?.display_name ?? ''} url={user?.avatar_url} size="xl" />
             <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 group-active:opacity-100 flex items-center justify-center transition-opacity">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -206,7 +206,7 @@ export default function Profile() {
 
       <div className="px-4 pt-6 space-y-4">
         {/* Display name */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               {t('profile.displayName')}
@@ -227,7 +227,7 @@ export default function Profile() {
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 required
-                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
                 autoFocus
               />
               <button type="submit" disabled={updateMe.isPending} className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
@@ -243,7 +243,7 @@ export default function Profile() {
         </div>
 
         {/* Email */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800">
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
             {t('profile.email')}
           </label>
@@ -251,14 +251,14 @@ export default function Profile() {
         </div>
 
         {/* Language */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             {t('profile.language')}
           </label>
           <select
             value={i18n.language}
             onChange={e => i18n.changeLanguage(e.target.value)}
-            className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border-none outline-none cursor-pointer"
+            className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border-none outline-hidden cursor-pointer"
           >
             <option value="en-US">English</option>
             <option value="de">Deutsch</option>
@@ -274,7 +274,7 @@ export default function Profile() {
         {/* Notifications */}
         <Link
           to="/notifications"
-          className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between"
+          className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800 flex items-center justify-between"
         >
           <span className="font-medium text-gray-900 dark:text-gray-50 text-sm">{t('profile.notifications')}</span>
           <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

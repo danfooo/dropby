@@ -146,7 +146,7 @@ function DoorAnimation({ active }: { active: boolean }) {
       </div>
       {/* Light streaming out */}
       <div
-        className={`absolute inset-2 rounded-t-md bg-gradient-to-r from-yellow-100/80 to-yellow-50/0 dark:from-yellow-200/20 dark:to-transparent transition-opacity duration-1000 ${
+        className={`absolute inset-2 rounded-t-md bg-linear-to-r from-yellow-100/80 to-yellow-50/0 dark:from-yellow-200/20 dark:to-transparent transition-opacity duration-1000 ${
           active ? 'opacity-100' : 'opacity-0'
         }`}
         style={{ transitionDelay: '400ms' }}
@@ -331,14 +331,14 @@ export default function Story() {
           <Reveal visible={s6} delay={300}>
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg border border-gray-100 dark:border-gray-700 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                  <img src="/logo-icon.svg" alt="" className="w-5 h-5 [filter:invert(1)]" />
+                <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0">
+                  <img src="/logo-icon.svg" alt="" className="w-5 h-5 filter-[invert(1)]" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">dropby</p>
                   <p className="text-gray-500 dark:text-gray-400 text-sm">{t('story.notifText')}</p>
                 </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{t('story.notifTime')}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{t('story.notifTime')}</p>
               </div>
             </div>
           </Reveal>
@@ -350,7 +350,7 @@ export default function Story() {
               style={{ animation: s6 ? 'float 4s ease-in-out 1.5s infinite' : undefined }}
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
                   S
                 </div>
                 <div className="min-w-0">

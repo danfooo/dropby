@@ -102,7 +102,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
           {visibleSaved.map((n: any) => (
             <div
               key={n.id}
-              className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              className={`shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                 selectedChip === n.text
                   ? 'bg-emerald-500 text-white border-emerald-500'
                   : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
@@ -124,7 +124,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
             <button
               key={chip}
               onClick={() => pickChip(chip)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                 selectedChip === chip
                   ? 'bg-emerald-500 text-white border-emerald-500'
                   : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
@@ -150,7 +150,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
               setPreviousNote(null);
             }
           }}
-          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
         />
         {note.length >= 130 && (
           <span className={`absolute right-3 bottom-2.5 text-xs pointer-events-none ${note.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
@@ -161,21 +161,21 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
 
       {/* Date / time pickers */}
       <div className="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800">
-        <div className="flex-[2] px-3 py-2 border-r border-gray-200 dark:border-gray-700">
+        <div className="flex-2 px-3 py-2 border-r border-gray-200 dark:border-gray-700">
           <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">Date</label>
           <input type="date" value={date} min={todayStr()} onChange={e => { setDate(e.target.value); setHasEditedDateTime(true); }}
-            className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
+            className="w-full text-base bg-transparent outline-hidden dark:text-gray-50" />
         </div>
         <div className={`flex-1 px-3 py-2 ${hasEndTime ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}>
           <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
           <input type="time" value={start} onChange={e => { setStart(e.target.value); setHasEditedDateTime(true); }}
-            className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
+            className="w-full text-base bg-transparent outline-hidden dark:text-gray-50" />
         </div>
         {hasEndTime && (
           <div className="flex-1 px-3 py-2 relative">
             <label className="text-xs text-gray-400 dark:text-gray-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
             <input type="time" value={end} onChange={e => setEnd(e.target.value)}
-              className="w-full text-base bg-transparent outline-none dark:text-gray-50 pr-5" />
+              className="w-full text-base bg-transparent outline-hidden dark:text-gray-50 pr-5" />
             <button onClick={() => setHasEndTime(false)} className="absolute top-2 right-2 text-gray-300 dark:text-gray-600 hover:text-gray-500 text-xs leading-none">✕</button>
           </div>
         )}
@@ -230,14 +230,14 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
                 <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-4">
                   <input type="checkbox" checked={recipients.includes(f.id)}
                     onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                    className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                    className="w-4 h-4 accent-emerald-500 shrink-0" />
                   <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
                 </label>
               ))}
             </div>
             {activeFriends.length >= 5 && !friendsAtBottom && (
-              <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 h-14 bg-linear-to-t from-white dark:from-gray-900 to-transparent pointer-events-none" />
             )}
           </div>
         </div>

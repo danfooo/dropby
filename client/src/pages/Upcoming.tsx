@@ -48,21 +48,21 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
     return (
       <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl p-4 space-y-3">
         <div className="flex border border-violet-200 dark:border-violet-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900">
-          <div className="flex-[2] px-3 py-2 border-r border-violet-200 dark:border-violet-800">
+          <div className="flex-2 px-3 py-2 border-r border-violet-200 dark:border-violet-800">
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">Date</label>
             <input type="date" value={editDate} min={format(new Date(), 'yyyy-MM-dd')} onChange={e => setEditDate(e.target.value)}
-              className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
+              className="w-full text-base bg-transparent outline-hidden dark:text-gray-50" />
           </div>
           <div className={`flex-1 px-3 py-2 ${hasEditEnd ? 'border-r border-violet-200 dark:border-violet-800' : ''}`}>
             <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
             <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
-              className="w-full text-base bg-transparent outline-none dark:text-gray-50" />
+              className="w-full text-base bg-transparent outline-hidden dark:text-gray-50" />
           </div>
           {hasEditEnd && (
             <div className="flex-1 px-3 py-2 relative">
               <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
               <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
-                className="w-full text-base bg-transparent outline-none dark:text-gray-50 pr-5" />
+                className="w-full text-base bg-transparent outline-hidden dark:text-gray-50 pr-5" />
               <button onClick={() => setHasEditEnd(false)} className="absolute top-2 right-2 text-violet-300 dark:text-violet-700 hover:text-violet-500 text-xs leading-none">✕</button>
             </div>
           )}
@@ -79,7 +79,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
             value={editNote}
             maxLength={160}
             onChange={e => setEditNote(e.target.value)}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
           />
           {editNote.length >= 130 && (
             <span className={`absolute right-3 bottom-2.5 text-xs pointer-events-none ${editNote.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
@@ -106,14 +106,14 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
                   <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900 px-4">
                     <input type="checkbox" checked={editRecipients.includes(f.id)}
                       onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                      className="w-4 h-4 accent-violet-600 flex-shrink-0" />
+                      className="w-4 h-4 accent-violet-600 shrink-0" />
                     <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                     <span className="text-sm font-medium text-violet-900 dark:text-violet-100">{f.display_name}</span>
                   </label>
                 ))}
               </div>
               {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-violet-50 dark:from-violet-950 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-14 bg-linear-to-t from-violet-50 dark:from-violet-950 to-transparent pointer-events-none" />
               )}
             </div>
           </div>

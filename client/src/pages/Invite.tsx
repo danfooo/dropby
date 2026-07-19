@@ -275,7 +275,7 @@ export default function Invite() {
                   onChange={e => setGuestNote(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleUpdateGuestNote(); }}
                   placeholder={t('invite.notePlaceholder')}
-                  className="flex-1 px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  className="flex-1 px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
                 />
                 <button
                   onClick={handleUpdateGuestNote}
@@ -372,14 +372,14 @@ function GuestGoingModal({ open, onClose, statusId, hostName, onSuccess }: { ope
           required
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
         />
         <input
           type="text"
           placeholder={t('invite.emailOrPhoneOptional')}
           value={contact}
           onChange={e => { setContact(e.target.value); if (!e.target.value) setConsent(false); }}
-          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
         />
         {contact && (
           <label className="flex items-start gap-3 cursor-pointer">
@@ -397,7 +397,7 @@ function GuestGoingModal({ open, onClose, statusId, hostName, onSuccess }: { ope
           placeholder={t('invite.notePlaceholder')}
           value={note}
           onChange={e => setNote(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
         />
         {note.trim() && (
           <p className="text-xs text-gray-400 dark:text-gray-500 -mt-1">{t('invite.noteDisclaimer', { name: hostName })}</p>

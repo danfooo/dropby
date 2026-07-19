@@ -157,7 +157,7 @@ export default function Friends() {
             placeholder={t('friends.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-50 rounded-lg text-sm focus:outline-none"
+            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-50 rounded-lg text-sm focus:outline-hidden"
           />
         )}
       </div>
@@ -181,7 +181,7 @@ export default function Friends() {
           <>
             {/* Active friends */}
             {activeFriends.length > 0 && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-800 mb-4">
                 {activeFriends.map((f: any, i: number) => {
                   const pref: NotifPref = f.notif_pref ?? 'default';
                   const pickerOpen = notifPickerFor === f.id;
@@ -256,7 +256,7 @@ export default function Friends() {
                 <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
                   {t('friends.hidden')}
                 </h2>
-                <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-xs border border-gray-100 dark:border-gray-800 mb-4">
                   {hiddenFriends.map((f: any, i: number) => (
                     <div key={f.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
                       <Avatar name={f.display_name} url={f.avatar_url} size="sm" className="opacity-60" />
@@ -296,7 +296,7 @@ export default function Friends() {
               <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 mt-4">
                 {t('friends.pendingTitle')}
               </h2>
-              <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-xs border border-gray-100 dark:border-gray-800 mb-4">
                 {merged.map((item: any, i: number) => {
                   const isLink = item.kind === 'link';
                   const ageSecs = now - item.created_at;
@@ -313,7 +313,7 @@ export default function Friends() {
                           onClick={() => handleCopyLink(item.url)}
                           className="flex items-center gap-3 flex-1 min-w-0 text-left"
                         >
-                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
                             <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
@@ -324,7 +324,7 @@ export default function Friends() {
                         </button>
                       ) : (
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
                             <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                             </svg>
@@ -334,7 +334,7 @@ export default function Friends() {
                       )}
                       <button
                         onClick={() => isLink ? revokeLink.mutate(item.token) : cancelInvite.mutate(item.token)}
-                        className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 flex-shrink-0"
+                        className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 shrink-0"
                         title={t('friends.cancelInvite')}
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -402,7 +402,7 @@ export default function Friends() {
               value={addInput}
               onChange={e => { setAddInput(e.target.value); setError(''); }}
               required
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
             />
             <button
               type="submit"

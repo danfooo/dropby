@@ -41,7 +41,7 @@ export default function ResetPassword() {
     <div className="min-h-full flex flex-col items-center justify-center px-6 py-10 bg-white">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="dropby" className="h-10 mx-auto dark:[filter:invert(1)]" />
+          <img src="/logo.svg" alt="dropby" className="h-10 mx-auto dark:filter-[invert(1)]" />
         </div>
 
         {status === 'error' && !token && (
@@ -77,7 +77,7 @@ export default function ResetPassword() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
               />
               <input
                 type="password"
@@ -85,7 +85,7 @@ export default function ResetPassword() {
                 required
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
               />
               <button
                 type="submit"

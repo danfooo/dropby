@@ -39,7 +39,7 @@ export default function Avatar({ name, url, seed, size = 'md', className = '' }:
     <img
       src={src}
       alt={name}
-      className={`${sizeMap[size]} rounded-full flex-shrink-0 object-cover ${className}`}
+      className={`${sizeMap[size]} rounded-full shrink-0 object-cover ${className}`}
     />
   );
 }

@@ -139,7 +139,7 @@ export default function Get() {
       <section className="min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center">
         <img
           src="/logo-icon.svg" alt="dropby"
-          className={`w-16 h-16 mb-6 dark:[filter:invert(1)] ${fx(mounted)}`}
+          className={`w-16 h-16 mb-6 dark:filter-[invert(1)] ${fx(mounted)}`}
           style={{ transitionDelay: '0ms' }}
         />
         <h1
@@ -203,7 +203,7 @@ export default function Get() {
                 className={`flex flex-col items-start md:items-center md:text-center ${fx(step.inView)}`}
                 style={{ transitionDelay: `${i * 120}ms` }}
               >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-2xl mb-4 flex-shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-2xl mb-4 shrink-0">
                   {step.icon}
                 </div>
                 <p className="font-semibold text-gray-900 dark:text-gray-50 mb-1">{t(step.titleKey)}</p>
@@ -225,7 +225,7 @@ export default function Get() {
             style={{ animation: cardIn ? 'float 4s ease-in-out 0.8s infinite' : undefined }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <img src="/avatar-sarah.jpg" alt="Sarah" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              <img src="/avatar-sarah.jpg" alt="Sarah" className="w-10 h-10 rounded-full object-cover shrink-0" />
               <div className="min-w-0">
                 <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">Sarah {t('marketing.mockOpened')}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('marketing.mockNote')}</p>

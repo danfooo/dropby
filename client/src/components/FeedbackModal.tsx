@@ -106,7 +106,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
             rows={4}
             maxLength={1000}
             required
-            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-50 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none mb-4"
+            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-50 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-400 resize-none mb-4"
           />
 
           {/* Follow-up opt-in */}
@@ -118,7 +118,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
                 setWantsReply(e.target.checked);
                 if (e.target.checked && !replyEmail) setReplyEmail(user?.email ?? '');
               }}
-              className="mt-0.5 w-4 h-4 rounded accent-emerald-500"
+              className="mt-0.5 w-4 h-4 rounded-sm accent-emerald-500"
             />
             <span className="text-sm text-gray-600 dark:text-gray-400">{t('feedback.wantsReply')}</span>
           </label>
@@ -130,7 +130,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
               onChange={e => setReplyEmail(e.target.value)}
               placeholder={t('feedback.emailPlaceholder')}
               required
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
+              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-50 placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-400 mb-4"
             />
           )}
 

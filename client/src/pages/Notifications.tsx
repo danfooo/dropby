@@ -93,7 +93,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
       onClick={onToggle}
       className={`relative w-11 h-6 rounded-full transition-colors ${on ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}
     >
-      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-5' : ''}`} />
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${on ? 'translate-x-5' : ''}`} />
     </button>
   );
 }
@@ -148,7 +148,7 @@ export default function Notifications() {
 
       <div className="px-4 pt-6 space-y-4">
         {/* Scheduled reminders */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between mb-1">
             <h2 className="font-semibold text-gray-900 dark:text-gray-50">{t('notifications.remindersTitle')}</h2>
             <button
@@ -192,7 +192,7 @@ export default function Notifications() {
         </div>
 
         {/* Auto-nudge */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between">
             <p className="font-medium text-gray-900 dark:text-gray-50 text-sm flex-1 pr-4">{t('notifications.autoNudgeTitle')}</p>
             <Toggle
@@ -207,14 +207,14 @@ export default function Notifications() {
         </div>
 
         {/* Session reminders */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800 space-y-3">
           <h2 className="font-semibold text-gray-900 dark:text-gray-50">{t('notifications.sessionRemindersTitle')}</h2>
           <div className="flex items-center justify-between">
             <label className="text-sm text-gray-700 dark:text-gray-300">{t('notifications.reminder1Label')}</label>
             <select
               value={user?.going_reminder_1 ?? 'day'}
               onChange={e => updateMe.mutate({ going_reminder_1: e.target.value })}
-              className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 outline-none"
+              className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 outline-hidden"
             >
               {REMINDER_OPTIONS.map(opt => (
                 <option key={opt} value={opt}>{t(`notifications.reminderOptions.${opt}`)}</option>
@@ -226,7 +226,7 @@ export default function Notifications() {
             <select
               value={user?.going_reminder_2 ?? '30m'}
               onChange={e => updateMe.mutate({ going_reminder_2: e.target.value })}
-              className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 outline-none"
+              className="text-sm text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 outline-hidden"
             >
               {REMINDER_OPTIONS.map(opt => (
                 <option key={opt} value={opt}>{t(`notifications.reminderOptions.${opt}`)}</option>
@@ -236,7 +236,7 @@ export default function Notifications() {
         </div>
 
         {/* Door closed confirmation */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1">
               <p className="font-medium text-gray-900 dark:text-gray-50 text-sm">{t('notifications.doorClosedTitle')}</p>

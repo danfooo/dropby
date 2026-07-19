@@ -80,7 +80,7 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
             type="checkbox"
             checked={myRsvp === 'going'}
             onChange={handleGoing}
-            className="w-5 h-5 rounded accent-emerald-500 cursor-pointer"
+            className="w-5 h-5 rounded-sm accent-emerald-500 cursor-pointer"
           />
           <span className="text-sm font-semibold text-violet-900 dark:text-violet-100">{t('home.rsvpGoing')}</span>
         </label>
@@ -91,7 +91,7 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
           onBlur={handleNoteBlur}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSaveNote(); (e.target as HTMLInputElement).blur(); } }}
           placeholder={t('home.rsvpNotePlaceholder')}
-          className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-violet-200 dark:border-violet-800 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-400"
+          className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-violet-200 dark:border-violet-800 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
         />
         {hasPendingChanges && (
           <div className="flex justify-end">

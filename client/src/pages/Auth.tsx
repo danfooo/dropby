@@ -238,7 +238,7 @@ export default function Auth() {
     <div className="min-h-full flex flex-col items-center justify-center px-6 py-10 bg-white dark:bg-gray-950">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="dropby" className="h-16 mx-auto dark:[filter:invert(1)]" />
+          <img src="/logo.svg" alt="dropby" className="h-16 mx-auto dark:filter-[invert(1)]" />
         </div>
 
         {view === 'forgot' ? (
@@ -268,7 +268,7 @@ export default function Auth() {
                     required
                     value={forgotEmail}
                     onChange={e => setForgotEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:text-gray-50"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] focus:outline-hidden focus:ring-2 focus:ring-emerald-400 dark:text-gray-50"
                   />
                   <button type="submit" disabled={loading} className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-colors">
                     {loading ? t('auth.pleaseWait') : t('auth.sendResetLink')}
@@ -303,7 +303,7 @@ export default function Auth() {
                   key={tabKey}
                   onClick={() => { setTab(tabKey); setError(''); setMessage(''); setShowResend(false); }}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-                    tab === tabKey ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400'
+                    tab === tabKey ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 shadow-xs' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {tabKey === 'login' ? t('auth.login') : t('auth.signup')}
@@ -350,7 +350,7 @@ export default function Auth() {
                       placeholder={t('auth.email')}
                       value={waitlistEmail}
                       onChange={e => setWaitlistEmail(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
                     />
                     {/* Honeypot — hidden from humans, bots auto-fill */}
                     <input
@@ -383,7 +383,7 @@ export default function Auth() {
                   required
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
                 />
               )}
               <input
@@ -392,7 +392,7 @@ export default function Auth() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
               />
               <input
                 type="password"
@@ -400,7 +400,7 @@ export default function Auth() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
               />
               {tab === 'login' && (
                 <div className="text-right -mt-1">
@@ -433,7 +433,7 @@ export default function Auth() {
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-3 bg-black hover:bg-gray-900 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-colors"
               >
-                <span className="flex items-center justify-center w-5 h-5 bg-white rounded-sm flex-shrink-0">
+                <span className="flex items-center justify-center w-5 h-5 bg-white rounded-xs shrink-0">
                   <svg className="w-3.5 h-3.5" viewBox="0 0 18 18" aria-hidden="true">
                     <path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z"/>
                     <path fill="#34A853" d="M9 18c2.43 0 4.4673-.806 5.9564-2.1818l-2.9087-2.2581c-.7959.5346-1.8159.8455-3.0477.8455-2.3454 0-4.3282-1.5836-5.0359-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"/>
@@ -463,7 +463,7 @@ export default function Auth() {
                 disabled={loading}
                 className="mt-3 w-full flex items-center justify-center gap-3 bg-black hover:bg-gray-900 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-colors"
               >
-                <svg className="w-5 h-5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                 </svg>
                 {t('auth.continueWithApple')}

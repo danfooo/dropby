@@ -331,7 +331,7 @@ export default function Home() {
     return (
       <div className={`relative overflow-hidden min-h-full px-4 safe-top flex flex-col ${
         openFriendDoors.length > 0
-          ? 'bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950'
+          ? 'bg-linear-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950'
           : 'bg-gray-200 dark:bg-gray-950'
       }`}>
         {openFriendDoors.length > 0 && (
@@ -360,7 +360,7 @@ export default function Home() {
           </div>
         )}
 
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-sm mb-4">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-xs mb-4">
         <h2 className={`font-bold text-gray-900 dark:text-gray-50 mb-4 ${openFriendDoors.length > 0 ? 'text-lg' : 'text-2xl'}`}>
           {getGreeting(t)}
         </h2>
@@ -372,7 +372,7 @@ export default function Home() {
               {savedChips.map((n: any) => (
                 <div
                   key={n.id}
-                  className={`flex-shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  className={`shrink-0 flex items-center gap-1 pl-3 pr-2 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                     selectedChip === n.text
                       ? 'bg-emerald-500 text-white border-emerald-500'
                       : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
@@ -421,7 +421,7 @@ export default function Home() {
                       trackApi.chipSelected({ chip: chip === IM_HOME_CHIP ? 'im_home' : 'suggestion', index: i });
                     }
                   }}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                     selectedChip === chip
                       ? 'bg-emerald-500 text-white border-emerald-500'
                       : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
@@ -448,7 +448,7 @@ export default function Home() {
                 setPreviousNote(null);
               }
             }}
-            className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
           />
           {note.length >= 130 && (
             <span className={`absolute right-3 bottom-3 text-xs pointer-events-none ${note.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
@@ -470,14 +470,14 @@ export default function Home() {
                   <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 -mx-3 px-3 transition-colors">
                     <input type="checkbox" checked={selectedRecipients.includes(f.id)}
                       onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                      className="w-4 h-4 accent-emerald-500 flex-shrink-0" />
+                      className="w-4 h-4 accent-emerald-500 shrink-0" />
                     <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
                   </label>
                 ))}
               </div>
               {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none rounded-b-xl" />
+                <div className="absolute bottom-0 left-0 right-0 h-14 bg-linear-to-t from-white dark:from-gray-900 to-transparent pointer-events-none rounded-b-xl" />
               )}
             </div>
           </div>
@@ -557,7 +557,7 @@ export default function Home() {
               maxLength={160}
               defaultValue={initNote}
               onChange={e => setEditNote(e.target.value)}
-              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
             />
             {editNote.length >= 130 && (
               <span className={`absolute right-3 bottom-3.5 text-xs pointer-events-none ${editNote.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
@@ -573,7 +573,7 @@ export default function Home() {
                 type="time"
                 defaultValue={initEndsAt}
                 onChange={e => setEditEndsAt(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
               />
             </div>
           )}
@@ -623,7 +623,7 @@ export default function Home() {
 
   // --- DOOR OPEN VIEW ---
   return (
-    <div className="relative overflow-hidden min-h-full bg-gradient-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 px-4 safe-top">
+    <div className="relative overflow-hidden min-h-full bg-linear-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 px-4 safe-top">
       {/* Glimmer overlay — blends with gradient, barely touches opaque cards */}
       <div
         className="pointer-events-none absolute -inset-4"
@@ -650,7 +650,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-xs">
       <div className="text-center mb-4">
         <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-4 py-1.5 rounded-full text-sm font-medium">
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -692,7 +692,7 @@ export default function Home() {
           onClick={copyInviteLink}
           className="w-full flex items-center gap-3 pt-2 mt-1 border-t border-gray-100 dark:border-gray-700 hover:opacity-70 transition-opacity"
         >
-          <div className="w-7 h-7 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center shrink-0">
             <svg className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
@@ -848,7 +848,7 @@ function TipsSection() {
     <div className="bg-white dark:bg-gray-900 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('common.appBannerText')}</p>
-        <button onClick={dismissAppBanner} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+        <button onClick={dismissAppBanner} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 shrink-0">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -862,7 +862,7 @@ function TipsSection() {
     <div className="bg-white dark:bg-gray-900 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.inviteFriendsText')}</p>
-        <button onClick={dismissInvite} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+        <button onClick={dismissInvite} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 shrink-0">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -886,7 +886,7 @@ function TipsSection() {
     <div className="bg-white dark:bg-gray-900 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.feedbackTipText')}</p>
-        <button onClick={() => { dismissFeedback(); setToast({ message: t('home.feedbackTipDismissed'), linkText: t('profile.title'), linkTo: '/profile' }); }} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+        <button onClick={() => { dismissFeedback(); setToast({ message: t('home.feedbackTipDismissed'), linkText: t('profile.title'), linkTo: '/profile' }); }} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 shrink-0">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -900,7 +900,7 @@ function TipsSection() {
     <div className="bg-white dark:bg-gray-900 px-4 py-4">
       <div className="flex items-start justify-between mb-2">
         <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.coffeeTipText')}</p>
-        <button onClick={dismissCoffee} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 flex-shrink-0">
+        <button onClick={dismissCoffee} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 shrink-0">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>

@@ -17,7 +17,7 @@ export default function Landing() {
 
       {/* Hero */}
       <div className="flex flex-col items-center px-6 py-8 text-center">
-        <img src="/logo-icon.svg" alt="dropby" className="w-16 h-16 mb-4 dark:[filter:invert(1)]" />
+        <img src="/logo-icon.svg" alt="dropby" className="w-16 h-16 mb-4 dark:filter-[invert(1)]" />
         <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-50 mb-2">dropby</h1>
         <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-2">
           {t('landing.tagline')}
@@ -30,7 +30,7 @@ export default function Landing() {
         <div className="space-y-4 max-w-sm mx-auto">
           {steps.map(item => (
             <div key={item.titleKey} className="flex gap-4 items-start">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-lg flex-shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-lg shrink-0">
                 {item.icon}
               </div>
               <div>
