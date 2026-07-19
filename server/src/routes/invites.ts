@@ -184,7 +184,7 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
 
 // POST /api/invites/:token/accept — accept invite (auth required)
 router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
-  const { token } = req.params;
+  const { token } = req.params as { token: string };
   const userId = req.userId!;
   const nowUnix = Math.floor(Date.now() / 1000);
 

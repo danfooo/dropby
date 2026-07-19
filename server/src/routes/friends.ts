@@ -63,7 +63,7 @@ router.delete('/:friendId', requireAuth, (req: AuthRequest, res) => {
 
 // POST /api/friends/:friendId/hide
 router.post('/:friendId/hide', requireAuth, (req: AuthRequest, res) => {
-  const { friendId } = req.params;
+  const { friendId } = req.params as { friendId: string };
   const userId = req.userId!;
   const { duration_days } = req.body ?? {};
 
@@ -106,7 +106,7 @@ router.delete('/:friendId/hide', requireAuth, (req: AuthRequest, res) => {
 
 // POST /api/friends/:friendId/notif-pref
 router.post('/:friendId/notif-pref', requireAuth, (req: AuthRequest, res) => {
-  const { friendId } = req.params;
+  const { friendId } = req.params as { friendId: string };
   const userId = req.userId!;
   const { pref } = req.body;
 

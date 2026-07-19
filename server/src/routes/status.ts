@@ -217,7 +217,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
 // POST /api/status/:statusId/activate — open a scheduled session
 router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
-  const { statusId } = req.params;
+  const { statusId } = req.params as { statusId: string };
   const nowUnix = Math.floor(Date.now() / 1000);
 
   const scheduled = db.prepare(`

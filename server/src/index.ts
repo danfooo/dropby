@@ -91,7 +91,7 @@ if (!isDev) {
   const clientDist = join(process.cwd(), '..', 'client', 'dist');
   if (existsSync(clientDist)) {
     app.use(express.static(clientDist));
-    app.get('*', (_req, res) => res.sendFile(join(clientDist, 'index.html')));
+    app.get('/*splat', (_req, res) => res.sendFile(join(clientDist, 'index.html')));
   }
 }
 
