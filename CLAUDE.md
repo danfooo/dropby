@@ -74,6 +74,33 @@ Commit after every change, without being asked. Push immediately too unless it r
 - Prefer specific file staging over `git add -A`
 - Always co-author: `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`
 
+## Local image verification (Apple `container`, not Docker)
+
+This machine doesn't have Docker installed. Instead it uses Apple's [`container`](https://github.com/apple/container) CLI — a native macOS tool (Apple silicon only, macOS 15+) that builds and runs standard `Dockerfile`s using Apple's own lightweight VM virtualization instead of a Docker Desktop-style VM. Installed via Homebrew (`brew install container`, the plain formula — not a cask), not Apple's signed `.pkg` installer, but it's the same upstream open-source project either way.
+
+The `Dockerfile` itself is a standard OCI/Docker-format file — nothing about it is Apple- or `container`-specific. `fly deploy` still builds it the normal way, on Fly's own remote builder infrastructure; `container` is only used here for local pre-deploy verification.
+
+One-time setup:
+
+```
+brew install container
+container system start
+container system kernel set --recommended   # downloads the default Linux kernel the VMs boot
+```
+
+To verify a change that touches the `Dockerfile`, native modules (e.g. `better-sqlite3`), or anything else that behaves differently in the actual Alpine/musl production environment than on macOS:
+
+```
+container build -f Dockerfile --build-arg VITE_GOOGLE_CLIENT_ID="<value from fly.toml>" -t dropby-local .
+container run -d --name dropby-local -p 3100:3000 -e JWT_SECRET=<any-value> -e NODE_ENV=production dropby-local:latest
+container exec dropby-local wget -qO- http://localhost:3000/api/friends   # sanity check from inside the container
+container stop dropby-local && container rm dropby-local
+```
+
+Known rough edge: `container run -p host:container` publishes the port, but connecting from the host (`curl localhost:3100`) can reset the connection — an immaturity in this early-stage tool's networking, not an application bug. `container exec <name> wget ...` (hitting the app from inside the container) is the reliable way to check it's actually serving correctly.
+
+Cleanup: `container image rm <name>` after testing to avoid accumulating build layers (a full image build is roughly 1–2 GB).
+
 ## Deploy
 
 Deploy command:
@@ -85,6 +112,8 @@ fly deploy
 `VITE_GOOGLE_CLIENT_ID` is hardcoded in `fly.toml` under `[build.args]` so no `--build-arg` is needed. All other production secrets are stored in Fly and injected at runtime — set them once with `fly secrets set KEY=value`.
 
 Always ask before deploying — it requires confirmation.
+
+Before deploying a change that touches the `Dockerfile` or native dependencies, verify it builds and boots locally first — see "Local image verification" above.
 
 ## APNs sandbox (iOS push notifications on dev builds)
 
