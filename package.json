@@ -24,8 +24,7 @@
     "@capacitor/android": "^8.2.0",
     "@capacitor/cli": "^7.6.0",
     "@playwright/test": "^1.58.2",
-    "concurrently": "^8.2.2",
-    "typescript": "^5.9.3"
+    "concurrently": "^8.2.2"
   },
   "overrides": {
     "serialize-javascript": "^7.0.5"
