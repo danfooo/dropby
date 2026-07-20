@@ -16,7 +16,6 @@
     "google-auth-library": "^10.9.0",
     "jose": "^6.2.3",
     "multer": "^2.1.1",
-    "nanoid": "^3.3.7",
     "node-cron": "^4.6.0",
     "resend": "^6.9.3"
   },
