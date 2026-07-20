@@ -2,7 +2,7 @@
 # One root lockfile is the single source of truth for both workspaces.
 # Copying only the package.json files (not source) keeps this layer
 # cached across source-only changes.
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
@@ -26,7 +26,7 @@ COPY server/ server/
 RUN npm run build --workspace=server
 
 # ── Production deps (native modules compiled for target, server only) ──
-FROM node:20-alpine AS server-deps
+FROM node:24-alpine AS server-deps
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
@@ -35,7 +35,7 @@ COPY server/package.json server/package.json
 RUN npm ci --workspace=server --omit=dev
 
 # ── Production ─────────────────────────────────────────────────
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app/server
 COPY --from=server-deps /app/node_modules ./node_modules
 COPY --from=server-build /app/server/dist ./dist

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node 20** via nvm (`nvm use 20` or set as default)
+- **Node 24** via nvm (`nvm use 24` or set as default)
 - **Playwright browsers** installed: `npx playwright install`
 
 ## Starting the dev server in test mode

@@ -133,7 +133,7 @@ In production (`NODE_ENV=production`), the server uses the production APNs host 
 
 ## Shell
 
-Use `zsh -c "..."` for shell commands (picks up nvm and Node 20).
+Use `zsh -c "..."` for shell commands (picks up nvm and Node 24).
 
 ## Brand
 
