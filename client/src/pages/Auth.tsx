@@ -264,6 +264,8 @@ export default function Auth() {
                 }} className="space-y-3">
                   <input
                     type="email"
+                    name="email"
+                    autoComplete="username"
                     placeholder={t('auth.email')}
                     required
                     value={forgotEmail}
@@ -346,6 +348,8 @@ export default function Auth() {
                   <form onSubmit={handleWaitlistSubmit} className="space-y-3">
                     <input
                       type="email"
+                      name="email"
+                      autoComplete="email"
                       required
                       placeholder={t('auth.email')}
                       value={waitlistEmail}
@@ -379,6 +383,8 @@ export default function Auth() {
               {tab === 'signup' && (
                 <input
                   type="text"
+                  name="name"
+                  autoComplete="name"
                   placeholder={t('auth.displayName')}
                   required
                   value={displayName}
@@ -388,6 +394,8 @@ export default function Auth() {
               )}
               <input
                 type="email"
+                name="email"
+                autoComplete="username"
                 placeholder={t('auth.email')}
                 required
                 value={email}
@@ -396,6 +404,8 @@ export default function Auth() {
               />
               <input
                 type="password"
+                name="password"
+                autoComplete={tab === 'signup' ? 'new-password' : 'current-password'}
                 placeholder={t('auth.password')}
                 required
                 value={password}
