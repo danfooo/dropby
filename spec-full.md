@@ -13,6 +13,7 @@ dropby is a presence signal app. One tap tells your friends you're open to a spo
 - Push notifications delivered via APNs (iOS) and FCM (Android)
 - Authentication: email/password, Google OAuth, and Apple OAuth ("Sign in with Apple"). On iOS and Android, Google sign-in uses the platform's native account picker (GoogleSignIn SDK / Credential Manager) instead of the web OAuth popup, via separate iOS/Android OAuth clients in the same Google Cloud project
 - iOS Universal Links: tapping a `dropby.cc/invite/*`, `/verify-email`, or `/reset-password` link opens the relevant screen directly in the app (when installed) instead of Safari, via an `apple-app-site-association` file served at `/.well-known/apple-app-site-association`
+- Password manager association: auth inputs carry `autocomplete` hints (`username`, `current-password`, `new-password`, `name`) so managers reliably offer to save and fill credentials. The `apple-app-site-association` file also declares `webcredentials`, paired with `webcredentials:dropby.cc` in the iOS entitlements, so passwords saved on dropby.cc and in the iOS app are treated as one account. The Android equivalent is served at `/.well-known/assetlinks.json`, which returns 404 until the `ANDROID_CERT_SHA256` env var (SHA-256 of the Play app signing certificate) is set
 
 ---
 

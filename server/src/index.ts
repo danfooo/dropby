@@ -50,7 +50,11 @@ app.use(express.json());
 // Serve uploaded avatars
 app.use('/avatars', express.static(avatarsDir));
 
-// iOS Universal Links — tells the OS which dropby.cc paths should open the app
+// iOS Universal Links — tells the OS which dropby.cc paths should open the app.
+// webcredentials lets iOS Password AutoFill (and 1Password etc.) treat passwords
+// saved on dropby.cc and in the native app as the same account. Requires the
+// matching `webcredentials:dropby.cc` entry in App.entitlements — one without
+// the other does nothing.
 app.get('/.well-known/apple-app-site-association', (_req, res) => {
   res.json({
     applinks: {
@@ -62,7 +66,36 @@ app.get('/.well-known/apple-app-site-association', (_req, res) => {
         },
       ],
     },
+    webcredentials: {
+      apps: ['PD486B4Z2Q.cc.dropby.app'],
+    },
   });
+});
+
+// Android Digital Asset Links — lets Google Password Manager share credentials
+// between dropby.cc and the Android app. The fingerprint is the SHA-256 of the
+// *app signing* certificate (from Play Console → Test and release → App
+// integrity), which is not the same as the local upload keystore when Play App
+// Signing is enabled. Public data, but kept in an env var so rotating it does
+// not need a redeploy. Served only once ANDROID_CERT_SHA256 is set — an
+// assetlinks.json with a wrong fingerprint is worse than none, since it tells
+// Google the association is false rather than unknown.
+app.get('/.well-known/assetlinks.json', (_req, res) => {
+  const fingerprint = process.env.ANDROID_CERT_SHA256;
+  if (!fingerprint) {
+    res.status(404).json({ error: 'NOT_CONFIGURED' });
+    return;
+  }
+  res.json([
+    {
+      relation: ['delegate_permission/common.get_login_creds'],
+      target: {
+        namespace: 'android_app',
+        package_name: 'cc.dropby.app',
+        sha256_cert_fingerprints: [fingerprint],
+      },
+    },
+  ]);
 });
 
 // API routes
