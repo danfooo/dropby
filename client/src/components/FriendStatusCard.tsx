@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
 import Avatar from './Avatar';
 import { bigEmojiClass, formatTime, formatTimeShort } from '../utils/schedule';
+import { LinkifiedText } from '../utils/linkify';
 
 export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
   status: any;
@@ -70,6 +71,11 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
         {status.note && (
           <p className={bigNote ? `${bigNote} leading-none` : 'text-sm text-violet-600 dark:text-violet-400'}>
             {status.note}
+          </p>
+        )}
+        {status.location && (
+          <p className="text-sm text-violet-500 dark:text-violet-400 mt-0.5">
+            📍 <LinkifiedText text={status.location} />
           </p>
         )}
       </div>

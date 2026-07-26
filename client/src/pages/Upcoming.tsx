@@ -19,6 +19,7 @@ import FriendStatusCard from '../components/FriendStatusCard';
 import Modal from '../components/Modal';
 import { UpcomingScheduleForm, clearScheduleDraft, SCHEDULE_DRAFT_KEY } from '../components/UpcomingScheduleForm';
 import { useToast } from '../contexts/toast';
+import { LinkifiedText } from '../utils/linkify';
 
 // --- ScheduledSessionCard ---
 
@@ -27,7 +28,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
   friends?: any[];
   me?: { display_name: string; avatar_url?: string | null } | null;
   onCancel: () => void;
-  onSave?: (data: { note?: string; starts_at?: number; ends_at?: number; recipient_ids?: string[] }) => void;
+  onSave?: (data: { note?: string; location?: string; starts_at?: number; ends_at?: number; recipient_ids?: string[] }) => void;
 }) {
   const { t } = useTranslation();
   const bigNote = session.note ? bigEmojiClass(session.note) : null;
@@ -39,6 +40,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
   const [hasEditEnd, setHasEditEnd] = useState(!!session.ends_at);
   const [editEnd, setEditEnd] = useState(session.ends_at ? format(new Date(session.ends_at * 1000), 'HH:mm') : addHours(sessionDate, format(new Date(session.starts_at * 1000), 'HH:mm'), 2));
   const [editNote, setEditNote] = useState(session.note || '');
+  const [editLocation, setEditLocation] = useState(session.location || '');
   const [editRecipients, setEditRecipients] = useState<string[]>((session.recipients || []).map((r: any) => r.id));
 
   const activeFriends = friends.filter((f: any) => !f.hidden);
@@ -87,6 +89,14 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
             </span>
           )}
         </div>
+        <input
+          type="text"
+          placeholder={t('home.locationPlaceholder')}
+          value={editLocation}
+          maxLength={200}
+          onChange={e => setEditLocation(e.target.value)}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+        />
         {friends.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-1">
@@ -123,6 +133,7 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
             onClick={() => {
               onSave?.({
                 note: editNote || undefined,
+                location: editLocation || undefined,
                 starts_at: toUnix(editDate, editStart),
                 ends_at: hasEditEnd ? toUnix(editDate, editEnd) : undefined,
                 recipient_ids: editRecipients,
@@ -161,6 +172,11 @@ function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
         {session.note && (
           <p className={bigNote ? `${bigNote} leading-none` : 'text-sm text-violet-600 dark:text-violet-400'}>
             {session.note}
+          </p>
+        )}
+        {session.location && (
+          <p className="text-sm text-violet-500 dark:text-violet-400 mt-0.5">
+            <LinkifiedText text={session.location} />
           </p>
         )}
       </div>
@@ -311,7 +327,7 @@ export default function Upcoming() {
     if (action) action();
   };
 
-  const handleScheduleSubmit = async (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at?: number; reminder_minutes: number }) => {
+  const handleScheduleSubmit = async (data: { note?: string; location?: string; recipient_ids: string[]; starts_at: number; ends_at?: number; reminder_minutes: number }) => {
     if (data.note) {
       await notesApi.save(data.note);
       qc.invalidateQueries({ queryKey: ['notes'] });

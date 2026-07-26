@@ -15,7 +15,7 @@ export function clearScheduleDraft() {
 export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }: {
   friends: any[];
   isPending?: boolean;
-  onSubmit: (data: { note?: string; recipient_ids: string[]; starts_at: number; ends_at?: number; reminder_minutes: number }) => void;
+  onSubmit: (data: { note?: string; location?: string; recipient_ids: string[]; starts_at: number; ends_at?: number; reminder_minutes: number }) => void;
   onCancel: () => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -30,6 +30,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
   const hasDraft = Object.keys(draft).length > 0;
 
   const [note, setNote] = useState<string>(draft.note ?? '');
+  const [location, setLocation] = useState<string>(draft.location ?? '');
   const [selectedChip, setSelectedChip] = useState<string>(draft.selectedChip ?? '');
   const [previousNote, setPreviousNote] = useState<string | null>(null);
   const [recipients, setRecipients] = useState<string[]>(() => {
@@ -82,13 +83,14 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
   useEffect(() => {
     try {
       sessionStorage.setItem(SCHEDULE_DRAFT_KEY, JSON.stringify({
-        note, selectedChip, date, start, end, hasEndTime, reminder, recipients, hasEditedDateTime,
+        note, location, selectedChip, date, start, end, hasEndTime, reminder, recipients, hasEditedDateTime,
       }));
     } catch {}
-  }, [note, selectedChip, date, start, end, hasEndTime, reminder, recipients, hasEditedDateTime]);
+  }, [note, location, selectedChip, date, start, end, hasEndTime, reminder, recipients, hasEditedDateTime]);
 
   const activeFriends = friends.filter((f: any) => !f.hidden);
   const trimmedNote = note.trim() || undefined;
+  const trimmedLocation = location.trim() || undefined;
 
   const startsMs = new Date(`${date}T${start}`).getTime();
   const isPast = startsMs < Date.now();
@@ -158,6 +160,16 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
           </span>
         )}
       </div>
+
+      {/* Location input */}
+      <input
+        type="text"
+        placeholder={t('home.locationPlaceholder')}
+        value={location}
+        maxLength={200}
+        onChange={e => setLocation(e.target.value)}
+        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+      />
 
       {/* Date / time pickers */}
       <div className="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800">
@@ -245,7 +257,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
 
       <div className="flex gap-2">
         <button
-          onClick={() => onSubmit({ note: trimmedNote, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: hasEndTime ? toUnix(date, end) : undefined, reminder_minutes: reminder })}
+          onClick={() => onSubmit({ note: trimmedNote, location: trimmedLocation, recipient_ids: recipients, starts_at: toUnix(date, start), ends_at: hasEndTime ? toUnix(date, end) : undefined, reminder_minutes: reminder })}
           disabled={isPending || isPast}
           className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-2xl font-semibold text-sm disabled:opacity-50 transition-colors"
         >

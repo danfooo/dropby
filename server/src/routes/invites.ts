@@ -124,6 +124,7 @@ router.get('/:token/calendar.ics', optionalAuth, (req: AuthRequest, res) => {
     `DTSTART:${formatIcsDate(new Date(status.starts_at * 1000))}`,
     `DTEND:${formatIcsDate(new Date((status.ends_at ?? status.closes_at) * 1000))}`,
     `SUMMARY:${summary}`,
+    ...(status.location ? [`LOCATION:${status.location}`] : []),
     `SEQUENCE:${sequence}`,
     'END:VEVENT',
     'END:VCALENDAR',
@@ -164,7 +165,7 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
       SELECT * FROM statuses WHERE id = ? AND closed_at IS NULL
         AND (closes_at > ? OR starts_at > ?)
     `).get(invite.status_id, nowUnix, nowUnix) as any;
-    if (s) status = { id: s.id, note: s.note, closes_at: s.closes_at, starts_at: s.starts_at || null, ends_at: s.ends_at || null };
+    if (s) status = { id: s.id, note: s.note, location: s.location || null, closes_at: s.closes_at, starts_at: s.starts_at || null, ends_at: s.ends_at || null };
   }
 
   let alreadyFriends = false;
@@ -199,7 +200,7 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
 
   if (areFriends(userId, inviterId)) {
     const activeStatus = db.prepare('SELECT * FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(inviterId, nowUnix) as any;
-    return res.json({ ok: true, alreadyFriends: true, status: activeStatus ? { id: activeStatus.id, note: activeStatus.note, closes_at: activeStatus.closes_at } : null });
+    return res.json({ ok: true, alreadyFriends: true, status: activeStatus ? { id: activeStatus.id, note: activeStatus.note, location: activeStatus.location || null, closes_at: activeStatus.closes_at } : null });
   }
 
   log('invite.accepted', userId);

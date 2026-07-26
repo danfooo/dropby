@@ -59,6 +59,7 @@ function formatStatus(status: any, userId: string) {
   return {
     id: status.id,
     note: status.note,
+    location: status.location || null,
     closes_at: status.closes_at,
     closed_at: status.closed_at,
     created_at: status.created_at,
@@ -127,6 +128,7 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
     owner_name: s.display_name,
     owner_avatar_url: s.avatar_url || null,
     note: s.note,
+    location: s.location || null,
     closes_at: s.closes_at,
     starts_at: s.starts_at || null,
     ends_at: s.ends_at || null,
@@ -146,6 +148,13 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     note = sanitizeNote(note);
     if (note.length > 160) return res.status(400).json({ error: 'Note max 160 chars' });
     if (!(await isNoteAllowed(note))) note = undefined;
+  }
+
+  let location: string | undefined = req.body.location;
+  if (location) {
+    location = sanitizeNote(location);
+    if (location.length > 200) return res.status(400).json({ error: 'Location max 200 chars' });
+    if (!(await isNoteAllowed(location))) location = undefined;
   }
 
   const nowUnix = Math.floor(Date.now() / 1000);
@@ -173,9 +182,9 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const notifyAt = isScheduled ? null : nowUnix + 2 * 60;
 
   db.prepare(`
-    INSERT INTO statuses (id, user_id, note, closes_at, starts_at, ends_at, reminder_minutes, notify_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(statusId, userId, note || null, closesAt, startsAt, endsAt, reminderMinutes, notifyAt);
+    INSERT INTO statuses (id, user_id, note, location, closes_at, starts_at, ends_at, reminder_minutes, notify_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(statusId, userId, note || null, location || null, closesAt, startsAt, endsAt, reminderMinutes, notifyAt);
 
   // Add recipients (only friends)
   const friendIds = (db.prepare(`
@@ -266,7 +275,7 @@ router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
 // PUT /api/status — update note + recipients (+ starts_at/ends_at for scheduled)
 router.put('/', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
-  let { note, recipient_ids, ends_at } = req.body;
+  let { note, location, recipient_ids, ends_at } = req.body;
 
   // Try active first, then scheduled
   const status = getActiveStatus(userId) || getScheduledStatus(userId);
@@ -279,6 +288,15 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
       if (!(await isNoteAllowed(note))) note = null;
     }
     db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, status.id);
+  }
+
+  if (location !== undefined) {
+    if (location) {
+      location = sanitizeNote(location);
+      if (location.length > 200) return res.status(400).json({ error: 'Location max 200 chars' });
+      if (!(await isNoteAllowed(location))) location = null;
+    }
+    db.prepare('UPDATE statuses SET location = ? WHERE id = ?').run(location || null, status.id);
   }
 
   if (ends_at !== undefined) {
@@ -313,7 +331,7 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
 router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { statusId } = req.params;
-  let { note, recipient_ids, starts_at, ends_at } = req.body;
+  let { note, location, recipient_ids, starts_at, ends_at } = req.body;
 
   const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL').get(statusId, userId) as any;
   if (!status) return res.status(404).json({ error: 'Session not found' });
@@ -325,6 +343,15 @@ router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
       if (!(await isNoteAllowed(note))) note = null;
     }
     db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, statusId);
+  }
+
+  if (location !== undefined) {
+    if (location) {
+      location = sanitizeNote(location);
+      if (location.length > 200) return res.status(400).json({ error: 'Location max 200 chars' });
+      if (!(await isNoteAllowed(location))) location = null;
+    }
+    db.prepare('UPDATE statuses SET location = ? WHERE id = ?').run(location || null, statusId);
   }
 
   const timesChanged = starts_at !== undefined || ends_at !== undefined;
@@ -535,6 +562,7 @@ function generateIcs(status: any, hostName: string, method: 'REQUEST' | 'CANCEL'
     `DTSTART:${formatIcsDate(new Date(status.starts_at * 1000))}`,
     `DTEND:${formatIcsDate(new Date((status.ends_at ?? status.closes_at) * 1000))}`,
     `SUMMARY:${summary}`,
+    ...(status.location ? [`LOCATION:${status.location}`] : []),
     `SEQUENCE:${sequence}`,
     'END:VEVENT',
     'END:VCALENDAR',

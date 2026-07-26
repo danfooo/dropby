@@ -9,6 +9,7 @@ import Modal from '../components/Modal';
 import { copyText } from '../utils/clipboard';
 import DeniedNotifModal from '../components/DeniedNotifModal';
 import { useDeniedNotifModal } from '../hooks/useDeniedNotifModal';
+import { LinkifiedText } from '../utils/linkify';
 
 function formatScheduledTime(startsAt: number, endsAt?: number | null): string {
   const start = format(new Date(startsAt * 1000), 'EEE, MMM d · h:mm a');
@@ -181,11 +182,18 @@ export default function Invite() {
           <h1 className="text-xl font-bold mb-2">{t('invite.alreadyFriendsTitle')}</h1>
           {info.status ? (
             <>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {info.status.note
-                  ? t('invite.doorOpenWithNote', { name: info.inviter.display_name, note: info.status.note })
-                  : t('invite.doorOpen', { name: info.inviter.display_name })}
-              </p>
+              <div className="mb-6">
+                <p className="text-gray-600 dark:text-gray-400">
+                  {info.status.note
+                    ? t('invite.doorOpenWithNote', { name: info.inviter.display_name, note: info.status.note })
+                    : t('invite.doorOpen', { name: info.inviter.display_name })}
+                </p>
+                {info.status.location && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    📍 <LinkifiedText text={info.status.location} />
+                  </p>
+                )}
+              </div>
               <Link to="/home" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
                 {t('invite.doorOpenCta')}
               </Link>
@@ -212,6 +220,11 @@ export default function Invite() {
             </div>
             {info.status.note && (
               <p data-testid="invite-door-note" className="text-sm text-emerald-700 dark:text-emerald-400 ml-4">{info.status.note}</p>
+            )}
+            {info.status.location && (
+              <p className="text-sm text-emerald-600 dark:text-emerald-500 ml-4 mt-0.5">
+                📍 <LinkifiedText text={info.status.location} />
+              </p>
             )}
           </div>
         )}
@@ -251,9 +264,16 @@ export default function Invite() {
           ) : (
             <p className="text-gray-500 dark:text-gray-400 mb-1">{t('invite.hasTheirDoorOpen')}</p>
           )}
-          {info.status.note && (
-            <p className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">"{info.status.note}"</p>
-          )}
+          <div className="mb-4">
+            {info.status.note && (
+              <p className="text-lg font-medium text-gray-800 dark:text-gray-200">"{info.status.note}"</p>
+            )}
+            {info.status.location && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                📍 <LinkifiedText text={info.status.location} />
+              </p>
+            )}
+          </div>
 
           {isScheduled && (
             <a

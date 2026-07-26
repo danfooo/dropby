@@ -19,6 +19,7 @@ import FeedbackModal from '../components/FeedbackModal';
 import { useToast } from '../contexts/toast';
 import { copyText } from '../utils/clipboard';
 import { getSuggestions, IM_HOME_CHIP } from '../i18n/suggestions';
+import { LinkifiedText } from '../utils/linkify';
 
 type HomeView = 'closed' | 'open' | 'edit';
 
@@ -109,10 +110,12 @@ export default function Home() {
   const { user } = useAuthStore();
   const [view, setView] = useState<HomeView>('closed');
   const [note, setNote] = useState('');
+  const [doorLocation, setDoorLocation] = useState('');
   const [selectedChip, setSelectedChip] = useState('');
   const [previousNote, setPreviousNote] = useState<string | null>(null);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [editNote, setEditNote] = useState('');
+  const [editLocation, setEditLocation] = useState('');
   const [editRecipients, setEditRecipients] = useState<string[]>([]);
   const [editEndsAt, setEditEndsAt] = useState('');
   const [showDurationPicker, setShowDurationPicker] = useState(false);
@@ -255,11 +258,12 @@ export default function Home() {
 
   const doOpen = async () => {
     const trimmedNote = note.trim() || undefined;
+    const trimmedLocation = doorLocation.trim() || undefined;
     if (trimmedNote && !selectedChip) {
       await notesApi.save(trimmedNote);
       qc.invalidateQueries({ queryKey: ['notes'] });
     }
-    createStatus.mutate({ note: trimmedNote, recipient_ids: selectedRecipients });
+    createStatus.mutate({ note: trimmedNote, location: trimmedLocation, recipient_ids: selectedRecipients });
   };
 
   const handleOpen = async () => {
@@ -293,7 +297,7 @@ export default function Home() {
       const dateStr = format(new Date(myStatus.ends_at * 1000), 'yyyy-MM-dd');
       ends_at = Math.floor(new Date(`${dateStr}T${editEndsAt}`).getTime() / 1000);
     }
-    updateStatus.mutate({ note: editNote || undefined, recipient_ids: editRecipients, ends_at });
+    updateStatus.mutate({ note: editNote || undefined, location: editLocation || undefined, recipient_ids: editRecipients, ends_at });
   };
 
   const copyInviteLink = async () => {
@@ -457,6 +461,18 @@ export default function Home() {
           )}
         </div>
 
+        {/* Location input */}
+        <div className="mb-3">
+          <input
+            type="text"
+            placeholder={t('home.locationPlaceholder')}
+            maxLength={200}
+            value={doorLocation}
+            onChange={e => setDoorLocation(e.target.value)}
+            className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
+          />
+        </div>
+
         {/* Recipient selection */}
         {activeFriends.length > 0 && (
           <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 mb-3 border border-gray-100 dark:border-gray-700">
@@ -534,6 +550,7 @@ export default function Home() {
   // --- DOOR OPEN EDIT VIEW ---
   if (view === 'edit') {
     const initNote = myStatus?.note || '';
+    const initLocation = myStatus?.location || '';
     const initRecipients = myStatus?.recipients.map((r: any) => r.id) || [];
     const initEndsAt = myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '';
 
@@ -564,6 +581,17 @@ export default function Home() {
                 {160 - editNote.length}
               </span>
             )}
+          </div>
+
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder={t('home.locationPlaceholder')}
+              maxLength={200}
+              defaultValue={initLocation}
+              onChange={e => setEditLocation(e.target.value)}
+              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
+            />
           </div>
 
           {initEndsAt && (
@@ -662,6 +690,7 @@ export default function Home() {
             <button
               onClick={() => {
                 setEditNote(myStatus.note || '');
+                setEditLocation(myStatus.location || '');
                 setEditRecipients(myStatus.recipients.map((r: any) => r.id) || []);
                 setEditEndsAt(myStatus.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
                 setView('edit');
@@ -672,6 +701,22 @@ export default function Home() {
             </button>
           );
         })()}
+        {myStatus?.location && (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              setEditNote(myStatus.note || '');
+              setEditLocation(myStatus.location || '');
+              setEditRecipients(myStatus.recipients.map((r: any) => r.id) || []);
+              setEditEndsAt(myStatus.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
+              setView('edit');
+            }}
+            className="text-sm text-gray-500 dark:text-gray-400 mt-1 block w-full cursor-pointer"
+          >
+            📍 <LinkifiedText text={myStatus.location} />
+          </div>
+        )}
       </div>
 
       {/* Visible to */}
@@ -726,6 +771,7 @@ export default function Home() {
       <button
         onClick={() => {
           setEditNote(myStatus?.note || '');
+          setEditLocation(myStatus?.location || '');
           setEditRecipients(myStatus?.recipients.map((r: any) => r.id) || []);
           setEditEndsAt(myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
           setView('edit');

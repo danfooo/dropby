@@ -289,4 +289,8 @@ if (!notifPrefCols.find(c => c.name === 'notif_window_start')) {
   db.exec('ALTER TABLE friend_notif_prefs ADD COLUMN notif_count INTEGER NOT NULL DEFAULT 0');
 }
 
+if (!statusCols.find(c => c.name === 'location')) {
+  db.exec('ALTER TABLE statuses ADD COLUMN location TEXT');
+}
+
 export default db;

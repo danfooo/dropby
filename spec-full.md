@@ -80,6 +80,7 @@ Per-friend notification throttling. Controls how often a user is notified when a
 | id | uuid PK | |
 | user_id | uuid FK → users | |
 | note | string nullable | Max 60 chars |
+| location | string nullable | Max 200 chars. Free text — an address, a venue name, or something only the recipient would understand ("Nina's apartment"). If it contains an `http(s)://` URL (e.g. a pasted Google Maps link), the URL renders as a clickable link wherever the location is shown; the rest of the text is not parsed or geocoded. |
 | closes_at | unix timestamp | App auto-reset timer: creation time + 1800 seconds; updated on each prolong (+1800 seconds). This is not a visit end time — guests remain welcome after `closes_at` passes. It exists purely to reset the app automatically so users don't have to remember to close their door. |
 | closed_at | unix timestamp nullable | Set when manually closed; null = still active |
 | closing_notification_sent | boolean | Default false; set to true after the 10-min-before-close push is sent |
@@ -282,6 +283,11 @@ Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side
 - Editing the text field after picking a chip immediately deselects the chip
 - A note is auto-saved to the user's library only when submitted with no chip selected (i.e. hand-typed or modified after picking); submitting an unmodified chip never triggers a save
 
+**Location input**
+- Free-text input below the note field (max 200 chars, optional); placeholder "Where? (optional)"
+- Plain text, no autocomplete or geocoding — an address, a venue name, or something only the recipient would understand ("Nina's apartment")
+- If the text contains an `http(s)://` URL (e.g. a pasted Google Maps link), it renders as a tappable link wherever the location is shown; no attempt is made to resolve, geocode, or otherwise parse the URL
+
 **Recipient selection**
 - Checkbox list of all friends
 - Default selection logic:
@@ -293,7 +299,7 @@ Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side
 **Open door button**
 - "Open Now"
 - On first tap ever: trigger OS notification permission prompt before proceeding (if not already granted)
-- Creates a status with the selected note and recipients
+- Creates a status with the selected note, location, and recipients
 - Navigates to Door Open view
 
 **Tips section** (below open door button)
@@ -318,7 +324,7 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 
 **Header**
 - Top-right: `UserMenu` — same as Door Closed view
-- "You're open!" status indicator with the active note below (if any)
+- "You're open!" status indicator with the active note and location below (if any); tapping either opens the Edit view
 - Countdown: "Closes in X min"
 - "Keep it open +30 min" button — appears when ≤ 20 minutes remain; extends `closes_at` by 30 minutes; unlimited prolongs
 
@@ -350,6 +356,7 @@ Accessible via "Add more / Edit".
 
 - Sticky banner: pulsing dot + "Your door is open — tap to go back" (tappable)
 - Editable note field (pre-populated with current note)
+- Editable location field (pre-populated with current location)
 - **End time field** — shown only when the session has a fixed `ends_at` (i.e. scheduled sessions); pre-populated with the current end time; editing updates `closes_at` on save
 - Editable recipient list with same checkbox/muted logic
 - "Save changes" button → updates status, returns to Door Open view
@@ -360,7 +367,7 @@ Accessible via "Add more / Edit".
 
 Shown at the top of the Home screen when one or more friends have an active status that includes the current user as a recipient. Updates in real time via SSE.
 
-- One card per open friend: avatar, display name, note (if any), time remaining
+- One card per open friend: avatar, display name, note (if any), location (if any), time remaining
 - "Going ✅" button per card
   - One tap, no confirmation
   - Sends push notification to host: "[name] is on their way"
@@ -388,6 +395,7 @@ All future/scheduled content lives here. Home (Now tab) is present-only.
 
 **Schedule creation form** (always in schedule mode)
 - Note chips + free-text note input (same as Home)
+- Free-text location input (same as Home)
 - Date, start time, optional end time pickers
 - Reminder picker (5 / 15 / 30 min / 1h; default 30 min)
 - Recipient checkboxes (non-muted friends)
@@ -445,7 +453,7 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 ### Invite Page (`/invite/:token`)
 
 **Token valid, user not logged in, host door is open**
-- Host avatar, display name, and note shown
+- Host avatar, display name, note, and location shown (location under the note, if set)
 - "I'm going 🏃" button → opens web Going modal
 - "Sign up / Log in to join dropby" link → `/auth?redirect=/invite/:token`
 

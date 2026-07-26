@@ -72,11 +72,11 @@ export const statusApi = {
   getScheduled: () => api.get('/status/scheduled').then(r => r.data),
   getFriends: () => api.get('/status/friends').then(r => r.data),
   getLastSelection: () => api.get('/status/last-selection').then(r => r.data),
-  create: (data: { note?: string; recipient_ids: string[]; starts_at?: number; ends_at?: number; reminder_minutes?: number }) =>
+  create: (data: { note?: string; location?: string; recipient_ids: string[]; starts_at?: number; ends_at?: number; reminder_minutes?: number }) =>
     api.post('/status', data).then(r => r.data),
-  update: (data: { note?: string; recipient_ids?: string[]; ends_at?: number }) =>
+  update: (data: { note?: string; location?: string; recipient_ids?: string[]; ends_at?: number }) =>
     api.put('/status', data).then(r => r.data),
-  updateById: (id: string, data: { note?: string; recipient_ids?: string[]; starts_at?: number; ends_at?: number }) =>
+  updateById: (id: string, data: { note?: string; location?: string; recipient_ids?: string[]; starts_at?: number; ends_at?: number }) =>
     api.put(`/status/${id}`, data).then(r => r.data),
   close: () => api.delete('/status').then(r => r.data),
   cancelScheduled: () => api.delete('/status/scheduled').then(r => r.data),
