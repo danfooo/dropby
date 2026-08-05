@@ -26,7 +26,7 @@ export default function Invite() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<'INVALID' | 'EXPIRED' | null>(null);
   const [expiredAgo, setExpiredAgo] = useState(0);
-  const [expiredInviter, setExpiredInviter] = useState<{ display_name: string } | null>(null);
+  const [expiredInviter, setExpiredInviter] = useState<{ display_name: string; avatar_url?: string | null } | null>(null);
   const [inviteBackCopied, setInviteBackCopied] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [acceptedName, setAcceptedName] = useState('');
@@ -255,7 +255,7 @@ export default function Invite() {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-center px-6 py-10">
         <div className="w-full max-w-sm text-center">
-          <Avatar name={info.inviter.display_name} size="lg" className="mx-auto mb-4" />
+          <Avatar name={info.inviter.display_name} url={info.inviter.avatar_url} size="lg" className="mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-50">{info.inviter.display_name}</h1>
           {isScheduled ? (
             <p className="text-violet-600 dark:text-violet-400 font-semibold mb-1 mt-1">

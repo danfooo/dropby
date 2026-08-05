@@ -154,11 +154,11 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
 
   if (invite.expires_at < nowUnix) {
     const agoSecs = nowUnix - invite.expires_at;
-    const expiredInviter = db.prepare('SELECT id, display_name FROM users WHERE id = ?').get(invite.created_by) as any;
+    const expiredInviter = db.prepare('SELECT id, display_name, avatar_url FROM users WHERE id = ?').get(invite.created_by) as any;
     return res.status(410).json({ error: 'EXPIRED', expired_ago_seconds: agoSecs, inviter: expiredInviter || null });
   }
 
-  const inviter = db.prepare('SELECT id, display_name FROM users WHERE id = ?').get(invite.created_by) as any;
+  const inviter = db.prepare('SELECT id, display_name, avatar_url FROM users WHERE id = ?').get(invite.created_by) as any;
   let status = null;
   if (invite.status_id) {
     const s = db.prepare(`

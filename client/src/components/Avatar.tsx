@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { createAvatar } from '@dicebear/core';
 import * as shapes from '@dicebear/shapes';
 import { Capacitor } from '@capacitor/core';
@@ -21,24 +21,37 @@ const sizeMap = {
 };
 
 export default function Avatar({ name, url, seed, size = 'md', className = '' }: Props) {
-  const svg = useMemo(() => {
-    if (url) return null;
-    return createAvatar(shapes, {
-      seed: seed ?? name,
-      size: 128,
-      backgroundColor: ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'ffdfbf'],
-    }).toString();
-  }, [name, seed, url]);
-
+  // Uploaded avatars are stored as server-relative paths; on native there's no
+  // same-origin server to resolve them against.
   const resolvedUrl = url && url.startsWith('/') && Capacitor.isNativePlatform()
     ? `${SERVER}${url}`
     : url;
-  const src = resolvedUrl || `data:image/svg+xml;utf8,${encodeURIComponent(svg!)}`;
+
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [resolvedUrl]);
+
+  const useGenerated = !resolvedUrl || failed;
+  const generated = useMemo(
+    () =>
+      useGenerated
+        ? createAvatar(shapes, {
+            seed: seed ?? name,
+            size: 128,
+            backgroundColor: ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'ffdfbf'],
+          }).toString()
+        : null,
+    [name, seed, useGenerated],
+  );
+
+  const src = useGenerated
+    ? `data:image/svg+xml;utf8,${encodeURIComponent(generated!)}`
+    : resolvedUrl!;
 
   return (
     <img
       src={src}
       alt={name}
+      onError={() => setFailed(true)}
       className={`${sizeMap[size]} rounded-full shrink-0 object-cover ${className}`}
     />
   );

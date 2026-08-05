@@ -774,7 +774,8 @@ Muting user A suppresses:
 - At signup via Google OAuth: the Google profile picture URL is saved as `avatar_url`
 - Custom upload (Profile page): image is cropped client-side to 400×400 JPEG, uploaded to server, stored at `data/avatars/<uuid>.jpg`, served as a static file at `/avatars/<uuid>.jpg`
 - Custom upload always takes precedence; Google picture is only saved if no `avatar_url` exists yet
-- Fallback: DiceBear geometric shape generated deterministically from the user's ID seed
+- Fallback: DiceBear geometric shape generated deterministically from the display name. Used when no `avatar_url` is set, or when the stored image fails to load
+- All avatars in the app render through a single `Avatar` component. On native builds, server-relative avatar paths are resolved against the production server origin
 
 ### Real-Time Updates (SSE)
 

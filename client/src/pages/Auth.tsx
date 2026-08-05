@@ -27,7 +27,7 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [showResend, setShowResend] = useState(false);
-  const [inviter, setInviter] = useState<{ display_name: string } | null>(null);
+  const [inviter, setInviter] = useState<{ display_name: string; avatar_url?: string | null } | null>(null);
   const [view, setView] = useState<'auth' | 'forgot'>('auth');
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
@@ -293,7 +293,7 @@ export default function Auth() {
           <>
             {inviter && (
               <div className="text-center mb-6">
-                <Avatar name={inviter.display_name} size="lg" className="mx-auto mb-3" />
+                <Avatar name={inviter.display_name} url={inviter.avatar_url} size="lg" className="mx-auto mb-3" />
                 <p className="text-gray-700 dark:text-gray-300 font-medium">{t('auth.connectWithName', { name: inviter.display_name })}</p>
               </div>
             )}
