@@ -3,7 +3,12 @@
 ## Prerequisites
 
 - **Node 24** via nvm (`nvm use 24` or set as default)
-- **Playwright browsers** installed: `npx playwright install`
+
+Running `npm install` from the repo root installs the matching Playwright
+browser build automatically (a `postinstall` script runs `npx playwright
+install chromium`). `@playwright/test` is pinned to an exact version in
+`package.json` for this reason — it and the downloaded browser binary must
+always match, so nothing should be able to bump one without the other.
 
 ## Starting the dev server in test mode
 
