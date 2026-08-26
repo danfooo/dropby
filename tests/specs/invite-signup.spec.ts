@@ -37,6 +37,17 @@ async function generateInvite(page: any, opts: { forDoor?: boolean } = {}): Prom
   return data.url as string;
 }
 
+// How many open doors this user is actually a recipient of. Asked of the API rather than
+// the UI: an absent element on /home proves nothing, since it is also absent while the
+// feed is still loading.
+async function visibleDoorCount(page: any): Promise<number> {
+  return page.evaluate(async () => {
+    const jwt = localStorage.getItem('token');
+    const res = await fetch('/api/status/friends', { headers: { 'Authorization': `Bearer ${jwt}` } });
+    return ((await res.json()) as unknown[]).length;
+  });
+}
+
 // Accept an invite via the API directly and return whether it was a new friendship
 async function acceptInvite(page: any, inviteUrl: string): Promise<void> {
   const token = inviteUrl.split('/').pop()!;
@@ -118,7 +129,44 @@ test.describe('Friendship at signup', () => {
       await verifyEmail(carolPage, CAROL.email);
 
       // Carol should immediately see Alice's open door
+      expect(await visibleDoorCount(carolPage)).toBe(1);
       await expect(carolPage.getByTestId('friends-available')).toBeVisible({ timeout: 10_000 });
+    } finally {
+      await aliceCtx.close();
+      await carolCtx.close();
+    }
+  });
+
+  test('new user signing up with a friend-only link does not see the inviter open door', async ({ browser }) => {
+    const aliceCtx = await browser.newContext();
+    const carolCtx = await browser.newContext();
+    const alicePage = await aliceCtx.newPage();
+    const carolPage = await carolCtx.newPage();
+
+    try {
+      await setupUser(alicePage, ALICE);
+      await openDoor(alicePage);
+      // Friend-only link — generated while the door happens to be open, but not for it
+      const inviteUrl = await generateInvite(alicePage);
+      const token = inviteUrl.split('/').pop()!;
+
+      await carolPage.goto('/auth');
+      await carolPage.evaluate((t: string) => localStorage.setItem('dropby_invite_token', t), token);
+      await carolPage.reload();
+      await carolPage.getByRole('button', { name: /sign up/i }).click();
+      await carolPage.getByPlaceholder(/display name/i).fill(CAROL.displayName);
+      await carolPage.getByPlaceholder(/email/i).fill(CAROL.email);
+      await carolPage.getByPlaceholder(/password/i).fill(CAROL.password);
+      await carolPage.getByRole('button', { name: /create account/i }).click();
+      await carolPage.waitForSelector('.bg-emerald-50', { timeout: 15_000 });
+
+      // Carol verifies and lands on home
+      await verifyEmail(carolPage, CAROL.email);
+
+      // Friendship exists, but Alice's door is not hers to see — she was never a recipient
+      expect(await areFriends(ALICE.email, CAROL.email)).toBe(true);
+      expect(await visibleDoorCount(carolPage)).toBe(0);
+      await expect(carolPage.getByTestId('friends-available')).not.toBeVisible();
     } finally {
       await aliceCtx.close();
       await carolCtx.close();
@@ -209,6 +257,7 @@ test.describe('Mutual door visibility on friend accept', () => {
       // never chose her as a recipient
       await alicePage.goto('/home');
       await alicePage.waitForLoadState('domcontentloaded');
+      expect(await visibleDoorCount(alicePage)).toBe(0);
       await expect(alicePage.getByTestId('friends-available')).not.toBeVisible();
     } finally {
       await aliceCtx.close();
@@ -253,6 +302,7 @@ test.describe('Friend-only invite does not attach session', () => {
       // friendship and nothing more
       await bobPage.goto('/home');
       await bobPage.waitForLoadState('domcontentloaded');
+      expect(await visibleDoorCount(bobPage)).toBe(0);
       await expect(bobPage.getByTestId('friends-available')).not.toBeVisible();
     } finally {
       await aliceCtx.close();
