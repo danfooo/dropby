@@ -33,13 +33,14 @@ export function acceptInviteToken(token: string, acceptorId: string): { ok: bool
     sendSSE(inviterId, 'friend:joined', { name: acceptor.display_name });
   }
 
-  const inviterActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(inviterId, nowUnix) as any;
-  if (inviterActive) {
-    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), inviterActive.id, acceptorId);
-  }
-  const acceptorActive = db.prepare('SELECT id FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(acceptorId, nowUnix) as any;
-  if (acceptorActive) {
-    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), acceptorActive.id, inviterId);
+  // Only a door-specific link (created from an open door) lets the acceptor into that door.
+  // A generic friend link creates the friendship and nothing more — it never adds anyone to
+  // a door that is already open, in either direction.
+  if (invite.status_id) {
+    const linkedStatus = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND closes_at > ?').get(invite.status_id, inviterId, nowUnix) as any;
+    if (linkedStatus) {
+      db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), linkedStatus.id, acceptorId);
+    }
   }
 
   const inviter = db.prepare('SELECT display_name FROM users WHERE id = ?').get(inviterId) as any;

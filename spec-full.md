@@ -117,9 +117,12 @@ Unique constraint on `(status_id, user_id)`.
 |---|---|---|
 | user_id | uuid PK FK → users | One row per user |
 | selected_ids | JSON string | Array of friend user IDs selected in the most recent session |
+| unselected_ids | JSON string | Array of friend user IDs explicitly *un*checked in the most recent session |
 | updated_at | unix timestamp | |
 
-Persists the recipient selection across sessions. Read on door close, written on door open. Used to restore the previous selection as the default next time the user opens the door.
+Persists the recipient selection across sessions. Written on door open and on door update; hiding a friend also adds them to `unselected_ids`.
+
+`unselected_ids` is the authority for the default selection, not `selected_ids` — storing the exclusions means a friend who joins later is selected by default without any list needing to be rewritten. It is never sent to the client as a list of its own: `GET /api/friends` resolves it into a `selected` boolean on each friend record.
 
 ### Invite Links
 | Field | Type | Notes |
@@ -289,12 +292,16 @@ Old-style links (`GET /api/auth/verify-email/:token`) are redirected server-side
 - If the text contains an `http(s)://` URL (e.g. a pasted Google Maps link), it renders as a tappable link wherever the location is shown; no attempt is made to resolve, geocode, or otherwise parse the URL
 
 **Recipient selection**
-- Checkbox list of all friends
-- Default selection logic:
-  - First time ever: all non-muted friends checked
-  - Subsequent opens: restore the exact selection from `recipient_sessions`, excluding anyone since removed as a friend; muted friends are unchecked by default
-- Muted friends shown in a separate "Muted" section, unchecked by default
+- Checkbox list of all non-hidden friends
+- Each friend record carries its own `selected` default from the server (`!hidden && !unselected_ids.includes(id)`), so a friend who has never been unchecked — including one who just joined — is checked by default
+- Toggling a checkbox is a local override stored against that friend's id, applied over the server default. It is persisted on door open, when the resulting selection is written back to `recipient_sessions`
+- Order: checked-by-default friends first, then newest friendship first. Order is computed from the server record only, so toggling a checkbox never reorders the list
+- The list scrolls within a fixed maximum height, with a bottom fade while more friends are below the fold
 - If the user has no friends, the recipient section is hidden entirely
+
+**Live updates while the door is closed**
+- When a friend accepts an invite link while this screen is open, the SSE `friend:joined` event refreshes the friend list and the new friend appears at the top of the recipient list, checked
+- Nothing else on the screen is disturbed: the note and location fields keep their text, other rows keep their checked state (including unsaved toggles), and the list's scroll position is preserved
 
 **Open door button**
 - "Open Now"
@@ -659,6 +666,8 @@ Friendships are formed exclusively via invite links. There is no search, no dire
 - If generated from the Door Open view or inline in Home, `status_id` is set — enables session-aware acceptance behaviour
 - Each tap generates a fresh link (no reuse)
 
+Accepting a link never adds the *inviter* to a door the acceptor already has open — that door's recipients were chosen before the friendship existed.
+
 **Sending by email**
 - From the Add Friend modal on the Friends page
 - Generates a 30-day link with `invited_email` set
@@ -669,9 +678,10 @@ Friendships are formed exclusively via invite links. There is no search, no dire
 
 | Recipient state | Host door | Outcome |
 |---|---|---|
-| Logged in, not yet friends | Open | Friendship created; recipient silently added as status recipient; success screen shows open door |
+| Logged in, not yet friends | Open, link is door-specific (`status_id` set) | Friendship created; recipient silently added as a recipient of that door; success screen shows open door |
+| Logged in, not yet friends | Open, link is friend-only (no `status_id`) | Friendship created only; the recipient is **not** added to the open door and does not see it; success screen confirms connection |
 | Logged in, not yet friends | Closed | Friendship created; success screen confirms connection |
-| Logged in, already friends | Open | No new friendship; shows open door card |
+| Logged in, already friends | Open | No new friendship; shows open door card (visible only if they were already a recipient, or the link is door-specific) |
 | Logged in, already friends | Closed | No new friendship; "Go home" |
 | Logged in, own link | Either | No-op; friendly message |
 | Not logged in | Open | Door card shown; can RSVP as guest (Going/Maybe); RSVP stored in localStorage for revisit/change; "Sign up / Log in" link below |
@@ -779,11 +789,16 @@ Muting user A suppresses:
 
 ### Real-Time Updates (SSE)
 
-The app maintains a persistent SSE connection (`GET /api/sse`) for real-time Home screen updates. Events:
-- Friend opens or closes their door
-- Going signal received
+The app maintains a persistent SSE connection (`GET /api/events?token=<jwt>`) for real-time Home screen updates. Events:
 
-No polling; the Home screen reflects friend state changes immediately.
+| Event | Fired when | Client effect |
+|---|---|---|
+| `status:open` | A friend opens their door | Refetches friend statuses |
+| `status:close` | A friend closes their door | Refetches friend statuses |
+| `going:received` | Someone signals they're on their way | Refetches own status |
+| `friend:joined` | Someone accepts this user's invite link | Refetches friends and own status |
+
+The connection is opened once for the whole app and reconnects automatically. Events only invalidate cached queries — they never reset local UI state, so a screen the user is mid-way through editing keeps its input and selection state when one arrives.
 
 ### Email Verification
 

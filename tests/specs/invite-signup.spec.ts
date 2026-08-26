@@ -14,17 +14,26 @@ async function openDoor(page: any) {
   await expect(page.getByText(/you're open/i)).toBeVisible({ timeout: 10_000 });
 }
 
-// Generate a friend-only invite via the API (no UI needed — invite UI is tested elsewhere)
-async function generateInvite(page: any): Promise<string> {
-  const data = await page.evaluate(async () => {
+// Generate an invite via the API (no UI needed — invite UI is tested elsewhere).
+// `forDoor: true` mirrors the link copied from an open door: it carries the status id,
+// which is what grants the acceptor access to that door. Without it the link is
+// friend-only and never adds anyone to a door.
+async function generateInvite(page: any, opts: { forDoor?: boolean } = {}): Promise<string> {
+  const data = await page.evaluate(async (forDoor: boolean) => {
     const token = localStorage.getItem('token');
+    const body: Record<string, string> = {};
+    if (forDoor) {
+      const statusRes = await fetch('/api/status', { headers: { 'Authorization': `Bearer ${token}` } });
+      const status = await statusRes.json();
+      body.status_id = status.id;
+    }
     const res = await fetch('/api/invites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({}),
+      body: JSON.stringify(body),
     });
     return res.json();
-  });
+  }, Boolean(opts.forDoor));
   return data.url as string;
 }
 
@@ -91,10 +100,10 @@ test.describe('Friendship at signup', () => {
     try {
       await setupUser(alicePage, ALICE);
       await openDoor(alicePage);
-      const inviteUrl = await generateInvite(alicePage);
+      const inviteUrl = await generateInvite(alicePage, { forDoor: true });
       const token = inviteUrl.split('/').pop()!;
 
-      // Carol signs up with Alice's token — acceptInviteToken adds Carol to Alice's status_recipients
+      // Carol signs up with Alice's door link — acceptInviteToken adds Carol to that status's recipients
       await carolPage.goto('/auth');
       await carolPage.evaluate((t: string) => localStorage.setItem('dropby_invite_token', t), token);
       await carolPage.reload();
@@ -135,9 +144,9 @@ test.describe('Mutual door visibility on friend accept', () => {
       await setupUser(bobPage, BOB);
 
       await openDoor(alicePage);
-      const inviteUrl = await generateInvite(alicePage);
+      const inviteUrl = await generateInvite(alicePage, { forDoor: true });
 
-      // Bob accepts Alice's invite via API — acceptInviteToken adds Bob to Alice's status_recipients
+      // Bob accepts Alice's door link — acceptInviteToken adds Bob to that status's recipients
       await acceptInvite(bobPage, inviteUrl);
 
       // Bob navigates to home and should see Alice's open door
@@ -161,7 +170,7 @@ test.describe('Mutual door visibility on friend accept', () => {
       await setupUser(bobPage, BOB);
 
       await openDoor(bobPage);
-      const inviteUrl = await generateInvite(bobPage);
+      const inviteUrl = await generateInvite(bobPage, { forDoor: true });
 
       // Alice accepts Bob's invite
       await acceptInvite(alicePage, inviteUrl);
@@ -175,7 +184,7 @@ test.describe('Mutual door visibility on friend accept', () => {
     }
   });
 
-  test('both have open doors when friendship forms — each sees the other', async ({ browser }) => {
+  test('both have open doors — the door link is one-way, the acceptor\'s own door stays private', async ({ browser }) => {
     const aliceCtx = await browser.newContext();
     const bobCtx = await browser.newContext();
     const alicePage = await aliceCtx.newPage();
@@ -188,18 +197,19 @@ test.describe('Mutual door visibility on friend accept', () => {
       await openDoor(alicePage);
       await openDoor(bobPage);
 
-      const inviteUrl = await generateInvite(alicePage);
+      const inviteUrl = await generateInvite(alicePage, { forDoor: true });
       await acceptInvite(bobPage, inviteUrl);
 
-      // Bob sees Alice's door
+      // Bob sees Alice's door — that's what the door link is for
       await bobPage.goto('/home');
       await bobPage.waitForLoadState('domcontentloaded');
       await expect(bobPage.getByTestId('friends-available')).toBeVisible({ timeout: 10_000 });
 
-      // Alice sees Bob's door
+      // Alice does NOT see Bob's door: Bob opened it before they were friends and
+      // never chose her as a recipient
       await alicePage.goto('/home');
       await alicePage.waitForLoadState('domcontentloaded');
-      await expect(alicePage.getByTestId('friends-available')).toBeVisible({ timeout: 10_000 });
+      await expect(alicePage.getByTestId('friends-available')).not.toBeVisible();
     } finally {
       await aliceCtx.close();
       await bobCtx.close();
@@ -239,10 +249,11 @@ test.describe('Friend-only invite does not attach session', () => {
       await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
       await expect(bobPage.getByTestId('invite-door-note')).not.toBeVisible();
 
-      // But Bob DOES see Alice's door on home (mutual add still fires)
+      // And Bob does NOT see Alice's door on home — a friend-only link creates the
+      // friendship and nothing more
       await bobPage.goto('/home');
       await bobPage.waitForLoadState('domcontentloaded');
-      await expect(bobPage.getByTestId('friends-available')).toBeVisible({ timeout: 10_000 });
+      await expect(bobPage.getByTestId('friends-available')).not.toBeVisible();
     } finally {
       await aliceCtx.close();
       await bobCtx.close();

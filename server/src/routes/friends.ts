@@ -32,8 +32,17 @@ function getFriendsOf(userId: string) {
 
 // GET /api/friends
 router.get('/', requireAuth, (req: AuthRequest, res) => {
-  const friends = getFriendsOf(req.userId!);
-  res.json(friends.map(f => ({ ...f, hidden: Boolean(f.hidden) })));
+  const userId = req.userId!;
+  const friends = getFriendsOf(userId);
+  // `selected` is the friend's own default recipient state, carried on the friend record itself
+  // so the client never has to reconcile a separate list against this one.
+  const sessionRow = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(userId) as { unselected_ids: string } | undefined;
+  const unselected: string[] = sessionRow ? JSON.parse(sessionRow.unselected_ids) : [];
+  res.json(friends.map(f => ({
+    ...f,
+    hidden: Boolean(f.hidden),
+    selected: !f.hidden && !unselected.includes(f.id),
+  })));
 });
 
 // DELETE /api/friends/:friendId

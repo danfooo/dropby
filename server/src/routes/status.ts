@@ -535,14 +535,6 @@ router.delete('/recipients/:recipientId', requireAuth, (req: AuthRequest, res) =
   res.json({ ok: true });
 });
 
-// GET /api/status/last-selection
-router.get('/last-selection', requireAuth, (req: AuthRequest, res) => {
-  const row = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(req.userId) as { unselected_ids: string } | undefined;
-  res.json({
-    unselected_ids: row ? JSON.parse(row.unselected_ids) : [],
-  });
-});
-
 function formatIcsDate(date: Date): string {
   return date.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
@@ -113,7 +113,7 @@ export default function Home() {
   const [doorLocation, setDoorLocation] = useState('');
   const [selectedChip, setSelectedChip] = useState('');
   const [previousNote, setPreviousNote] = useState<string | null>(null);
-  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [recipientOverrides, setRecipientOverrides] = useState<Record<string, boolean>>({});
   const [editNote, setEditNote] = useState('');
   const [editLocation, setEditLocation] = useState('');
   const [editRecipients, setEditRecipients] = useState<string[]>([]);
@@ -127,7 +127,16 @@ export default function Home() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const [friendsAtBottom, setFriendsAtBottom] = useState(false);
+  const friendsListRef = useRef<HTMLDivElement | null>(null);
+  const [friendsScroll, setFriendsScroll] = useState({ canScroll: false, atBottom: false });
+  const measureFriendsList = () => {
+    const el = friendsListRef.current;
+    if (!el) return;
+    setFriendsScroll({
+      canScroll: el.scrollHeight > el.clientHeight + 1,
+      atBottom: el.scrollTop + el.clientHeight >= el.scrollHeight - 1,
+    });
+  };
 
   const { data: myStatus, isLoading: statusLoading } = useQuery({
     queryKey: ['myStatus'],
@@ -139,11 +148,6 @@ export default function Home() {
     queryKey: ['friendStatuses'],
     queryFn: statusApi.getFriends,
     refetchInterval: 30000,
-  });
-
-  const { data: lastSelection } = useQuery({
-    queryKey: ['lastSelection'],
-    queryFn: statusApi.getLastSelection,
   });
 
   const { data: friends = [] } = useQuery({
@@ -159,18 +163,6 @@ export default function Home() {
   const savedChips = savedNotes as any[];
   const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
   const suggestionChips = suggestions.slice(0, 7);
-
-  // Initialize recipient selection from server
-  useEffect(() => {
-    if (!lastSelection || !friends.length) return;
-    const unselected: string[] = lastSelection.unselected_ids ?? [];
-    const hiddenIds = (friends as any[]).filter((f: any) => f.hidden).map((f: any) => f.id);
-    setSelectedRecipients(
-      (friends as any[])
-        .map((f: any) => f.id)
-        .filter((id: string) => !unselected.includes(id) && !hiddenIds.includes(id))
-    );
-  }, [lastSelection, friends]);
 
   // Sync view with status
   useEffect(() => {
@@ -202,6 +194,10 @@ export default function Home() {
     mutationFn: (data: Parameters<typeof statusApi.create>[0]) => statusApi.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['myStatus'] });
+      // The server now owns this selection; drop the local overrides so the friend
+      // records stay the single source of truth.
+      setRecipientOverrides({});
+      qc.invalidateQueries({ queryKey: ['friends'] });
       setView('open');
     },
   });
@@ -317,16 +313,25 @@ export default function Home() {
   };
 
   const hasFriends = (friends as any[]).length > 0;
+  // Order comes only from the server record, never from live toggles, so checking a box
+  // never reorders the list under the user's finger.
   const activeFriends = useMemo(() => {
     return (friends as any[])
       .filter((f: any) => !f.hidden)
       .sort((a: any, b: any) => {
-        const aChecked = selectedRecipients.includes(a.id);
-        const bChecked = selectedRecipients.includes(b.id);
-        if (aChecked !== bChecked) return aChecked ? -1 : 1;
+        if (a.selected !== b.selected) return a.selected ? -1 : 1;
         return (b.friendship_created_at ?? 0) - (a.friendship_created_at ?? 0);
       });
-  }, [friends, selectedRecipients]);
+  }, [friends]);
+  // A row's checked state is its own: the server default it carries, plus any override the
+  // user made, keyed by friend id. Friends arriving or leaving never disturb the others.
+  const isRecipientSelected = (f: any): boolean => recipientOverrides[f.id] ?? Boolean(f.selected);
+  const selectedRecipients = useMemo(
+    () => activeFriends.filter(isRecipientSelected).map((f: any) => f.id),
+    [activeFriends, recipientOverrides],
+  );
+  // Re-measure when the list grows (e.g. a friend joins) so the fade matches reality.
+  useLayoutEffect(() => { measureFriendsList(); }, [activeFriends.length, view]);
   const nowTs = Math.floor(Date.now() / 1000);
   const openFriendDoors = (friendStatuses as any[]).filter((s: any) => !s.starts_at || s.starts_at <= nowTs);
 
@@ -479,20 +484,21 @@ export default function Home() {
             <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('home.openDoorTo')}</h2>
             <div className="relative">
               <div
-                className={`divide-y divide-gray-50 dark:divide-gray-800 overflow-x-hidden rounded-xl${activeFriends.length >= 5 ? ' h-[192px] overflow-y-auto' : ' overflow-hidden'}`}
-                onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
+                className="divide-y divide-gray-50 dark:divide-gray-800 overflow-x-hidden rounded-xl max-h-[192px] overflow-y-auto"
+                ref={friendsListRef}
+                onScroll={measureFriendsList}
               >
                 {activeFriends.map((f: any) => (
                   <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 -mx-3 px-3 transition-colors">
-                    <input type="checkbox" checked={selectedRecipients.includes(f.id)}
-                      onChange={e => setSelectedRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
+                    <input type="checkbox" checked={isRecipientSelected(f)}
+                      onChange={e => setRecipientOverrides(prev => ({ ...prev, [f.id]: e.target.checked }))}
                       className="w-4 h-4 accent-emerald-500 shrink-0" />
                     <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
                   </label>
                 ))}
               </div>
-              {activeFriends.length >= 5 && !friendsAtBottom && (
+              {friendsScroll.canScroll && !friendsScroll.atBottom && (
                 <div className="absolute bottom-0 left-0 right-0 h-14 bg-linear-to-t from-white dark:from-gray-900 to-transparent pointer-events-none rounded-b-xl" />
               )}
             </div>

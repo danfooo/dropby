@@ -71,7 +71,6 @@ export const statusApi = {
   get: () => api.get('/status').then(r => r.data),
   getScheduled: () => api.get('/status/scheduled').then(r => r.data),
   getFriends: () => api.get('/status/friends').then(r => r.data),
-  getLastSelection: () => api.get('/status/last-selection').then(r => r.data),
   create: (data: { note?: string; location?: string; recipient_ids: string[]; starts_at?: number; ends_at?: number; reminder_minutes?: number }) =>
     api.post('/status', data).then(r => r.data),
   update: (data: { note?: string; location?: string; recipient_ids?: string[]; ends_at?: number }) =>

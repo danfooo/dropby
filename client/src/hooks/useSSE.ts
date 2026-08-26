@@ -28,6 +28,8 @@ export function useSSE() {
 
     es.addEventListener('friend:joined', () => {
       queryClient.invalidateQueries({ queryKey: ['friends'] });
+      // A door-specific link adds the new friend to the open door right away.
+      queryClient.invalidateQueries({ queryKey: ['myStatus'] });
     });
 
     es.onerror = () => {
