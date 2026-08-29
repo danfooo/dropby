@@ -542,7 +542,7 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 **Token valid, own link**
 - "That's your own link! Share it with friends to join dropby."
 
-**Token expired or revoked, viewer has no pending invite for it**
+**Token expired, viewer has no pending invite for it**
 - "This invite expired [relative time] ago" — relative time rounds down (e.g. 1h 45min → "1 hour ago")
 - "Go home" button
 - Logged-out visitors are redirected to `/auth?redirect=/invite/:token` first, so the expired state is only ever seen by a signed-in user
@@ -550,8 +550,8 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 **Token expired or revoked, viewer already has a pending invite for it**
 - The confirmation screen is shown as normal and can still be accepted — the pending invite outlives the link
 
-**Token not found / revoked**
-- "This invite link is invalid."
+**Token not found, or revoked with no pending invite for the viewer**
+- "This invite link is invalid." — a revoked link reads as invalid rather than expired: it was deliberately closed, not left to lapse
 - "Go home" button
 
 ---
