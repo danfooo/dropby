@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { Capacitor } from '@capacitor/core';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import i18n from '../i18n';
 import { authApi, invitesApi, waitlistApi, associatePendingGuest, trackApi } from '../api';
 import { useAuthStore } from '../stores/auth';
@@ -418,6 +418,14 @@ export default function Auth() {
                     {t('auth.forgotPassword')}
                   </button>
                 </div>
+              )}
+              {tab === 'signup' && (
+                <p data-testid="signup-consent" className="text-xs text-gray-500 dark:text-gray-400 mb-3 leading-relaxed">
+                  <Trans
+                    i18nKey="auth.consentNotice"
+                    components={{ privacy: <Link to="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300" /> }}
+                  />
+                </p>
               )}
               <button
                 type="submit"

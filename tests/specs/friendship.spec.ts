@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { resetTestUsers, areFriends } from '../helpers/server';
 import { setupUser } from '../helpers/auth';
-import { ALICE, BOB } from '../helpers/users';
+import { ALICE, BOB, CAROL } from '../helpers/users';
 
 test.beforeEach(async () => {
   await resetTestUsers();
@@ -105,7 +105,7 @@ test('Bob closes the invite; it waits in his Friends tab until he accepts', asyn
     const waiting = bobPage.getByTestId('incoming-invites');
     await expect(waiting).toBeVisible({ timeout: 10_000 });
     await expect(waiting.getByText('Alice')).toBeVisible();
-    await waiting.getByRole('button', { name: /accept/i }).click();
+    await bobPage.getByTestId('incoming-connect').click();
 
     await expect.poll(() => areFriends(ALICE.email, BOB.email), { timeout: 10_000 }).toBe(true);
   } finally {
@@ -141,7 +141,7 @@ test('Revoking a link does not retract an invite that was already opened', async
     await bobPage.waitForLoadState('domcontentloaded');
     const waiting = bobPage.getByTestId('incoming-invites');
     await expect(waiting).toBeVisible({ timeout: 10_000 });
-    await waiting.getByRole('button', { name: /accept/i }).click();
+    await bobPage.getByTestId('incoming-connect').click();
 
     await expect.poll(() => areFriends(ALICE.email, BOB.email), { timeout: 10_000 }).toBe(true);
   } finally {
@@ -180,5 +180,109 @@ test('Dismissing clears the pending invite, and re-opening the link asks again',
   } finally {
     await aliceCtx.close();
     await bobCtx.close();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// One link, everyone connected: people who opened the same link are candidates
+// for each other, not just for the host.
+// ---------------------------------------------------------------------------
+
+test('Two people who opened the same link can connect with each other, not just the host', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const bobCtx = await browser.newContext();
+  const carolCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  const bobPage = await bobCtx.newPage();
+  const carolPage = await carolCtx.newPage();
+
+  try {
+    await setupUser(alicePage, ALICE);
+    const { url } = await generateInvite(alicePage);
+
+    // Bob is first: nobody else has opened the link yet, so there is no one to offer
+    await setupUser(bobPage, BOB);
+    await bobPage.goto(url);
+    await expect(bobPage.getByTestId('invite-confirm')).toBeVisible({ timeout: 10_000 });
+    await expect(bobPage.getByTestId('invite-candidates')).not.toBeVisible();
+    await bobPage.getByTestId('invite-accept').click();
+    await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    // Carol opens the same link and is offered Bob, pre-checked, in the same action
+    await setupUser(carolPage, CAROL);
+    await carolPage.goto(url);
+    await expect(carolPage.getByTestId('invite-confirm')).toBeVisible({ timeout: 10_000 });
+    const candidates = carolPage.getByTestId('invite-candidates');
+    await expect(candidates).toBeVisible();
+    await expect(candidates.getByText('Bob')).toBeVisible();
+    await expect(candidates.getByRole('checkbox')).toBeChecked();
+    await carolPage.getByTestId('invite-accept').click();
+    await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    // The host connection is immediate; Bob has only been asked
+    await expect.poll(() => areFriends(ALICE.email, CAROL.email), { timeout: 10_000 }).toBe(true);
+    expect(await areFriends(BOB.email, CAROL.email)).toBe(false);
+
+    // Bob accepts from his Friends tab and the pair is connected
+    await bobPage.goto('/friends');
+    await bobPage.waitForLoadState('domcontentloaded');
+    const waiting = bobPage.getByTestId('incoming-invites');
+    await expect(waiting).toBeVisible({ timeout: 10_000 });
+    await expect(waiting.getByText('Carol')).toBeVisible();
+    await bobPage.getByTestId('incoming-connect').click();
+    await expect.poll(() => areFriends(BOB.email, CAROL.email), { timeout: 10_000 }).toBe(true);
+  } finally {
+    await aliceCtx.close();
+    await bobCtx.close();
+    await carolCtx.close();
+  }
+});
+
+test('Both sides picking each other connects them with no accept step', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const bobCtx = await browser.newContext();
+  const carolCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  const bobPage = await bobCtx.newPage();
+  const carolPage = await carolCtx.newPage();
+
+  try {
+    await setupUser(alicePage, ALICE);
+    const { url } = await generateInvite(alicePage);
+
+    await setupUser(bobPage, BOB);
+    await bobPage.goto(url);
+    await bobPage.getByTestId('invite-accept').click();
+    await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    // Carol picks Bob — Bob has not picked her, so it only waits
+    await setupUser(carolPage, CAROL);
+    await carolPage.goto(url);
+    await expect(carolPage.getByTestId('invite-candidates')).toBeVisible({ timeout: 10_000 });
+    await carolPage.getByTestId('invite-accept').click();
+    await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+    expect(await areFriends(BOB.email, CAROL.email)).toBe(false);
+
+    // Bob re-opens the link. He is already friends with Alice, but the link is still how
+    // he catches whoever joined after him — and since Carol already picked him, picking
+    // her back connects them straight away rather than sending her a second invitation.
+    await bobPage.goto(url);
+    await expect(bobPage.getByTestId('invite-already-friends')).toBeVisible({ timeout: 10_000 });
+    const catchUp = bobPage.getByTestId('invite-candidates');
+    await expect(catchUp).toBeVisible();
+    await expect(catchUp.getByText('Carol')).toBeVisible();
+    await bobPage.getByTestId('invite-also-connect').click();
+    await expect(bobPage.getByTestId('invite-also-done')).toBeVisible({ timeout: 10_000 });
+
+    await expect.poll(() => areFriends(BOB.email, CAROL.email), { timeout: 10_000 }).toBe(true);
+
+    // Nothing was left waiting for either of them
+    await bobPage.goto('/friends');
+    await bobPage.waitForLoadState('domcontentloaded');
+    await expect(bobPage.getByTestId('incoming-invites')).not.toBeVisible();
+  } finally {
+    await aliceCtx.close();
+    await bobCtx.close();
+    await carolCtx.close();
   }
 });

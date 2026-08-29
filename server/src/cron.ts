@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { db } from './db/index.js';
-import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder, notifyReengagement, isQuietHours, alreadyNotifiedToday, recordDoorOpenNotified } from './services/notifications.js';
+import { notifyDoorClosingSoon, notifyDoorClosed, notifyNudge, notifyAutoNudge, notifyScheduledReminder, notifyFriendDoorOpen, notifyGoingReminder, notifyReengagement, isQuietHours, alreadyNotifiedToday, recordDoorOpenNotified, flushQueuedNotifications } from './services/notifications.js';
 import { broadcastSSE } from './services/sse.js';
 import { sendWaitlistDigest } from './services/email.js';
 import { randomUUID } from 'crypto';
@@ -14,6 +14,12 @@ const DAY_NAMES: Record<string, string> = {
 const JS_DAY_TO_SHORT: Record<number, string> = {
   0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat',
 };
+
+// Every minute: send the coalesced connection pushes queued since the last run, so a
+// burst of accepts or link opens arrives as one notification rather than several.
+cron.schedule('* * * * *', () => {
+  flushQueuedNotifications();
+});
 
 // Every minute: check for statuses closing in 10 minutes
 cron.schedule('* * * * *', () => {

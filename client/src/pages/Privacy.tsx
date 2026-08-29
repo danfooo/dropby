@@ -41,6 +41,11 @@ export default function Privacy() {
                 <p className="text-gray-600 dark:text-gray-400">When you and another person both accept each other's invite, we store that friendship. Deleted if either of you removes the other or deletes their account.</p>
               </div>
               <div>
+                <p className="font-medium text-gray-800 dark:text-gray-200">Invite link participation</p>
+                <p className="text-gray-600 dark:text-gray-400">Which invite links you open, and who else opened them. This is what lets everyone who opened one link connect without inviting each other one by one, and it is used to suggest people you may know. Kept after the link expires, because that is what the suggestions are built on. Deleted when you delete your account. You can turn off suggestion notifications under Notifications; the record itself is part of how connections work.</p>
+              </div>
+
+              <div>
                 <p className="font-medium text-gray-800 dark:text-gray-200">Guest contact info</p>
                 <p className="text-gray-600 dark:text-gray-400">If someone without an account says they're coming and provides their name or email/phone, we store it so the host knows who to expect. We only contact them if they explicitly asked for the app link.</p>
               </div>

@@ -92,12 +92,13 @@ export const statusApi = {
 export const invitesApi = {
   generate: (statusId?: string) => api.post('/invites', statusId ? { status_id: statusId } : {}).then(r => r.data),
   get: (token: string) => api.get(`/invites/${token}`).then(r => r.data),
-  accept: (token: string) => api.post(`/invites/${token}/accept`).then(r => r.data),
+  accept: (token: string, also?: string[]) => api.post(`/invites/${token}/accept`, also?.length ? { also } : {}).then(r => r.data),
   revoke: (token: string) => api.post(`/invites/${token}/revoke`).then(r => r.data),
   sendByEmail: (email: string) => api.post('/invites/email', { email }).then(r => r.data),
   listPending: () => api.get('/invites/pending').then(r => r.data),
   listIncoming: () => api.get('/invites/incoming').then(r => r.data),
-  dismiss: (token: string) => api.post(`/invites/${token}/dismiss`).then(r => r.data),
+  dismiss: (fromUserIds: string[]) => api.post('/invites/pending/dismiss', { from_user_ids: fromUserIds }).then(r => r.data),
+  acceptPending: (fromUserIds: string[]) => api.post('/invites/pending/accept', { from_user_ids: fromUserIds }).then(r => r.data),
   listOpenLinks: () => api.get('/invites/open-links').then(r => r.data),
 };
 

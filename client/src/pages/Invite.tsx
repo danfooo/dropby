@@ -31,6 +31,10 @@ export default function Invite() {
   const [accepted, setAccepted] = useState(false);
   const [acceptedName, setAcceptedName] = useState('');
   const [accepting, setAccepting] = useState(false);
+  // Everyone else who opened this link, pre-checked: connecting with the whole group is
+  // the default, unchecking is how you connect with fewer.
+  const [picked, setPicked] = useState<string[] | null>(null);
+  const [alsoDone, setAlsoDone] = useState(false);
   const deniedNotif = useDeniedNotifModal();
   const [showGoingForm, setShowGoingForm] = useState(false);
   const [guestRsvp, setGuestRsvp] = useState<{ signalId: string } | null>(null);
@@ -77,10 +81,71 @@ export default function Invite() {
     if (info.isSelf || info.alreadyFriends) setAccepted(true);
   }, [info, user]);
 
+  const candidates: Array<{ id: string; display_name: string; avatar_url: string | null }> = info?.candidates ?? [];
+  const checked = picked ?? candidates.map(c => c.id);
+  const toggle = (id: string) =>
+    setPicked(checked.includes(id) ? checked.filter(c => c !== id) : [...checked, id]);
+
+  const candidateList = () => (
+    <div data-testid="invite-candidates" className="mb-6 text-left">
+      <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+        {t('invite.alsoHereTitle')}
+      </p>
+      <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+        {candidates.map((c, i) => (
+          <label
+            key={c.id}
+            className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${i > 0 ? 'border-t border-gray-100 dark:border-gray-800' : ''}`}
+          >
+            <Avatar name={c.display_name} url={c.avatar_url} size="sm" />
+            <span className="flex-1 min-w-0 truncate text-sm font-medium text-gray-900 dark:text-gray-50">{c.display_name}</span>
+            <input
+              type="checkbox"
+              checked={checked.includes(c.id)}
+              onChange={() => toggle(c.id)}
+              className="w-5 h-5 accent-emerald-500"
+            />
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Used on the already-friends and own-link screens: the host is settled, but a re-opened
+  // link is how you catch the people who joined after you last looked.
+  const connectOnly = () => {
+    if (accepting) return;
+    setAccepting(true);
+    invitesApi.accept(token!, checked)
+      .then(() => setAlsoDone(true))
+      .catch(() => {})
+      .finally(() => setAccepting(false));
+  };
+
+  const catchUpBlock = () => {
+    if (alsoDone) {
+      return <p data-testid="invite-also-done" className="text-sm text-emerald-600 dark:text-emerald-400 mb-6">{t('invite.alsoConnected')}</p>;
+    }
+    if (!candidates.length) return null;
+    return (
+      <div className="w-full max-w-xs mb-6">
+        {candidateList()}
+        <button
+          data-testid="invite-also-connect"
+          onClick={connectOnly}
+          disabled={accepting || checked.length === 0}
+          className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold"
+        >
+          {t('invite.alsoConnectCta', { count: checked.length })}
+        </button>
+      </div>
+    );
+  };
+
   const handleAccept = () => {
     if (accepting) return;
     setAccepting(true);
-    invitesApi.accept(token!)
+    invitesApi.accept(token!, checked)
       .then(res => {
         setAccepted(true);
         setAcceptedName(res.inviterName || info.inviter?.display_name || '');
@@ -167,6 +232,7 @@ export default function Invite() {
           <p className="text-5xl mb-4">😄</p>
           <h1 className="text-xl font-bold mb-2">{t('invite.ownLinkTitle')}</h1>
           <p className="text-gray-500 dark:text-gray-400 mb-8">{t('invite.ownLinkDesc')}</p>
+          {catchUpBlock()}
           <Link to="/home" className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold">
             {t('invite.goHome')}
           </Link>
@@ -179,6 +245,7 @@ export default function Invite() {
         <div data-testid="invite-already-friends" className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-white dark:bg-gray-950">
           <p className="text-5xl mb-4">👋</p>
           <h1 className="text-xl font-bold mb-2">{t('invite.alreadyFriendsTitle')}</h1>
+          {catchUpBlock()}
           {info.status ? (
             <>
               <div className="mb-6">
@@ -275,13 +342,17 @@ export default function Invite() {
             </div>
           )}
 
+          {candidates.length > 0 && candidateList()}
+
           <button
             data-testid="invite-accept"
             onClick={handleAccept}
             disabled={accepting}
             className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-4 rounded-2xl font-semibold text-base mb-3"
           >
-            {t('invite.confirmAccept')}
+            {checked.length > 0
+              ? t('invite.confirmAcceptMany', { count: checked.length + 1 })
+              : t('invite.confirmAccept')}
           </button>
           <button
             data-testid="invite-close"

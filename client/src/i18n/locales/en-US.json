@@ -84,7 +84,8 @@
     "continueWithApple": "Continue with Apple",
     "continueWithGoogle": "Continue with Google",
     "somethingWentWrong": "Something went wrong. Please try again.",
-    "inviteRequired": "dropby is invite-only right now. Ask a friend for their invite link, or join the waitlist."
+    "inviteRequired": "dropby is invite-only right now. Ask a friend for their invite link, or join the waitlist.",
+    "consentNotice": "By creating an account you agree to the <privacy>Privacy Policy</privacy>. dropby records which invite links you open so it can suggest people you may know."
   },
   "waitlist": {
     "title": "dropby is invite-only right now",
@@ -233,8 +234,9 @@
     "linkCreatedJustNow": "just now",
     "linkExpiryNote": "Links expire after 7 days.",
     "waitingTitle": "Waiting for you",
-    "acceptInvite": "Accept",
-    "dismissInvite": "Dismiss"
+    "dismissInvite": "Dismiss",
+    "acceptInvite_one": "Connect",
+    "acceptInvite_other": "Connect with {{count}}"
   },
   "invite": {
     "expiredTitle": "Invite expired",
@@ -275,7 +277,11 @@
     "confirmDesc": "You'll both see when the other's door is open.",
     "confirmAccept": "Accept",
     "confirmClose": "Not now",
-    "confirmLater": "You can decide later in Friends."
+    "confirmLater": "You can decide later in Friends.",
+    "alsoHereTitle": "Also here",
+    "confirmAcceptMany": "Connect with {{count}} people",
+    "alsoConnectCta": "Connect with {{count}}",
+    "alsoConnected": "Sent. They'll see it in their Friends tab."
   },
   "feedback": {
     "title": "Share feedback",
@@ -400,6 +406,8 @@
       "60m": "1 hour before",
       "30m": "30 min before",
       "15m": "15 min before"
-    }
+    },
+    "suggestionsTitle": "People you may know",
+    "suggestionsDesc": "Get notified when someone opens an invite link you also opened."
   }
 }

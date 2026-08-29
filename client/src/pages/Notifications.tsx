@@ -116,7 +116,7 @@ export default function Notifications() {
   const { data: nudges = [] } = useQuery({ queryKey: ['nudges'], queryFn: nudgesApi.list });
 
   const updateMe = useMutation({
-    mutationFn: (data: { auto_nudge_enabled?: boolean; notif_door_closed?: boolean; going_reminder_1?: string; going_reminder_2?: string }) => authApi.updateMe(data),
+    mutationFn: (data: { auto_nudge_enabled?: boolean; notif_door_closed?: boolean; notif_friend_suggestions?: boolean; going_reminder_1?: string; going_reminder_2?: string }) => authApi.updateMe(data),
     onSuccess: updated => setUser(updated),
   });
 
@@ -232,6 +232,20 @@ export default function Notifications() {
                 <option key={opt} value={opt}>{t(`notifications.reminderOptions.${opt}`)}</option>
               ))}
             </select>
+          </div>
+        </div>
+
+        {/* Connection suggestions */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-xs border border-gray-100 dark:border-gray-800">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <p className="font-medium text-gray-900 dark:text-gray-50 text-sm">{t('notifications.suggestionsTitle')}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('notifications.suggestionsDesc')}</p>
+            </div>
+            <Toggle
+              on={user?.notif_friend_suggestions !== false}
+              onToggle={() => updateMe.mutate({ notif_friend_suggestions: !user?.notif_friend_suggestions })}
+            />
           </div>
         </div>
 

@@ -84,7 +84,8 @@
     "appleFailed": "Apple-inloggning misslyckades",
     "continueWithApple": "Fortsätt med Apple",
     "continueWithGoogle": "Fortsätt med Google",
-    "inviteRequired": "dropby är bara för inbjudna just nu. Be en kompis om deras inbjudningslänk, eller ställ dig i kön."
+    "inviteRequired": "dropby är bara för inbjudna just nu. Be en kompis om deras inbjudningslänk, eller ställ dig i kön.",
+    "consentNotice": "Genom att skapa ett konto godkänner du <privacy>integritetspolicyn</privacy>. dropby sparar vilka inbjudningslänkar du öppnar för att kunna föreslå personer du kanske känner."
   },
   "waitlist": {
     "title": "dropby är bara för inbjudna just nu",
@@ -233,8 +234,9 @@
     "linkCreatedJustNow": "just nu",
     "linkExpiryNote": "Länkar upphör efter 7 dagar.",
     "waitingTitle": "Väntar på dig",
-    "acceptInvite": "Acceptera",
-    "dismissInvite": "Avfärda"
+    "dismissInvite": "Avfärda",
+    "acceptInvite_one": "Koppla ihop",
+    "acceptInvite_other": "Koppla ihop med {{count}}"
   },
   "invite": {
     "expiredTitle": "Inbjudan utgången",
@@ -275,7 +277,11 @@
     "confirmDesc": "Ni ser båda när den andra har dörren öppen.",
     "confirmAccept": "Acceptera",
     "confirmClose": "Inte nu",
-    "confirmLater": "Du kan bestämma senare under Vänner."
+    "confirmLater": "Du kan bestämma senare under Vänner.",
+    "alsoHereTitle": "Också här",
+    "confirmAcceptMany": "Koppla ihop med {{count}} personer",
+    "alsoConnectCta": "Koppla ihop med {{count}}",
+    "alsoConnected": "Skickat. De ser det under Vänner."
   },
   "feedback": {
     "title": "Dela feedback",
@@ -400,6 +406,8 @@
       "60m": "1 timme innan",
       "30m": "30 min innan",
       "15m": "15 min innan"
-    }
+    },
+    "suggestionsTitle": "Personer du kanske känner",
+    "suggestionsDesc": "Få en notis när någon öppnar en inbjudningslänk som du också öppnat."
   }
 }

@@ -84,7 +84,8 @@
     "appleFailed": "Falha no login com Apple",
     "continueWithApple": "Continuar com Apple",
     "continueWithGoogle": "Continuar com Google",
-    "inviteRequired": "O dropby é só por convite neste momento. Pede o link de convite a um amigo ou entra para a lista de espera."
+    "inviteRequired": "O dropby é só por convite neste momento. Pede o link de convite a um amigo ou entra para a lista de espera.",
+    "consentNotice": "Ao criar uma conta aceitas a <privacy>Política de Privacidade</privacy>. O dropby regista que links de convite abres para te sugerir pessoas que talvez conheças."
   },
   "waitlist": {
     "title": "O dropby é só por convite neste momento",
@@ -233,8 +234,9 @@
     "linkCreatedJustNow": "agora mesmo",
     "linkExpiryNote": "Links expiram após 7 dias.",
     "waitingTitle": "À tua espera",
-    "acceptInvite": "Aceitar",
-    "dismissInvite": "Dispensar"
+    "dismissInvite": "Dispensar",
+    "acceptInvite_one": "Ligar",
+    "acceptInvite_other": "Ligar-te a {{count}}"
   },
   "invite": {
     "expiredTitle": "Convite expirado",
@@ -275,7 +277,11 @@
     "confirmDesc": "Vão ver os dois quando o outro tem a porta aberta.",
     "confirmAccept": "Aceitar",
     "confirmClose": "Agora não",
-    "confirmLater": "Podes decidir mais tarde em Amigos."
+    "confirmLater": "Podes decidir mais tarde em Amigos.",
+    "alsoHereTitle": "Também aqui",
+    "confirmAcceptMany": "Ligar-te a {{count}} pessoas",
+    "alsoConnectCta": "Ligar-te a {{count}}",
+    "alsoConnected": "Enviado. Vão ver no separador Amigos."
   },
   "feedback": {
     "title": "Partilhar feedback",
@@ -400,6 +406,8 @@
       "60m": "1 hora antes",
       "30m": "30 min antes",
       "15m": "15 min antes"
-    }
+    },
+    "suggestionsTitle": "Pessoas que talvez conheças",
+    "suggestionsDesc": "Recebe um aviso quando alguém abrir um link de convite que também abriste."
   }
 }

@@ -1,5 +1,5 @@
 import { db } from '../db/index.js';
-import { createSign } from 'crypto';
+import { createSign, randomUUID } from 'crypto';
 import * as http2 from 'http2';
 import { log } from './analytics.js';
 import { formatScheduledDayTime, formatScheduledTime } from '../utils/time-format.js';
@@ -293,15 +293,62 @@ export function notifyGoingReminder(userId: string, hostName: string, startsAt: 
   );
 }
 
+// Connection pushes are coalesced instead of sent per event: several people accepting
+// at once, or a group chat opening the same link within a minute, would otherwise land
+// as a burst of near-identical notifications. Flushed once a minute by the cron.
+export function queueNotification(userId: string, type: 'friend_joined' | 'friend_suggestion', subjectName: string) {
+  db.prepare('INSERT INTO queued_notifications (id, user_id, type, subject_name) VALUES (?, ?, ?, ?)')
+    .run(randomUUID(), userId, type, subjectName);
+}
+
+function coalescedBody(type: string, names: string[]): string {
+  const [first, second] = names;
+  if (type === 'friend_suggestion') {
+    return names.length === 1
+      ? `${first} opened the same invite link as you`
+      : `${first} and ${names.length - 1} others opened the same invite link as you`;
+  }
+  if (names.length === 1) return `${first} just joined your dropby!`;
+  if (names.length === 2) return `${first} and ${second} just joined your dropby!`;
+  return `${first} and ${names.length - 1} others just joined your dropby!`;
+}
+
+export function flushQueuedNotifications() {
+  const rows = db.prepare('SELECT id, user_id, type, subject_name FROM queued_notifications ORDER BY created_at ASC')
+    .all() as Array<{ id: string; user_id: string; type: string; subject_name: string }>;
+  if (!rows.length) return;
+
+  const groups = new Map<string, { userId: string; type: string; names: string[]; ids: string[] }>();
+  for (const r of rows) {
+    const key = `${r.user_id}:${r.type}`;
+    let g = groups.get(key);
+    if (!g) { g = { userId: r.user_id, type: r.type, names: [], ids: [] }; groups.set(key, g); }
+    g.names.push(r.subject_name);
+    g.ids.push(r.id);
+  }
+
+  const del = db.prepare('DELETE FROM queued_notifications WHERE id = ?');
+  for (const g of groups.values()) {
+    // Suggestions wait out quiet hours rather than being dropped; they are not time-critical.
+    if (g.type === 'friend_suggestion' && isQuietHours(g.userId)) continue;
+    g.ids.forEach(id => del.run(id));
+    const tokens = getPushTokens(g.userId);
+    const body = coalescedBody(g.type, g.names);
+    tokens.forEach(t =>
+      sendPush(g.userId, t.token, t.platform, { title: 'dropby', body, data: { type: g.type } })
+    );
+  }
+}
+
 export function notifyFriendJoined(inviterId: string, newFriendName: string) {
-  const tokens = getPushTokens(inviterId);
-  tokens.forEach(t =>
-    sendPush(inviterId, t.token, t.platform, {
-      title: 'dropby',
-      body: `${newFriendName} just joined your dropby!`,
-      data: { type: 'friend_joined' },
-    })
-  );
+  queueNotification(inviterId, 'friend_joined', newFriendName);
+}
+
+// Someone new opened a link this user also opened — they are now offerable to each other.
+export function notifyConnectionSuggestion(userId: string, newParticipantName: string) {
+  const user = db.prepare('SELECT notif_friend_suggestions FROM users WHERE id = ?').get(userId) as any;
+  if (user && user.notif_friend_suggestions === 0) return;
+  queueNotification(userId, 'friend_suggestion', newParticipantName);
 }
 
 export function notifyReengagement(userId: string) {

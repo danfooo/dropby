@@ -84,7 +84,8 @@
     "continueWithApple": "通过 Apple 继续",
     "continueWithGoogle": "通过 Google 继续",
     "somethingWentWrong": "出了点问题，请重试。",
-    "inviteRequired": "dropby 目前仅限受邀加入。请向朋友索取邀请链接，或加入等待名单。"
+    "inviteRequired": "dropby 目前仅限受邀加入。请向朋友索取邀请链接，或加入等待名单。",
+    "consentNotice": "创建账户即表示你同意<privacy>隐私政策</privacy>。dropby 会记录你打开过哪些邀请链接，以便向你推荐可能认识的人。"
   },
   "waitlist": {
     "title": "dropby 目前仅限受邀加入",
@@ -233,8 +234,9 @@
     "linkCreatedJustNow": "刚刚",
     "linkExpiryNote": "链接7天后失效。",
     "waitingTitle": "等你决定",
-    "acceptInvite": "接受",
-    "dismissInvite": "忽略"
+    "dismissInvite": "忽略",
+    "acceptInvite_one": "连接",
+    "acceptInvite_other": "与 {{count}} 人连接"
   },
   "invite": {
     "expiredTitle": "邀请已过期",
@@ -275,7 +277,11 @@
     "confirmDesc": "你们都能看到对方什么时候开着门。",
     "confirmAccept": "接受",
     "confirmClose": "暂不",
-    "confirmLater": "你可以稍后在朋友里决定。"
+    "confirmLater": "你可以稍后在朋友里决定。",
+    "alsoHereTitle": "也在这里",
+    "confirmAcceptMany": "与 {{count}} 人连接",
+    "alsoConnectCta": "与 {{count}} 人连接",
+    "alsoConnected": "已发送。他们会在朋友页看到。"
   },
   "feedback": {
     "title": "分享反馈",
@@ -400,6 +406,8 @@
       "60m": "提前1小时",
       "30m": "提前30分钟",
       "15m": "提前15分钟"
-    }
+    },
+    "suggestionsTitle": "你可能认识的人",
+    "suggestionsDesc": "当有人打开你也打开过的邀请链接时通知你。"
   }
 }

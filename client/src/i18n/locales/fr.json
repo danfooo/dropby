@@ -84,7 +84,8 @@
     "appleFailed": "Connexion Apple échouée",
     "continueWithApple": "Continuer avec Apple",
     "continueWithGoogle": "Continuer avec Google",
-    "inviteRequired": "dropby est sur invitation pour l'instant. Demande son lien à un ami, ou rejoins la liste d'attente."
+    "inviteRequired": "dropby est sur invitation pour l'instant. Demande son lien à un ami, ou rejoins la liste d'attente.",
+    "consentNotice": "En créant un compte, tu acceptes la <privacy>politique de confidentialité</privacy>. dropby enregistre les liens d'invitation que tu ouvres pour te suggérer des personnes que tu connais peut-être."
   },
   "waitlist": {
     "title": "dropby est sur invitation pour l'instant",
@@ -233,8 +234,9 @@
     "linkCreatedJustNow": "à l'instant",
     "linkExpiryNote": "Les liens expirent après 7 jours.",
     "waitingTitle": "En attente de toi",
-    "acceptInvite": "Accepter",
-    "dismissInvite": "Ignorer"
+    "dismissInvite": "Ignorer",
+    "acceptInvite_one": "Se connecter",
+    "acceptInvite_other": "Se connecter avec {{count}}"
   },
   "invite": {
     "expiredTitle": "Invitation expirée",
@@ -275,7 +277,11 @@
     "confirmDesc": "Vous verrez tous les deux quand l'autre a sa porte ouverte.",
     "confirmAccept": "Accepter",
     "confirmClose": "Pas maintenant",
-    "confirmLater": "Tu peux décider plus tard dans Amis."
+    "confirmLater": "Tu peux décider plus tard dans Amis.",
+    "alsoHereTitle": "Aussi ici",
+    "confirmAcceptMany": "Se connecter avec {{count}} personnes",
+    "alsoConnectCta": "Se connecter avec {{count}}",
+    "alsoConnected": "Envoyé. Ils le verront dans leur onglet Amis."
   },
   "feedback": {
     "title": "Partager un avis",
@@ -400,6 +406,8 @@
       "60m": "1 heure avant",
       "30m": "30 min avant",
       "15m": "15 min avant"
-    }
+    },
+    "suggestionsTitle": "Personnes que tu connais peut-être",
+    "suggestionsDesc": "Être notifié quand quelqu'un ouvre un lien d'invitation que tu as aussi ouvert."
   }
 }

@@ -8,6 +8,7 @@ export interface User {
   timezone: string | null;
   auto_nudge_enabled: boolean;
   notif_door_closed: boolean;
+  notif_friend_suggestions: boolean;
   going_reminder_1: string;
   going_reminder_2: string;
   avatar_url: string | null;

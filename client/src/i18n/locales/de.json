@@ -84,7 +84,8 @@
     "appleFailed": "Apple-Anmeldung fehlgeschlagen",
     "continueWithApple": "Mit Apple fortfahren",
     "continueWithGoogle": "Mit Google fortfahren",
-    "inviteRequired": "dropby ist gerade nur mit Einladung. Frag einen Freund nach seinem Einladungslink oder trag dich auf die Warteliste ein."
+    "inviteRequired": "dropby ist gerade nur mit Einladung. Frag einen Freund nach seinem Einladungslink oder trag dich auf die Warteliste ein.",
+    "consentNotice": "Mit der Erstellung eines Kontos stimmst du der <privacy>Datenschutzerklärung</privacy> zu. dropby speichert, welche Einladungslinks du öffnest, um dir Leute vorzuschlagen, die du kennen könntest."
   },
   "waitlist": {
     "title": "dropby ist gerade nur mit Einladung",
@@ -233,8 +234,9 @@
     "linkCreatedJustNow": "gerade eben",
     "linkExpiryNote": "Links laufen nach 7 Tagen ab.",
     "waitingTitle": "Wartet auf dich",
-    "acceptInvite": "Annehmen",
-    "dismissInvite": "Verwerfen"
+    "dismissInvite": "Verwerfen",
+    "acceptInvite_one": "Verbinden",
+    "acceptInvite_other": "Mit {{count}} verbinden"
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",
@@ -275,7 +277,11 @@
     "confirmDesc": "Ihr seht beide, wenn der andere die Tür offen hat.",
     "confirmAccept": "Annehmen",
     "confirmClose": "Jetzt nicht",
-    "confirmLater": "Du kannst später unter Freunde entscheiden."
+    "confirmLater": "Du kannst später unter Freunde entscheiden.",
+    "alsoHereTitle": "Auch hier",
+    "confirmAcceptMany": "Mit {{count}} Leuten verbinden",
+    "alsoConnectCta": "Mit {{count}} verbinden",
+    "alsoConnected": "Gesendet. Sie sehen es in ihrem Freunde-Tab."
   },
   "feedback": {
     "title": "Feedback teilen",
@@ -400,6 +406,8 @@
       "60m": "1 Stunde vorher",
       "30m": "30 Min. vorher",
       "15m": "15 Min. vorher"
-    }
+    },
+    "suggestionsTitle": "Leute, die du kennen könntest",
+    "suggestionsDesc": "Benachrichtigung, wenn jemand einen Einladungslink öffnet, den du auch geöffnet hast."
   }
 }

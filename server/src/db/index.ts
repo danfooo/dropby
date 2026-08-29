@@ -92,13 +92,31 @@ db.exec(`
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
 
-  CREATE TABLE IF NOT EXISTS invite_views (
+  CREATE TABLE IF NOT EXISTS pending_invites (
+    id TEXT PRIMARY KEY,
+    from_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    to_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    source_token TEXT REFERENCES invite_links(token) ON DELETE SET NULL,
+    dismissed INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    UNIQUE(from_user_id, to_user_id)
+  );
+
+  -- Retained after the link expires or is revoked: candidacy is what powers suggestions.
+  CREATE TABLE IF NOT EXISTS link_participants (
     id TEXT PRIMARY KEY,
     token TEXT NOT NULL REFERENCES invite_links(token) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    dismissed INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (unixepoch()),
     UNIQUE(token, user_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS queued_notifications (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    subject_name TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
 
   CREATE TABLE IF NOT EXISTS user_notes (
@@ -215,6 +233,23 @@ if (!cols.find(c => c.name === 'avatar_url')) {
 
 if (!cols.find(c => c.name === 'default_door_minutes')) {
   db.exec('ALTER TABLE users ADD COLUMN default_door_minutes INTEGER NOT NULL DEFAULT 60');
+}
+
+// invite_views (token, opener) generalised into pending_invites (from, to): the implicit
+// sender was always the link's creator.
+const inviteViewsExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='invite_views'").get();
+if (inviteViewsExists) {
+  db.exec(`
+    INSERT OR IGNORE INTO pending_invites (id, from_user_id, to_user_id, source_token, dismissed, created_at)
+    SELECT v.id, l.created_by, v.user_id, v.token, v.dismissed, v.created_at
+    FROM invite_views v JOIN invite_links l ON l.token = v.token
+    WHERE l.created_by <> v.user_id
+  `);
+  db.exec('DROP TABLE invite_views');
+}
+
+if (!cols.find(c => c.name === 'notif_friend_suggestions')) {
+  db.exec('ALTER TABLE users ADD COLUMN notif_friend_suggestions INTEGER NOT NULL DEFAULT 1');
 }
 
 const inviteCols = db.pragma('table_info(invite_links)') as { name: string }[];

@@ -44,6 +44,7 @@ function userResponse(u: any) {
     display_name: u.display_name,
     timezone: u.timezone,
     auto_nudge_enabled: Boolean(u.auto_nudge_enabled),
+    notif_friend_suggestions: u.notif_friend_suggestions !== undefined ? Boolean(u.notif_friend_suggestions) : true,
     notif_door_closed: u.notif_door_closed !== undefined ? Boolean(u.notif_door_closed) : true,
     going_reminder_1: u.going_reminder_1 ?? 'day',
     going_reminder_2: u.going_reminder_2 ?? '30m',
@@ -62,7 +63,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
 
 // PUT /api/auth/me
 router.put('/me', requireAuth, (req: AuthRequest, res) => {
-  const { display_name, auto_nudge_enabled, notif_door_closed, going_reminder_1, going_reminder_2, avatar_seed } = req.body;
+  const { display_name, auto_nudge_enabled, notif_door_closed, notif_friend_suggestions, going_reminder_1, going_reminder_2, avatar_seed } = req.body;
   const updates: string[] = [];
   const values: unknown[] = [];
 
@@ -80,6 +81,10 @@ router.put('/me', requireAuth, (req: AuthRequest, res) => {
   if (notif_door_closed !== undefined) {
     updates.push('notif_door_closed = ?');
     values.push(notif_door_closed ? 1 : 0);
+  }
+  if (notif_friend_suggestions !== undefined) {
+    updates.push('notif_friend_suggestions = ?');
+    values.push(notif_friend_suggestions ? 1 : 0);
   }
   const validReminders = ['none', 'day', '120m', '60m', '30m', '15m', '0m'];
   if (going_reminder_1 !== undefined && validReminders.includes(going_reminder_1)) {

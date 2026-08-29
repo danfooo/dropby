@@ -5,7 +5,7 @@ import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.js';
 import { areFriends } from './friends.js';
 import { sendInviteEmail } from '../services/email.js';
 import { log } from '../services/analytics.js';
-import { notifyFriendJoined } from '../services/notifications.js';
+import { notifyFriendJoined, notifyConnectionSuggestion } from '../services/notifications.js';
 import { sendSSE } from '../services/sse.js';
 
 const router = Router();
@@ -14,27 +14,108 @@ function generateToken(): string {
   return randomUUID().replace(/-/g, '');
 }
 
-// A pending invite: someone opened a link while it was live but hasn't accepted yet.
-// No friendship edge exists until they do — nothing is visible in either direction.
+function inviteIsOpen(invite: { revoked: number; expires_at: number }, nowUnix: number): boolean {
+  return !invite.revoked && invite.expires_at > nowUnix;
+}
+
+function hasPendingInvite(fromId: string, toId: string): boolean {
+  return !!db.prepare('SELECT id FROM pending_invites WHERE from_user_id = ? AND to_user_id = ?').get(fromId, toId);
+}
+
+function displayName(userId: string): string | null {
+  const u = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
+  return u?.display_name ?? null;
+}
+
+// Creates the friendship both sides have now asked for, and clears any pending rows.
+// `sourceToken` only matters for a door-specific link: it is what lets the new friend
+// into a door that is already open.
+export function connectUsers(actorId: string, otherId: string, sourceToken?: string | null): void {
+  if (actorId === otherId || areFriends(actorId, otherId)) return;
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  const [a, b] = [actorId, otherId].sort();
+  db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
+  db.prepare('DELETE FROM pending_invites WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?)')
+    .run(actorId, otherId, otherId, actorId);
+
+  const actorName = displayName(actorId);
+  if (actorName) {
+    notifyFriendJoined(otherId, actorName);
+    sendSSE(otherId, 'friend:joined', { name: actorName });
+  }
+
+  if (sourceToken) {
+    const invite = db.prepare('SELECT created_by, status_id FROM invite_links WHERE token = ?').get(sourceToken) as any;
+    // Only the link's own creator can let someone into their open door — being picked off
+    // a link by a third party never grants door access.
+    if (invite?.status_id && (invite.created_by === actorId || invite.created_by === otherId)) {
+      const guestId = invite.created_by === actorId ? otherId : actorId;
+      const linkedStatus = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND closes_at > ?')
+        .get(invite.status_id, invite.created_by, nowUnix) as any;
+      if (linkedStatus) {
+        db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)')
+          .run(randomUUID(), linkedStatus.id, guestId);
+      }
+    }
+  }
+}
+
+// Records one person's intent to connect. If the other side already asked, this connects
+// them instead — order doesn't matter, and neither sees an accept step.
+export function recordIntent(fromId: string, toId: string, sourceToken?: string | null): 'connected' | 'pending' | 'noop' {
+  if (fromId === toId || areFriends(fromId, toId)) return 'noop';
+  if (hasPendingInvite(toId, fromId)) {
+    connectUsers(fromId, toId, sourceToken ?? db.prepare('SELECT source_token FROM pending_invites WHERE from_user_id = ? AND to_user_id = ?').get(toId, fromId) as any);
+    return 'connected';
+  }
+  db.prepare(`
+    INSERT INTO pending_invites (id, from_user_id, to_user_id, source_token) VALUES (?, ?, ?, ?)
+    ON CONFLICT(from_user_id, to_user_id) DO UPDATE SET dismissed = 0
+  `).run(randomUUID(), fromId, toId, sourceToken ?? null);
+  return 'pending';
+}
+
+// Opening a link makes the opener a candidate for everyone else who opened it, and
+// records the creator's standing intent toward them.
 function recordInviteView(token: unknown, userId: string): void {
   if (typeof token !== 'string' || !token) return;
   const nowUnix = Math.floor(Date.now() / 1000);
   const invite = db.prepare('SELECT created_by FROM invite_links WHERE token = ? AND revoked = 0 AND expires_at > ?').get(token, nowUnix) as any;
   if (!invite || invite.created_by === userId) return;
+
+  const isNewParticipant = db.prepare('SELECT id FROM link_participants WHERE token = ? AND user_id = ?').get(token, userId) === undefined;
+  db.prepare('INSERT OR IGNORE INTO link_participants (id, token, user_id) VALUES (?, ?, ?)').run(randomUUID(), token, userId);
+
+  if (isNewParticipant) {
+    const name = displayName(userId);
+    if (name) {
+      for (const other of candidatesFor(token, userId)) {
+        notifyConnectionSuggestion(other.id, name);
+      }
+    }
+  }
+
   if (areFriends(userId, invite.created_by)) return;
   // Re-opening a link the user dismissed brings the decision back.
-  db.prepare(`
-    INSERT INTO invite_views (id, token, user_id) VALUES (?, ?, ?)
-    ON CONFLICT(token, user_id) DO UPDATE SET dismissed = 0
-  `).run(randomUUID(), token, userId);
+  recordIntent(invite.created_by, userId, token);
 }
 
-function inviteIsOpen(invite: { revoked: number; expires_at: number }, nowUnix: number): boolean {
-  return !invite.revoked && invite.expires_at > nowUnix;
-}
-
-function hasInviteView(token: string, userId: string): boolean {
-  return !!db.prepare('SELECT id FROM invite_views WHERE token = ? AND user_id = ?').get(token, userId);
+// Everyone else on this link the viewer could still connect with: not themselves, not the
+// link's creator (offered separately), and nobody they are already friends with.
+function candidatesFor(token: string, viewerId: string): Array<{ id: string; display_name: string; avatar_url: string | null }> {
+  return db.prepare(`
+    SELECT u.id, u.display_name, u.avatar_url
+    FROM link_participants p
+    JOIN users u ON u.id = p.user_id
+    JOIN invite_links l ON l.token = p.token
+    WHERE p.token = ? AND p.user_id <> ? AND l.created_by <> p.user_id
+      AND NOT EXISTS (
+        SELECT 1 FROM friendships f
+        WHERE (f.user_a_id = p.user_id AND f.user_b_id = ?) OR (f.user_a_id = ? AND f.user_b_id = p.user_id)
+      )
+    ORDER BY p.created_at ASC
+  `).all(token, viewerId, viewerId, viewerId) as any;
 }
 
 // Shared logic: create friendship from an invite token, used by accept endpoint and email verification
@@ -45,33 +126,33 @@ export function acceptInviteToken(token: string, acceptorId: string): { ok: bool
   // Revoking is just "expire now": both only stop people who never opened the link.
   // Anyone who opened it while it was live holds a pending invite, and that pending
   // invite is the authorisation — "accept later" never silently dies.
-  if (!inviteIsOpen(invite, nowUnix) && !hasInviteView(token, acceptorId)) return { ok: false };
+  if (!inviteIsOpen(invite, nowUnix) && !hasPendingInvite(invite.created_by, acceptorId)) return { ok: false };
 
   const inviterId = invite.created_by;
   if (acceptorId === inviterId) return { ok: true };
   if (areFriends(acceptorId, inviterId)) return { ok: true };
 
-  const [a, b] = [acceptorId, inviterId].sort();
-  db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
-
-  const acceptor = db.prepare('SELECT display_name FROM users WHERE id = ?').get(acceptorId) as any;
-  if (acceptor) {
-    notifyFriendJoined(inviterId, acceptor.display_name);
-    sendSSE(inviterId, 'friend:joined', { name: acceptor.display_name });
-  }
-
   // Only a door-specific link (created from an open door) lets the acceptor into that door.
-  // A generic friend link creates the friendship and nothing more — it never adds anyone to
-  // a door that is already open, in either direction.
-  if (invite.status_id) {
-    const linkedStatus = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND closes_at > ?').get(invite.status_id, inviterId, nowUnix) as any;
-    if (linkedStatus) {
-      db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), linkedStatus.id, acceptorId);
-    }
-  }
+  // A generic friend link creates the friendship and nothing more.
+  connectUsers(acceptorId, inviterId, token);
+  return { ok: true, inviterName: displayName(inviterId) ?? undefined };
+}
 
-  const inviter = db.prepare('SELECT display_name FROM users WHERE id = ?').get(inviterId) as any;
-  return { ok: true, inviterName: inviter?.display_name };
+// Connect with the people picked off the link. Only genuine candidates count, so a
+// crafted request can't reach anyone the viewer wasn't offered.
+function connectAlso(raw: unknown, userId: string, token: string): { connected: number; pending: number } {
+  const picked: string[] = Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : [];
+  if (!picked.length) return { connected: 0, pending: 0 };
+
+  const offerable = new Set(candidatesFor(token, userId).map(c => c.id));
+  let connected = 0, pending = 0;
+  for (const id of picked) {
+    if (!offerable.has(id)) continue;
+    const result = recordIntent(userId, id, token);
+    if (result === 'connected') connected++;
+    else if (result === 'pending') pending++;
+  }
+  return { connected, pending };
 }
 
 // POST /api/invites — generate invite link
@@ -122,30 +203,49 @@ router.get('/pending', requireAuth, (req: AuthRequest, res) => {
 // GET /api/invites/incoming — invites this user opened but hasn't accepted yet
 router.get('/incoming', requireAuth, (req: AuthRequest, res) => {
   const rows = db.prepare(`
-    SELECT v.token, v.created_at, u.id AS inviter_id, u.display_name, u.avatar_url
-    FROM invite_views v
-    JOIN invite_links l ON l.token = v.token
-    JOIN users u ON u.id = l.created_by
-    WHERE v.user_id = ? AND v.dismissed = 0
+    SELECT p.source_token, p.created_at, u.id AS inviter_id, u.display_name, u.avatar_url
+    FROM pending_invites p
+    JOIN users u ON u.id = p.from_user_id
+    WHERE p.to_user_id = ? AND p.dismissed = 0
       AND NOT EXISTS (
         SELECT 1 FROM friendships f
-        WHERE (f.user_a_id = v.user_id AND f.user_b_id = l.created_by)
-           OR (f.user_a_id = l.created_by AND f.user_b_id = v.user_id)
+        WHERE (f.user_a_id = p.from_user_id AND f.user_b_id = p.to_user_id)
+           OR (f.user_a_id = p.to_user_id AND f.user_b_id = p.from_user_id)
       )
-    ORDER BY v.created_at DESC
-  `).all(req.userId) as Array<{ token: string; created_at: number; inviter_id: string; display_name: string; avatar_url: string | null }>;
+    ORDER BY p.created_at DESC
+  `).all(req.userId) as Array<{ source_token: string | null; created_at: number; inviter_id: string; display_name: string; avatar_url: string | null }>;
   res.json(rows.map(r => ({
-    token: r.token,
+    token: r.source_token,
     created_at: r.created_at,
     inviter: { id: r.inviter_id, display_name: r.display_name, avatar_url: r.avatar_url },
   })));
 });
 
-// POST /api/invites/:token/dismiss — clear a pending invite without accepting it.
+// POST /api/invites/pending/dismiss — clear pending invites without accepting them.
 // The link itself stays live: opening it again brings the decision back.
-router.post('/:token/dismiss', requireAuth, (req: AuthRequest, res) => {
-  db.prepare('UPDATE invite_views SET dismissed = 1 WHERE token = ? AND user_id = ?').run(req.params.token, req.userId);
+router.post('/pending/dismiss', requireAuth, (req: AuthRequest, res) => {
+  const ids = Array.isArray(req.body?.from_user_ids) ? req.body.from_user_ids : [];
+  const stmt = db.prepare('UPDATE pending_invites SET dismissed = 1 WHERE from_user_id = ? AND to_user_id = ?');
+  ids.filter((id: unknown) => typeof id === 'string').forEach((id: string) => stmt.run(id, req.userId));
   res.json({ ok: true });
+});
+
+// POST /api/invites/pending/accept — accept a batch of people who asked to connect
+router.post('/pending/accept', requireAuth, (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const ids: string[] = Array.isArray(req.body?.from_user_ids)
+    ? req.body.from_user_ids.filter((id: unknown) => typeof id === 'string')
+    : [];
+
+  let connected = 0;
+  for (const fromId of ids) {
+    const pending = db.prepare('SELECT source_token FROM pending_invites WHERE from_user_id = ? AND to_user_id = ?').get(fromId, userId) as any;
+    if (!pending) continue;
+    connectUsers(userId, fromId, pending.source_token);
+    connected++;
+  }
+  if (connected) log('invite.accepted', userId, { count: connected });
+  res.json({ ok: true, connected });
 });
 
 function formatIcsDate(date: Date): string {
@@ -207,7 +307,7 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
   const invite = db.prepare('SELECT * FROM invite_links WHERE token = ?').get(token) as any;
   if (!invite) return res.status(404).json({ error: 'INVALID_TOKEN' });
 
-  const pendingForViewer = !!(req.userId && hasInviteView(token, req.userId));
+  const pendingForViewer = !!(req.userId && hasPendingInvite(invite.created_by, req.userId));
 
   if (invite.revoked && !pendingForViewer) return res.status(410).json({ error: 'REVOKED' });
 
@@ -227,6 +327,8 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
     if (s) status = { id: s.id, note: s.note, location: s.location || null, closes_at: s.closes_at, starts_at: s.starts_at || null, ends_at: s.ends_at || null };
   }
 
+  const candidates = req.userId ? candidatesFor(token, req.userId) : [];
+
   let alreadyFriends = false;
   let isSelf = false;
   if (req.userId) {
@@ -241,7 +343,7 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
 
   if (req.userId && !isSelf && !alreadyFriends) recordInviteView(token, req.userId);
 
-  res.json({ inviter, status, alreadyFriends, isSelf });
+  res.json({ inviter, status, alreadyFriends, isSelf, candidates });
 });
 
 // POST /api/invites/:token/accept — accept invite (auth required)
@@ -252,24 +354,26 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
 
   const invite = db.prepare('SELECT * FROM invite_links WHERE token = ?').get(token) as any;
   if (!invite) return res.status(404).json({ error: 'Invalid or expired invite' });
-  if (!inviteIsOpen(invite, nowUnix) && !hasInviteView(token, userId)) {
+  if (!inviteIsOpen(invite, nowUnix) && !hasPendingInvite(invite.created_by, userId)) {
     return res.status(404).json({ error: 'Invalid or expired invite' });
   }
 
   const inviterId = invite.created_by;
 
   if (userId === inviterId) {
-    return res.json({ ok: true, alreadyFriends: false, isSelf: true });
+    return res.json({ ok: true, alreadyFriends: false, isSelf: true, also: connectAlso(req.body?.also, userId, token) });
   }
 
   if (areFriends(userId, inviterId)) {
+    const also = connectAlso(req.body?.also, userId, token);
     const activeStatus = db.prepare('SELECT * FROM statuses WHERE user_id = ? AND closed_at IS NULL AND closes_at > ?').get(inviterId, nowUnix) as any;
-    return res.json({ ok: true, alreadyFriends: true, status: activeStatus ? { id: activeStatus.id, note: activeStatus.note, location: activeStatus.location || null, closes_at: activeStatus.closes_at } : null });
+    return res.json({ ok: true, alreadyFriends: true, also, status: activeStatus ? { id: activeStatus.id, note: activeStatus.note, location: activeStatus.location || null, closes_at: activeStatus.closes_at } : null });
   }
 
   log('invite.accepted', userId);
   const result = acceptInviteToken(token, userId);
-  res.json({ ok: true, alreadyFriends: false, inviterName: result.inviterName });
+  const also = connectAlso(req.body?.also, userId, token);
+  res.json({ ok: true, alreadyFriends: false, inviterName: result.inviterName, also });
 });
 
 // POST /api/invites/email — send an email invite (30-day link)

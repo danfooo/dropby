@@ -41,6 +41,9 @@ export default function Friends() {
   const [error, setError] = useState('');
   const [notifPickerFor, setNotifPickerFor] = useState<string | null>(null);
   const [notifPickerDir, setNotifPickerDir] = useState<'up' | 'down'>('down');
+  // Waiting-for-you rows are checked by default; storing the exclusions means someone
+  // who asks while the page is open is included without rewriting the selection.
+  const [uncheckedIncoming, setUnchecked] = useState<string[]>([]);
   const pickerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -58,6 +61,9 @@ export default function Friends() {
   const { data: pendingInvites = [] } = useQuery({ queryKey: ['pending-invites'], queryFn: invitesApi.listPending });
   const { data: openLinks = [] } = useQuery({ queryKey: ['open-links'], queryFn: invitesApi.listOpenLinks });
   const { data: incoming = [] } = useQuery({ queryKey: ['incoming-invites'], queryFn: invitesApi.listIncoming });
+  const checkedIncoming = (incoming as any[])
+    .map(i => i.inviter.id as string)
+    .filter(id => !uncheckedIncoming.includes(id));
 
   const removeFriend = useMutation({
     mutationFn: (id: string) => friendsApi.remove(id),
@@ -95,8 +101,9 @@ export default function Friends() {
   });
 
   const acceptIncoming = useMutation({
-    mutationFn: (token: string) => invitesApi.accept(token),
+    mutationFn: (fromUserIds: string[]) => invitesApi.acceptPending(fromUserIds),
     onSuccess: () => {
+      setUnchecked([]);
       qc.invalidateQueries({ queryKey: ['incoming-invites'] });
       qc.invalidateQueries({ queryKey: ['friends'] });
       qc.invalidateQueries({ queryKey: ['friendStatuses'] });
@@ -104,7 +111,7 @@ export default function Friends() {
   });
 
   const dismissIncoming = useMutation({
-    mutationFn: (token: string) => invitesApi.dismiss(token),
+    mutationFn: (fromUserIds: string[]) => invitesApi.dismiss(fromUserIds),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['incoming-invites'] }),
   });
 
@@ -178,26 +185,19 @@ export default function Friends() {
       </div>
 
       <div className="px-4 pt-4">
-        {/* Invites opened but not accepted — no connection exists until one is accepted */}
+        {/* People who want to connect — no edge exists until this user accepts */}
         {(incoming as any[]).length > 0 && (
           <>
             <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
               {t('friends.waitingTitle')}
             </h2>
-            <div data-testid="incoming-invites" className="bg-white dark:bg-gray-900 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-800 mb-4">
+            <div data-testid="incoming-invites" className="bg-white dark:bg-gray-900 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-800 mb-3">
               {(incoming as any[]).map((item: any, i: number) => (
-                <div key={item.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
+                <label key={item.inviter.id} className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
                   <Avatar name={item.inviter.display_name} url={item.inviter.avatar_url} size="sm" />
                   <span className="flex-1 min-w-0 truncate text-sm font-medium text-gray-900 dark:text-gray-50">{item.inviter.display_name}</span>
                   <button
-                    onClick={() => acceptIncoming.mutate(item.token)}
-                    disabled={acceptIncoming.isPending}
-                    className="px-3 py-1.5 bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shrink-0"
-                  >
-                    {t('friends.acceptInvite')}
-                  </button>
-                  <button
-                    onClick={() => dismissIncoming.mutate(item.token)}
+                    onClick={e => { e.preventDefault(); dismissIncoming.mutate([item.inviter.id]); }}
                     className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 shrink-0"
                     title={t('friends.dismissInvite')}
                   >
@@ -205,9 +205,27 @@ export default function Friends() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                </div>
+                  <input
+                    type="checkbox"
+                    checked={!uncheckedIncoming.includes(item.inviter.id)}
+                    onChange={() => setUnchecked(
+                      uncheckedIncoming.includes(item.inviter.id)
+                        ? uncheckedIncoming.filter(id => id !== item.inviter.id)
+                        : [...uncheckedIncoming, item.inviter.id]
+                    )}
+                    className="w-5 h-5 accent-emerald-500 shrink-0"
+                  />
+                </label>
               ))}
             </div>
+            <button
+              data-testid="incoming-connect"
+              onClick={() => acceptIncoming.mutate(checkedIncoming)}
+              disabled={acceptIncoming.isPending || checkedIncoming.length === 0}
+              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3 rounded-2xl font-semibold mb-4"
+            >
+              {t('friends.acceptInvite', { count: checkedIncoming.length })}
+            </button>
           </>
         )}
 
