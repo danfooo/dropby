@@ -231,7 +231,10 @@
     "linkCreatedDaysAgo": "för {{days}}d sedan",
     "linkCreatedHoursAgo": "för {{hours}}h sedan",
     "linkCreatedJustNow": "just nu",
-    "linkExpiryNote": "Länkar upphör efter 7 dagar."
+    "linkExpiryNote": "Länkar upphör efter 7 dagar.",
+    "waitingTitle": "Väntar på dig",
+    "acceptInvite": "Acceptera",
+    "dismissInvite": "Avfärda"
   },
   "invite": {
     "expiredTitle": "Inbjudan utgången",
@@ -267,7 +270,12 @@
     "rsvpGoing": "Jag kommer",
     "notePlaceholder": "Något de borde veta? (valfritt)",
     "noteDisclaimer": "{{name}} får ett meddelande, men kanske inte ser det direkt. Hör av dig direkt om du behöver koordinera.",
-    "addToCalendar": "Lägg till i kalender"
+    "addToCalendar": "Lägg till i kalender",
+    "confirmTitle": "{{name}} vill koppla ihop er",
+    "confirmDesc": "Ni ser båda när den andra har dörren öppen.",
+    "confirmAccept": "Acceptera",
+    "confirmClose": "Inte nu",
+    "confirmLater": "Du kan bestämma senare under Vänner."
   },
   "feedback": {
     "title": "Dela feedback",

@@ -57,8 +57,9 @@ test.describe('Generic friendship invite', () => {
       const inviteUrl = inviteData.url;
       expect(inviteUrl).toBeTruthy();
 
-      // Bob (registered, not yet friends with Alice) visits the invite link
+      // Bob (registered, not yet friends with Alice) visits the invite link and accepts
       await bobPage.goto(inviteUrl);
+      await bobPage.getByTestId('invite-accept').click();
       await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
 
       // Carol (new user) visits the invite URL first — the invite page stores the token in
@@ -127,7 +128,7 @@ test.describe('Door-open invite', () => {
     // Alice & Bob are friends; Carol is not Alice's friend
   });
 
-  test('Bob (friend) sees the open door; Carol (non-friend) gets auto-friended and sees the door', async ({ browser }) => {
+  test('Bob (friend) sees the open door; Carol (non-friend) accepts and then sees the door', async ({ browser }) => {
     const aliceCtx = await browser.newContext();
     const bobCtx = await browser.newContext();
     const carolCtx = await browser.newContext();
@@ -164,12 +165,14 @@ test.describe('Door-open invite', () => {
       // The door note is shown inside the "already friends" screen
       await expect(bobPage.getByText(doorNote, { exact: false })).toBeVisible();
 
-      // Carol (non-friend) visits the invite link — gets auto-friended and sees the door note
+      // Carol (non-friend) visits the invite link — accepts, then sees the door note
       await carolPage.goto(doorInviteUrl);
+      await expect(carolPage.getByTestId('invite-confirm')).toBeVisible({ timeout: 10_000 });
+      await carolPage.getByTestId('invite-accept').click();
       await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
       await expect(carolPage.getByTestId('invite-door-note')).toBeVisible();
 
-      // Carol is auto-added as a recipient — she sees Alice's door on her home feed
+      // Accepting a door link adds Carol as a recipient — she sees Alice's door on her home feed
       await carolPage.goto('/home');
       await carolPage.waitForLoadState('domcontentloaded');
       await expect(carolPage.getByTestId('friends-available')).toBeVisible({ timeout: 10_000 });

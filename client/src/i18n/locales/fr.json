@@ -231,7 +231,10 @@
     "linkCreatedDaysAgo": "il y a {{days}}j",
     "linkCreatedHoursAgo": "il y a {{hours}}h",
     "linkCreatedJustNow": "à l'instant",
-    "linkExpiryNote": "Les liens expirent après 7 jours."
+    "linkExpiryNote": "Les liens expirent après 7 jours.",
+    "waitingTitle": "En attente de toi",
+    "acceptInvite": "Accepter",
+    "dismissInvite": "Ignorer"
   },
   "invite": {
     "expiredTitle": "Invitation expirée",
@@ -267,7 +270,12 @@
     "rsvpGoing": "J'y vais",
     "notePlaceholder": "Quelque chose qu'ils devraient savoir ? (optionnel)",
     "noteDisclaimer": "{{name}} recevra une notification, mais ne la verra peut-être pas tout de suite. Contacte-le directement si tu dois coordonner.",
-    "addToCalendar": "Ajouter au calendrier"
+    "addToCalendar": "Ajouter au calendrier",
+    "confirmTitle": "{{name}} veut se connecter avec toi",
+    "confirmDesc": "Vous verrez tous les deux quand l'autre a sa porte ouverte.",
+    "confirmAccept": "Accepter",
+    "confirmClose": "Pas maintenant",
+    "confirmLater": "Tu peux décider plus tard dans Amis."
   },
   "feedback": {
     "title": "Partager un avis",

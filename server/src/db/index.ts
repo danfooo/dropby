@@ -92,6 +92,15 @@ db.exec(`
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
 
+  CREATE TABLE IF NOT EXISTS invite_views (
+    id TEXT PRIMARY KEY,
+    token TEXT NOT NULL REFERENCES invite_links(token) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    dismissed INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    UNIQUE(token, user_id)
+  );
+
   CREATE TABLE IF NOT EXISTS user_notes (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

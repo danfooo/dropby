@@ -293,8 +293,11 @@ test.describe('Friend-only invite does not attach session', () => {
       // Generate invite from the API (friend-only, no status_id)
       const inviteUrl = await generateInvite(alicePage);
 
-      // Bob visits the invite page — should see acceptance, but NOT the door note
+      // Bob visits the invite page — the friend-only link carries no door, before or after accepting
       await bobPage.goto(inviteUrl);
+      await expect(bobPage.getByTestId('invite-confirm')).toBeVisible({ timeout: 10_000 });
+      await expect(bobPage.getByTestId('invite-door-note')).not.toBeVisible();
+      await bobPage.getByTestId('invite-accept').click();
       await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
       await expect(bobPage.getByTestId('invite-door-note')).not.toBeVisible();
 

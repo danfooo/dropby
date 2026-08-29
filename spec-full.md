@@ -138,6 +138,20 @@ Persists the recipient selection across sessions. Written on door open and on do
 
 Invite links are the sole mechanism for forming friendships. They are multi-use — multiple people can accept the same link. Each tap on "Copy invite link" generates a fresh link. Revoked or expired links return appropriate errors.
 
+### Invite Views (Pending Invites)
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| token | string FK → invite_links.token | Cascades on link delete |
+| user_id | uuid FK → users | The person who opened the link |
+| dismissed | boolean | Default false; set when the recipient clears it from their Friends page |
+| created_at | unix timestamp | |
+| | | UNIQUE(token, user_id) |
+
+A row is written when a logged-in user opens a live invite link that isn't their own and isn't from an existing friend. It records an *offer*, not a connection — no friendship edge exists until the user accepts, and neither side is visible to the other in the meantime.
+
+The pending row is the acceptor's standing authorisation: once written, it can be accepted at any point, with no expiry of its own. Expiring and revoking the link only stop people who never opened it — "revoke" means "expire now", and neither retracts an invite already sitting in someone's Friends page. Re-opening a dismissed link sets `dismissed` back to false.
+
 ### User Notes (Saved)
 | Field | Type | Notes |
 |---|---|---|
@@ -441,6 +455,13 @@ Remove confirmation: "Remove [name] as a friend? This cannot be undone." — Con
 
 Empty state (no friends): invite link CTA + Add Friend CTA
 
+**Waiting for you section** (above friend list, only if non-empty)
+- Invites this user has opened but not yet accepted — one row per pending invite link
+- Each row: sender's avatar and name, "Accept" button, × to dismiss
+- Accept creates the friendship (same outcome as accepting on the invite page); dismiss clears the row without telling the sender
+- Dismissing does not touch the link: opening it again brings the row back
+- Title: "Waiting for you"
+
 **Pending invites section** (below friend list, only if non-empty)
 - Shows email addresses of pending email invites that haven't been accepted yet
 - Each row: email address, × to cancel (revokes the invite link)
@@ -468,9 +489,12 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 - Redirect to `/auth?redirect=/invite/:token`
 
 **Token valid, user logged in, not yet friends**
-- Auto-accepts: creates friendship
-- If inviter's door is still open: new friend is silently added as a recipient; success screen shows "You're now friends!" + host's open door card with "Going ✅" button
-- If inviter's door is closed: success screen shows "You and [name] are now friends on dropby" + "Go home" button
+- Nothing is created on open. A confirmation screen is shown: host avatar and name, "[name] wants to connect", "You'll both see when the other's door is open."
+- If the link is door-specific, the door card (note, location, or scheduled time) is shown on the confirmation screen too — the door is visible before accepting, but joining it still requires accepting
+- "Accept" → creates the friendship, then:
+  - If the link is door-specific and that door is still open: the new friend is added as a recipient; success screen shows "You're now friends!" + host's open door card with "Going ✅" button
+  - Otherwise: success screen shows "You and [name] are now friends on dropby" + "Go home" button
+- "Not now" → navigates to Friends, where the invite waits in the "Waiting for you" section. Nothing is created and the sender is never told the link was opened.
 
 **Token valid, user logged in, already friends**
 - No new friendship
@@ -480,9 +504,13 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 **Token valid, own link**
 - "That's your own link! Share it with friends to join dropby."
 
-**Token expired**
+**Token expired or revoked, viewer has no pending invite for it**
 - "This invite expired [relative time] ago" — relative time rounds down (e.g. 1h 45min → "1 hour ago")
 - "Go home" button
+- Logged-out visitors are redirected to `/auth?redirect=/invite/:token` first, so the expired state is only ever seen by a signed-in user
+
+**Token expired or revoked, viewer already has a pending invite for it**
+- The confirmation screen is shown as normal and can still be accepted — the pending invite outlives the link
 
 **Token not found / revoked**
 - "This invite link is invalid."
@@ -512,7 +540,7 @@ Shown when a non-logged-in user taps "Going ✅" on an open or scheduled door.
 - If localStorage contains a `dropby_guest_rsvp` matching the current status, the note edit field is shown instead of the Going form
 - Note update: `PATCH /api/going/guest/:signalId` with new note; host is notified; localStorage retains the signalId
 - On login or signup completion: `associatePendingGuest()` runs silently:
-  1. If `dropby_invite_token` is set: `POST /api/invites/:token/accept` (creates friendship)
+  1. If `dropby_invite_token` is set: `GET /api/invites/:token` — this records the invite as pending, it does not accept it. Logging in through a link never connects anyone on its own; the acceptance is always an explicit tap.
   2. If `dropby_guest_rsvp` is set: `POST /api/going/claim { signal_id }` (migrates guest signal to user account)
   3. Both keys are cleared from localStorage
 
@@ -668,6 +696,12 @@ Friendships are formed exclusively via invite links. There is no search, no dire
 
 Accepting a link never adds the *inviter* to a door the acceptor already has open — that door's recipients were chosen before the friendship existed.
 
+**Accepting is always explicit**
+
+Opening a link creates nothing. A logged-in recipient is shown a confirmation screen with Accept and "Not now"; deferring leaves the invite in the "Waiting for you" section of their Friends page, where it can be accepted or dismissed later. The sender receives no signal that a link was opened — only the `friend:joined` notification when it is actually accepted.
+
+The one exception is **signing up through a link**: entering a name, email and password in response to a specific invite is itself the acceptance, so the friendship is created at signup (see "New user signup via invite link" below). The confirmation screen exists for people who already have an account when a link reaches them.
+
 **Sending by email**
 - From the Add Friend modal on the Friends page
 - Generates a 30-day link with `invited_email` set
@@ -678,9 +712,10 @@ Accepting a link never adds the *inviter* to a door the acceptor already has ope
 
 | Recipient state | Host door | Outcome |
 |---|---|---|
-| Logged in, not yet friends | Open, link is door-specific (`status_id` set) | Friendship created; recipient silently added as a recipient of that door; success screen shows open door |
-| Logged in, not yet friends | Open, link is friend-only (no `status_id`) | Friendship created only; the recipient is **not** added to the open door and does not see it; success screen confirms connection |
-| Logged in, not yet friends | Closed | Friendship created; success screen confirms connection |
+| Logged in, not yet friends | Open, link is door-specific (`status_id` set) | Confirmation screen shows the door; on accept, friendship created and recipient added to that door; success screen shows open door |
+| Logged in, not yet friends | Open, link is friend-only (no `status_id`) | Confirmation screen; on accept, friendship created only — the recipient is **not** added to the open door and does not see it |
+| Logged in, not yet friends | Closed | Confirmation screen; on accept, friendship created |
+| Logged in, not yet friends, deferred earlier | Either | Pending row already exists; the invite is also acceptable from the Friends page, and stays acceptable after the link expires or is revoked |
 | Logged in, already friends | Open | No new friendship; shows open door card (visible only if they were already a recipient, or the link is door-specific) |
 | Logged in, already friends | Closed | No new friendship; "Go home" |
 | Logged in, own link | Either | No-op; friendly message |
@@ -695,7 +730,7 @@ The redirect destination must survive signup → email verification → login:
 2. Sign up; client sends `redirect_url=/invite/:token` alongside credentials
 3. Server embeds redirect in verification email link: `/verify-email?token=<token>&redirect=/invite/:token`
 4. User clicks link → `/verify-email` verifies and auto-logs in → navigates to `/invite/:token`
-5. Invite page auto-accepts and shows success state
+5. Friendship is created at signup; the invite page shows the "already friends" state
 
 ### Contextual Note Suggestions
 

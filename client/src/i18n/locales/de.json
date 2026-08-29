@@ -231,7 +231,10 @@
     "linkCreatedDaysAgo": "vor {{days}}T",
     "linkCreatedHoursAgo": "vor {{hours}}h",
     "linkCreatedJustNow": "gerade eben",
-    "linkExpiryNote": "Links laufen nach 7 Tagen ab."
+    "linkExpiryNote": "Links laufen nach 7 Tagen ab.",
+    "waitingTitle": "Wartet auf dich",
+    "acceptInvite": "Annehmen",
+    "dismissInvite": "Verwerfen"
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",
@@ -267,7 +270,12 @@
     "rsvpGoing": "Ich komme",
     "notePlaceholder": "Gibt es etwas, das sie wissen sollten? (optional)",
     "noteDisclaimer": "{{name}} wird benachrichtigt, sieht es aber vielleicht nicht sofort. Melde dich direkt, wenn du koordinieren musst.",
-    "addToCalendar": "Zum Kalender hinzufügen"
+    "addToCalendar": "Zum Kalender hinzufügen",
+    "confirmTitle": "{{name}} möchte sich mit dir verbinden",
+    "confirmDesc": "Ihr seht beide, wenn der andere die Tür offen hat.",
+    "confirmAccept": "Annehmen",
+    "confirmClose": "Jetzt nicht",
+    "confirmLater": "Du kannst später unter Freunde entscheiden."
   },
   "feedback": {
     "title": "Feedback teilen",

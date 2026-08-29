@@ -231,7 +231,10 @@
     "linkCreatedDaysAgo": "{{days}}d ago",
     "linkCreatedHoursAgo": "{{hours}}h ago",
     "linkCreatedJustNow": "just now",
-    "linkExpiryNote": "Links expire after 7 days."
+    "linkExpiryNote": "Links expire after 7 days.",
+    "waitingTitle": "Waiting for you",
+    "acceptInvite": "Accept",
+    "dismissInvite": "Dismiss"
   },
   "invite": {
     "expiredTitle": "Invite expired",
@@ -267,7 +270,12 @@
     "rsvpGoing": "Going",
     "notePlaceholder": "Anything they should know? (optional)",
     "noteDisclaimer": "{{name}} will be notified, but may not see this right away. Reach out separately if you need to coordinate.",
-    "addToCalendar": "Add to Calendar"
+    "addToCalendar": "Add to Calendar",
+    "confirmTitle": "{{name}} wants to connect",
+    "confirmDesc": "You'll both see when the other's door is open.",
+    "confirmAccept": "Accept",
+    "confirmClose": "Not now",
+    "confirmLater": "You can decide later in Friends."
   },
   "feedback": {
     "title": "Share feedback",

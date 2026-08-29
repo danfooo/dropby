@@ -57,6 +57,7 @@ export default function Friends() {
   const { data: friends = [], isLoading } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
   const { data: pendingInvites = [] } = useQuery({ queryKey: ['pending-invites'], queryFn: invitesApi.listPending });
   const { data: openLinks = [] } = useQuery({ queryKey: ['open-links'], queryFn: invitesApi.listOpenLinks });
+  const { data: incoming = [] } = useQuery({ queryKey: ['incoming-invites'], queryFn: invitesApi.listIncoming });
 
   const removeFriend = useMutation({
     mutationFn: (id: string) => friendsApi.remove(id),
@@ -91,6 +92,20 @@ export default function Friends() {
   const cancelInvite = useMutation({
     mutationFn: (token: string) => invitesApi.revoke(token),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['pending-invites'] }),
+  });
+
+  const acceptIncoming = useMutation({
+    mutationFn: (token: string) => invitesApi.accept(token),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['incoming-invites'] });
+      qc.invalidateQueries({ queryKey: ['friends'] });
+      qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    },
+  });
+
+  const dismissIncoming = useMutation({
+    mutationFn: (token: string) => invitesApi.dismiss(token),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['incoming-invites'] }),
   });
 
   const revokeLink = useMutation({
@@ -163,6 +178,39 @@ export default function Friends() {
       </div>
 
       <div className="px-4 pt-4">
+        {/* Invites opened but not accepted — no connection exists until one is accepted */}
+        {(incoming as any[]).length > 0 && (
+          <>
+            <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+              {t('friends.waitingTitle')}
+            </h2>
+            <div data-testid="incoming-invites" className="bg-white dark:bg-gray-900 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-800 mb-4">
+              {(incoming as any[]).map((item: any, i: number) => (
+                <div key={item.token} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
+                  <Avatar name={item.inviter.display_name} url={item.inviter.avatar_url} size="sm" />
+                  <span className="flex-1 min-w-0 truncate text-sm font-medium text-gray-900 dark:text-gray-50">{item.inviter.display_name}</span>
+                  <button
+                    onClick={() => acceptIncoming.mutate(item.token)}
+                    disabled={acceptIncoming.isPending}
+                    className="px-3 py-1.5 bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shrink-0"
+                  >
+                    {t('friends.acceptInvite')}
+                  </button>
+                  <button
+                    onClick={() => dismissIncoming.mutate(item.token)}
+                    className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 shrink-0"
+                    title={t('friends.dismissInvite')}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         {(friends as any[]).length === 0 ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-4">👋</p>

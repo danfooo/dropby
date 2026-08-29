@@ -30,6 +30,7 @@ export default function Invite() {
   const [inviteBackCopied, setInviteBackCopied] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [acceptedName, setAcceptedName] = useState('');
+  const [accepting, setAccepting] = useState(false);
   const deniedNotif = useDeniedNotifModal();
   const [showGoingForm, setShowGoingForm] = useState(false);
   const [guestRsvp, setGuestRsvp] = useState<{ signalId: string } | null>(null);
@@ -69,26 +70,24 @@ export default function Invite() {
     }
   }, [token, info]);
 
-  // Auto-accept for logged-in users
+  // Nothing is accepted on the user's behalf: own links and existing friendships resolve
+  // straight away, but a new connection always waits for an explicit tap.
   useEffect(() => {
     if (!info || !user || accepted) return;
-
-    if (info.isSelf) {
-      setAccepted(true);
-      return;
-    }
-
-    if (!info.alreadyFriends) {
-      invitesApi.accept(token!)
-        .then(res => {
-          setAccepted(true);
-          setAcceptedName(res.inviterName || info.inviter?.display_name || '');
-        })
-        .catch(() => setError('INVALID'));
-    } else {
-      setAccepted(true);
-    }
+    if (info.isSelf || info.alreadyFriends) setAccepted(true);
   }, [info, user]);
+
+  const handleAccept = () => {
+    if (accepting) return;
+    setAccepting(true);
+    invitesApi.accept(token!)
+      .then(res => {
+        setAccepted(true);
+        setAcceptedName(res.inviterName || info.inviter?.display_name || '');
+      })
+      .catch(() => setError('INVALID'))
+      .finally(() => setAccepting(false));
+  };
 
   // After friendship forms, nudge the user to enable notifications if they've denied them
   useEffect(() => {
@@ -232,6 +231,67 @@ export default function Invite() {
           {info.status ? t('invite.doorOpenCta') : t('invite.hurray')}
         </Link>
         <DeniedNotifModal open={deniedNotif.open} onDismiss={deniedNotif.dismiss} onSnooze={deniedNotif.snooze} onOpenSettings={deniedNotif.goToSettings} />
+      </div>
+    );
+  }
+
+  // Logged in, not connected yet: ask before creating anything.
+  // Closing leaves it pending in Friends; the sender is never told it was opened.
+  if (user && !accepted) {
+    const isScheduled = info.status?.starts_at && info.status.starts_at > Math.floor(Date.now() / 1000);
+    return (
+      <div data-testid="invite-confirm" className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-center px-6 py-10">
+        <div className="w-full max-w-sm text-center">
+          <Avatar name={info.inviter.display_name} url={info.inviter.avatar_url} size="lg" className="mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-50 mb-2">
+            {t('invite.confirmTitle', { name: info.inviter.display_name })}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">{t('invite.confirmDesc')}</p>
+
+          {info.status && (
+            <div className="bg-emerald-50 dark:bg-emerald-950 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 mb-6 text-left">
+              <div className="flex items-center gap-2">
+                {isScheduled ? (
+                  <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+                    🕐 {formatScheduledTime(info.status.starts_at, info.status.ends_at)}
+                  </span>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                      {t('invite.doorOpen', { name: info.inviter.display_name })}
+                    </span>
+                  </>
+                )}
+              </div>
+              {info.status.note && (
+                <p data-testid="invite-door-note" className="text-sm text-emerald-700 dark:text-emerald-400 mt-1">{info.status.note}</p>
+              )}
+              {info.status.location && (
+                <p className="text-sm text-emerald-600 dark:text-emerald-500 mt-0.5">
+                  📍 <LinkifiedText text={info.status.location} />
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            data-testid="invite-accept"
+            onClick={handleAccept}
+            disabled={accepting}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-4 rounded-2xl font-semibold text-base mb-3"
+          >
+            {t('invite.confirmAccept')}
+          </button>
+          <button
+            data-testid="invite-close"
+            onClick={() => navigate('/friends')}
+            className="w-full py-3 text-gray-500 dark:text-gray-400 font-medium"
+          >
+            {t('invite.confirmClose')}
+          </button>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{t('invite.confirmLater')}</p>
+        </div>
       </div>
     );
   }

@@ -231,7 +231,10 @@
     "linkCreatedDaysAgo": "{{days}}天前",
     "linkCreatedHoursAgo": "{{hours}}小时前",
     "linkCreatedJustNow": "刚刚",
-    "linkExpiryNote": "链接7天后失效。"
+    "linkExpiryNote": "链接7天后失效。",
+    "waitingTitle": "等你决定",
+    "acceptInvite": "接受",
+    "dismissInvite": "忽略"
   },
   "invite": {
     "expiredTitle": "邀请已过期",
@@ -267,7 +270,12 @@
     "rsvpGoing": "我会去",
     "notePlaceholder": "有什么想让他们知道的？（可选）",
     "noteDisclaimer": "{{name}} 会收到通知，但可能不会立刻看到。如需协调，请另行联系。",
-    "addToCalendar": "添加到日历"
+    "addToCalendar": "添加到日历",
+    "confirmTitle": "{{name}} 想和你连接",
+    "confirmDesc": "你们都能看到对方什么时候开着门。",
+    "confirmAccept": "接受",
+    "confirmClose": "暂不",
+    "confirmLater": "你可以稍后在朋友里决定。"
   },
   "feedback": {
     "title": "分享反馈",

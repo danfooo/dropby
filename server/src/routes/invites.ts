@@ -14,11 +14,38 @@ function generateToken(): string {
   return randomUUID().replace(/-/g, '');
 }
 
+// A pending invite: someone opened a link while it was live but hasn't accepted yet.
+// No friendship edge exists until they do — nothing is visible in either direction.
+function recordInviteView(token: unknown, userId: string): void {
+  if (typeof token !== 'string' || !token) return;
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const invite = db.prepare('SELECT created_by FROM invite_links WHERE token = ? AND revoked = 0 AND expires_at > ?').get(token, nowUnix) as any;
+  if (!invite || invite.created_by === userId) return;
+  if (areFriends(userId, invite.created_by)) return;
+  // Re-opening a link the user dismissed brings the decision back.
+  db.prepare(`
+    INSERT INTO invite_views (id, token, user_id) VALUES (?, ?, ?)
+    ON CONFLICT(token, user_id) DO UPDATE SET dismissed = 0
+  `).run(randomUUID(), token, userId);
+}
+
+function inviteIsOpen(invite: { revoked: number; expires_at: number }, nowUnix: number): boolean {
+  return !invite.revoked && invite.expires_at > nowUnix;
+}
+
+function hasInviteView(token: string, userId: string): boolean {
+  return !!db.prepare('SELECT id FROM invite_views WHERE token = ? AND user_id = ?').get(token, userId);
+}
+
 // Shared logic: create friendship from an invite token, used by accept endpoint and email verification
 export function acceptInviteToken(token: string, acceptorId: string): { ok: boolean; inviterName?: string } {
   const nowUnix = Math.floor(Date.now() / 1000);
-  const invite = db.prepare('SELECT * FROM invite_links WHERE token = ? AND revoked = 0 AND expires_at > ?').get(token, nowUnix) as any;
+  const invite = db.prepare('SELECT * FROM invite_links WHERE token = ?').get(token) as any;
   if (!invite) return { ok: false };
+  // Revoking is just "expire now": both only stop people who never opened the link.
+  // Anyone who opened it while it was live holds a pending invite, and that pending
+  // invite is the authorisation — "accept later" never silently dies.
+  if (!inviteIsOpen(invite, nowUnix) && !hasInviteView(token, acceptorId)) return { ok: false };
 
   const inviterId = invite.created_by;
   if (acceptorId === inviterId) return { ok: true };
@@ -92,6 +119,35 @@ router.get('/pending', requireAuth, (req: AuthRequest, res) => {
   res.json(pending);
 });
 
+// GET /api/invites/incoming — invites this user opened but hasn't accepted yet
+router.get('/incoming', requireAuth, (req: AuthRequest, res) => {
+  const rows = db.prepare(`
+    SELECT v.token, v.created_at, u.id AS inviter_id, u.display_name, u.avatar_url
+    FROM invite_views v
+    JOIN invite_links l ON l.token = v.token
+    JOIN users u ON u.id = l.created_by
+    WHERE v.user_id = ? AND v.dismissed = 0
+      AND NOT EXISTS (
+        SELECT 1 FROM friendships f
+        WHERE (f.user_a_id = v.user_id AND f.user_b_id = l.created_by)
+           OR (f.user_a_id = l.created_by AND f.user_b_id = v.user_id)
+      )
+    ORDER BY v.created_at DESC
+  `).all(req.userId) as Array<{ token: string; created_at: number; inviter_id: string; display_name: string; avatar_url: string | null }>;
+  res.json(rows.map(r => ({
+    token: r.token,
+    created_at: r.created_at,
+    inviter: { id: r.inviter_id, display_name: r.display_name, avatar_url: r.avatar_url },
+  })));
+});
+
+// POST /api/invites/:token/dismiss — clear a pending invite without accepting it.
+// The link itself stays live: opening it again brings the decision back.
+router.post('/:token/dismiss', requireAuth, (req: AuthRequest, res) => {
+  db.prepare('UPDATE invite_views SET dismissed = 1 WHERE token = ? AND user_id = ?').run(req.params.token, req.userId);
+  res.json({ ok: true });
+});
+
 function formatIcsDate(date: Date): string {
   return date.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
 }
@@ -145,15 +201,17 @@ router.get('/:token/calendar.ics', optionalAuth, (req: AuthRequest, res) => {
 
 // GET /api/invites/:token — get invite info (no auth required)
 router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
-  const { token } = req.params;
+  const { token } = req.params as { token: string };
   const nowUnix = Math.floor(Date.now() / 1000);
 
   const invite = db.prepare('SELECT * FROM invite_links WHERE token = ?').get(token) as any;
   if (!invite) return res.status(404).json({ error: 'INVALID_TOKEN' });
 
-  if (invite.revoked) return res.status(410).json({ error: 'REVOKED' });
+  const pendingForViewer = !!(req.userId && hasInviteView(token, req.userId));
 
-  if (invite.expires_at < nowUnix) {
+  if (invite.revoked && !pendingForViewer) return res.status(410).json({ error: 'REVOKED' });
+
+  if (invite.expires_at < nowUnix && !pendingForViewer) {
     const agoSecs = nowUnix - invite.expires_at;
     const expiredInviter = db.prepare('SELECT id, display_name, avatar_url FROM users WHERE id = ?').get(invite.created_by) as any;
     return res.status(410).json({ error: 'EXPIRED', expired_ago_seconds: agoSecs, inviter: expiredInviter || null });
@@ -181,6 +239,8 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
     log('invite.viewed', req.userId ?? null, { has_active_door: !!status });
   }
 
+  if (req.userId && !isSelf && !alreadyFriends) recordInviteView(token, req.userId);
+
   res.json({ inviter, status, alreadyFriends, isSelf });
 });
 
@@ -190,8 +250,11 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
   const nowUnix = Math.floor(Date.now() / 1000);
 
-  const invite = db.prepare('SELECT * FROM invite_links WHERE token = ? AND revoked = 0 AND expires_at > ?').get(token, nowUnix) as any;
+  const invite = db.prepare('SELECT * FROM invite_links WHERE token = ?').get(token) as any;
   if (!invite) return res.status(404).json({ error: 'Invalid or expired invite' });
+  if (!inviteIsOpen(invite, nowUnix) && !hasInviteView(token, userId)) {
+    return res.status(404).json({ error: 'Invalid or expired invite' });
+  }
 
   const inviterId = invite.created_by;
 

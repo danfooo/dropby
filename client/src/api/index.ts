@@ -96,6 +96,8 @@ export const invitesApi = {
   revoke: (token: string) => api.post(`/invites/${token}/revoke`).then(r => r.data),
   sendByEmail: (email: string) => api.post('/invites/email', { email }).then(r => r.data),
   listPending: () => api.get('/invites/pending').then(r => r.data),
+  listIncoming: () => api.get('/invites/incoming').then(r => r.data),
+  dismiss: (token: string) => api.post(`/invites/${token}/dismiss`).then(r => r.data),
   listOpenLinks: () => api.get('/invites/open-links').then(r => r.data),
 };
 
@@ -114,7 +116,9 @@ export const goingApi = {
 export async function associatePendingGuest() {
   const inviteToken = localStorage.getItem('dropby_invite_token');
   if (inviteToken) {
-    try { await invitesApi.accept(inviteToken); } catch {}
+    // Fetching the invite records it as pending — accepting is always an explicit choice,
+    // so logging in through a link never connects you to anyone on its own.
+    try { await invitesApi.get(inviteToken); } catch {}
     localStorage.removeItem('dropby_invite_token');
   }
   const raw = localStorage.getItem('dropby_guest_rsvp');

@@ -231,7 +231,10 @@
     "linkCreatedDaysAgo": "{{days}}g fa",
     "linkCreatedHoursAgo": "{{hours}}h fa",
     "linkCreatedJustNow": "poco fa",
-    "linkExpiryNote": "I link scadono dopo 7 giorni."
+    "linkExpiryNote": "I link scadono dopo 7 giorni.",
+    "waitingTitle": "In attesa di te",
+    "acceptInvite": "Accetta",
+    "dismissInvite": "Ignora"
   },
   "invite": {
     "expiredTitle": "Invito scaduto",
@@ -267,7 +270,12 @@
     "rsvpGoing": "Arrivo",
     "notePlaceholder": "Qualcosa che devono sapere? (opzionale)",
     "noteDisclaimer": "{{name}} riceverà una notifica, ma potrebbe non vederla subito. Contattalo direttamente se hai bisogno di coordinare.",
-    "addToCalendar": "Aggiungi al calendario"
+    "addToCalendar": "Aggiungi al calendario",
+    "confirmTitle": "{{name}} vuole connettersi con te",
+    "confirmDesc": "Vedrete entrambi quando l'altro ha la porta aperta.",
+    "confirmAccept": "Accetta",
+    "confirmClose": "Non ora",
+    "confirmLater": "Puoi decidere più tardi in Amici."
   },
   "feedback": {
     "title": "Condividi feedback",

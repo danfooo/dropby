@@ -26,6 +26,19 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] **Android App Links not configured** — unlike iOS, `AndroidManifest.xml` has no `intent-filter` for `dropby.cc`, so invite / verify-email / reset-password links open in the browser rather than the app. Independent of the credential sharing above, which does not need an intent filter.
 - [ ] **Tab bar safe area flicker on first load** — `--safe-area-inset-bottom` is injected by Capacitor's `SystemBars` plugin via JS after page render. There may be a brief flash where the tab bar sits too low before the variable is set. If seen, fix by hardcoding a reasonable CSS fallback (e.g. `var(--safe-area-inset-bottom, 24px)`) or by deferring first paint until insets are ready. See `client/src/index.css` `.safe-bottom` and `android/app/src/main/java/cc/dropby/app/MainActivity.java`.
 
+## Named group invite links (in design)
+One link, dropped in a group chat, that connects everyone who opens it to everyone else — not just to the link's creator. Decided so far:
+
+- The **group is the durable object; links are disposable children of it**. Link = group fragments the network every time a link is re-shared (expired link → someone mints a new one → a second, disconnected half-network). Minting a second link must attach to the existing group instead.
+- Group connections are **not** `friendships` rows — they are derived from membership (a SQL view unioning `friendships` with same-group pairs), so leaving a group vacates those edges with nothing to clean up. `status.ts` queries `friendships` directly in five places; those become the view.
+- The group is named by its creator; the name is in the link path (slugified, truncated, random suffix) and in the OG share preview. Server-rendered per-token OG tags are new work — nothing renders them today. The name is user-typed and becomes a title card in WhatsApp, so it should pass through the moderation service.
+- Links expire faster than regular invites (~24h). Expiry only closes joining; the group and its connections persist.
+- Any member can mint a link; leaving revokes only your own. Creator can revoke any link in their group, remove members (which revokes theirs), delete the group, and there is a member cap. Optional creator toggle: "only I can share".
+- Joining shows a full member list first and requires an explicit accept (the confirm screen shipped for regular links is the precedent).
+- "Move this person to my own friends" is **deferred**: v1's equivalent is exchanging regular invite links, which already creates a real friendship that survives leaving the group. A proper version needs the other side to confirm — the first pending-friendship state in the model.
+
+Still open: whether a group can be selected as a door recipient in one tap (and whether that set is a snapshot or stays dynamic as people join); what these are called in the UI ("group" is honest but carries group-chat baggage); whether the creator can rename after sharing (proposed: yes, with a frozen URL slug).
+
 ## Maybe
 - [ ] New user with no friends: "Open Now" gives no hint that a share link is coming. Needs a solution that doesn't introduce the friends concept prematurely — the right fix probably lives earlier in the onboarding flow, not on the home screen.
 - [ ] SMS delivery for Add Friend: currently logs to console, only email delivery is implemented
