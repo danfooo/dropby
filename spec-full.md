@@ -31,6 +31,7 @@ dropby is a presence signal app. One tap tells your friends you're open to a spo
 | locale | string nullable | IETF language tag (e.g. `en-US`, `de`) sent by client at signup; used to localise transactional emails |
 | timezone | string nullable | IANA timezone string e.g. `Europe/London`; sent by client on every authenticated request via `x-timezone` header; stored and updated automatically if the value changes |
 | auto_nudge_enabled | boolean | Default true; controls the repeat-behaviour auto-nudge |
+| notif_friend_suggestions | boolean | Default true; controls the "people you may know" push. Turning it off silences the push only — suggestions still appear in the app |
 | avatar_seed | integer | Default 0; legacy field for seeded DiceBear avatar (superseded by avatar_url) |
 | email_verified | boolean | Default false; must be true before password login is allowed |
 | email_verification_token | string nullable | Cleared after successful verification |
@@ -138,19 +139,50 @@ Persists the recipient selection across sessions. Written on door open and on do
 
 Invite links are the sole mechanism for forming friendships. They are multi-use — multiple people can accept the same link. Each tap on "Copy invite link" generates a fresh link. Revoked or expired links return appropriate errors.
 
-### Invite Views (Pending Invites)
+### Pending Invites
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| token | string FK → invite_links.token | Cascades on link delete |
-| user_id | uuid FK → users | The person who opened the link |
+| from_user_id | uuid FK → users | The person who wants to connect |
+| to_user_id | uuid FK → users | The person who has not answered yet |
+| source_token | string FK → invite_links.token nullable | The link this came through; drives door access on accept |
 | dismissed | boolean | Default false; set when the recipient clears it from their Friends page |
+| created_at | unix timestamp | |
+| | | UNIQUE(from_user_id, to_user_id) |
+
+A pending invite records one person's intent to connect. It is an *offer*, not a connection: no friendship edge exists until the other side answers, so neither is visible to the other in the meantime, and the sender is never told whether it was seen.
+
+Two ways one is created:
+- **Opening a link.** A logged-in user opens a live link that isn't their own and isn't from an existing friend → a pending invite from the link's creator to the opener. Generating a link is a blanket standing intent toward whoever opens it, which is why the opener can accept immediately.
+- **Picking someone from a link.** A user selects another person who opened the same link → a pending invite from the picker to the picked.
+
+**Mutual intent connects immediately.** If a pending invite already exists in the opposite direction, recording the second one creates the friendship instead and both rows are removed. Order does not matter, and neither side sees an accept step if both acted independently.
+
+A pending invite is the sender's standing authorisation and has no expiry of its own. Expiring or revoking the link only stops people who have not opened it yet — "revoke" means "expire now", and neither retracts an invite already waiting on someone's Friends page. Re-opening a dismissed link sets `dismissed` back to false.
+
+### Link Participants
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| token | string FK → invite_links.token | The link that was opened |
+| user_id | uuid FK → users | |
 | created_at | unix timestamp | |
 | | | UNIQUE(token, user_id) |
 
-A row is written when a logged-in user opens a live invite link that isn't their own and isn't from an existing friend. It records an *offer*, not a connection — no friendship edge exists until the user accepts, and neither side is visible to the other in the meantime.
+Written whenever a logged-in user opens an invite link that is not their own. Two people are **candidates** for each other because they share a token — an undirected fact about the pair. Nothing has been sent by anyone, and no directed state exists until someone picks the other.
 
-The pending row is the acceptor's standing authorisation: once written, it can be accepted at any point, with no expiry of its own. Expiring and revoking the link only stop people who never opened it — "revoke" means "expire now", and neither retracts an invite already sitting in someone's Friends page. Re-opening a dismissed link sets `dismissed` back to false.
+**Retained after the link expires or is revoked.** Expiry closes joining; it does not delete the record, because candidacy is what powers connection suggestions (see "Connection Suggestions"). This is a durable record of who opened which link alongside whom, disclosed at signup and in the Privacy Policy, and deleted with the account.
+
+### Queued Notifications
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid FK → users | Who will receive the push |
+| type | string | `friend_joined` or `friend_suggestion` |
+| subject_name | string | Display name captured at queue time |
+| created_at | unix timestamp | |
+
+Both connection-related pushes are coalesced rather than sent per event: several people accepting at once, or several people opening the same link within a minute, would otherwise produce a burst of near-identical notifications. Rows are flushed by a per-minute cron, grouped by `(user_id, type)`, and one push is sent per group. Delivery is therefore delayed by up to 60 seconds — acceptable for these two types, and never used for door-open pushes, which stay immediate.
 
 ### User Notes (Saved)
 | Field | Type | Notes |
@@ -241,6 +273,7 @@ Shown to unauthenticated users visiting the root.
 
 - Login / Sign up tabs (defaults to Login; switches to Sign Up automatically when arriving via an invite link)
 - **Invite-only signup gate**: signup requires a valid invite token (from an existing user's invite link). The token is read from the redirect URL (`?redirect=/invite/:token`) or from `localStorage` (set when visiting `/invite/:token`). All signup paths (email/password, Google, Apple) enforce this server-side — `INVITE_REQUIRED` error if missing or invalid.
+- **Consent notice**: shown directly above the "Create account" button on the Sign Up tab, and above the Google and Apple buttons, in small muted text: "By creating an account you agree to the Privacy Policy. dropby records which invite links you open so it can suggest people you may know." "Privacy Policy" links to `/privacy`. It is a notice, not a checkbox — the account cannot be created without passing it.
 - **Waitlist** (no invite token): the Sign Up tab shows a waitlist form instead of the signup fields:
   - Title: "dropby is invite-only right now"
   - Subtitle: "Leave your email and we'll let you know when there's room at the door."
@@ -456,8 +489,9 @@ Remove confirmation: "Remove [name] as a friend? This cannot be undone." — Con
 Empty state (no friends): invite link CTA + Add Friend CTA
 
 **Waiting for you section** (above friend list, only if non-empty)
-- Invites this user has opened but not yet accepted — one row per pending invite link
-- Each row: sender's avatar and name, "Accept" button, × to dismiss
+- Everyone who wants to connect with this user — one row per pending invite, whether it came from opening their link or from being picked off a link they both opened
+- Each row: sender's avatar and name, a checkbox (pre-checked), and × to dismiss that one
+- A single "Connect" button below the list accepts every checked row at once
 - Accept creates the friendship (same outcome as accepting on the invite page); dismiss clears the row without telling the sender
 - Dismissing does not touch the link: opening it again brings the row back
 - Title: "Waiting for you"
@@ -491,13 +525,17 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 **Token valid, user logged in, not yet friends**
 - Nothing is created on open. A confirmation screen is shown: host avatar and name, "[name] wants to connect", "You'll both see when the other's door is open."
 - If the link is door-specific, the door card (note, location, or scheduled time) is shown on the confirmation screen too — the door is visible before accepting, but joining it still requires accepting
-- "Accept" → creates the friendship, then:
+- **Others who opened this link** are listed below the host, if any: avatar, name, and a checkbox, **all pre-checked**. The list excludes the viewer, the host, and anyone they are already friends with. Header: "Also here — connect with everyone in one go."
+- The single Accept action covers the host and every checked person; unchecking is how you connect with fewer. Button reads "Accept" alone, or "Connect with [n] people" when the list is non-empty.
+- "Accept" → connects with the host, records intent toward each checked person (connecting immediately with any who already picked the viewer), then:
   - If the link is door-specific and that door is still open: the new friend is added as a recipient; success screen shows "You're now friends!" + host's open door card with "Going ✅" button
   - Otherwise: success screen shows "You and [name] are now friends on dropby" + "Go home" button
 - "Not now" → navigates to Friends, where the invite waits in the "Waiting for you" section. Nothing is created and the sender is never told the link was opened.
+- Opening the link records the viewer in `link_participants` regardless of what they do next — they become a candidate for everyone else on the link, and everyone already on it becomes a candidate for them. This is disclosed at signup and in the Privacy Policy.
 
 **Token valid, user logged in, already friends**
-- No new friendship
+- No new friendship with the host, but the "others who opened this link" list is still shown with its own Connect action, so a re-opened link is a way to catch late joiners
+- Same for the viewer's own link: the host sees who has opened it and can connect with them from here
 - If host's door is open: show the open door card
 - If host's door is closed: show "You're already friends" + "Go home"
 
@@ -578,6 +616,13 @@ Accessible via the back-arrow header of Home.
 **Notifications link**
 - "Notifications →" row links to `/notifications` sub-page
 
+### Privacy Policy Page (`/privacy`)
+
+Static page, reachable without auth, linked from the signup consent notice and the About page. It lists each category of data collected, why, and how long it is kept. Two entries relate to connections:
+
+- **Friend connections** — the friendship rows themselves, deleted if either person removes the other or deletes their account.
+- **Invite link participation** — which invite links you opened and who else opened them. Used to suggest people you may know, and to let everyone who opened one link connect without inviting each other one by one. Kept after the link expires, because that is what the suggestions are built on. Deleted when you delete your account. Suggestion notifications can be turned off in Notifications; the underlying record is part of how connections work and is not separately opt-out.
+
 ### Notifications Page (`/notifications`)
 
 **Reminders section**
@@ -596,6 +641,12 @@ Accessible via the back-arrow header of Home.
 **Auto-nudge toggle**
 - "Remind me based on previous times"
 - On by default; toggle persisted via `PUT /api/auth/me { auto_nudge_enabled }`
+
+**Connection suggestions toggle**
+- "People you may know"
+- Description: "Get notified when someone opens an invite link you also opened."
+- On by default; persisted via `PUT /api/auth/me { notif_friend_suggestions }`
+- Off silences the push only — suggestions still appear on the invite page
 
 **Session reminders**
 - Two dropdown selects: "First reminder" and "Second reminder"
@@ -696,6 +747,22 @@ Friendships are formed exclusively via invite links. There is no search, no dire
 
 Accepting a link never adds the *inviter* to a door the acceptor already has open — that door's recipients were chosen before the friendship existed.
 
+**Candidacy — people who opened the same link**
+
+Opening an invite link records the opener in `link_participants`. Everyone on the same token is a **candidate** for everyone else: an undirected fact about the pair, created by nothing more than both having opened the link. Candidacy is not a connection, is never visible on the Home screen, and grants nothing — it only makes two people offerable to each other.
+
+This is what lets one link connect a whole group without n² invites. Everyone who opens it sees everyone else who already has, pre-checked, and connects with the lot in one action. Later openers see the people who came before them and can do the same, so a link shared in a group chat over an afternoon still ends with everyone connected.
+
+Candidacy survives the link. Expiry and revocation stop new people joining and stop the candidate list being readable through that link; they do not delete `link_participants`, because it also powers connection suggestions.
+
+**Connection Suggestions**
+
+The platform may suggest people to each other based on shared link participation. Currently implemented: first degree only — people who opened a link you also opened, surfaced on the invite page and as a coalesced push (opt out with `notif_friend_suggestions`; the in-app list is unaffected).
+
+Two rules govern any future expansion:
+- **Relevance is inversely weighted by link size.** A five-person link is strong evidence people know each other; a forty-person link is nearly none.
+- **A suggestion ships only when its reason renders as one honest phrase.** First degree has one ("opened the same link as you"). Anything that cannot be explained to the person seeing it is the social-network surface dropby is not, and does not ship.
+
 **Accepting is always explicit**
 
 Opening a link creates nothing. A logged-in recipient is shown a confirmation screen with Accept and "Not now"; deferring leaves the invite in the "Waiting for you" section of their Friends page, where it can be accepted or dismissed later. The sender receives no signal that a link was opened — only the `friend:joined` notification when it is actually accepted.
@@ -762,7 +829,8 @@ Sent via FCM (Android) and APNs (iOS).
 | Going signal or note update | Door opener | "[Name] is on their way" / note as body if provided | — |
 | 10 min before close | Door opener | "Your door closes in 10 minutes" | "Keep open", "Close now" |
 | Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Hope it was a good one. Open again?" | — |
-| Friend accepted invite | Inviter | "[Name] just joined your dropby!" | — |
+| Friend accepted invite | Inviter | One: "[Name] just joined your dropby!" · Two: "[Name] and [Name] just joined your dropby!" · Three or more: "[Name] and [n] others just joined your dropby!" | — |
+| Connection suggestion | Everyone already on a link, when someone new opens it (if `notif_friend_suggestions` enabled) | One: "[Name] opened the same invite link as you" · Two or more: "[Name] and [n] others opened the same invite link as you" | — |
 | Nudge reminder | User themselves | "Hey, got a free [day]? Open your door" | "Open now" |
 | Auto-nudge | User themselves | "Open your door again? Change nudge timing anytime in Profile." | "Open now" |
 | Going reminder (primary) | RSVP'd user — day-before window | "[Host] is opening their door tomorrow at [time]" | — |
@@ -778,7 +846,9 @@ Muting user A suppresses:
 - A being notified when the muting user opens their door (A is unchecked by default)
 - The muting user receiving notifications when A opens their door
 
-**Quiet hours:** "Friend opens door" pushes are not sent between 22:00–08:00 in the recipient's local time (based on their stored `timezone`, falling back to UTC). The door-open event itself, and the Home screen's real-time SSE update, are unaffected — only the push is skipped, so the recipient sees it next time they open the app.
+**Coalescing:** "Friend accepted invite" and "Connection suggestion" pushes are queued in `queued_notifications` and flushed by a per-minute cron, one push per user per type. A burst — five people accepting at once, or a group chat opening the same link within a minute — arrives as one notification naming the first person and counting the rest. Names are captured at queue time, so a person who is renamed or deletes their account between queue and flush still reads correctly. No other notification type is queued.
+
+**Quiet hours:** "Friend opens door" and "Connection suggestion" pushes are not sent between 22:00–08:00 in the recipient's local time (based on their stored `timezone`, falling back to UTC). The door-open event itself, and the Home screen's real-time SSE update, are unaffected — only the push is skipped, so the recipient sees it next time they open the app.
 
 **Once-per-day cap:** For the `default` notification preference, a recipient receives at most one "door opened" push per calendar day per host, in the recipient's local timezone. The `all` preference bypasses this cap. Brief door openings that close within 2 minutes never trigger a push regardless (the `notify_at` fires 2 minutes after creation and the cron excludes statuses with `closed_at` set), so only genuine openings count against the daily cap. Custom-set nudge schedules are unaffected by this cap.
 
