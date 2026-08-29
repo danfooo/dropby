@@ -27,17 +27,21 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] **Tab bar safe area flicker on first load** — `--safe-area-inset-bottom` is injected by Capacitor's `SystemBars` plugin via JS after page render. There may be a brief flash where the tab bar sits too low before the variable is set. If seen, fix by hardcoding a reasonable CSS fallback (e.g. `var(--safe-area-inset-bottom, 24px)`) or by deferring first paint until insets are ready. See `client/src/index.css` `.safe-bottom` and `android/app/src/main/java/cc/dropby/app/MainActivity.java`.
 
 ## Named group invite links (in design)
-One link, dropped in a group chat, that connects everyone who opens it to everyone else — not just to the link's creator. Decided so far:
+One link, dropped in a group chat, that lets everyone who opens it connect to everyone else — so n people don't need n² invites. Current design:
 
-- The **group is the durable object; links are disposable children of it**. Link = group fragments the network every time a link is re-shared (expired link → someone mints a new one → a second, disconnected half-network). Minting a second link must attach to the existing group instead.
-- Group connections are **not** `friendships` rows — they are derived from membership (a SQL view unioning `friendships` with same-group pairs), so leaving a group vacates those edges with nothing to clean up. `status.ts` queries `friendships` directly in five places; those become the view.
-- The group is named by its creator; the name is in the link path (slugified, truncated, random suffix) and in the OG share preview. Server-rendered per-token OG tags are new work — nothing renders them today. The name is user-typed and becomes a title card in WhatsApp, so it should pass through the moderation service.
-- Links expire faster than regular invites (~24h). Expiry only closes joining; the group and its connections persist.
-- Any member can mint a link; leaving revokes only your own. Creator can revoke any link in their group, remove members (which revokes theirs), delete the group, and there is a member cap. Optional creator toggle: "only I can share".
-- Joining shows a full member list first and requires an explicit accept (the confirm screen shipped for regular links is the precedent).
-- "Move this person to my own friends" is **deferred**: v1's equivalent is exchanging regular invite links, which already creates a real friendship that survives leaving the group. A proper version needs the other side to confirm — the first pending-friendship state in the model.
+**There is no group object.** The link is a named, short-lived *roster* of people who opened it, and every connection it produces is an ordinary 1:1 friendship. This replaces an earlier design with durable groups and membership-derived connections; that version needed a `groups` table, a connections view unioning it with `friendships` (rewriting five raw queries in `status.ts`), leave semantics, member removal, a cap, and a "move this person to my own friends" flow — all of it machinery for making an automatic connection reversible. Nothing is automatic here, so none of it is needed.
 
-Still open: whether a group can be selected as a door recipient in one tap (and whether that set is a snapshot or stays dynamic as people join); what these are called in the UI ("group" is honest but carries group-chat baggage); whether the creator can rename after sharing (proposed: yes, with a frozen URL slug).
+- **One action, not two.** "Offer to connect" and "accept" are the same thing: recording that you'd like to connect with someone. When both sides have recorded it, in either order, they are friends. An offer never interrupts — it lands quietly in the "Waiting for you" section of the Friends page. So if Anna picks Ben and Ben later picks Anna from the roster, they connect on the spot and Ben never sees an accept step. Today's invite link fits the same rule: generating one is a blanket standing intent toward whoever opens it.
+- **Multi-select both ways.** Picking from the roster is one screen with checkboxes; the waiting rows accept in a batch. In the common everyone-picks-everyone case that is one tap per person and no accept screens at all.
+- **Consent to be listed.** First open shows the group name, the creator and a count, with one button to join the list and see everyone. Opening alone does not list you.
+- **Provenance.** A waiting row reads "Anna — from *Sunday BBQ*", which is what makes an unfamiliar name worth accepting. The name lives in the link path (slugified, truncated, random suffix), the OG share preview, and that row — never as an object in the app. No groups tab, no "group" noun in the UI.
+- **Server-rendered OG tags per link are new work** — nothing renders them today. The name is user-typed and becomes a title card in WhatsApp, so it should pass through the moderation service.
+- **Safety is expiry plus close.** Nothing needs revoking, since nothing is created without consent — but the roster itself is a disclosure: someone who consented to be seen by "people in this link" did not consent to a stranger three forwards later. So the link expires fast (~24h, vs. 7 days for regular invites) and the creator can close it early. Expiry stops new opens and roster reads; connections already made are untouched.
+- **Declining tells the sender nothing.** Outstanding offers you sent appear in the existing Pending section.
+
+Still open: exact expiry (proposed 24h); whether "close this link" is creator-only or any lister.
+
+Related but separate: with no group object there is nothing to select as door recipients in one tap. Saved recipient sets ("open my door to these 8") are a real ergonomic want, but a different feature — do not drag the group object back for it.
 
 ## Maybe
 - [ ] New user with no friends: "Open Now" gives no hint that a share link is coming. Needs a solution that doesn't introduce the friends concept prematurely — the right fix probably lives earlier in the onboarding flow, not on the home screen.
