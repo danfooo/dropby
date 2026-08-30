@@ -185,7 +185,12 @@ Written whenever a logged-in user opens an invite link that is not their own. Tw
 | subject_name | string | Display name captured at queue time |
 | created_at | unix timestamp | |
 
-Both connection-related pushes are coalesced rather than sent per event: several people accepting at once, or several people opening the same link within a minute, would otherwise produce a burst of near-identical notifications. Rows are flushed by a per-minute cron, grouped by `(user_id, type)`, and one push is sent per group. Delivery is therefore delayed by up to 60 seconds — acceptable for these two types, and never used for door-open pushes, which stay immediate.
+Both connection-related pushes are coalesced rather than sent per event: several people accepting at once, or several people opening the same link, would otherwise produce a burst of near-identical notifications. Rows are flushed by a per-minute cron, grouped by `(user_id, type)`, and one push is sent per group.
+
+- `friend_joined` flushes on the next run — delayed by up to 60 seconds.
+- `friend_suggestion` is held until its oldest queued row is an hour old, then the whole group goes out together. A link dropped in a group chat is opened across an evening rather than in a burst, so one notification covers everyone who turned up in that window.
+
+Door-open pushes are never queued and stay immediate.
 
 ### User Notes (Saved)
 | Field | Type | Notes |
@@ -491,6 +496,13 @@ Remove confirmation: "Remove [name] as a friend? This cannot be undone." — Con
 
 Empty state (no friends): invite link CTA + Add Friend CTA
 
+**People you may know section** (top of the page, above "Waiting for you", only if non-empty)
+- Up to 10 people who opened a link this user also opened, and who are not already friends, not already in a pending invite either direction, and not previously dismissed
+- Ranked by the smallest link the two people share. A link named for a group and opened by five people is strong evidence they know each other; a door link broadcast widely is weak, and size ordering handles that without special-casing link types. Someone reachable through several links is listed once, under the smallest.
+- Each row: avatar, name, and — only when the shared link has a name — "from [link name]" beneath it. **The mechanism is never shown.** No row ever says "opened the same link as you": the subtitle is a human context when one exists, and absent otherwise.
+- "Connect" records intent, which asks the other person rather than connecting outright (unless they had already asked, in which case it connects). × dismisses permanently, stored in `suggestion_dismissals`.
+- Nobody has asked for anything in this section — it is a standing signal, and acting on it is entirely opt-in.
+
 **Waiting for you section** (above friend list, only if non-empty)
 - Everyone who wants to connect with this user — one row per pending invite, whether it came from opening their link or from being picked off a link they both opened
 - Each row: sender's avatar and name, "from [link name]" beneath it when the invite came through a named link, a checkbox (pre-checked), and × to dismiss that one
@@ -664,9 +676,9 @@ Static page, reachable without auth, linked from the signup consent notice and t
 
 **Connection suggestions toggle**
 - "People you may know"
-- Description: "Get notified when someone opens an invite link you also opened."
+- Description: "Get notified when someone you may know turns up on dropby."
 - On by default; persisted via `PUT /api/auth/me { notif_friend_suggestions }`
-- Off silences the push only — suggestions still appear on the invite page
+- Off silences the push only — the Friends page list is unaffected
 
 **Session reminders**
 - Two dropdown selects: "First reminder" and "Second reminder"
@@ -777,7 +789,9 @@ Candidacy survives the link. Expiry and revocation stop new people joining and s
 
 **Connection Suggestions**
 
-The platform may suggest people to each other based on shared link participation. Currently implemented: first degree only — people who opened a link you also opened, surfaced on the invite page and as a coalesced push (opt out with `notif_friend_suggestions`; the in-app list is unaffected).
+The platform may suggest people to each other based on shared link participation. Currently implemented: first degree only — people who opened a link you also opened, surfaced on the invite page, in the "People you may know" section of the Friends page, and as a coalesced push (opt out with `notif_friend_suggestions`; the in-app list is unaffected).
+
+**The mechanism is never surfaced in the UI.** A suggestion carries a human reason when there is one — the name of the shared link — and no explanation at all when there isn't. Copy never explains how the suggestion was derived. The precise data behind it is disclosed where precision belongs: the signup consent notice and the Privacy Policy.
 
 Two rules govern any future expansion:
 - **Relevance is inversely weighted by link size.** A five-person link is strong evidence people know each other; a forty-person link is nearly none.
@@ -850,7 +864,7 @@ Sent via FCM (Android) and APNs (iOS).
 | 10 min before close | Door opener | "Your door closes in 10 minutes" | "Keep open", "Close now" |
 | Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Hope it was a good one. Open again?" | — |
 | Friend accepted invite | Inviter | One: "[Name] just joined your dropby!" · Two: "[Name] and [Name] just joined your dropby!" · Three or more: "[Name] and [n] others just joined your dropby!" | — |
-| Connection suggestion | Everyone already on a link, when someone new opens it (if `notif_friend_suggestions` enabled) | One: "[Name] opened the same invite link as you" · Two or more: "[Name] and [n] others opened the same invite link as you" | — |
+| Connection suggestion | Everyone already on a link, when someone new opens it (if `notif_friend_suggestions` enabled) | One: "[Name] might be someone you know" · Two or more: "[Name] and [n] others might be people you know" | — |
 | Nudge reminder | User themselves | "Hey, got a free [day]? Open your door" | "Open now" |
 | Auto-nudge | User themselves | "Open your door again? Change nudge timing anytime in Profile." | "Open now" |
 | Going reminder (primary) | RSVP'd user — day-before window | "[Host] is opening their door tomorrow at [time]" | — |

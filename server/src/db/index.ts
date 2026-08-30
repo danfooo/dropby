@@ -111,6 +111,14 @@ db.exec(`
     UNIQUE(token, user_id)
   );
 
+  CREATE TABLE IF NOT EXISTS suggestion_dismissals (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    other_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    UNIQUE(user_id, other_user_id)
+  );
+
   CREATE TABLE IF NOT EXISTS queued_notifications (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

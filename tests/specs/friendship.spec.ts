@@ -411,3 +411,103 @@ test('Creating a link asks for a name first', async ({ browser }) => {
     await ctx.close();
   }
 });
+
+// ---------------------------------------------------------------------------
+// People you may know: a standing signal from links both people opened, sitting
+// above the friend list. Nobody has asked for anything — acting on it is opt-in.
+// ---------------------------------------------------------------------------
+
+test('Someone who opened the same link appears as a suggestion, and connecting asks them', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const bobCtx = await browser.newContext();
+  const carolCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  const bobPage = await bobCtx.newPage();
+  const carolPage = await carolCtx.newPage();
+
+  try {
+    await setupUser(alicePage, ALICE);
+    const { path } = await generateNamedInvite(alicePage, 'Sunday BBQ');
+
+    // Bob and Carol both open the link and connect to Alice, but not to each other:
+    // unchecking leaves Carol out, so nothing is pending between them.
+    await setupUser(bobPage, BOB);
+    await bobPage.goto(path);
+    await bobPage.getByTestId('invite-accept').click();
+    await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    await setupUser(carolPage, CAROL);
+    await carolPage.goto(path);
+    await expect(carolPage.getByTestId('invite-candidates')).toBeVisible({ timeout: 10_000 });
+    await carolPage.getByTestId('invite-candidates').getByRole('checkbox').uncheck();
+    await carolPage.getByTestId('invite-accept').click();
+    await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+    expect(await areFriends(BOB.email, CAROL.email)).toBe(false);
+
+    // Carol still shows up for Bob as someone he may know, with the reason attached
+    await bobPage.goto('/friends');
+    await bobPage.waitForLoadState('domcontentloaded');
+    const suggestions = bobPage.getByTestId('friend-suggestions');
+    await expect(suggestions).toBeVisible({ timeout: 10_000 });
+    await expect(suggestions.getByText('Carol')).toBeVisible();
+    await expect(suggestions.getByText(/from Sunday BBQ/i)).toBeVisible();
+
+    // Connecting asks Carol rather than connecting outright
+    await suggestions.getByRole('button', { name: /^connect$/i }).click();
+    await expect(bobPage.getByTestId('friend-suggestions')).not.toBeVisible({ timeout: 10_000 });
+    expect(await areFriends(BOB.email, CAROL.email)).toBe(false);
+
+    await carolPage.goto('/friends');
+    await carolPage.waitForLoadState('domcontentloaded');
+    await expect(carolPage.getByTestId('incoming-invites')).toBeVisible({ timeout: 10_000 });
+    await carolPage.getByTestId('incoming-connect').click();
+    await expect.poll(() => areFriends(BOB.email, CAROL.email), { timeout: 10_000 }).toBe(true);
+  } finally {
+    await aliceCtx.close();
+    await bobCtx.close();
+    await carolCtx.close();
+  }
+});
+
+test('Dismissing a suggestion stops it coming back', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const bobCtx = await browser.newContext();
+  const carolCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  const bobPage = await bobCtx.newPage();
+  const carolPage = await carolCtx.newPage();
+
+  try {
+    await setupUser(alicePage, ALICE);
+    const { path } = await generateNamedInvite(alicePage, 'Sunday BBQ');
+
+    await setupUser(bobPage, BOB);
+    await bobPage.goto(path);
+    await bobPage.getByTestId('invite-accept').click();
+    await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    await setupUser(carolPage, CAROL);
+    await carolPage.goto(path);
+    await expect(carolPage.getByTestId('invite-candidates')).toBeVisible({ timeout: 10_000 });
+    await carolPage.getByTestId('invite-candidates').getByRole('checkbox').uncheck();
+    await carolPage.getByTestId('invite-accept').click();
+    await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    await bobPage.goto('/friends');
+    await bobPage.waitForLoadState('domcontentloaded');
+    const suggestions = bobPage.getByTestId('friend-suggestions');
+    await expect(suggestions).toBeVisible({ timeout: 10_000 });
+    await suggestions.getByTitle(/dismiss/i).click();
+    await expect(bobPage.getByTestId('friend-suggestions')).not.toBeVisible({ timeout: 10_000 });
+
+    // Still gone after a reload — the dismissal is stored, not just hidden
+    await bobPage.reload();
+    await bobPage.waitForLoadState('domcontentloaded');
+    await expect(bobPage.getByTestId('incoming-invites')).not.toBeVisible();
+    await expect(bobPage.getByTestId('friend-suggestions')).not.toBeVisible({ timeout: 10_000 });
+  } finally {
+    await aliceCtx.close();
+    await bobCtx.close();
+    await carolCtx.close();
+  }
+});

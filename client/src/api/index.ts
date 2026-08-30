@@ -57,6 +57,9 @@ export const authApi = {
 
 // Friends
 export const friendsApi = {
+  suggestions: () => api.get('/friends/suggestions').then(r => r.data),
+  dismissSuggestions: (userIds: string[]) => api.post('/friends/suggestions/dismiss', { user_ids: userIds }).then(r => r.data),
+  connect: (userIds: string[]) => api.post('/friends/connect', { user_ids: userIds }).then(r => r.data),
   list: () => api.get('/friends').then(r => r.data),
   remove: (friendId: string) => api.delete(`/friends/${friendId}`).then(r => r.data),
   hide: (friendId: string, durationDays?: number) =>

@@ -240,7 +240,9 @@
     "viaLink": "from {{name}}",
     "nameLinkTitle": "New invite link",
     "nameLinkDesc": "Give it a name and everyone who opens it sees what it's for — in the chat preview and in the app.",
-    "nameLinkPlaceholder": "Sunday BBQ (optional)"
+    "nameLinkPlaceholder": "Sunday BBQ (optional)",
+    "suggestionsTitle": "People you may know",
+    "suggestionConnect": "Connect"
   },
   "invite": {
     "expiredTitle": "Invite expired",
@@ -413,6 +415,6 @@
       "15m": "15 min before"
     },
     "suggestionsTitle": "People you may know",
-    "suggestionsDesc": "Get notified when someone opens an invite link you also opened."
+    "suggestionsDesc": "Get notified when someone you may know turns up on dropby."
   }
 }

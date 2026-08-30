@@ -240,7 +240,9 @@
     "viaLink": "från {{name}}",
     "nameLinkTitle": "Ny inbjudningslänk",
     "nameLinkDesc": "Ge den ett namn så ser alla vad den gäller — i chattens förhandsvisning och i appen.",
-    "nameLinkPlaceholder": "Söndagsgrillning (valfritt)"
+    "nameLinkPlaceholder": "Söndagsgrillning (valfritt)",
+    "suggestionsTitle": "Personer du kanske känner",
+    "suggestionConnect": "Koppla ihop"
   },
   "invite": {
     "expiredTitle": "Inbjudan utgången",
@@ -413,6 +415,6 @@
       "15m": "15 min innan"
     },
     "suggestionsTitle": "Personer du kanske känner",
-    "suggestionsDesc": "Få en notis när någon öppnar en inbjudningslänk som du också öppnat."
+    "suggestionsDesc": "Få en notis när någon du kanske känner dyker upp på dropby."
   }
 }

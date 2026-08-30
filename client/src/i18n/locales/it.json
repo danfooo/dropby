@@ -240,7 +240,9 @@
     "viaLink": "da {{name}}",
     "nameLinkTitle": "Nuovo link d'invito",
     "nameLinkDesc": "Dagli un nome e tutti vedranno a cosa serve — nell'anteprima della chat e nell'app.",
-    "nameLinkPlaceholder": "Grigliata di domenica (facoltativo)"
+    "nameLinkPlaceholder": "Grigliata di domenica (facoltativo)",
+    "suggestionsTitle": "Persone che potresti conoscere",
+    "suggestionConnect": "Connetti"
   },
   "invite": {
     "expiredTitle": "Invito scaduto",
@@ -413,6 +415,6 @@
       "15m": "15 min prima"
     },
     "suggestionsTitle": "Persone che potresti conoscere",
-    "suggestionsDesc": "Ricevi una notifica quando qualcuno apre un link d'invito che hai aperto anche tu."
+    "suggestionsDesc": "Ricevi una notifica quando arriva qualcuno che potresti conoscere."
   }
 }

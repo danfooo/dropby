@@ -240,7 +240,9 @@
     "viaLink": "de {{name}}",
     "nameLinkTitle": "Nuevo enlace de invitación",
     "nameLinkDesc": "Ponle un nombre y todos verán para qué es — en la vista previa del chat y en la app.",
-    "nameLinkPlaceholder": "Asado del domingo (opcional)"
+    "nameLinkPlaceholder": "Asado del domingo (opcional)",
+    "suggestionsTitle": "Personas que quizá conozcas",
+    "suggestionConnect": "Conectar"
   },
   "invite": {
     "expiredTitle": "Invitación expirada",
@@ -413,6 +415,6 @@
       "15m": "15 min antes"
     },
     "suggestionsTitle": "Personas que quizá conozcas",
-    "suggestionsDesc": "Recibe un aviso cuando alguien abra un enlace de invitación que tú también abriste."
+    "suggestionsDesc": "Recibe un aviso cuando aparezca alguien que quizá conozcas."
   }
 }

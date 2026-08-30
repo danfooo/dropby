@@ -240,7 +240,9 @@
     "viaLink": "来自{{name}}",
     "nameLinkTitle": "新邀请链接",
     "nameLinkDesc": "起个名字，打开的人就知道这是做什么的——在聊天预览里和应用里都能看到。",
-    "nameLinkPlaceholder": "周日烧烤（可选）"
+    "nameLinkPlaceholder": "周日烧烤（可选）",
+    "suggestionsTitle": "你可能认识的人",
+    "suggestionConnect": "连接"
   },
   "invite": {
     "expiredTitle": "邀请已过期",
@@ -413,6 +415,6 @@
       "15m": "提前15分钟"
     },
     "suggestionsTitle": "你可能认识的人",
-    "suggestionsDesc": "当有人打开你也打开过的邀请链接时通知你。"
+    "suggestionsDesc": "当你可能认识的人出现在 dropby 时通知你。"
   }
 }

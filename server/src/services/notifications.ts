@@ -303,34 +303,47 @@ export function queueNotification(userId: string, type: 'friend_joined' | 'frien
 
 function coalescedBody(type: string, names: string[]): string {
   const [first, second] = names;
+  // Deliberately says nothing about how the suggestion was made — the reason is a
+  // human one when we have it (the link's name, shown in-app) and no explanation at all
+  // when we don't. The mechanism is never the copy.
   if (type === 'friend_suggestion') {
     return names.length === 1
-      ? `${first} opened the same invite link as you`
-      : `${first} and ${names.length - 1} others opened the same invite link as you`;
+      ? `${first} might be someone you know`
+      : `${first} and ${names.length - 1} others might be people you know`;
   }
   if (names.length === 1) return `${first} just joined your dropby!`;
   if (names.length === 2) return `${first} and ${second} just joined your dropby!`;
   return `${first} and ${names.length - 1} others just joined your dropby!`;
 }
 
+// A link dropped in a group chat is opened over an evening, not in a burst. Suggestions
+// therefore sit for an hour before going out, so one notification covers everyone who
+// turned up in that window rather than one arriving per person.
+const SUGGESTION_DELAY_SECONDS = 3600;
+
 export function flushQueuedNotifications() {
-  const rows = db.prepare('SELECT id, user_id, type, subject_name FROM queued_notifications ORDER BY created_at ASC')
-    .all() as Array<{ id: string; user_id: string; type: string; subject_name: string }>;
+  const rows = db.prepare('SELECT id, user_id, type, subject_name, created_at FROM queued_notifications ORDER BY created_at ASC')
+    .all() as Array<{ id: string; user_id: string; type: string; subject_name: string; created_at: number }>;
   if (!rows.length) return;
 
-  const groups = new Map<string, { userId: string; type: string; names: string[]; ids: string[] }>();
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const groups = new Map<string, { userId: string; type: string; names: string[]; ids: string[]; oldest: number }>();
   for (const r of rows) {
     const key = `${r.user_id}:${r.type}`;
     let g = groups.get(key);
-    if (!g) { g = { userId: r.user_id, type: r.type, names: [], ids: [] }; groups.set(key, g); }
+    if (!g) { g = { userId: r.user_id, type: r.type, names: [], ids: [], oldest: r.created_at }; groups.set(key, g); }
     g.names.push(r.subject_name);
     g.ids.push(r.id);
+    g.oldest = Math.min(g.oldest, r.created_at);
   }
 
   const del = db.prepare('DELETE FROM queued_notifications WHERE id = ?');
   for (const g of groups.values()) {
-    // Suggestions wait out quiet hours rather than being dropped; they are not time-critical.
-    if (g.type === 'friend_suggestion' && isQuietHours(g.userId)) continue;
+    if (g.type === 'friend_suggestion') {
+      if (nowUnix - g.oldest < SUGGESTION_DELAY_SECONDS) continue;
+      // Suggestions wait out quiet hours rather than being dropped; they are not time-critical.
+      if (isQuietHours(g.userId)) continue;
+    }
     g.ids.forEach(id => del.run(id));
     const tokens = getPushTokens(g.userId);
     const body = coalescedBody(g.type, g.names);

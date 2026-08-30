@@ -240,7 +240,9 @@
     "viaLink": "de {{name}}",
     "nameLinkTitle": "Nouveau lien d'invitation",
     "nameLinkDesc": "Donne-lui un nom et tout le monde verra à quoi il sert — dans l'aperçu du chat et dans l'app.",
-    "nameLinkPlaceholder": "Barbecue de dimanche (facultatif)"
+    "nameLinkPlaceholder": "Barbecue de dimanche (facultatif)",
+    "suggestionsTitle": "Personnes que tu connais peut-être",
+    "suggestionConnect": "Se connecter"
   },
   "invite": {
     "expiredTitle": "Invitation expirée",
@@ -413,6 +415,6 @@
       "15m": "15 min avant"
     },
     "suggestionsTitle": "Personnes que tu connais peut-être",
-    "suggestionsDesc": "Être notifié quand quelqu'un ouvre un lien d'invitation que tu as aussi ouvert."
+    "suggestionsDesc": "Être notifié quand quelqu'un que tu connais peut-être arrive sur dropby."
   }
 }

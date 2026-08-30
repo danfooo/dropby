@@ -240,7 +240,9 @@
     "viaLink": "von {{name}}",
     "nameLinkTitle": "Neuer Einladungslink",
     "nameLinkDesc": "Gib ihm einen Namen, dann sehen alle, wofür er ist — in der Chat-Vorschau und in der App.",
-    "nameLinkPlaceholder": "Grillen am Sonntag (optional)"
+    "nameLinkPlaceholder": "Grillen am Sonntag (optional)",
+    "suggestionsTitle": "Leute, die du kennen könntest",
+    "suggestionConnect": "Verbinden"
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",
@@ -413,6 +415,6 @@
       "15m": "15 Min. vorher"
     },
     "suggestionsTitle": "Leute, die du kennen könntest",
-    "suggestionsDesc": "Benachrichtigung, wenn jemand einen Einladungslink öffnet, den du auch geöffnet hast."
+    "suggestionsDesc": "Benachrichtigung, wenn jemand auftaucht, den du kennen könntest."
   }
 }

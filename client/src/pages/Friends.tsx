@@ -63,6 +63,7 @@ export default function Friends() {
   const { data: pendingInvites = [] } = useQuery({ queryKey: ['pending-invites'], queryFn: invitesApi.listPending });
   const { data: openLinks = [] } = useQuery({ queryKey: ['open-links'], queryFn: invitesApi.listOpenLinks });
   const { data: incoming = [] } = useQuery({ queryKey: ['incoming-invites'], queryFn: invitesApi.listIncoming });
+  const { data: suggestions = [] } = useQuery({ queryKey: ['friend-suggestions'], queryFn: friendsApi.suggestions });
   const checkedIncoming = (incoming as any[])
     .map(i => i.inviter.id as string)
     .filter(id => !uncheckedIncoming.includes(id));
@@ -115,6 +116,20 @@ export default function Friends() {
   const dismissIncoming = useMutation({
     mutationFn: (fromUserIds: string[]) => invitesApi.dismiss(fromUserIds),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['incoming-invites'] }),
+  });
+
+  const connectSuggested = useMutation({
+    mutationFn: (userIds: string[]) => friendsApi.connect(userIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['friend-suggestions'] });
+      qc.invalidateQueries({ queryKey: ['friends'] });
+      qc.invalidateQueries({ queryKey: ['incoming-invites'] });
+    },
+  });
+
+  const dismissSuggested = useMutation({
+    mutationFn: (userIds: string[]) => friendsApi.dismissSuggestions(userIds),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['friend-suggestions'] }),
   });
 
   const revokeLink = useMutation({
@@ -192,6 +207,47 @@ export default function Friends() {
       </div>
 
       <div className="px-4 pt-4">
+        {/* People you may know — nobody has asked for anything here; it is a standing
+            signal from links both people opened, and acting on it is entirely opt-in */}
+        {(suggestions as any[]).length > 0 && (
+          <>
+            <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+              {t('friends.suggestionsTitle')}
+            </h2>
+            <div data-testid="friend-suggestions" className="bg-white dark:bg-gray-900 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-800 mb-4">
+              {(suggestions as any[]).map((sug: any, i: number) => (
+                <div key={sug.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
+                  <Avatar name={sug.display_name} url={sug.avatar_url} size="sm" />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{sug.display_name}</span>
+                    {sug.link_name && (
+                      <span className="block text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {t('friends.viaLink', { name: sug.link_name })}
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    onClick={() => connectSuggested.mutate([sug.id])}
+                    disabled={connectSuggested.isPending}
+                    className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 disabled:opacity-50 rounded-xl text-sm font-semibold shrink-0"
+                  >
+                    {t('friends.suggestionConnect')}
+                  </button>
+                  <button
+                    onClick={() => dismissSuggested.mutate([sug.id])}
+                    className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 shrink-0"
+                    title={t('friends.dismissInvite')}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         {/* People who want to connect — no edge exists until this user accepts */}
         {(incoming as any[]).length > 0 && (
           <>

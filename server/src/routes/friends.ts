@@ -135,5 +135,79 @@ router.post('/:friendId/notif-pref', requireAuth, (req: AuthRequest, res) => {
   res.json({ ok: true });
 });
 
+// GET /api/friends/suggestions — people you may know, from links you both opened.
+//
+// Ranked by the smallest link two people share: a link named for a group and opened by
+// five people is strong evidence they know each other, while a door link broadcast to
+// everyone is weak. Size ordering handles that without special-casing link types.
+router.get('/suggestions', requireAuth, (req: AuthRequest, res) => {
+  const rows = db.prepare(`
+    SELECT u.id, u.display_name, u.avatar_url, l.name AS link_name, sizes.n AS link_size
+    FROM link_participants mine
+    JOIN link_participants theirs ON theirs.token = mine.token AND theirs.user_id <> mine.user_id
+    JOIN users u ON u.id = theirs.user_id
+    JOIN invite_links l ON l.token = mine.token
+    JOIN (SELECT token, COUNT(*) AS n FROM link_participants GROUP BY token) sizes ON sizes.token = mine.token
+    WHERE mine.user_id = ?
+      AND NOT EXISTS (
+        SELECT 1 FROM friendships f
+        WHERE (f.user_a_id = mine.user_id AND f.user_b_id = theirs.user_id)
+           OR (f.user_a_id = theirs.user_id AND f.user_b_id = mine.user_id)
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM pending_invites p
+        WHERE (p.from_user_id = mine.user_id AND p.to_user_id = theirs.user_id)
+           OR (p.from_user_id = theirs.user_id AND p.to_user_id = mine.user_id)
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM suggestion_dismissals d
+        WHERE d.user_id = mine.user_id AND d.other_user_id = theirs.user_id
+      )
+    ORDER BY sizes.n ASC, theirs.created_at DESC
+  `).all(req.userId) as Array<{ id: string; display_name: string; avatar_url: string | null; link_name: string | null; link_size: number }>;
+
+  // Someone reachable through several links is listed once, under the smallest — the
+  // strongest reason we have for suggesting them.
+  const seen = new Set<string>();
+  const suggestions = rows.filter(r => !seen.has(r.id) && seen.add(r.id)).slice(0, 10);
+  res.json(suggestions);
+});
+
+// POST /api/friends/suggestions/dismiss — stop suggesting these people
+router.post('/suggestions/dismiss', requireAuth, (req: AuthRequest, res) => {
+  const ids: string[] = Array.isArray(req.body?.user_ids)
+    ? req.body.user_ids.filter((id: unknown) => typeof id === 'string')
+    : [];
+  const stmt = db.prepare('INSERT OR IGNORE INTO suggestion_dismissals (id, user_id, other_user_id) VALUES (?, ?, ?)');
+  ids.forEach(id => stmt.run(randomUUID(), req.userId, id));
+  res.json({ ok: true });
+});
+
+// POST /api/friends/connect — ask to connect with suggested people
+router.post('/connect', requireAuth, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const ids: string[] = Array.isArray(req.body?.user_ids)
+    ? req.body.user_ids.filter((id: unknown) => typeof id === 'string')
+    : [];
+
+  const { recordIntent } = await import('./invites.js');
+  let connected = 0, pending = 0;
+  for (const otherId of ids) {
+    // Only people you actually share a link with — the suggestion is the authorisation.
+    const shared = db.prepare(`
+      SELECT mine.token FROM link_participants mine
+      JOIN link_participants theirs ON theirs.token = mine.token
+      WHERE mine.user_id = ? AND theirs.user_id = ?
+      LIMIT 1
+    `).get(userId, otherId) as { token: string } | undefined;
+    if (!shared) continue;
+
+    const result = recordIntent(userId, otherId, shared.token);
+    if (result === 'connected') connected++;
+    else if (result === 'pending') pending++;
+  }
+  res.json({ ok: true, connected, pending });
+});
+
 export { areFriends, getFriendsOf };
 export default router;
