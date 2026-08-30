@@ -132,10 +132,13 @@ Persists the recipient selection across sessions. Written on door open and on do
 | token | string unique | 16-char hex string |
 | created_by | uuid FK → users | |
 | status_id | uuid FK → statuses nullable | Set if link was generated from an active status context |
+| name | string nullable | Optional, set by the creator, max 60 chars. Sanitised and moderation-checked like a door note. Appears in the link path, the share preview, the invite screen, and as provenance on the recipient's waiting row |
 | invited_email | string nullable | Set for email invites; the email address the invite was sent to |
 | revoked | boolean | Default false |
 | expires_at | unix timestamp | 7 days for link-share invites; 30 days for email invites |
 | created_at | unix timestamp | |
+
+**Link URLs.** A link is `/invite/<token>`, or `/invite/<slug>-<token>` when it has a name — the slug is the name lowercased, stripped of diacritics and punctuation, and truncated to 24 characters. The trailing 32 hex characters are the token, so the slug is purely cosmetic: renaming a link never breaks a copy already shared, and both forms resolve identically. `POST /api/invites/:token/rename` updates the name; new copies carry the new slug.
 
 Invite links are the sole mechanism for forming friendships. They are multi-use — multiple people can accept the same link. Each tap on "Copy invite link" generates a fresh link. Revoked or expired links return appropriate errors.
 
@@ -387,7 +390,7 @@ Two tips are shown, one at a time, in priority order. Each can be permanently di
 - "Notified" label if they were sent a push notification when the door opened
 - "On their way ✅" label if they've sent a Going signal
 - × button to remove with 3-second undo pattern (see Core Behaviors)
-- Active invite links for this session shown below named recipients: link icon, "Anyone with link", creation time (e.g. "3h ago"), × to revoke (3-second undo)
+- Active invite links for this session shown below named recipients: link icon, the link's name or "Anyone with link" and creation time (e.g. "3h ago"), × to revoke (3-second undo)
 - The section renders if either named recipients or active invite links exist
 
 **Invite link row**
@@ -490,7 +493,7 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 
 **Waiting for you section** (above friend list, only if non-empty)
 - Everyone who wants to connect with this user — one row per pending invite, whether it came from opening their link or from being picked off a link they both opened
-- Each row: sender's avatar and name, a checkbox (pre-checked), and × to dismiss that one
+- Each row: sender's avatar and name, "from [link name]" beneath it when the invite came through a named link, a checkbox (pre-checked), and × to dismiss that one
 - A single "Connect" button below the list accepts every checked row at once
 - Accept creates the friendship (same outcome as accepting on the invite page); dismiss clears the row without telling the sender
 - Dismissing does not touch the link: opening it again brings the row back
@@ -500,6 +503,11 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 - Shows email addresses of pending email invites that haven't been accepted yet
 - Each row: email address, × to cancel (revokes the invite link)
 - Title: "Pending"
+
+**Name link modal** (opens from "New invite link", both the empty state and the action row)
+- Title: "New invite link"; description: "Give it a name and everyone who opens it sees what it's for — in the chat preview and in the app."
+- Single text input, max 60 chars, placeholder "Sunday BBQ (optional)"
+- "New invite link" button generates and copies. An empty name creates an ordinary unnamed link, so naming is optional and costs one tap.
 
 **Add Friend modal**
 - Email input (type="email")
@@ -525,6 +533,7 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 **Token valid, user logged in, not yet friends**
 - Nothing is created on open. A confirmation screen is shown: host avatar and name, "[name] wants to connect", "You'll both see when the other's door is open."
 - If the link is door-specific, the door card (note, location, or scheduled time) is shown on the confirmation screen too — the door is visible before accepting, but joining it still requires accepting
+- The link's name, if it has one, is shown above the host's avatar. The candidate list is headed "Also in [name]" for a named link, "Also here" otherwise.
 - **Others who opened this link** are listed below the host, if any: avatar, name, and a checkbox, **all pre-checked**. The list excludes the viewer, the host, and anyone they are already friends with. Header: "Also here"
 - The single Accept action covers the host and every checked person; unchecking is how you connect with fewer. Button reads "Accept" alone, or "Connect with [n] people" when the list is non-empty — [n] counts the host too, since this screen only appears when the host is not yet a friend. The catch-up list on the already-friends and own-link screens counts only the people picked.
 - Because the list already excludes existing friends, the count only ever covers connections that do not exist yet. Someone who opens a link where they already know half the people is offered the other half.
@@ -616,6 +625,16 @@ Accessible via the back-arrow header of Home.
 
 **Notifications link**
 - "Notifications →" row links to `/notifications` sub-page
+
+### Share Preview (`/invite/*`)
+
+Requests for an invite path are served the built `index.html` with its `og:` and `twitter:` meta tags rewritten for that link, so a link pasted into a chat shows what it is rather than the generic app card.
+
+- **Named link** — title is the name verbatim; description is "[Creator] shared this on dropby. Open it to see who's here."
+- **Unnamed link** — title stays "dropby"; description is "[Creator] wants to connect with you on dropby."
+- The preview is identical whether the link is live, expired or revoked. State is only revealed in the app, after signing in, so the link still does its job of getting someone over the signup step.
+- Names are HTML-escaped on the way into the tags.
+- Production only: in development the client is served by Vite and never reaches this route.
 
 ### Privacy Policy Page (`/privacy`)
 

@@ -5,6 +5,8 @@ import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.js';
 import { areFriends } from './friends.js';
 import { sendInviteEmail } from '../services/email.js';
 import { log } from '../services/analytics.js';
+import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
+import { normalizeToken, inviteUrl } from '../utils/invite-link.js';
 import { notifyFriendJoined, notifyConnectionSuggestion } from '../services/notifications.js';
 import { sendSSE } from '../services/sse.js';
 
@@ -119,7 +121,8 @@ function candidatesFor(token: string, viewerId: string): Array<{ id: string; dis
 }
 
 // Shared logic: create friendship from an invite token, used by accept endpoint and email verification
-export function acceptInviteToken(token: string, acceptorId: string): { ok: boolean; inviterName?: string } {
+export function acceptInviteToken(rawToken: string, acceptorId: string): { ok: boolean; inviterName?: string } {
+  const token = normalizeToken(rawToken);
   const nowUnix = Math.floor(Date.now() / 1000);
   const invite = db.prepare('SELECT * FROM invite_links WHERE token = ?').get(token) as any;
   if (!invite) return { ok: false };
@@ -156,9 +159,18 @@ function connectAlso(raw: unknown, userId: string, token: string): { connected: 
 }
 
 // POST /api/invites — generate invite link
-router.post('/', requireAuth, (req: AuthRequest, res) => {
+router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { status_id } = req.body;
+
+  // The name is the creator's own words and ends up as a title card in other people's
+  // chat apps, so it gets the same sanitising and moderation as a door note.
+  let name: string | null = null;
+  if (typeof req.body?.name === 'string' && req.body.name.trim()) {
+    name = sanitizeNote(req.body.name).slice(0, 60);
+    if (name && !(await isNoteAllowed(name))) return res.status(400).json({ error: 'NAME_NOT_ALLOWED' });
+    if (!name) name = null;
+  }
   const nowUnix = Math.floor(Date.now() / 1000);
   const expiresAt = nowUnix + 7 * 86400; // 7 days
 
@@ -170,22 +182,23 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
 
   const token = generateToken();
   const id = randomUUID();
-  db.prepare('INSERT INTO invite_links (id, token, created_by, status_id, expires_at) VALUES (?, ?, ?, ?, ?)').run(id, token, userId, resolvedStatusId, expiresAt);
+  db.prepare('INSERT INTO invite_links (id, token, created_by, status_id, name, expires_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(id, token, userId, resolvedStatusId, name, expiresAt);
 
   const appUrl = process.env.APP_URL || 'http://localhost:5173';
-  res.status(201).json({ token, url: `${appUrl}/invite/${token}`, expires_at: expiresAt });
+  res.status(201).json({ token, name, url: inviteUrl(appUrl, token, name), expires_at: expiresAt });
 });
 
 // GET /api/invites/open-links — list active link-based invites created by the current user
 router.get('/open-links', requireAuth, (req: AuthRequest, res) => {
   const nowUnix = Math.floor(Date.now() / 1000);
   const links = db.prepare(`
-    SELECT token, created_at, expires_at FROM invite_links
+    SELECT token, name, created_at, expires_at FROM invite_links
     WHERE created_by = ? AND invited_email IS NULL AND revoked = 0 AND expires_at > ?
     ORDER BY created_at DESC
-  `).all(req.userId, nowUnix) as Array<{ token: string; created_at: number; expires_at: number }>;
+  `).all(req.userId, nowUnix) as Array<{ token: string; name: string | null; created_at: number; expires_at: number }>;
   const appUrl = process.env.APP_URL || 'http://localhost:5173';
-  res.json(links.map(l => ({ ...l, url: `${appUrl}/invite/${l.token}` })));
+  res.json(links.map(l => ({ ...l, url: inviteUrl(appUrl, l.token, l.name) })));
 });
 
 // GET /api/invites/pending — list pending email invites sent by the current user
@@ -203,9 +216,10 @@ router.get('/pending', requireAuth, (req: AuthRequest, res) => {
 // GET /api/invites/incoming — invites this user opened but hasn't accepted yet
 router.get('/incoming', requireAuth, (req: AuthRequest, res) => {
   const rows = db.prepare(`
-    SELECT p.source_token, p.created_at, u.id AS inviter_id, u.display_name, u.avatar_url
+    SELECT p.source_token, l.name AS source_name, p.created_at, u.id AS inviter_id, u.display_name, u.avatar_url
     FROM pending_invites p
     JOIN users u ON u.id = p.from_user_id
+    LEFT JOIN invite_links l ON l.token = p.source_token
     WHERE p.to_user_id = ? AND p.dismissed = 0
       AND NOT EXISTS (
         SELECT 1 FROM friendships f
@@ -213,9 +227,10 @@ router.get('/incoming', requireAuth, (req: AuthRequest, res) => {
            OR (f.user_a_id = p.to_user_id AND f.user_b_id = p.from_user_id)
       )
     ORDER BY p.created_at DESC
-  `).all(req.userId) as Array<{ source_token: string | null; created_at: number; inviter_id: string; display_name: string; avatar_url: string | null }>;
+  `).all(req.userId) as Array<{ source_token: string | null; source_name: string | null; created_at: number; inviter_id: string; display_name: string; avatar_url: string | null }>;
   res.json(rows.map(r => ({
     token: r.source_token,
+    source_name: r.source_name,
     created_at: r.created_at,
     inviter: { id: r.inviter_id, display_name: r.display_name, avatar_url: r.avatar_url },
   })));
@@ -254,7 +269,7 @@ function formatIcsDate(date: Date): string {
 
 // GET /api/invites/:token/calendar.ics — invitee calendar download (no auth required)
 router.get('/:token/calendar.ics', optionalAuth, (req: AuthRequest, res) => {
-  const { token } = req.params;
+  const token = normalizeToken(req.params.token as string);
   const nowUnix = Math.floor(Date.now() / 1000);
 
   const invite = db.prepare('SELECT * FROM invite_links WHERE token = ? AND revoked = 0').get(token) as any;
@@ -301,7 +316,7 @@ router.get('/:token/calendar.ics', optionalAuth, (req: AuthRequest, res) => {
 
 // GET /api/invites/:token — get invite info (no auth required)
 router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
-  const { token } = req.params as { token: string };
+  const token = normalizeToken(req.params.token as string);
   const nowUnix = Math.floor(Date.now() / 1000);
 
   const invite = db.prepare('SELECT * FROM invite_links WHERE token = ?').get(token) as any;
@@ -343,12 +358,12 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
 
   if (req.userId && !isSelf && !alreadyFriends) recordInviteView(token, req.userId);
 
-  res.json({ inviter, status, alreadyFriends, isSelf, candidates });
+  res.json({ inviter, status, alreadyFriends, isSelf, candidates, link_name: invite.name ?? null });
 });
 
 // POST /api/invites/:token/accept — accept invite (auth required)
 router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
-  const { token } = req.params as { token: string };
+  const token = normalizeToken(req.params.token as string);
   const userId = req.userId!;
   const nowUnix = Math.floor(Date.now() / 1000);
 
@@ -403,9 +418,25 @@ router.post('/email', requireAuth, async (req: AuthRequest, res) => {
   res.status(201).json({ ok: true, token });
 });
 
+// POST /api/invites/:token/rename — the name is cosmetic in the URL, so renaming never
+// breaks a copy already shared; new copies just carry the new slug.
+router.post('/:token/rename', requireAuth, async (req: AuthRequest, res) => {
+  const token = normalizeToken(req.params.token as string);
+  const raw = typeof req.body?.name === 'string' ? sanitizeNote(req.body.name).slice(0, 60) : '';
+  const name = raw || null;
+  if (name && !(await isNoteAllowed(name))) return res.status(400).json({ error: 'NAME_NOT_ALLOWED' });
+
+  const result = db.prepare('UPDATE invite_links SET name = ? WHERE token = ? AND created_by = ?')
+    .run(name, token, req.userId);
+  if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
+
+  const appUrl = process.env.APP_URL || 'http://localhost:5173';
+  res.json({ ok: true, name, url: inviteUrl(appUrl, token, name) });
+});
+
 // POST /api/invites/:token/revoke
 router.post('/:token/revoke', requireAuth, (req: AuthRequest, res) => {
-  const { token } = req.params;
+  const token = normalizeToken(req.params.token as string);
   const result = db.prepare('UPDATE invite_links SET revoked = 1 WHERE token = ? AND created_by = ?').run(token, req.userId);
   if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
   res.json({ ok: true });

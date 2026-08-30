@@ -89,7 +89,7 @@ export default function Invite() {
   const candidateList = () => (
     <div data-testid="invite-candidates" className="mb-6 text-left">
       <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
-        {t('invite.alsoHereTitle')}
+        {info.link_name ? t('invite.alsoHereNamed', { name: info.link_name }) : t('invite.alsoHereTitle')}
       </p>
       <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
         {candidates.map((c, i) => (
@@ -309,6 +309,11 @@ export default function Invite() {
     return (
       <div data-testid="invite-confirm" className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-center px-6 py-10">
         <div className="w-full max-w-sm text-center">
+          {info.link_name && (
+            <p data-testid="invite-link-name" className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-3">
+              {info.link_name}
+            </p>
+          )}
           <Avatar name={info.inviter.display_name} url={info.inviter.avatar_url} size="lg" className="mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-50 mb-2">
             {t('invite.confirmTitle', { name: info.inviter.display_name })}

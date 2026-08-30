@@ -236,7 +236,11 @@
     "waitingTitle": "等你决定",
     "dismissInvite": "忽略",
     "acceptInvite_one": "连接",
-    "acceptInvite_other": "与 {{count}} 人连接"
+    "acceptInvite_other": "与 {{count}} 人连接",
+    "viaLink": "来自{{name}}",
+    "nameLinkTitle": "新邀请链接",
+    "nameLinkDesc": "起个名字，打开的人就知道这是做什么的——在聊天预览里和应用里都能看到。",
+    "nameLinkPlaceholder": "周日烧烤（可选）"
   },
   "invite": {
     "expiredTitle": "邀请已过期",
@@ -281,7 +285,8 @@
     "alsoHereTitle": "也在这里",
     "confirmAcceptMany": "与 {{count}} 人连接",
     "alsoConnectCta": "与 {{count}} 人连接",
-    "alsoConnected": "已发送。他们会在朋友页看到。"
+    "alsoConnected": "已发送。他们会在朋友页看到。",
+    "alsoHereNamed": "同在「{{name}}」"
   },
   "feedback": {
     "title": "分享反馈",

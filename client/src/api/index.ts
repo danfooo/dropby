@@ -90,7 +90,9 @@ export const statusApi = {
 
 // Invites
 export const invitesApi = {
-  generate: (statusId?: string) => api.post('/invites', statusId ? { status_id: statusId } : {}).then(r => r.data),
+  generate: (statusId?: string, name?: string) =>
+    api.post('/invites', { ...(statusId ? { status_id: statusId } : {}), ...(name ? { name } : {}) }).then(r => r.data),
+  rename: (token: string, name: string) => api.post(`/invites/${token}/rename`, { name }).then(r => r.data),
   get: (token: string) => api.get(`/invites/${token}`).then(r => r.data),
   accept: (token: string, also?: string[]) => api.post(`/invites/${token}/accept`, also?.length ? { also } : {}).then(r => r.data),
   revoke: (token: string) => api.post(`/invites/${token}/revoke`).then(r => r.data),

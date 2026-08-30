@@ -334,3 +334,80 @@ test('People you are already connected to are left out of the list', async ({ br
     await carolCtx.close();
   }
 });
+
+// ---------------------------------------------------------------------------
+// Named links: the name is in the URL, on the invite screen, and on the other
+// person's waiting row — so an unfamiliar name arrives with a reason attached.
+// ---------------------------------------------------------------------------
+
+async function generateNamedInvite(page: any, name: string): Promise<{ url: string; path: string }> {
+  const data = await page.evaluate(async (linkName: string) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/invites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name: linkName }),
+    });
+    return res.json();
+  }, name);
+  const url = data.url as string;
+  return { url, path: `/invite/${url.split('/invite/')[1]}` };
+}
+
+test('A named link carries its name in the URL, on the invite screen and on the waiting row', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const bobCtx = await browser.newContext();
+  const carolCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  const bobPage = await bobCtx.newPage();
+  const carolPage = await carolCtx.newPage();
+
+  try {
+    await setupUser(alicePage, ALICE);
+    const { path } = await generateNamedInvite(alicePage, 'Sunday BBQ');
+
+    // The name is readable in the link itself, ahead of the token
+    expect(path).toContain('sunday-bbq-');
+
+    // ...and the slugged URL resolves exactly like a bare token would
+    await setupUser(bobPage, BOB);
+    await bobPage.goto(path);
+    await expect(bobPage.getByTestId('invite-confirm')).toBeVisible({ timeout: 10_000 });
+    await expect(bobPage.getByTestId('invite-link-name')).toHaveText('Sunday BBQ');
+    await bobPage.getByTestId('invite-accept').click();
+    await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    // Carol picks Bob off the link; Bob is told where the request came from
+    await setupUser(carolPage, CAROL);
+    await carolPage.goto(path);
+    await expect(carolPage.getByTestId('invite-candidates')).toBeVisible({ timeout: 10_000 });
+    await carolPage.getByTestId('invite-accept').click();
+    await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    await bobPage.goto('/friends');
+    await bobPage.waitForLoadState('domcontentloaded');
+    const waiting = bobPage.getByTestId('incoming-invites');
+    await expect(waiting).toBeVisible({ timeout: 10_000 });
+    await expect(waiting.getByText('Carol')).toBeVisible();
+    await expect(waiting.getByText(/from Sunday BBQ/i)).toBeVisible();
+  } finally {
+    await aliceCtx.close();
+    await bobCtx.close();
+    await carolCtx.close();
+  }
+});
+
+test('Creating a link asks for a name first', async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  try {
+    await setupUser(page, ALICE);
+    await page.goto('/friends');
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: /new invite link/i }).first().click();
+    await expect(page.getByPlaceholder(/sunday bbq/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('copy-named-link')).toBeVisible();
+  } finally {
+    await ctx.close();
+  }
+});

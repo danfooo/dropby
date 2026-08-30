@@ -236,7 +236,11 @@
     "waitingTitle": "In attesa di te",
     "dismissInvite": "Ignora",
     "acceptInvite_one": "Connetti",
-    "acceptInvite_other": "Connettiti con {{count}}"
+    "acceptInvite_other": "Connettiti con {{count}}",
+    "viaLink": "da {{name}}",
+    "nameLinkTitle": "Nuovo link d'invito",
+    "nameLinkDesc": "Dagli un nome e tutti vedranno a cosa serve — nell'anteprima della chat e nell'app.",
+    "nameLinkPlaceholder": "Grigliata di domenica (facoltativo)"
   },
   "invite": {
     "expiredTitle": "Invito scaduto",
@@ -281,7 +285,8 @@
     "alsoHereTitle": "Anche qui",
     "confirmAcceptMany": "Connettiti con {{count}} persone",
     "alsoConnectCta": "Connettiti con {{count}}",
-    "alsoConnected": "Inviato. Lo vedranno nella loro scheda Amici."
+    "alsoConnected": "Inviato. Lo vedranno nella loro scheda Amici.",
+    "alsoHereNamed": "Anche in {{name}}"
   },
   "feedback": {
     "title": "Condividi feedback",

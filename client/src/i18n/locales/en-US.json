@@ -236,7 +236,11 @@
     "waitingTitle": "Waiting for you",
     "dismissInvite": "Dismiss",
     "acceptInvite_one": "Connect",
-    "acceptInvite_other": "Connect with {{count}}"
+    "acceptInvite_other": "Connect with {{count}}",
+    "viaLink": "from {{name}}",
+    "nameLinkTitle": "New invite link",
+    "nameLinkDesc": "Give it a name and everyone who opens it sees what it's for — in the chat preview and in the app.",
+    "nameLinkPlaceholder": "Sunday BBQ (optional)"
   },
   "invite": {
     "expiredTitle": "Invite expired",
@@ -281,7 +285,8 @@
     "alsoHereTitle": "Also here",
     "confirmAcceptMany": "Connect with {{count}} people",
     "alsoConnectCta": "Connect with {{count}}",
-    "alsoConnected": "Sent. They'll see it in their Friends tab."
+    "alsoConnected": "Sent. They'll see it in their Friends tab.",
+    "alsoHereNamed": "Also in {{name}}"
   },
   "feedback": {
     "title": "Share feedback",

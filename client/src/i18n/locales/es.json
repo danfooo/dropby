@@ -236,7 +236,11 @@
     "waitingTitle": "Te está esperando",
     "dismissInvite": "Descartar",
     "acceptInvite_one": "Conectar",
-    "acceptInvite_other": "Conectar con {{count}}"
+    "acceptInvite_other": "Conectar con {{count}}",
+    "viaLink": "de {{name}}",
+    "nameLinkTitle": "Nuevo enlace de invitación",
+    "nameLinkDesc": "Ponle un nombre y todos verán para qué es — en la vista previa del chat y en la app.",
+    "nameLinkPlaceholder": "Asado del domingo (opcional)"
   },
   "invite": {
     "expiredTitle": "Invitación expirada",
@@ -281,7 +285,8 @@
     "alsoHereTitle": "También aquí",
     "confirmAcceptMany": "Conectar con {{count}} personas",
     "alsoConnectCta": "Conectar con {{count}}",
-    "alsoConnected": "Enviado. Lo verán en su pestaña de Amigos."
+    "alsoConnected": "Enviado. Lo verán en su pestaña de Amigos.",
+    "alsoHereNamed": "También en {{name}}"
   },
   "feedback": {
     "title": "Compartir opinión",

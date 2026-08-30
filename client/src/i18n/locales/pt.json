@@ -236,7 +236,11 @@
     "waitingTitle": "À tua espera",
     "dismissInvite": "Dispensar",
     "acceptInvite_one": "Ligar",
-    "acceptInvite_other": "Ligar-te a {{count}}"
+    "acceptInvite_other": "Ligar-te a {{count}}",
+    "viaLink": "de {{name}}",
+    "nameLinkTitle": "Novo link de convite",
+    "nameLinkDesc": "Dá-lhe um nome e toda a gente vê para que serve — na pré-visualização do chat e na app.",
+    "nameLinkPlaceholder": "Churrasco de domingo (opcional)"
   },
   "invite": {
     "expiredTitle": "Convite expirado",
@@ -281,7 +285,8 @@
     "alsoHereTitle": "Também aqui",
     "confirmAcceptMany": "Ligar-te a {{count}} pessoas",
     "alsoConnectCta": "Ligar-te a {{count}}",
-    "alsoConnected": "Enviado. Vão ver no separador Amigos."
+    "alsoConnected": "Enviado. Vão ver no separador Amigos.",
+    "alsoHereNamed": "Também em {{name}}"
   },
   "feedback": {
     "title": "Partilhar feedback",

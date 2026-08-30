@@ -236,7 +236,11 @@
     "waitingTitle": "Wartet auf dich",
     "dismissInvite": "Verwerfen",
     "acceptInvite_one": "Verbinden",
-    "acceptInvite_other": "Mit {{count}} verbinden"
+    "acceptInvite_other": "Mit {{count}} verbinden",
+    "viaLink": "von {{name}}",
+    "nameLinkTitle": "Neuer Einladungslink",
+    "nameLinkDesc": "Gib ihm einen Namen, dann sehen alle, wofür er ist — in der Chat-Vorschau und in der App.",
+    "nameLinkPlaceholder": "Grillen am Sonntag (optional)"
   },
   "invite": {
     "expiredTitle": "Einladung abgelaufen",
@@ -281,7 +285,8 @@
     "alsoHereTitle": "Auch hier",
     "confirmAcceptMany": "Mit {{count}} Leuten verbinden",
     "alsoConnectCta": "Mit {{count}} verbinden",
-    "alsoConnected": "Gesendet. Sie sehen es in ihrem Freunde-Tab."
+    "alsoConnected": "Gesendet. Sie sehen es in ihrem Freunde-Tab.",
+    "alsoHereNamed": "Auch bei {{name}}"
   },
   "feedback": {
     "title": "Feedback teilen",

@@ -8,6 +8,7 @@ import { db } from '../db/index.js';
 import { requireAuth, signJwt, AuthRequest } from '../middleware/auth.js';
 import { sendVerificationEmail } from '../services/email.js';
 import { acceptInviteToken } from './invites.js';
+import { normalizeToken } from '../utils/invite-link.js';
 import { log } from '../services/analytics.js';
 
 const avatarsDir = join(process.cwd(), 'data', 'avatars');
@@ -33,7 +34,7 @@ function validateInviteToken(token: unknown): string | null {
   const now = Math.floor(Date.now() / 1000);
   const row = db.prepare(
     'SELECT created_by FROM invite_links WHERE token = ? AND revoked = 0 AND expires_at > ?'
-  ).get(token, now) as { created_by: string } | undefined;
+  ).get(normalizeToken(token), now) as { created_by: string } | undefined;
   return row?.created_by ?? null;
 }
 

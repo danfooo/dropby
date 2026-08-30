@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { invitePreview, applyPreview } from './services/invite-preview.js';
 
 import authRouter from './routes/auth.js';
 import friendsRouter from './routes/friends.js';
@@ -123,7 +124,17 @@ if (process.env.NODE_ENV === 'test') {
 if (!isDev) {
   const clientDist = join(process.cwd(), '..', 'client', 'dist');
   if (existsSync(clientDist)) {
-    app.use(express.static(clientDist));
+    app.use(express.static(clientDist, { index: false }));
+
+    // Invite links get their own share preview, so a link named for a group shows that
+    // name as the title card in whatever chat app it was pasted into.
+    app.get('/invite/:token', (req, res) => {
+      const indexPath = join(clientDist, 'index.html');
+      const preview = invitePreview(req.params.token as string);
+      if (!preview) return res.sendFile(indexPath);
+      res.type('html').send(applyPreview(readFileSync(indexPath, 'utf-8'), preview));
+    });
+
     app.get('/*splat', (_req, res) => res.sendFile(join(clientDist, 'index.html')));
   }
 }

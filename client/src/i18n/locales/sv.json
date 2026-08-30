@@ -236,7 +236,11 @@
     "waitingTitle": "Väntar på dig",
     "dismissInvite": "Avfärda",
     "acceptInvite_one": "Koppla ihop",
-    "acceptInvite_other": "Koppla ihop med {{count}}"
+    "acceptInvite_other": "Koppla ihop med {{count}}",
+    "viaLink": "från {{name}}",
+    "nameLinkTitle": "Ny inbjudningslänk",
+    "nameLinkDesc": "Ge den ett namn så ser alla vad den gäller — i chattens förhandsvisning och i appen.",
+    "nameLinkPlaceholder": "Söndagsgrillning (valfritt)"
   },
   "invite": {
     "expiredTitle": "Inbjudan utgången",
@@ -281,7 +285,8 @@
     "alsoHereTitle": "Också här",
     "confirmAcceptMany": "Koppla ihop med {{count}} personer",
     "alsoConnectCta": "Koppla ihop med {{count}}",
-    "alsoConnected": "Skickat. De ser det under Vänner."
+    "alsoConnected": "Skickat. De ser det under Vänner.",
+    "alsoHereNamed": "Också i {{name}}"
   },
   "feedback": {
     "title": "Dela feedback",

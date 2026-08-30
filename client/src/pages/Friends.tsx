@@ -44,6 +44,8 @@ export default function Friends() {
   // Waiting-for-you rows are checked by default; storing the exclusions means someone
   // who asks while the page is open is included without rewriting the selection.
   const [uncheckedIncoming, setUnchecked] = useState<string[]>([]);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [linkName, setLinkName] = useState('');
   const pickerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -138,12 +140,17 @@ export default function Friends() {
   const activeFriends = filtered.filter((f: any) => !f.hidden);
   const hiddenFriends = filtered.filter((f: any) => f.hidden);
 
+  // Naming is what makes a link legible in a group chat — it becomes the title card in
+  // the share preview and the "from ..." line on the other person's waiting row.
   const handleInvite = async () => {
+    const name = linkName.trim();
     try {
-      await copyText(invitesApi.generate().then(data => {
+      await copyText(invitesApi.generate(undefined, name || undefined).then(data => {
         qc.invalidateQueries({ queryKey: ['open-links'] });
         return `${t('home.friendshipCopyText')}\n${data.url}`;
       }));
+      setShowNameModal(false);
+      setLinkName('');
       alert(t('home.inviteLinkCopied'));
     } catch {
       alert(t('home.couldNotCopy'));
@@ -195,7 +202,14 @@ export default function Friends() {
               {(incoming as any[]).map((item: any, i: number) => (
                 <label key={item.inviter.id} className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${i > 0 ? 'border-t border-gray-50 dark:border-gray-800' : ''}`}>
                   <Avatar name={item.inviter.display_name} url={item.inviter.avatar_url} size="sm" />
-                  <span className="flex-1 min-w-0 truncate text-sm font-medium text-gray-900 dark:text-gray-50">{item.inviter.display_name}</span>
+                  <span className="flex-1 min-w-0 truncate">
+                    <span className="block text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{item.inviter.display_name}</span>
+                    {item.source_name && (
+                      <span className="block text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {t('friends.viaLink', { name: item.source_name })}
+                      </span>
+                    )}
+                  </span>
                   <button
                     onClick={e => { e.preventDefault(); dismissIncoming.mutate([item.inviter.id]); }}
                     className="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1 shrink-0"
@@ -235,7 +249,7 @@ export default function Friends() {
             <p className="font-semibold text-gray-900 dark:text-gray-50 mb-2">{t('friends.noFriendsTitle')}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t('friends.noFriendsDesc')}</p>
             <div className="flex gap-3 justify-center">
-              <button onClick={handleInvite} className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium">
+              <button onClick={() => setShowNameModal(true)} className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium">
                 {t('friends.copyInviteLink')}
               </button>
               <button onClick={() => setShowAddModal(true)} className="px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium">
@@ -384,8 +398,8 @@ export default function Friends() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
                           </div>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {t('friends.inviteLinkLabel', { time: createdAgo })}
+                          <span className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                            {item.name || t('friends.inviteLinkLabel', { time: createdAgo })}
                           </span>
                         </button>
                       ) : (
@@ -419,7 +433,7 @@ export default function Friends() {
         {/* Add friends actions */}
         <div className="flex gap-3 mt-2 mb-6">
           <button
-            onClick={handleInvite}
+            onClick={() => setShowNameModal(true)}
             className="flex-1 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium"
           >
             {t('friends.copyInviteLink')}
@@ -479,6 +493,26 @@ export default function Friends() {
             </button>
           </form>
         )}
+      </Modal>
+
+      <Modal open={showNameModal} onClose={() => setShowNameModal(false)} title={t('friends.nameLinkTitle')}>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('friends.nameLinkDesc')}</p>
+        <input
+          type="text"
+          value={linkName}
+          maxLength={60}
+          onChange={e => setLinkName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleInvite(); }}
+          placeholder={t('friends.nameLinkPlaceholder')}
+          className="w-full px-4 py-3 mb-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
+        />
+        <button
+          data-testid="copy-named-link"
+          onClick={handleInvite}
+          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-semibold"
+        >
+          {t('friends.copyInviteLink')}
+        </button>
       </Modal>
     </div>
   );
