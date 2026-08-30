@@ -124,7 +124,10 @@ if (process.env.NODE_ENV === 'test') {
 if (!isDev) {
   const clientDist = join(process.cwd(), '..', 'client', 'dist');
   if (existsSync(clientDist)) {
-    app.use(express.static(clientDist, { index: false }));
+    // Note: no `index: false` here — that would stop `/` being served, and Express 5's
+    // `/*splat` does not match the root. Static passes non-file paths through anyway,
+    // so the invite route below still gets `/invite/*`.
+    app.use(express.static(clientDist));
 
     // Invite links get their own share preview, so a link named for a group shows that
     // name as the title card in whatever chat app it was pasted into.
