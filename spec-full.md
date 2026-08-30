@@ -526,7 +526,8 @@ Empty state (no friends): invite link CTA + Add Friend CTA
 - Nothing is created on open. A confirmation screen is shown: host avatar and name, "[name] wants to connect", "You'll both see when the other's door is open."
 - If the link is door-specific, the door card (note, location, or scheduled time) is shown on the confirmation screen too — the door is visible before accepting, but joining it still requires accepting
 - **Others who opened this link** are listed below the host, if any: avatar, name, and a checkbox, **all pre-checked**. The list excludes the viewer, the host, and anyone they are already friends with. Header: "Also here"
-- The single Accept action covers the host and every checked person; unchecking is how you connect with fewer. Button reads "Accept" alone, or "Connect with [n] people" when the list is non-empty.
+- The single Accept action covers the host and every checked person; unchecking is how you connect with fewer. Button reads "Accept" alone, or "Connect with [n] people" when the list is non-empty — [n] counts the host too, since this screen only appears when the host is not yet a friend. The catch-up list on the already-friends and own-link screens counts only the people picked.
+- Because the list already excludes existing friends, the count only ever covers connections that do not exist yet. Someone who opens a link where they already know half the people is offered the other half.
 - "Accept" → connects with the host, records intent toward each checked person (connecting immediately with any who already picked the viewer), then:
   - If the link is door-specific and that door is still open: the new friend is added as a recipient; success screen shows "You're now friends!" + host's open door card with "Going ✅" button
   - Otherwise: success screen shows "You and [name] are now friends on dropby" + "Go home" button

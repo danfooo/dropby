@@ -286,3 +286,51 @@ test('Both sides picking each other connects them with no accept step', async ({
     await carolCtx.close();
   }
 });
+
+test('People you are already connected to are left out of the list', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const bobCtx = await browser.newContext();
+  const carolCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  const bobPage = await bobCtx.newPage();
+  const carolPage = await carolCtx.newPage();
+
+  try {
+    await setupUser(alicePage, ALICE);
+    const { url } = await generateInvite(alicePage);
+
+    await setupUser(bobPage, BOB);
+    await bobPage.goto(url);
+    await bobPage.getByTestId('invite-accept').click();
+    await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    // Carol connects with Alice and asks Bob; Bob accepts, so the pair is settled
+    await setupUser(carolPage, CAROL);
+    await carolPage.goto(url);
+    await expect(carolPage.getByTestId('invite-candidates')).toBeVisible({ timeout: 10_000 });
+    await carolPage.getByTestId('invite-accept').click();
+    await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    await bobPage.goto('/friends');
+    await bobPage.waitForLoadState('domcontentloaded');
+    await expect(bobPage.getByTestId('incoming-invites')).toBeVisible({ timeout: 10_000 });
+    await bobPage.getByTestId('incoming-connect').click();
+    await expect.poll(() => areFriends(BOB.email, CAROL.email), { timeout: 10_000 }).toBe(true);
+
+    // Re-opening the link offers nobody: Carol is the only other person on it and Bob
+    // is now connected to her, so there is nothing left to pick.
+    await bobPage.goto(url);
+    await expect(bobPage.getByTestId('invite-already-friends')).toBeVisible({ timeout: 10_000 });
+    await expect(bobPage.getByTestId('invite-candidates')).not.toBeVisible();
+    await expect(bobPage.getByTestId('invite-also-connect')).not.toBeVisible();
+
+    // And Carol, opening it again, is likewise offered nobody
+    await carolPage.goto(url);
+    await expect(carolPage.getByTestId('invite-already-friends')).toBeVisible({ timeout: 10_000 });
+    await expect(carolPage.getByTestId('invite-candidates')).not.toBeVisible();
+  } finally {
+    await aliceCtx.close();
+    await bobCtx.close();
+    await carolCtx.close();
+  }
+});
