@@ -26,21 +26,14 @@ All other logo assets (`logo-icon.svg`, `logo.svg`, `ic_launcher_foreground.svg`
 - [ ] **Android App Links not configured** — unlike iOS, `AndroidManifest.xml` has no `intent-filter` for `dropby.cc`, so invite / verify-email / reset-password links open in the browser rather than the app. Independent of the credential sharing above, which does not need an intent filter.
 - [ ] **Tab bar safe area flicker on first load** — `--safe-area-inset-bottom` is injected by Capacitor's `SystemBars` plugin via JS after page render. There may be a brief flash where the tab bar sits too low before the variable is set. If seen, fix by hardcoding a reasonable CSS fallback (e.g. `var(--safe-area-inset-bottom, 24px)`) or by deferring first paint until insets are ready. See `client/src/index.css` `.safe-bottom` and `android/app/src/main/java/cc/dropby/app/MainActivity.java`.
 
-## Named group invite links (in design)
-One link, dropped in a group chat, that lets everyone who opens it connect to everyone else — so n people don't need n² invites. Current design:
+## Named group invite links — remaining
+Built: link participation and candidacy, pre-checked multi-connect on the invite page, batch accept on the Friends page, mutual-pick auto-connection, link names with the slug in the URL, per-link share previews, provenance on waiting rows, coalesced connection pushes, the suggestions opt-out, and the signup/Privacy disclosure. See `spec-full.md`.
 
-**There is no group object.** The link records who opened it, and every connection it produces is an ordinary 1:1 friendship. This replaces an earlier design with durable groups and membership-derived connections; that version needed a `groups` table, a connections view unioning it with `friendships` (rewriting five raw queries in `status.ts`), leave semantics, member removal, a cap, and a "move this person to my own friends" flow — all machinery for making an automatic connection reversible. Nothing is automatic here, so none of it is needed.
+Still open:
 
-- **Opening a link makes you a candidate, not a connection.** Storage is `link_participants(token, user_id)`; two people are candidates for each other because they share a token. Nothing is sent by anyone, and no directed state exists until someone taps connect — at which point it is the ordinary invite already in the app, landing in the "Waiting for you" section of the Friends page. One rule on top: if both sides independently tap connect, connect them rather than leaving two invitations pointing at each other.
-- **Multi-select both ways.** Picking people from the link is one screen with checkboxes; waiting rows accept in a batch.
-- **Provenance.** A waiting row reads "Anna — from *Sunday BBQ*", which is what makes an unfamiliar name worth accepting. The name lives in the link path (slugified, truncated, random suffix), the OG share preview, and that row — never as an object in the app. No groups tab, no "group" noun in the UI.
-- **Server-rendered OG tags per link are new work** — nothing renders them today. The name is user-typed and becomes a title card in WhatsApp, so it should pass through the moderation service.
-- **Expiry closes joining, nothing else** (~24h, vs. 7 days for regular invites); the creator can close a link early. Connections already made are untouched, and `link_participants` is retained rather than expiring with the link — see suggestions below. Deliberate: it is a durable record of who was in which chat with whom, so expiry is not a safety mechanism here.
-- **Declining tells the sender nothing.** Outstanding invites you sent appear in the existing Pending section.
-
-**Later: suggestions from shared links.** Because candidacy is a fact about a pair rather than something anyone sent, it can be read for friend suggestions beyond the people on one link. Relevance is inversely weighted by link size — a 5-person link is strong evidence people actually know each other, a 40-person link is nearly none, which also caps second-degree blowup. Ship a degree only when the reason renders as one honest phrase: first degree has one ("from Sunday BBQ"), second may ("you both know Anna from Sunday BBQ"), third almost certainly does not — and an unexplainable suggestion is the social-network surface dropby is not.
-
-Still open: exact expiry (proposed 24h); whether closing a link is creator-only or open to anyone who opened it.
+- [ ] **Expiry for named links.** All links are still 7 days. The design proposed ~24h for a link meant to be dropped in a group chat, on the grounds that the candidate list is a disclosure and expiry is what closes it. Not changed unilaterally: it shortens the life of every link people are already sharing, and it is not obvious that naming a link should make it die sooner. Decide whether expiry keys off the name, off a separate "group link" affordance, or stays uniform.
+- [ ] **Closing a link early** is creator-only via the existing revoke. Decide whether anyone who opened it can close it.
+- [ ] **Second-degree suggestions** — people who opened a link someone from your link also opened. Ships only if the reason renders in one honest phrase ("you both know Anna from Sunday BBQ"), weighted inversely by link size. First degree is live.
 
 Related but separate: with no group object there is nothing to select as door recipients in one tap. Saved recipient sets ("open my door to these 8") are a real ergonomic want, but a different feature — do not drag the group object back for it.
 
