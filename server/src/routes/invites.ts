@@ -32,9 +32,27 @@ function displayName(userId: string): string | null {
 // Creates the friendship both sides have now asked for, and clears any pending rows.
 // `sourceToken` only matters for a door-specific link: it is what lets the new friend
 // into a door that is already open.
-export function connectUsers(actorId: string, otherId: string, sourceToken?: string | null): void {
+export function connectUsers(
+  actorId: string,
+  otherId: string,
+  sourceToken?: string | null,
+  via: 'link_host' | 'candidate' | 'suggestion' | 'signup' = 'link_host',
+): void {
   if (actorId === otherId || areFriends(actorId, otherId)) return;
   const nowUnix = Math.floor(Date.now() / 1000);
+
+  // How the pair met, and how big the link was: together these say whether a link is
+  // connecting a whole group or just funnelling people to its creator.
+  const linkSize = sourceToken
+    ? (db.prepare('SELECT COUNT(*) AS n FROM link_participants WHERE token = ?').get(sourceToken) as any)?.n ?? 0
+    : 0;
+  const mutual = hasPendingInvite(actorId, otherId) && hasPendingInvite(otherId, actorId);
+  log('connection.created', actorId, {
+    via,
+    link_size: linkSize,
+    named_link: sourceToken ? !!(db.prepare('SELECT name FROM invite_links WHERE token = ?').get(sourceToken) as any)?.name : false,
+    resolution: hasPendingInvite(otherId, actorId) ? (mutual ? 'mutual' : 'accepted') : 'immediate',
+  });
 
   const [a, b] = [actorId, otherId].sort();
   db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
@@ -65,12 +83,18 @@ export function connectUsers(actorId: string, otherId: string, sourceToken?: str
 
 // Records one person's intent to connect. If the other side already asked, this connects
 // them instead — order doesn't matter, and neither sees an accept step.
-export function recordIntent(fromId: string, toId: string, sourceToken?: string | null): 'connected' | 'pending' | 'noop' {
+export function recordIntent(
+  fromId: string,
+  toId: string,
+  sourceToken?: string | null,
+  via: 'link_host' | 'candidate' | 'suggestion' = 'candidate',
+): 'connected' | 'pending' | 'noop' {
   if (fromId === toId || areFriends(fromId, toId)) return 'noop';
   if (hasPendingInvite(toId, fromId)) {
-    connectUsers(fromId, toId, sourceToken ?? db.prepare('SELECT source_token FROM pending_invites WHERE from_user_id = ? AND to_user_id = ?').get(toId, fromId) as any);
+    connectUsers(fromId, toId, sourceToken ?? db.prepare('SELECT source_token FROM pending_invites WHERE from_user_id = ? AND to_user_id = ?').get(toId, fromId) as any, via);
     return 'connected';
   }
+  log('invite.sent', fromId, { via });
   db.prepare(`
     INSERT INTO pending_invites (id, from_user_id, to_user_id, source_token) VALUES (?, ?, ?, ?)
     ON CONFLICT(from_user_id, to_user_id) DO UPDATE SET dismissed = 0
@@ -87,7 +111,13 @@ function recordInviteView(token: unknown, userId: string): void {
   if (!invite || invite.created_by === userId) return;
 
   const isNewParticipant = db.prepare('SELECT id FROM link_participants WHERE token = ? AND user_id = ?').get(token, userId) === undefined;
+  const priorParticipants = (db.prepare('SELECT COUNT(*) AS n FROM link_participants WHERE token = ?').get(token) as any)?.n ?? 0;
   db.prepare('INSERT OR IGNORE INTO link_participants (id, token, user_id) VALUES (?, ?, ?)').run(randomUUID(), token, userId);
+
+  if (isNewParticipant) {
+    const named = !!(db.prepare('SELECT name FROM invite_links WHERE token = ?').get(token) as any)?.name;
+    log('link.opened', userId, { named, prior_participants: priorParticipants });
+  }
 
   if (isNewParticipant) {
     const name = displayName(userId);
@@ -121,7 +151,11 @@ function candidatesFor(token: string, viewerId: string): Array<{ id: string; dis
 }
 
 // Shared logic: create friendship from an invite token, used by accept endpoint and email verification
-export function acceptInviteToken(rawToken: string, acceptorId: string): { ok: boolean; inviterName?: string } {
+export function acceptInviteToken(
+  rawToken: string,
+  acceptorId: string,
+  via: 'link_host' | 'signup' = 'link_host',
+): { ok: boolean; inviterName?: string } {
   const token = normalizeToken(rawToken);
   const nowUnix = Math.floor(Date.now() / 1000);
   const invite = db.prepare('SELECT * FROM invite_links WHERE token = ?').get(token) as any;
@@ -137,7 +171,7 @@ export function acceptInviteToken(rawToken: string, acceptorId: string): { ok: b
 
   // Only a door-specific link (created from an open door) lets the acceptor into that door.
   // A generic friend link creates the friendship and nothing more.
-  connectUsers(acceptorId, inviterId, token);
+  connectUsers(acceptorId, inviterId, token, via);
   return { ok: true, inviterName: displayName(inviterId) ?? undefined };
 }
 
@@ -151,10 +185,12 @@ function connectAlso(raw: unknown, userId: string, token: string): { connected: 
   let connected = 0, pending = 0;
   for (const id of picked) {
     if (!offerable.has(id)) continue;
-    const result = recordIntent(userId, id, token);
+    const result = recordIntent(userId, id, token, 'candidate');
     if (result === 'connected') connected++;
     else if (result === 'pending') pending++;
   }
+  // Offered vs. kept: whether people actually take the whole group, or prune it.
+  log('candidates.picked', userId, { offered: offerable.size, picked: connected + pending });
   return { connected, pending };
 }
 
@@ -241,7 +277,9 @@ router.get('/incoming', requireAuth, (req: AuthRequest, res) => {
 router.post('/pending/dismiss', requireAuth, (req: AuthRequest, res) => {
   const ids = Array.isArray(req.body?.from_user_ids) ? req.body.from_user_ids : [];
   const stmt = db.prepare('UPDATE pending_invites SET dismissed = 1 WHERE from_user_id = ? AND to_user_id = ?');
-  ids.filter((id: unknown) => typeof id === 'string').forEach((id: string) => stmt.run(id, req.userId));
+  const valid = ids.filter((id: unknown) => typeof id === 'string');
+  valid.forEach((id: string) => stmt.run(id, req.userId));
+  if (valid.length) log('pending.dismissed', req.userId!, { count: valid.length });
   res.json({ ok: true });
 });
 

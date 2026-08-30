@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { useAuthStore } from '../stores/auth';
-import { invitesApi, goingApi } from '../api';
+import { invitesApi, goingApi, trackApi } from '../api';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
 import { copyText } from '../utils/clipboard';
@@ -361,7 +361,10 @@ export default function Invite() {
           </button>
           <button
             data-testid="invite-close"
-            onClick={() => navigate('/friends')}
+            onClick={() => {
+              trackApi.event('invite.deferred', { candidates: candidates.length }).catch(() => {});
+              navigate('/friends');
+            }}
             className="w-full py-3 text-gray-500 dark:text-gray-400 font-medium"
           >
             {t('invite.confirmClose')}

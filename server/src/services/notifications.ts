@@ -347,6 +347,8 @@ export function flushQueuedNotifications() {
     g.ids.forEach(id => del.run(id));
     const tokens = getPushTokens(g.userId);
     const body = coalescedBody(g.type, g.names);
+    // batch tells us whether the coalescing window is actually bundling anything.
+    log(g.type === 'friend_suggestion' ? 'suggestion.notified' : 'friend_joined.notified', g.userId, { batch: g.names.length });
     tokens.forEach(t =>
       sendPush(g.userId, t.token, t.platform, { title: 'dropby', body, data: { type: g.type } })
     );

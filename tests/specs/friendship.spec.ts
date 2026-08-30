@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { resetTestUsers, areFriends } from '../helpers/server';
+import { resetTestUsers, areFriends, getEvents } from '../helpers/server';
 import { setupUser } from '../helpers/auth';
 import { ALICE, BOB, CAROL } from '../helpers/users';
 
@@ -505,6 +505,69 @@ test('Dismissing a suggestion stops it coming back', async ({ browser }) => {
     await bobPage.waitForLoadState('domcontentloaded');
     await expect(bobPage.getByTestId('incoming-invites')).not.toBeVisible();
     await expect(bobPage.getByTestId('friend-suggestions')).not.toBeVisible({ timeout: 10_000 });
+  } finally {
+    await aliceCtx.close();
+    await bobCtx.close();
+    await carolCtx.close();
+  }
+});
+
+test('Connecting through a link is instrumented well enough to tell fan-out from funnelling', async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const bobCtx = await browser.newContext();
+  const carolCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  const bobPage = await bobCtx.newPage();
+  const carolPage = await carolCtx.newPage();
+
+  try {
+    await setupUser(alicePage, ALICE);
+    const { path } = await generateNamedInvite(alicePage, 'Sunday BBQ');
+
+    await setupUser(bobPage, BOB);
+    await bobPage.goto(path);
+    await bobPage.getByTestId('invite-accept').click();
+    await expect(bobPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    await setupUser(carolPage, CAROL);
+    const carolId = await carolPage.evaluate(async () => {
+      const jwt = localStorage.getItem('token');
+      const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${jwt}` } });
+      return (await res.json()).id as string;
+    });
+
+    await carolPage.goto(path);
+    await expect(carolPage.getByTestId('invite-candidates')).toBeVisible({ timeout: 10_000 });
+    await carolPage.getByTestId('invite-accept').click();
+    await expect(carolPage.getByTestId('invite-accepted')).toBeVisible({ timeout: 10_000 });
+
+    const events = await getEvents(carolId);
+
+    // Opening a named link, and where in the queue she arrived
+    const opened = events.find(e => e.event === 'link.opened');
+    expect(opened, 'link.opened not logged').toBeTruthy();
+    expect(opened!.named).toBe(true);
+    expect(opened!.prior_participants).toBe(1);
+
+    // Offered one person, kept them: this is the ratio that says whether pre-checking is right
+    const picked = events.find(e => e.event === 'candidates.picked');
+    expect(picked, 'candidates.picked not logged').toBeTruthy();
+    expect(picked!.offered).toBe(1);
+    expect(picked!.picked).toBe(1);
+
+    // The connection to the host is distinguishable from the one to a fellow opener —
+    // without that split there is no way to tell a group connecting from a funnel.
+    // Signup's own auto-accept must not be counted as link fan-out, or the ratio the
+    // whole feature is judged on is inflated by every new account.
+    const connections = events.filter(e => e.event === 'connection.created');
+    expect(connections.map(c => c.via).sort()).toEqual(['link_host', 'signup']);
+    const viaLink = connections.find(c => c.via === 'link_host')!;
+    expect(viaLink.named_link).toBe(true);
+    expect(viaLink.link_size).toBe(2);
+
+    // Carol asked Bob rather than connecting outright, and that ask is recorded
+    const sent = events.filter(e => e.event === 'invite.sent');
+    expect(sent.map(s => s.via)).toEqual(['candidate']);
   } finally {
     await aliceCtx.close();
     await bobCtx.close();

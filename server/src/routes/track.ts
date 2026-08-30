@@ -5,7 +5,7 @@ import { optionalAuth, AuthRequest } from '../middleware/auth.js';
 const router = Router();
 
 // Allowlist of events the client is permitted to log
-const ALLOWED_CLIENT_EVENTS = new Set(['page.auth_viewed', 'chip.selected']);
+const ALLOWED_CLIENT_EVENTS = new Set(['page.auth_viewed', 'chip.selected', 'invite.deferred']);
 
 // POST /api/track — client-side event tracking (auth optional)
 router.post('/', optionalAuth, (req: AuthRequest, res) => {

@@ -160,7 +160,7 @@ router.post('/signup', async (req, res) => {
     VALUES (?, ?, ?, ?, 0, ?, ?, ?)
   `).run(id, emailLower, name, hash, verificationToken, verificationExpires, locale ?? null);
 
-  acceptInviteToken(invite_token as string, id);
+  acceptInviteToken(invite_token as string, id, 'signup');
 
   sendVerificationEmail(emailLower, name, verificationToken, locale, redirect_url);
   log('user.signup', id, { method: 'email' });
@@ -283,7 +283,7 @@ router.post('/google', async (req, res) => {
       `).run(id, emailLower, displayName, googleId, picture ?? null);
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
       log('user.signup', id, { method: 'google' });
-      acceptInviteToken(invite_token as string, id);
+      acceptInviteToken(invite_token as string, id, 'signup');
     } else {
       const updates: string[] = ['email_verified = 1'];
       const values: unknown[] = [];
@@ -353,7 +353,7 @@ router.post('/apple', async (req, res) => {
       `).run(id, userEmail, displayName, appleId);
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
       log('user.signup', id, { method: 'apple' });
-      acceptInviteToken(invite_token as string, id);
+      acceptInviteToken(invite_token as string, id, 'signup');
     } else {
       const updates: string[] = ['email_verified = 1'];
       const values: unknown[] = [];

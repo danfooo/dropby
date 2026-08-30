@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import { log } from '../services/analytics.js';
 
 const router = Router();
 
@@ -170,6 +171,13 @@ router.get('/suggestions', requireAuth, (req: AuthRequest, res) => {
   // strongest reason we have for suggesting them.
   const seen = new Set<string>();
   const suggestions = rows.filter(r => !seen.has(r.id) && seen.add(r.id)).slice(0, 10);
+  if (suggestions.length) {
+    log('suggestions.shown', req.userId!, {
+      count: suggestions.length,
+      // The strongest reason on offer — lets acceptance be read against link size.
+      best_link_size: suggestions[0].link_size,
+    });
+  }
   res.json(suggestions);
 });
 
@@ -180,6 +188,7 @@ router.post('/suggestions/dismiss', requireAuth, (req: AuthRequest, res) => {
     : [];
   const stmt = db.prepare('INSERT OR IGNORE INTO suggestion_dismissals (id, user_id, other_user_id) VALUES (?, ?, ?)');
   ids.forEach(id => stmt.run(randomUUID(), req.userId, id));
+  if (ids.length) log('suggestion.dismissed', req.userId!, { count: ids.length });
   res.json({ ok: true });
 });
 
@@ -202,7 +211,12 @@ router.post('/connect', requireAuth, async (req: AuthRequest, res) => {
     `).get(userId, otherId) as { token: string } | undefined;
     if (!shared) continue;
 
-    const result = recordIntent(userId, otherId, shared.token);
+    const size = (db.prepare('SELECT COUNT(*) AS n FROM link_participants WHERE token = ?').get(shared.token) as any)?.n ?? 0;
+    // link_size here is the test of the ranking hypothesis: are suggestions from small
+    // links acted on more often than suggestions from large ones?
+    log('suggestion.connected', userId, { link_size: size });
+
+    const result = recordIntent(userId, otherId, shared.token, 'suggestion');
     if (result === 'connected') connected++;
     else if (result === 'pending') pending++;
   }

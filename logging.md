@@ -112,9 +112,127 @@ Source: `server/src/routes/invites.ts`
 ### `invite.accepted`
 Emitted when a viewer accepts a friend invite (creates a friendship).
 
-No data fields.
+| field   | value                                                          |
+|---------|----------------------------------------------------------------|
+| `count` | Only when accepting a batch from the Friends page: how many     |
 
 Source: `server/src/routes/invites.ts`
+
+---
+
+### `invite.deferred`
+Emitted when someone taps "Not now" on the invite screen. Client-tracked via `/api/track`.
+
+| field        | value                                                        |
+|--------------|--------------------------------------------------------------|
+| `candidates` | How many other people were on offer when they walked away     |
+
+Source: `client/src/pages/Invite.tsx`
+
+---
+
+### `invite.sent`
+Emitted when someone records intent toward a person who has not asked back — the invite waits rather than connecting.
+
+| field | value                                       |
+|-------|---------------------------------------------|
+| `via` | `candidate` \| `suggestion` \| `link_host`   |
+
+Source: `server/src/routes/invites.ts`
+
+---
+
+### `link.opened`
+Emitted the first time a logged-in user opens an invite link that is not their own, making them a candidate for everyone else on it.
+
+| field                | value                                                     |
+|----------------------|-----------------------------------------------------------|
+| `named`              | `true` if the link has a name                              |
+| `prior_participants` | How many people had already opened it — their position     |
+
+Source: `server/src/routes/invites.ts`
+
+---
+
+### `candidates.picked`
+Emitted on accept when the link offered other people.
+
+| field     | value                                          |
+|-----------|------------------------------------------------|
+| `offered` | How many candidates were shown, all pre-checked |
+| `picked`  | How many were still checked on accept            |
+
+Source: `server/src/routes/invites.ts`
+
+---
+
+### `connection.created`
+Emitted whenever a friendship forms. `user_id` is the person who acted.
+
+| field        | value                                                                  |
+|--------------|------------------------------------------------------------------------|
+| `via`        | `link_host` \| `candidate` \| `suggestion` \| `signup`                   |
+| `link_size`  | Participants on the source link, `0` if none                            |
+| `named_link` | `true` if the source link had a name                                    |
+| `resolution` | `immediate` (the other side had a standing offer), `mutual` (both asked independently), `accepted` (answered a waiting row) |
+
+Source: `server/src/routes/invites.ts`
+
+---
+
+### `pending.dismissed`
+Emitted when waiting-for-you rows are cleared without connecting.
+
+| field   | value             |
+|---------|-------------------|
+| `count` | Rows dismissed     |
+
+Source: `server/src/routes/invites.ts`
+
+---
+
+### `suggestions.shown`
+Emitted when "People you may know" is rendered with at least one row.
+
+| field            | value                                                     |
+|------------------|-----------------------------------------------------------|
+| `count`          | Rows shown (max 10)                                        |
+| `best_link_size` | Size of the smallest shared link — the strongest reason on offer |
+
+Source: `server/src/routes/friends.ts`
+
+---
+
+### `suggestion.connected`
+Emitted when Connect is tapped on a suggestion.
+
+| field       | value                                    |
+|-------------|------------------------------------------|
+| `link_size` | Size of the link the pair share            |
+
+Source: `server/src/routes/friends.ts`
+
+---
+
+### `suggestion.dismissed`
+Emitted when a suggestion is dismissed. The dismissal is permanent.
+
+| field   | value                  |
+|---------|------------------------|
+| `count` | Suggestions dismissed   |
+
+Source: `server/src/routes/friends.ts`
+
+---
+
+### `suggestion.notified` / `friend_joined.notified`
+Emitted when a coalesced connection push goes out.
+
+| field   | value                                              |
+|---------|----------------------------------------------------|
+| `batch` | How many people the single notification covered      |
+
+Source: `server/src/services/notifications.ts`
 
 ---
 
@@ -153,6 +271,29 @@ Emitted when a push notification delivery fails.
 | `error`    | error message string              |
 
 Source: `server/src/services/notifications.ts`
+
+---
+
+### `waitlist.joined`
+Emitted when a new email is added to the waitlist.
+
+| field    | value                          |
+|----------|--------------------------------|
+| `locale` | Language tag sent by the client |
+
+Source: `server/src/routes/waitlist.ts`
+
+---
+
+### `push.register.ok` / `push.register.fail`
+Emitted when a device registers a push token, or is rejected.
+
+| field      | value                                        |
+|------------|----------------------------------------------|
+| `platform` | `ios` \| `android` \| `web` \| `missing`      |
+| `reason`   | Failures only, e.g. `invalid_platform`        |
+
+Source: `server/src/routes/auth.ts`
 
 ---
 

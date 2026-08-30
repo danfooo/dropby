@@ -1036,35 +1036,21 @@ Sections:
 Daily at 09:00 UTC, emails `hi@dropby.cc` (override via `WAITLIST_DIGEST_TO` env var) with all new waitlist entries since the last digest. Skipped when there are no new entries.
 
 ---
-
 ## 10. Analytics
 
-All server-side analytics are written to the `event_log` table by `server/src/services/analytics.ts`. The full event catalogue with data fields is in `logging.md`.
+All server-side analytics are written to the `event_log` table by `server/src/services/analytics.ts`.
 
-### Events
+**`logging.md` is the event catalogue** — every event, its data fields, its source file, the retention policy, and the `session.start` deduplication rule. It is the single place those are defined; this section does not repeat them. What belongs here is the product question each area of instrumentation exists to answer.
 
-| Event | Emitted when | Key data fields |
-|---|---|---|
-| `user.signup` | New account created | `method: "email" \| "google"` |
-| `user.verify` | Email verification link accepted | — |
-| `session.start` | User establishes SSE connection; throttled to once per hour per user | — |
-| `page.auth_viewed` | Client tracks auth page view with signup intent | `intent: "signup"` |
-| `door.open` | User creates an active status | `recipients: number`, `has_note: boolean` |
-| `going.sent` | Going signal submitted | `rsvp: string`, `is_guest: boolean` |
-| `invite.viewed` | Invite link opened | `has_active_door: boolean` |
-| `invite.accepted` | Invite link accepted (friendship created) | — |
-| `waitlist.joined` | New email added to waitlist | `locale` |
-| `nudge.sent` | Nudge push notification sent by cron | `type: "scheduled" \| "auto" \| "going_reminder_1" \| "going_reminder_2" \| "reengagement"` |
-| `push.sent` | Door-open push notification delivered | `type: "door_open"` |
-| `push.fail` | Push notification delivery failed | `type`, `platform`, `error` |
-| `chip.selected` | Suggestion chip tapped on Home screen | `chip: "im_home" \| "suggestion"`, `index: number` |
+### What the networking events are for
 
-### Retention
+The premise of link participation is that **one link should connect a group, not just funnel people to its creator.** The events exist to check whether that is happening, and each is chosen to make a specific claim falsifiable.
 
-- All events except `user.signup` and `user.verify` are deleted after 12 months (daily cron, 03:00 UTC)
-- `user.signup` and `user.verify` are kept indefinitely for cohort analysis
-
-### `session.start` deduplication
-
-The SSE connection reconnects frequently on mobile. To prevent this inflating the event count, `session.start` is only logged if no `session.start` event exists for that user in the past hour.
-
+- **Is the fan-out real?** `connection.created` split by `via`. If `link_host` dominates and `candidate` is near zero, the feature is not doing its job and the extra screen is pure cost. The ratio of `candidate` to `link_host` connections per link is the headline number. `signup` is tagged separately and must be excluded from it — every new account produces one, and counting them would inflate the result the feature is judged on.
+- **Do people take the whole group or prune it?** `candidates.picked` — `picked / offered`. Pre-checking assumes people want everyone; a low ratio says the default is wrong.
+- **Does the mutual shortcut fire?** `connection.created.resolution`. A healthy share of `mutual` means people connect without ever seeing an accept step, which is the design working. Mostly `accepted` means the pre-check is not reaching people before they are asked.
+- **Is the ranking hypothesis true?** `suggestion.connected.link_size` against `suggestions.shown.best_link_size`. If suggestions from small links are accepted at a much higher rate, inverse weighting by link size is right and could be sharpened. If acceptance is flat across sizes, the ranking is not earning its complexity.
+- **Are suggestions welcome or noise?** `suggestion.connected` against `suggestion.dismissed`, and both against `suggestions.shown`. Heavy dismissal is the signal to narrow the source rather than broaden it.
+- **Is the coalescing window doing anything?** `suggestion.notified.batch`. A batch size that is almost always 1 means the hour-long hold is delaying notifications for no benefit and should be shortened.
+- **Where do people drop out?** `link.opened` → `invite.deferred` vs `invite.accepted`, and `pending.dismissed` against the invites that produced it. `invite.deferred.candidates` says whether a long list of strangers is what makes people walk away.
+- **How far does a link travel?** `link.opened.prior_participants` — the distribution of positions shows whether links are opened by two people or twenty, which is the input to every size-weighted decision above.
