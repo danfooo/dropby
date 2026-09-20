@@ -51,6 +51,9 @@ Related but separate: with no group object there is nothing to select as door re
 ## Limits & Safety
 - [x] Rate limiting — waitlist endpoint has per-IP limits (5/hour, 20/day); broader API rate limiting still TODO
 
+## Before launch
+- [ ] Set `min_machines_running = 1` in `fly.toml` — with `auto_stop_machines = 'stop'` and no traffic, Fly stops the machine and the `node-cron` timers in `server/src/cron.ts` (closing-soon pushes, nudges, reminders, coalesced notification flush) don't run until the next request wakes it. Open SSE connections mask this while someone has the app open; it fails in the quiet periods. ~$2/month.
+
 ## Not needed for launch
 - [ ] Remove or update `rua` in DMARC record (currently no mailbox receiving aggregate reports)
 - [ ] GitHub Actions deploy-on-push (manual `fly deploy` is fine for now)
