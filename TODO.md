@@ -60,5 +60,6 @@ Related but separate: with no group object there is nothing to select as door re
 - [ ] Optional: GitHub Actions CI on push — `npm run build`, `npm run build:server`, `npm run test:unit`, `npx playwright test` on ubuntu with dummy env values; no deploy, no native builds. Free tier is ample (~5 min per run).
 
 ## Deferred dependency bumps
+- [ ] Node 24 → 26 in the `Dockerfile` (`node:26-alpine`) once Node 26 becomes LTS (October 2026); Node 24 security support runs to April 2028 so there is no rush. Bump `@types/node` to 26 at the same time. `better-sqlite3` rebuilds in the image, nothing else to do.
 - [ ] `typescript` 5→7 — the TS team skipped a stable 6 release and shipped 7 as a from-scratch Go-native compiler port (published ~5 weeks ago as of 2026-08-16). Revisit once it's had more time in the wild; needs dedicated testing, not a routine bump.
 - [ ] `@dicebear/core` 9→10 — restructures the whole package (individual style packages like `@dicebear/adventurer` removed in favor of a single `@dicebear/styles` package with JSON style definitions; component options renamed, e.g. `eyes` → `eyesVariant`). Real migration work in `client/src/components/Avatar.tsx`, not a routine bump.
