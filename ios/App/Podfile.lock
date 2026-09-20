@@ -11,16 +11,16 @@ PODS:
     - PromisesObjC (~> 2.4)
     - PromisesSwift (~> 2.4)
     - RecaptchaInterop (~> 101.0)
-  - Capacitor (8.3.4):
+  - Capacitor (8.5.0):
     - CapacitorCordova
   - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
-  - CapacitorCordova (8.3.4)
+  - CapacitorCordova (8.5.0)
   - CapacitorPreferences (8.0.1):
     - Capacitor
-  - CapacitorPushNotifications (8.1.1):
+  - CapacitorPushNotifications (8.1.2):
     - Capacitor
-  - CapgoCapacitorSocialLogin (8.3.22):
+  - CapgoCapacitorSocialLogin (8.3.40):
     - Capacitor
     - GoogleSignIn (~> 9.0.0)
   - GoogleSignIn (9.0.0):
@@ -83,12 +83,12 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AppAuth: ef4da5a3fc2e10b90c09a0a94a9baeaedc0341d5
   AppCheckCore: 214137f5c378d1dec88a68425c467fe65aaff637
-  Capacitor: d13cad5fa09155679672808cc4ca9fbc2997e1b4
+  Capacitor: 00b87168591cc006ea6f5c0de681ec5c39a2c8eb
   CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
-  CapacitorCordova: c07921bdcfec6f691bae22274446b4d606ebf6a4
+  CapacitorCordova: 9d3acbb574048e7167d2af127a0af2123e619f2f
   CapacitorPreferences: cca2021f386efb75947c850334447d9ff22b14f1
-  CapacitorPushNotifications: ec08d589c226a2c0db7c032ec1bf5b044ec85f8e
-  CapgoCapacitorSocialLogin: 28248e4ce2c153a3a1f53c0d3999d04faa70350a
+  CapacitorPushNotifications: 32a7f840815f319fd9ba1c1c9b0b914be9d95237
+  CapgoCapacitorSocialLogin: e8bba66c67e02247c2c7e4ba08dbf1a7fca9d5e8
   GoogleSignIn: c7f09cfbc85a1abf69187be091997c317cc33b77
   GoogleUtilities: 4f2618a4a1e762a1ee134a1e2323bba9843e06da
   GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
