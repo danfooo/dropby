@@ -15,5 +15,5 @@ cd "$CI_PRIMARY_REPOSITORY_PATH"
 npm install
 npm run build
 
-# Sync Capacitor (copies web assets + runs pod install)
+# Sync Capacitor (copies web assets + regenerates CapApp-SPM/Package.swift; no CocoaPods since 4bc35c5)
 npx cap sync ios
