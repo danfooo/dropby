@@ -57,6 +57,7 @@ Related but separate: with no group object there is nothing to select as door re
 ## Not needed for launch
 - [ ] Remove or update `rua` in DMARC record (currently no mailbox receiving aggregate reports)
 - [ ] GitHub Actions deploy-on-push (manual `fly deploy` is fine for now)
+- [ ] Optional: GitHub Actions CI on push — `npm run build`, `npm run build:server`, `npm run test:unit`, `npx playwright test` on ubuntu with dummy env values; no deploy, no native builds. Free tier is ample (~5 min per run).
 
 ## Deferred dependency bumps
 - [ ] `typescript` 5→7 — the TS team skipped a stable 6 release and shipped 7 as a from-scratch Go-native compiler port (published ~5 weeks ago as of 2026-08-16). Revisit once it's had more time in the wild; needs dedicated testing, not a routine bump.
