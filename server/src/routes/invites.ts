@@ -10,6 +10,8 @@ import { normalizeToken, inviteUrl } from '../utils/invite-link.js';
 import { notifyFriendJoined, notifyConnectionSuggestion } from '../services/notifications.js';
 import { sendSSE } from '../services/sse.js';
 import { limits } from '../services/rate-limit.js';
+import { validateBody } from '../middleware/validate.js';
+import { acceptInviteBody, createInviteBody, emailInviteBody, fromUserIdsBody, renameInviteBody } from '@dropby/shared';
 
 const router = Router();
 
@@ -198,7 +200,7 @@ function connectAlso(raw: unknown, userId: string, token: string): { connected: 
 }
 
 // POST /api/invites — generate invite link
-router.post('/', requireAuth, async (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateBody(createInviteBody), async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { status_id } = req.body;
 
@@ -277,7 +279,7 @@ router.get('/incoming', requireAuth, (req: AuthRequest, res) => {
 
 // POST /api/invites/pending/dismiss — clear pending invites without accepting them.
 // The link itself stays live: opening it again brings the decision back.
-router.post('/pending/dismiss', requireAuth, (req: AuthRequest, res) => {
+router.post('/pending/dismiss', requireAuth, validateBody(fromUserIdsBody), (req: AuthRequest, res) => {
   const ids = Array.isArray(req.body?.from_user_ids) ? req.body.from_user_ids : [];
   const stmt = db.prepare('UPDATE pending_invites SET dismissed = 1 WHERE from_user_id = ? AND to_user_id = ?');
   const valid = ids.filter((id: unknown) => typeof id === 'string');
@@ -287,7 +289,7 @@ router.post('/pending/dismiss', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/invites/pending/accept — accept a batch of people who asked to connect
-router.post('/pending/accept', requireAuth, (req: AuthRequest, res) => {
+router.post('/pending/accept', requireAuth, validateBody(fromUserIdsBody), (req: AuthRequest, res) => {
   const userId = req.userId!;
   const ids: string[] = Array.isArray(req.body?.from_user_ids)
     ? req.body.from_user_ids.filter((id: unknown) => typeof id === 'string')
@@ -403,7 +405,7 @@ router.get('/:token', optionalAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/invites/:token/accept — accept invite (auth required)
-router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
+router.post('/:token/accept', requireAuth, validateBody(acceptInviteBody), (req: AuthRequest, res) => {
   const token = normalizeToken(req.params.token as string);
   const userId = req.userId!;
   const nowUnix = Math.floor(Date.now() / 1000);
@@ -433,7 +435,7 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/invites/email — send an email invite (30-day link)
-router.post('/email', requireAuth, limits.perUserEmail, async (req: AuthRequest, res) => {
+router.post('/email', requireAuth, limits.perUserEmail, validateBody(emailInviteBody), async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { email } = req.body;
 
@@ -461,7 +463,7 @@ router.post('/email', requireAuth, limits.perUserEmail, async (req: AuthRequest,
 
 // POST /api/invites/:token/rename — the name is cosmetic in the URL, so renaming never
 // breaks a copy already shared; new copies just carry the new slug.
-router.post('/:token/rename', requireAuth, async (req: AuthRequest, res) => {
+router.post('/:token/rename', requireAuth, validateBody(renameInviteBody), async (req: AuthRequest, res) => {
   const token = normalizeToken(req.params.token as string);
   const raw = typeof req.body?.name === 'string' ? sanitizeNote(req.body.name).slice(0, 60) : '';
   const name = raw || null;

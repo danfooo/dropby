@@ -7,3 +7,11 @@ server/dist
 client/dist
 screenshots
 *.md
+shared/dist
+server/data-test
+# Local copies of the production database — never send these to a builder.
+db-snapshot*
+test-results
+playwright-report
+android
+ios

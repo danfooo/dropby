@@ -14,7 +14,7 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'cd server && NODE_ENV=test PORT=3001 DATA_DIR=./data-test APP_URL=http://localhost:5174 npx tsx --env-file=../.env src/index.ts',
+      command: 'cd server && NODE_ENV=test PORT=3001 DATA_DIR=./data-test APP_URL=http://localhost:5174 npx tsx --conditions=development --env-file=../.env src/index.ts',
       port: 3001,
       reuseExistingServer: false,
       timeout: 30_000,

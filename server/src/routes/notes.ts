@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import { validateBody } from '../middleware/validate.js';
+import { hideNoteBody, saveNoteBody } from '@dropby/shared';
 
 const router = Router();
 
@@ -15,7 +17,7 @@ router.get('/', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/notes — auto-called when user uses a custom note
-router.post('/', requireAuth, (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateBody(saveNoteBody), (req: AuthRequest, res) => {
   const { text } = req.body;
   if (!text?.trim()) return res.status(400).json({ error: 'Text required' });
   if (text.length > 160) return res.status(400).json({ error: 'Max 160 chars' });
@@ -38,7 +40,7 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
 });
 
 // PUT /api/notes/:id — hide/unhide
-router.put('/:id', requireAuth, (req: AuthRequest, res) => {
+router.put('/:id', requireAuth, validateBody(hideNoteBody), (req: AuthRequest, res) => {
   const { hidden } = req.body;
   db.prepare('UPDATE user_notes SET hidden = ? WHERE id = ? AND user_id = ?').run(hidden ? 1 : 0, req.params.id, req.userId);
   res.json({ ok: true });

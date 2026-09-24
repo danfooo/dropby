@@ -3,6 +3,9 @@ import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { log } from '../services/analytics.js';
+import { validateBody } from '../middleware/validate.js';
+import type { Friend, NotifPref } from '@dropby/shared';
+import { hideFriendBody, notifPrefBody, userIdsBody } from '@dropby/shared';
 
 const router = Router();
 
@@ -27,7 +30,7 @@ function getFriendsOf(userId: string) {
     WHERE f.user_a_id = ? OR f.user_b_id = ?
     ORDER BY u.display_name
   `).all(userId, userId, userId, userId, userId) as Array<{
-    id: string; display_name: string; email: string; avatar_url: string | null; hidden: number; friendship_created_at: number; notif_pref: string;
+    id: string; display_name: string; email: string; avatar_url: string | null; hidden: number; friendship_created_at: number; notif_pref: NotifPref;
   }>;
 }
 
@@ -39,7 +42,7 @@ router.get('/', requireAuth, (req: AuthRequest, res) => {
   // so the client never has to reconcile a separate list against this one.
   const sessionRow = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(userId) as { unselected_ids: string } | undefined;
   const unselected: string[] = sessionRow ? JSON.parse(sessionRow.unselected_ids) : [];
-  res.json(friends.map(f => ({
+  res.json(friends.map((f): Friend => ({
     ...f,
     hidden: Boolean(f.hidden),
     selected: !f.hidden && !unselected.includes(f.id),
@@ -74,7 +77,7 @@ router.delete('/:friendId', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/friends/:friendId/hide
-router.post('/:friendId/hide', requireAuth, (req: AuthRequest, res) => {
+router.post('/:friendId/hide', requireAuth, validateBody(hideFriendBody), (req: AuthRequest, res) => {
   const { friendId } = req.params as { friendId: string };
   const userId = req.userId!;
   const { duration_days } = req.body ?? {};
@@ -119,7 +122,7 @@ router.delete('/:friendId/hide', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/friends/:friendId/notif-pref
-router.post('/:friendId/notif-pref', requireAuth, (req: AuthRequest, res) => {
+router.post('/:friendId/notif-pref', requireAuth, validateBody(notifPrefBody), (req: AuthRequest, res) => {
   const { friendId } = req.params as { friendId: string };
   const userId = req.userId!;
   const { pref } = req.body;
@@ -186,7 +189,7 @@ router.get('/suggestions', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/friends/suggestions/dismiss — stop suggesting these people
-router.post('/suggestions/dismiss', requireAuth, (req: AuthRequest, res) => {
+router.post('/suggestions/dismiss', requireAuth, validateBody(userIdsBody), (req: AuthRequest, res) => {
   const ids: string[] = Array.isArray(req.body?.user_ids)
     ? req.body.user_ids.filter((id: unknown) => typeof id === 'string')
     : [];
@@ -197,7 +200,7 @@ router.post('/suggestions/dismiss', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/friends/connect — ask to connect with suggested people
-router.post('/connect', requireAuth, async (req: AuthRequest, res) => {
+router.post('/connect', requireAuth, validateBody(userIdsBody), async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const ids: string[] = Array.isArray(req.body?.user_ids)
     ? req.body.user_ids.filter((id: unknown) => typeof id === 'string')

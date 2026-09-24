@@ -1,20 +1,8 @@
 import { create } from 'zustand';
+import type { User } from '@dropby/shared';
 import { syncAuthTokenToNative } from '../utils/notifications';
 
-export interface User {
-  id: string;
-  email: string;
-  display_name: string;
-  timezone: string | null;
-  auto_nudge_enabled: boolean;
-  notif_door_closed: boolean;
-  notif_friend_suggestions: boolean;
-  going_reminder_1: string;
-  going_reminder_2: string;
-  avatar_url: string | null;
-  default_door_minutes: number;
-  created_at: number;
-}
+export type { User };
 
 interface AuthState {
   user: User | null;

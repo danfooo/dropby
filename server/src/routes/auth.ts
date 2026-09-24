@@ -13,6 +13,9 @@ import { normalizeToken } from '../utils/invite-link.js';
 import { log } from '../services/analytics.js';
 import { syncUserGoingJobs } from '../services/jobs.js';
 import { limits } from '../services/rate-limit.js';
+import { validateBody } from '../middleware/validate.js';
+import type { User } from '@dropby/shared';
+import { appleSignInBody, forgotPasswordBody, googleSignInBody, loginBody, pushTokenBody, removePushTokenBody, resendVerificationBody, resetPasswordBody, signupBody, updateMeBody, verifyEmailBody } from '@dropby/shared';
 
 const avatarsDir = join(process.cwd(), 'data', 'avatars');
 mkdirSync(avatarsDir, { recursive: true });
@@ -50,7 +53,7 @@ function validateInviteToken(token: unknown): string | null {
   return row?.created_by ?? null;
 }
 
-function userResponse(u: any) {
+function userResponse(u: any): User {
   return {
     id: u.id,
     email: u.email,
@@ -75,7 +78,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
 });
 
 // PUT /api/auth/me
-router.put('/me', requireAuth, (req: AuthRequest, res) => {
+router.put('/me', requireAuth, validateBody(updateMeBody), (req: AuthRequest, res) => {
   const { display_name, auto_nudge_enabled, notif_door_closed, notif_friend_suggestions, going_reminder_1, going_reminder_2, avatar_seed } = req.body;
   const updates: string[] = [];
   const values: unknown[] = [];
@@ -154,7 +157,7 @@ router.delete('/me', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/auth/signup
-router.post('/signup', limits.signup, async (req, res) => {
+router.post('/signup', limits.signup, validateBody(signupBody), async (req, res) => {
   const { email, password, display_name, locale, redirect_url, invite_token } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   if (!display_name?.trim()) return res.status(400).json({ error: 'Display name required' });
@@ -200,7 +203,7 @@ router.get('/verify-email/:token', (req, res) => {
 });
 
 // POST /api/auth/verify-email — verify token, return JWT for auto-login
-router.post('/verify-email', limits.tokenCheck, async (req, res) => {
+router.post('/verify-email', limits.tokenCheck, validateBody(verifyEmailBody), async (req, res) => {
   const { token } = req.body;
   if (!token) return res.status(400).json({ error: 'Token required' });
 
@@ -224,7 +227,7 @@ router.post('/verify-email', limits.tokenCheck, async (req, res) => {
 });
 
 // POST /api/auth/resend-verification
-router.post('/resend-verification', limits.emailSending, (req, res) => {
+router.post('/resend-verification', limits.emailSending, validateBody(resendVerificationBody), (req, res) => {
   const { email, redirect_url } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
 
@@ -240,7 +243,7 @@ router.post('/resend-verification', limits.emailSending, (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', limits.login, async (req, res) => {
+router.post('/login', limits.login, validateBody(loginBody), async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
@@ -259,7 +262,7 @@ router.post('/login', limits.login, async (req, res) => {
 });
 
 // POST /api/auth/google
-router.post('/google', limits.tokenCheck, async (req, res) => {
+router.post('/google', limits.tokenCheck, validateBody(googleSignInBody), async (req, res) => {
   const { credential, invite_token } = req.body;
   if (!credential) return res.status(400).json({ error: 'Google credential required' });
 
@@ -326,7 +329,7 @@ router.post('/google', limits.tokenCheck, async (req, res) => {
 });
 
 // POST /api/auth/apple
-router.post('/apple', limits.tokenCheck, async (req, res) => {
+router.post('/apple', limits.tokenCheck, validateBody(appleSignInBody), async (req, res) => {
   const { identityToken, fullName, invite_token } = req.body;
   if (!identityToken) return res.status(400).json({ error: 'Apple identity token required' });
 
@@ -394,7 +397,7 @@ router.post('/apple', limits.tokenCheck, async (req, res) => {
 });
 
 // POST /api/auth/forgot-password
-router.post('/forgot-password', limits.emailSending, async (req, res) => {
+router.post('/forgot-password', limits.emailSending, validateBody(forgotPasswordBody), async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
 
@@ -416,7 +419,7 @@ router.post('/forgot-password', limits.emailSending, async (req, res) => {
 });
 
 // POST /api/auth/reset-password
-router.post('/reset-password', limits.tokenCheck, async (req, res) => {
+router.post('/reset-password', limits.tokenCheck, validateBody(resetPasswordBody), async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ error: 'Token and password required' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
@@ -449,7 +452,7 @@ router.post('/logout', requireAuth, (req: AuthRequest, res) => {
 });
 
 // DELETE /api/auth/push-token — deregister current device token on logout
-router.delete('/push-token', requireAuth, (req: AuthRequest, res) => {
+router.delete('/push-token', requireAuth, validateBody(removePushTokenBody), (req: AuthRequest, res) => {
   const { token } = req.body;
   if (token) {
     db.prepare('DELETE FROM push_tokens WHERE user_id = ? AND token = ?').run(req.userId, token);
@@ -460,7 +463,7 @@ router.delete('/push-token', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/auth/push-token
-router.post('/push-token', requireAuth, (req: AuthRequest, res) => {
+router.post('/push-token', requireAuth, validateBody(pushTokenBody), (req: AuthRequest, res) => {
   const { token, platform } = req.body;
   if (!token || !['ios', 'android'].includes(platform)) {
     console.warn(`[Push] Token registration rejected — user=${req.userId} platform=${platform} token=${String(token).slice(0, 20)}`);

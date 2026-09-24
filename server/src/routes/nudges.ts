@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import { validateBody } from '../middleware/validate.js';
+import { addNudgeBody } from '@dropby/shared';
 
 const router = Router();
 
@@ -14,7 +16,7 @@ router.get('/', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/nudges
-router.post('/', requireAuth, (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateBody(addNudgeBody), (req: AuthRequest, res) => {
   const { day_of_week, hour } = req.body;
   if (!VALID_DAYS.includes(day_of_week)) return res.status(400).json({ error: 'Invalid day_of_week' });
   if (typeof hour !== 'number' || hour < 0 || hour > 23) return res.status(400).json({ error: 'Hour must be 0–23' });

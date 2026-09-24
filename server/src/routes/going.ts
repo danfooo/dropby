@@ -7,6 +7,8 @@ import { sendWelcomeMessage } from '../services/email.js';
 import { log } from '../services/analytics.js';
 import { syncGoingJobs, cancelGoingJobs } from '../services/jobs.js';
 import { sendSSE } from '../services/sse.js';
+import { validateBody } from '../middleware/validate.js';
+import { claimGuestBody, goingBody, guestGoingBody } from '@dropby/shared';
 
 const router = Router();
 
@@ -26,7 +28,7 @@ router.get('/ever-received', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/going/claim — claim a guest signal after login
-router.post('/claim', requireAuth, (req: AuthRequest, res) => {
+router.post('/claim', requireAuth, validateBody(claimGuestBody), (req: AuthRequest, res) => {
   const { signal_id } = req.body;
   const userId = req.userId!;
   if (!signal_id) return res.status(400).json({ error: 'signal_id required' });
@@ -49,7 +51,7 @@ router.post('/claim', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/going/:statusId — logged-in RSVP (going only), changeable; accepts optional note
-router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
+router.post('/:statusId', requireAuth, validateBody(goingBody), (req: AuthRequest, res) => {
   const { statusId } = req.params as { statusId: string };
   const userId = req.userId!;
   const { note } = req.body;
@@ -91,7 +93,7 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
 });
 
 // PATCH /api/going/:statusId — update note only (logged-in)
-router.patch('/:statusId', requireAuth, (req: AuthRequest, res) => {
+router.patch('/:statusId', requireAuth, validateBody(goingBody), (req: AuthRequest, res) => {
   const { statusId } = req.params as { statusId: string };
   const userId = req.userId!;
   const { note } = req.body;
@@ -129,7 +131,7 @@ router.delete('/:statusId', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/going/:statusId/guest — web guest RSVP
-router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
+router.post('/:statusId/guest', optionalAuth, validateBody(guestGoingBody), (req: AuthRequest, res) => {
   const { statusId } = req.params as { statusId: string };
   const { name, contact, marketing_consent, note } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
@@ -169,7 +171,7 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
 });
 
 // PATCH /api/going/guest/:signalId — update guest note
-router.patch('/guest/:signalId', (req, res) => {
+router.patch('/guest/:signalId', validateBody(goingBody), (req, res) => {
   const { signalId } = req.params;
   const { note } = req.body;
   const trimmedNote = note?.trim() || null;

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { log } from '../services/analytics.js';
 import { optionalAuth, AuthRequest } from '../middleware/auth.js';
+import { validateBody } from '../middleware/validate.js';
+import { trackBody } from '@dropby/shared';
 
 const router = Router();
 
@@ -8,7 +10,7 @@ const router = Router();
 const ALLOWED_CLIENT_EVENTS = new Set(['page.auth_viewed', 'chip.selected', 'invite.deferred']);
 
 // POST /api/track — client-side event tracking (auth optional)
-router.post('/', optionalAuth, (req: AuthRequest, res) => {
+router.post('/', optionalAuth, validateBody(trackBody), (req: AuthRequest, res) => {
   const { event, data } = req.body;
 
   if (!ALLOWED_CLIENT_EVENTS.has(event)) {

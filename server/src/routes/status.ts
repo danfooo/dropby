@@ -7,6 +7,9 @@ import { syncStatusJobs } from '../services/jobs.js';
 import { broadcastSSE } from '../services/sse.js';
 import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 import { log } from '../services/analytics.js';
+import { validateBody } from '../middleware/validate.js';
+import type { Status, FriendStatus } from '@dropby/shared';
+import { createStatusBody, setDurationBody, updateStatusBody, updateStatusByIdBody } from '@dropby/shared';
 
 const router = Router();
 
@@ -27,7 +30,7 @@ function getScheduledStatus(userId: string) {
   `).get(userId, nowUnix) as any | undefined;
 }
 
-function formatStatus(status: any, userId: string) {
+function formatStatus(status: any, userId: string): Status | null {
   if (!status) return null;
   const recipients = db.prepare(`
     SELECT u.id, u.display_name, u.avatar_url FROM status_recipients sr
@@ -123,7 +126,7 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
   `).all(userId) as Array<{ status_id: string; rsvp: string; note: string | null }>;
   const rsvpMap = new Map(myRsvps.map(r => [r.status_id, r]));
 
-  res.json(friendStatuses.map(s => ({
+  res.json(friendStatuses.map((s): FriendStatus => ({
     id: s.id,
     owner_id: s.owner_id,
     owner_name: s.display_name,
@@ -181,7 +184,7 @@ async function cleanText(raw: unknown, max: number, label: string): Promise<Clea
 }
 
 // POST /api/status — create (spontaneous or scheduled)
-router.post('/', requireAuth, async (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateBody(createStatusBody), async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { recipient_ids = [], starts_at: rawStartsAt, ends_at: rawEndsAt, reminder_minutes: rawReminderMinutes } = req.body;
 
@@ -268,7 +271,7 @@ router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
 });
 
 // PUT /api/status — update note + recipients (+ ends_at) of the active or next scheduled status
-router.put('/', requireAuth, async (req: AuthRequest, res) => {
+router.put('/', requireAuth, validateBody(updateStatusBody), async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { recipient_ids, ends_at } = req.body;
 
@@ -306,7 +309,7 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // PUT /api/status/:statusId — update a specific session by ID
-router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
+router.put('/:statusId', requireAuth, validateBody(updateStatusByIdBody), async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { statusId } = req.params as { statusId: string };
   const { recipient_ids, starts_at, ends_at } = req.body;
@@ -360,7 +363,7 @@ router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // POST /api/status/duration — update auto-close duration for active session + save as user preference
-router.post('/duration', requireAuth, (req: AuthRequest, res) => {
+router.post('/duration', requireAuth, validateBody(setDurationBody), (req: AuthRequest, res) => {
   const userId = req.userId!;
   const minutes = Number(req.body.minutes);
   if (!minutes || minutes <= 0) return res.status(400).json({ error: 'Invalid minutes' });

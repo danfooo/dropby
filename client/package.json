@@ -17,6 +17,7 @@
     "@capgo/capacitor-social-login": "^8.3.22",
     "@dicebear/core": "^9.4.0",
     "@dicebear/shapes": "^9.4.0",
+    "@dropby/shared": "0.1.0",
     "@react-oauth/google": "^0.13.5",
     "@tanstack/react-query": "^5.17.19",
     "axios": "^1.6.7",
