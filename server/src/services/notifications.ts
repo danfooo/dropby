@@ -2,6 +2,7 @@ import { db } from '../db/index.js';
 import { createSign, randomUUID } from 'crypto';
 import * as http2 from 'http2';
 import { log } from './analytics.js';
+import { broadcastSSE } from './sse.js';
 import { formatScheduledDayTime, formatScheduledTime } from '../utils/time-format.js';
 
 interface PushPayload {
@@ -48,6 +49,69 @@ export function recordDoorOpenNotified(recipientId: string, hostUserId: string, 
     VALUES (?, ?, 'default', ?)
     ON CONFLICT(user_id, friend_user_id) DO UPDATE SET last_notified_at = excluded.last_notified_at
   `).run(recipientId, hostUserId, nowUnix);
+}
+
+// True while `userId` has `otherId` hidden (muted). A mute with a passed expiry no longer counts.
+export function isHidden(userId: string, otherId: string): boolean {
+  return !!db.prepare(`
+    SELECT 1 FROM friend_hides
+    WHERE user_id = ? AND hidden_user_id = ? AND (expires_at IS NULL OR expires_at > unixepoch())
+  `).get(userId, otherId);
+}
+
+// Either side has muted the other. A muted friend's doors are also left out of the
+// muting person's feed, so a push about one would point at nothing.
+export function isHiddenEitherWay(a: string, b: string): boolean {
+  return isHidden(a, b) || isHidden(b, a);
+}
+
+// The one rule for whether a recipient gets a "door opened" push. Every path that
+// announces an open door goes through announceDoorOpen, so the rule lives only here.
+function shouldPushDoorOpen(recipientId: string, hostId: string): boolean {
+  if (isHiddenEitherWay(recipientId, hostId)) return false;
+  // Quiet hours: don't push "door opened" overnight in the recipient's timezone.
+  if (isQuietHours(recipientId)) return false;
+  const prefRow = db.prepare(
+    'SELECT pref, last_notified_at FROM friend_notif_prefs WHERE user_id = ? AND friend_user_id = ?'
+  ).get(recipientId, hostId) as { pref: string; last_notified_at: number | null } | undefined;
+  const pref = prefRow?.pref ?? 'default';
+  if (pref === 'none') return false;
+  // Once per calendar day per recipient per host (in recipient's local timezone).
+  // pref === 'all' bypasses this cap.
+  if (pref === 'default' && alreadyNotifiedToday(recipientId, prefRow?.last_notified_at ?? null)) return false;
+  return true;
+}
+
+// Tell a door's recipients it is open: a push to those the policy allows, a live update
+// to all of them, and a mark on the status that friends now know (so a later close is
+// announced too).
+export function announceDoorOpen(statusId: string) {
+  const status = db.prepare(`
+    SELECT s.id, s.user_id, s.note, s.closes_at, u.display_name
+    FROM statuses s JOIN users u ON u.id = s.user_id
+    WHERE s.id = ?
+  `).get(statusId) as { id: string; user_id: string; note: string | null; closes_at: number; display_name: string } | undefined;
+  if (!status) return;
+
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const recipients = (db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?')
+    .all(status.id) as Array<{ user_id: string }>).map(r => r.user_id);
+
+  for (const rid of recipients) {
+    if (!shouldPushDoorOpen(rid, status.user_id)) continue;
+    notifyFriendDoorOpen(rid, status.display_name, status.note || null, status.id, status.user_id);
+    recordDoorOpenNotified(rid, status.user_id, nowUnix);
+  }
+
+  broadcastSSE(recipients, 'status:open', {
+    status_id: status.id,
+    owner_id: status.user_id,
+    owner_name: status.display_name,
+    note: status.note || null,
+    closes_at: status.closes_at,
+  });
+
+  db.prepare('UPDATE statuses SET notifications_sent = 1 WHERE id = ?').run(status.id);
 }
 
 // ── FCM (Android) ─────────────────────────────────────────────
@@ -279,8 +343,9 @@ export function notifyGoingSignal(hostId: string, guestName: string, note?: stri
 
 export function notifyGoingReminder(userId: string, hostName: string, startsAt: number, type: 'day' | 'soon' = 'soon') {
   const tokens = getPushTokens(userId);
-  const date = new Date(startsAt * 1000);
-  const timeStr = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  // In the recipient's timezone — the server runs in UTC.
+  const tz = (db.prepare('SELECT timezone FROM users WHERE id = ?').get(userId) as { timezone: string | null } | undefined)?.timezone || 'UTC';
+  const timeStr = formatScheduledTime(startsAt, tz);
   const body = type === 'day'
     ? `${hostName} is opening their door tomorrow at ${timeStr}`
     : `${hostName}'s starts at ${timeStr}`;

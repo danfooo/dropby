@@ -19,6 +19,7 @@ export interface AuthRequest extends Request {
     auto_nudge_enabled: number;
     avatar_seed: number;
     email_verified: number;
+    avatar_url: string | null;
   };
 }
 

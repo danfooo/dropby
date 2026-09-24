@@ -54,29 +54,31 @@ export function connectUsers(
     resolution: hasPendingInvite(otherId, actorId) ? (mutual ? 'mutual' : 'accepted') : 'immediate',
   });
 
-  const [a, b] = [actorId, otherId].sort();
-  db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
-  db.prepare('DELETE FROM pending_invites WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?)')
-    .run(actorId, otherId, otherId, actorId);
-
   const actorName = displayName(actorId);
-  if (actorName) {
-    notifyFriendJoined(otherId, actorName);
-    sendSSE(otherId, 'friend:joined', { name: actorName });
-  }
+  db.transaction(() => {
+    const [a, b] = [actorId, otherId].sort();
+    db.prepare('INSERT OR IGNORE INTO friendships (id, user_a_id, user_b_id) VALUES (?, ?, ?)').run(randomUUID(), a, b);
+    db.prepare('DELETE FROM pending_invites WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?)')
+      .run(actorId, otherId, otherId, actorId);
+    if (actorName) notifyFriendJoined(otherId, actorName);
+    if (sourceToken) letIntoLinkedDoor(sourceToken, actorId, otherId, nowUnix);
+  })();
 
-  if (sourceToken) {
-    const invite = db.prepare('SELECT created_by, status_id FROM invite_links WHERE token = ?').get(sourceToken) as any;
-    // Only the link's own creator can let someone into their open door — being picked off
-    // a link by a third party never grants door access.
-    if (invite?.status_id && (invite.created_by === actorId || invite.created_by === otherId)) {
-      const guestId = invite.created_by === actorId ? otherId : actorId;
-      const linkedStatus = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND closes_at > ?')
-        .get(invite.status_id, invite.created_by, nowUnix) as any;
-      if (linkedStatus) {
-        db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)')
-          .run(randomUUID(), linkedStatus.id, guestId);
-      }
+  if (actorName) sendSSE(otherId, 'friend:joined', { name: actorName });
+}
+
+// A door-specific link lets the new friend into that door while it is still open.
+function letIntoLinkedDoor(sourceToken: string, actorId: string, otherId: string, nowUnix: number) {
+  const invite = db.prepare('SELECT created_by, status_id FROM invite_links WHERE token = ?').get(sourceToken) as any;
+  // Only the link's own creator can let someone into their open door — being picked off
+  // a link by a third party never grants door access.
+  if (invite?.status_id && (invite.created_by === actorId || invite.created_by === otherId)) {
+    const guestId = invite.created_by === actorId ? otherId : actorId;
+    const linkedStatus = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND closes_at > ?')
+      .get(invite.status_id, invite.created_by, nowUnix) as any;
+    if (linkedStatus) {
+      db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)')
+        .run(randomUUID(), linkedStatus.id, guestId);
     }
   }
 }

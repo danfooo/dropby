@@ -51,22 +51,24 @@ router.delete('/:friendId', requireAuth, (req: AuthRequest, res) => {
   const { friendId } = req.params;
   const userId = req.userId!;
 
-  db.prepare(`
-    DELETE FROM friendships
-    WHERE (user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?)
-  `).run(userId, friendId, friendId, userId);
-
-  // Remove from each other's active status recipients
-  const nowUnix = Math.floor(Date.now() / 1000);
-  const activeStatuses = db.prepare(`
-    SELECT id FROM statuses WHERE (user_id = ? OR user_id = ?) AND closed_at IS NULL AND closes_at > ?
-  `).all(userId, friendId, nowUnix) as Array<{ id: string }>;
-
-  for (const s of activeStatuses) {
+  db.transaction(() => {
     db.prepare(`
-      DELETE FROM status_recipients WHERE status_id = ? AND (user_id = ? OR user_id = ?)
-    `).run(s.id, userId, friendId);
-  }
+      DELETE FROM friendships
+      WHERE (user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?)
+    `).run(userId, friendId, friendId, userId);
+
+    // Remove from each other's active status recipients
+    const nowUnix = Math.floor(Date.now() / 1000);
+    const activeStatuses = db.prepare(`
+      SELECT id FROM statuses WHERE (user_id = ? OR user_id = ?) AND closed_at IS NULL AND closes_at > ?
+    `).all(userId, friendId, nowUnix) as Array<{ id: string }>;
+
+    for (const s of activeStatuses) {
+      db.prepare(`
+        DELETE FROM status_recipients WHERE status_id = ? AND (user_id = ? OR user_id = ?)
+      `).run(s.id, userId, friendId);
+    }
+  })();
 
   res.json({ ok: true });
 });
@@ -85,24 +87,26 @@ router.post('/:friendId/hide', requireAuth, (req: AuthRequest, res) => {
     ? Math.floor(Date.now() / 1000) + duration_days * 86400
     : null;
 
-  db.prepare(`
-    INSERT INTO friend_hides (id, user_id, hidden_user_id, expires_at)
-    VALUES (?, ?, ?, ?)
-    ON CONFLICT(user_id, hidden_user_id) DO UPDATE SET
-      expires_at = excluded.expires_at,
-      created_at = (unixepoch())
-  `).run(randomUUID(), userId, friendId, expiresAt);
-
-  // Also mark as unselected in recipient sessions
-  const sessionRow = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(userId) as { unselected_ids: string } | undefined;
-  const unselected: string[] = sessionRow ? JSON.parse(sessionRow.unselected_ids) : [];
-  if (!unselected.includes(friendId)) {
-    unselected.push(friendId);
+  db.transaction(() => {
     db.prepare(`
-      INSERT INTO recipient_sessions (user_id, unselected_ids, updated_at) VALUES (?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
-    `).run(userId, JSON.stringify(unselected), Math.floor(Date.now() / 1000));
-  }
+      INSERT INTO friend_hides (id, user_id, hidden_user_id, expires_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(user_id, hidden_user_id) DO UPDATE SET
+        expires_at = excluded.expires_at,
+        created_at = (unixepoch())
+    `).run(randomUUID(), userId, friendId, expiresAt);
+
+    // Also mark as unselected in recipient sessions
+    const sessionRow = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(userId) as { unselected_ids: string } | undefined;
+    const unselected: string[] = sessionRow ? JSON.parse(sessionRow.unselected_ids) : [];
+    if (!unselected.includes(friendId)) {
+      unselected.push(friendId);
+      db.prepare(`
+        INSERT INTO recipient_sessions (user_id, unselected_ids, updated_at) VALUES (?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
+      `).run(userId, JSON.stringify(unselected), Math.floor(Date.now() / 1000));
+    }
+  })();
 
   res.json({ ok: true });
 });

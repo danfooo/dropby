@@ -48,16 +48,16 @@ dropby is a presence signal app. One tap tells your friends you're open to a spo
 
 Stored as a single bidirectional row with a `UNIQUE(user_a_id, user_b_id)` constraint. Canonical order (lower UUID first) is enforced at insert time using `[a, b].sort()`. Queries must check both directions or use `OR`. When a friendship is deleted, the friend is immediately removed from all active status recipient lists for both users.
 
-### Friend Mutes
+### Friend Mutes (`friend_hides`)
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid FK → users | The user doing the muting |
-| muted_user_id | uuid FK → users | The friend being muted |
+| hidden_user_id | uuid FK → users | The friend being muted |
 | expires_at | unix timestamp nullable | When the mute expires; null = permanent |
 | created_at | unix timestamp | |
 
-Muting is one-way. A muted friend still receives notifications when the muting user opens their door. Muted friends are excluded from the default recipient selection when opening the door. The muting user does not receive push notifications when the muted friend opens their door.
+Muted friends are excluded from the default recipient selection when opening the door, and the muted friend's doors are left out of the muting user's feed. "Door opened" and "scheduled session" pushes are suppressed in both directions: the muting user gets none about the muted friend's doors, and the muted friend gets none about the muting user's doors even if the muting user selects them explicitly.
 
 Mutes support an optional duration: `POST /api/friends/:friendId/hide` accepts `{ duration_days }`. If provided, `expires_at` is set to now + duration_days. If omitted, the mute is permanent (`expires_at = null`). The endpoint upserts, so a temporary mute can be promoted to permanent by calling again without `duration_days`. Expired mutes (where `expires_at <= now`) are treated as inactive in all queries and cleaned up daily by cron.
 
@@ -80,11 +80,12 @@ Per-friend notification throttling. Controls how often a user is notified when a
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid FK → users | |
-| note | string nullable | Max 60 chars |
+| note | string nullable | Max 160 chars |
 | location | string nullable | Max 200 chars. Free text — an address, a venue name, or something only the recipient would understand ("Nina's apartment"). If it contains an `http(s)://` URL (e.g. a pasted Google Maps link), the URL renders as a clickable link wherever the location is shown; the rest of the text is not parsed or geocoded. |
-| closes_at | unix timestamp | App auto-reset timer: creation time + 1800 seconds; updated on each prolong (+1800 seconds). This is not a visit end time — guests remain welcome after `closes_at` passes. It exists purely to reset the app automatically so users don't have to remember to close their door. |
+| closes_at | unix timestamp | App auto-reset timer: creation time + the user's `default_door_minutes` (default 60); +30 minutes on each prolong, or set directly by a duration change. This is not a visit end time — guests remain welcome after `closes_at` passes. It exists purely to reset the app automatically so users don't have to remember to close their door. |
 | closed_at | unix timestamp nullable | Set when manually closed; null = still active |
-| closing_notification_sent | boolean | Default false; set to true after the 10-min-before-close push is sent |
+| notify_at | unix timestamp nullable | Spontaneous opens only: creation + 2 minutes, when friends are told |
+| notifications_sent | boolean | Set once friends have been told the door is open (at `notify_at`, or at once when a scheduled session is opened early). A manual close is broadcast to friends only if this is set |
 | created_at | unix timestamp | |
 
 A user may have at most one active status at a time. A status is considered active when `closed_at IS NULL AND closes_at > now()`.
@@ -98,7 +99,6 @@ A user may have at most one active status at a time. A status is considered acti
 | guest_contact_id | uuid FK → guest_contacts nullable | Set for guest Going signals when contact info was provided |
 | rsvp | text | Always `'going'` (Maybe removed) |
 | note | text nullable | Optional one-way note to host |
-| reminder_sent | integer | 0/1; whether the pre-session going reminder push has been sent |
 | created_at | unix timestamp | |
 
 Unique constraint on `(status_id, user_id)` for logged-in users — one signal per user per status. No cap for guest signals.
@@ -191,6 +191,21 @@ Both connection-related pushes are coalesced rather than sent per event: several
 - `friend_suggestion` is held until its oldest queued row is an hour old, then the whole group goes out together. A link dropped in a group chat is opened across an evening rather than in a burst, so one notification covers everyone who turned up in that window.
 
 Door-open pushes are never queued and stay immediate.
+
+### Jobs
+Timed notifications about a specific door or RSVP. Whenever a status or going signal changes, its pending jobs are recomputed from the record's current state; a worker runs whatever is due every 10 seconds. Each job re-checks its record before sending, so one made stale by a later edit sends nothing.
+
+| Field | Type | Notes |
+|---|---|---|
+| id | integer PK | |
+| type | text | `door.notify_open`, `door.closing_soon`, `door.auto_closed`, `door.host_reminder`, `going.reminder_1`, `going.reminder_2` |
+| subject_id | text | The status (door jobs) or going signal (going jobs) |
+| dedupe_key | text | What counts as the same notification. `closes_at` for closing-soon and auto-closed (a new closing time re-arms them); empty for the rest (once per record) |
+| run_at | unix timestamp | When it is due |
+| done_at | unix timestamp nullable | Set when run, whether it sent, skipped or failed. A done job is never replaced, which is what stops repeats |
+| error | text nullable | Set if the job threw |
+
+`UNIQUE(type, subject_id, dedupe_key)`. Finished jobs are purged after 30 days. Recurring nudges (scheduled, auto, re-engagement) follow weekly or daily patterns rather than a single record and run as sweeps instead.
 
 ### User Notes (Saved)
 | Field | Type | Notes |
@@ -486,7 +501,7 @@ All future/scheduled content lives here. Home (Now tab) is present-only.
 Active friends:
 - Each row: avatar, display name, bell button, Hide button
 - Bell button: opens a floating notification picker (All notifications / Default / Mute them); active option shown with checkmark; closes on selection or tap outside
-- Hide: moves friend to Hidden section (creates a `friend_mutes` row)
+- Hide: moves friend to Hidden section (creates a `friend_hides` row)
 
 Hidden friends (below active, labelled "Muted", only if non-empty):
 - Each row: avatar + name at reduced opacity, struck-through bell (non-interactive), red outline Remove button
@@ -732,7 +747,7 @@ Static page, reachable without auth, linked from the signup consent notice and t
 - "Keep it open +30 min" appears when `closes_at - now() ≤ 20 min`
 - Tapping sets `closes_at = closes_at + 30 min`
 - Unlimited prolongs
-- 10-minute-before-close push notification sent once per status (`closing_notification_sent` flag):
+- 10-minute-before-close push notification, sent once per closing time (prolonging or changing the duration re-arms it). Only sent while 10–12 minutes remain, so a door opened with less than that gets none:
   - Copy: "Your door closes in 10 minutes"
   - Actions: "Keep open" (prolongs without opening app), "Close now", default tap → app Door Open view
 
@@ -740,7 +755,7 @@ Static page, reachable without auth, linked from the signup consent notice and t
 
 - Manual: "Close now" sets `closed_at = now()`
 - Automatic: server-side job expires statuses where `closed_at IS NULL AND closes_at < now()`
-- After auto-close, host receives a confirmation push if `notif_door_closed` is enabled: "Hope it was a good one. Open again?"
+- After auto-close, host receives a confirmation push if `notif_door_closed` is enabled: "Hope it was a good one. Open again?" — only within 2 minutes of `closes_at`, so a server outage never produces a stale one
 
 ### Recipient Removal (Undo Pattern)
 
@@ -755,10 +770,10 @@ Static page, reachable without auth, linked from the signup consent notice and t
 
 ### Hiding a Friend
 
-- Creates a `friend_mutes` row
+- Creates a `friend_hides` row
 - Hidden friend is unchecked by default in recipient selection
-- The hiding user does not receive push notifications when the hidden friend opens their door (enforced via `friend_mutes` check in the notification cron, independently of `friend_notif_prefs`)
-- Hidden friend still receives notifications when the hiding user opens their door (unless that friend also hid the opener)
+- The hiding user does not receive push notifications when the hidden friend opens their door, independently of `friend_notif_prefs`
+- The hidden friend does not receive push notifications when the hiding user opens their door either, even if selected explicitly (they still see it in the app)
 
 ### Setting Notification Preferences for a Friend
 
@@ -889,7 +904,7 @@ Muting user A suppresses:
 ### Nudge Reminders
 
 - Set per user on the Profile page (day + hour, stored in `nudge_schedules`)
-- Server checks every minute for due nudges based on each user's stored timezone
+- Server checks every minute for due nudges based on each user's stored timezone; at most one nudge per user per day, where "day" is the user's local calendar day
 - Suppressed if user already has an active status at the scheduled time
 - No cap on number of slots
 
@@ -901,7 +916,8 @@ Muting user A suppresses:
   - **Primary** (`going_reminder_1`): defaults to "day" (fires 20–28 h before start); copy: "[Host] is opening their door tomorrow at [time]"
   - **Secondary** (`going_reminder_2`): defaults to "30m" (fires 25–35 min before start); copy: "[Host]'s starts at [time]"
 - Options: none, day before, 120 min, 60 min, 30 min, 15 min
-- Flags `reminder_1_sent` and `reminder_sent` on `going_signals` prevent re-sending
+- Each reminder is a job (`going.reminder_1` / `going.reminder_2`) and is sent at most once per RSVP; changing the settings re-times reminders not yet sent, and un-RSVPing cancels them
+- The time in the copy is shown in the recipient's timezone
 - Complements ICS calendar downloads; no harm in a user receiving both
 
 ### Re-engagement

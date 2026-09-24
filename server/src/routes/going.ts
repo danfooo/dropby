@@ -5,6 +5,7 @@ import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.js';
 import { notifyGoingSignal } from '../services/notifications.js';
 import { sendWelcomeMessage } from '../services/email.js';
 import { log } from '../services/analytics.js';
+import { syncGoingJobs, cancelGoingJobs } from '../services/jobs.js';
 
 const router = Router();
 
@@ -31,7 +32,11 @@ router.post('/claim', requireAuth, (req: AuthRequest, res) => {
   if (existing) {
     db.prepare('DELETE FROM going_signals WHERE id = ?').run(signal_id);
   } else {
-    db.prepare('UPDATE going_signals SET user_id = ?, guest_contact_id = NULL WHERE id = ?').run(userId, signal_id);
+    db.transaction(() => {
+      db.prepare('UPDATE going_signals SET user_id = ?, guest_contact_id = NULL WHERE id = ?').run(userId, signal_id);
+      // Now a signed-in RSVP, so it gets reminders.
+      syncGoingJobs(signal_id);
+    })();
   }
 
   res.json({ ok: true });
@@ -53,21 +58,25 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
 
   const trimmedNote = note?.trim() || null;
 
-  // Upsert — allow updating RSVP and note
-  db.prepare(`
-    INSERT INTO going_signals (id, status_id, user_id, rsvp, note) VALUES (?, ?, ?, 'going', ?)
-    ON CONFLICT(status_id, user_id) DO UPDATE SET rsvp = 'going', note = excluded.note
-  `).run(randomUUID(), statusId, userId, trimmedNote);
+  db.transaction(() => {
+    // Upsert — allow updating RSVP and note
+    db.prepare(`
+      INSERT INTO going_signals (id, status_id, user_id, rsvp, note) VALUES (?, ?, ?, 'going', ?)
+      ON CONFLICT(status_id, user_id) DO UPDATE SET rsvp = 'going', note = excluded.note
+    `).run(randomUUID(), statusId, userId, trimmedNote);
+    const signal = db.prepare('SELECT id FROM going_signals WHERE status_id = ? AND user_id = ?').get(statusId, userId) as { id: string };
+    syncGoingJobs(signal.id);
+
+    // Visiting resets the daily cap so the next door open always notifies
+    db.prepare(`
+      INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref, last_notified_at)
+      VALUES (?, ?, 'default', 0)
+      ON CONFLICT(user_id, friend_user_id) DO UPDATE SET last_notified_at = 0
+    `).run(userId, status.user_id);
+  })();
 
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
   notifyGoingSignal(status.user_id, user.display_name, trimmedNote, status.starts_at);
-
-  // Visiting resets the daily cap so the next door open always notifies
-  db.prepare(`
-    INSERT INTO friend_notif_prefs (user_id, friend_user_id, pref, last_notified_at)
-    VALUES (?, ?, 'default', 0)
-    ON CONFLICT(user_id, friend_user_id) DO UPDATE SET last_notified_at = 0
-  `).run(userId, status.user_id);
 
   log('going.sent', userId, { rsvp: 'going', is_guest: false });
 
@@ -100,7 +109,12 @@ router.patch('/:statusId', requireAuth, (req: AuthRequest, res) => {
 // DELETE /api/going/:statusId — remove RSVP
 router.delete('/:statusId', requireAuth, (req: AuthRequest, res) => {
   const { statusId } = req.params;
-  db.prepare('DELETE FROM going_signals WHERE status_id = ? AND user_id = ?').run(statusId, req.userId);
+  db.transaction(() => {
+    const signal = db.prepare('SELECT id FROM going_signals WHERE status_id = ? AND user_id = ?').get(statusId, req.userId) as { id: string } | undefined;
+    if (!signal) return;
+    cancelGoingJobs(signal.id);
+    db.prepare('DELETE FROM going_signals WHERE id = ?').run(signal.id);
+  })();
   res.json({ ok: true });
 });
 
@@ -120,22 +134,22 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
   if (!status) return res.status(404).json({ error: 'Status not found or expired' });
 
   const guestContactId = randomUUID();
-  db.prepare(`
-    INSERT INTO guest_contacts (id, name, contact, marketing_consent, status_id)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(guestContactId, name.trim(), contact?.trim() || null, marketing_consent ? 1 : 0, statusId);
+  const trimmedNote = note?.trim() || null;
+  const signalId = randomUUID();
+  db.transaction(() => {
+    db.prepare(`
+      INSERT INTO guest_contacts (id, name, contact, marketing_consent, status_id)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(guestContactId, name.trim(), contact?.trim() || null, marketing_consent ? 1 : 0, statusId);
+    db.prepare('INSERT INTO going_signals (id, status_id, user_id, guest_contact_id, rsvp, note) VALUES (?, ?, NULL, ?, \'going\', ?)').run(
+      signalId, statusId, guestContactId, trimmedNote
+    );
+  })();
 
   if (contact?.trim() && marketing_consent) {
     const appUrl = process.env.APP_URL || 'http://localhost:5173';
     sendWelcomeMessage(contact.trim(), `${appUrl}/download`);
   }
-
-  const trimmedNote = note?.trim() || null;
-
-  const signalId = randomUUID();
-  db.prepare('INSERT INTO going_signals (id, status_id, user_id, guest_contact_id, rsvp, note) VALUES (?, ?, NULL, ?, \'going\', ?)').run(
-    signalId, statusId, guestContactId, trimmedNote
-  );
 
   notifyGoingSignal(status.user_id, name.trim(), trimmedNote, status.starts_at);
   log('going.sent', null, { rsvp: 'going', is_guest: true });

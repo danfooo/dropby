@@ -352,8 +352,57 @@ function baseline(db: Database) {
   }
 }
 
+// Timed notifications move from per-record "_sent" flags to a jobs table
+// (server/src/services/jobs.ts). Anything the flags say was already sent for a live
+// record is carried over as a finished job, so the switch doesn't send it again.
+// The old flag columns stay in place, unused, so the previous build can still run
+// against this database if a deploy has to be rolled back.
+function jobs(db: Database) {
+  db.exec(`
+    CREATE TABLE jobs (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      type       TEXT NOT NULL,
+      subject_id TEXT NOT NULL,
+      dedupe_key TEXT NOT NULL DEFAULT '',
+      run_at     INTEGER NOT NULL,
+      done_at    INTEGER,
+      error      TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(type, subject_id, dedupe_key)
+    );
+    CREATE INDEX idx_jobs_due ON jobs(run_at) WHERE done_at IS NULL;
+    CREATE INDEX idx_jobs_subject ON jobs(subject_id);
+  `);
+
+  const live = `closed_at IS NULL AND (closes_at > unixepoch() - 86400 OR starts_at > unixepoch())`;
+  const liveS = `s.closed_at IS NULL AND (s.closes_at > unixepoch() - 86400 OR s.starts_at > unixepoch())`;
+  db.exec(`
+    INSERT OR IGNORE INTO jobs (type, subject_id, dedupe_key, run_at, done_at)
+      SELECT 'door.notify_open', id, '', COALESCE(notify_at, created_at), unixepoch()
+      FROM statuses WHERE notifications_sent = 1 AND ${live};
+    INSERT OR IGNORE INTO jobs (type, subject_id, dedupe_key, run_at, done_at)
+      SELECT 'door.closing_soon', id, CAST(closes_at AS TEXT), closes_at - 720, unixepoch()
+      FROM statuses WHERE closing_notification_sent = 1 AND ${live};
+    INSERT OR IGNORE INTO jobs (type, subject_id, dedupe_key, run_at, done_at)
+      SELECT 'door.auto_closed', id, CAST(closes_at AS TEXT), closes_at, unixepoch()
+      FROM statuses WHERE auto_close_notification_sent = 1 AND ${live};
+    INSERT OR IGNORE INTO jobs (type, subject_id, dedupe_key, run_at, done_at)
+      SELECT 'door.host_reminder', id, '', starts_at - COALESCE(reminder_minutes, 0) * 60, unixepoch()
+      FROM statuses WHERE reminder_sent = 1 AND starts_at IS NOT NULL AND ${live};
+    INSERT OR IGNORE INTO jobs (type, subject_id, dedupe_key, run_at, done_at)
+      SELECT 'going.reminder_1', gs.id, '', s.starts_at, unixepoch()
+      FROM going_signals gs JOIN statuses s ON s.id = gs.status_id
+      WHERE gs.reminder_1_sent = 1 AND s.starts_at IS NOT NULL AND ${liveS};
+    INSERT OR IGNORE INTO jobs (type, subject_id, dedupe_key, run_at, done_at)
+      SELECT 'going.reminder_2', gs.id, '', s.starts_at, unixepoch()
+      FROM going_signals gs JOIN statuses s ON s.id = gs.status_id
+      WHERE gs.reminder_sent = 1 AND s.starts_at IS NOT NULL AND ${liveS};
+  `);
+}
+
 export const migrations: Migration[] = [
   { version: 1, name: 'baseline', up: baseline },
+  { version: 2, name: 'jobs', up: jobs },
 ];
 
 export function runMigrations(db: Database, list: Migration[] = migrations) {

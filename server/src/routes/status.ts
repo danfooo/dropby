@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
-import { notifyFriendDoorOpen, notifyScheduledSession, notifyScheduledReminder, notifyCalendarUpdate, notifyCalendarCancel, isQuietHours, alreadyNotifiedToday, recordDoorOpenNotified } from '../services/notifications.js';
+import { announceDoorOpen, isHiddenEitherWay, notifyScheduledSession, notifyCalendarUpdate, notifyCalendarCancel } from '../services/notifications.js';
+import { syncStatusJobs } from '../services/jobs.js';
 import { broadcastSSE } from '../services/sse.js';
 import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 import { log } from '../services/analytics.js';
@@ -138,24 +139,56 @@ router.get('/friends', requireAuth, (req: AuthRequest, res) => {
   })));
 });
 
+// Friend ids of a user, from whichever side of the friendship row they are on.
+function friendIdsOf(userId: string): string[] {
+  return (db.prepare(`
+    SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
+    FROM friendships WHERE user_a_id = ? OR user_b_id = ?
+  `).all(userId, userId, userId) as Array<{ fid: string }>).map(r => r.fid);
+}
+
+function setRecipients(statusId: string, recipientIds: string[]) {
+  db.prepare('DELETE FROM status_recipients WHERE status_id = ?').run(statusId);
+  const insert = db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)');
+  for (const rid of recipientIds) insert.run(randomUUID(), statusId, rid);
+}
+
+// Remember who was picked (and who was left out) as the default for next time.
+function saveRecipientSelection(userId: string, selected: string[], friendIds: string[], nowUnix: number) {
+  const unselected = friendIds.filter(id => !selected.includes(id));
+  db.prepare(`
+    INSERT INTO recipient_sessions (user_id, selected_ids, unselected_ids, updated_at) VALUES (?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
+  `).run(userId, JSON.stringify(selected), JSON.stringify(unselected), nowUnix);
+}
+
+function closeStatus(statusId: string, nowUnix: number) {
+  db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, statusId);
+  syncStatusJobs(statusId);
+}
+
+type Cleaned = { ok: true; value: string | null | undefined } | { ok: false; error: string };
+
+// Sanitise and moderate a free-text field. `undefined` means "not sent, leave as is";
+// text that moderation rejects is dropped (stored as empty) rather than refused.
+async function cleanText(raw: unknown, max: number, label: string): Promise<Cleaned> {
+  if (raw === undefined) return { ok: true, value: undefined };
+  if (!raw) return { ok: true, value: null };
+  const text = sanitizeNote(String(raw));
+  if (text.length > max) return { ok: false, error: `${label} max ${max} chars` };
+  if (!(await isNoteAllowed(text))) return { ok: true, value: null };
+  return { ok: true, value: text || null };
+}
+
 // POST /api/status — create (spontaneous or scheduled)
 router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { recipient_ids = [], starts_at: rawStartsAt, ends_at: rawEndsAt, reminder_minutes: rawReminderMinutes } = req.body;
 
-  let note: string | undefined = req.body.note;
-  if (note) {
-    note = sanitizeNote(note);
-    if (note.length > 160) return res.status(400).json({ error: 'Note max 160 chars' });
-    if (!(await isNoteAllowed(note))) note = undefined;
-  }
-
-  let location: string | undefined = req.body.location;
-  if (location) {
-    location = sanitizeNote(location);
-    if (location.length > 200) return res.status(400).json({ error: 'Location max 200 chars' });
-    if (!(await isNoteAllowed(location))) location = undefined;
-  }
+  const note = await cleanText(req.body.note, 160, 'Note');
+  if (!note.ok) return res.status(400).json({ error: note.error });
+  const location = await cleanText(req.body.location, 200, 'Location');
+  if (!location.ok) return res.status(400).json({ error: location.error });
 
   const nowUnix = Math.floor(Date.now() / 1000);
   const isScheduled = rawStartsAt && Number(rawStartsAt) > nowUnix;
@@ -163,61 +196,44 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const startsAt: number | null = isScheduled ? Number(rawStartsAt) : null;
   const endsAt: number | null = rawEndsAt ? Number(rawEndsAt) : null;
   const reminderMinutes: number | null = isScheduled ? (rawReminderMinutes ?? 30) : null;
-  const user = db.prepare('SELECT default_door_minutes FROM users WHERE id = ?').get(userId) as any;
+  const user = db.prepare('SELECT default_door_minutes, display_name FROM users WHERE id = ?').get(userId) as any;
   const doorMinutes = user?.default_door_minutes ?? 60;
   const closesAt = isScheduled
     ? (endsAt ?? (Number(rawStartsAt) + doorMinutes * 60))
     : nowUnix + doorMinutes * 60;
 
-  // Close any existing active status — but only for spontaneous opens (scheduled sessions coexist)
-  if (!isScheduled) {
-    const existing = getActiveStatus(userId);
-    if (existing) {
-      db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, existing.id);
-    }
-  }
-
   const statusId = randomUUID();
-
+  // Spontaneous: friends are told after a 2-minute minimum open window (a job)
   const notifyAt = isScheduled ? null : nowUnix + 2 * 60;
-
-  db.prepare(`
-    INSERT INTO statuses (id, user_id, note, location, closes_at, starts_at, ends_at, reminder_minutes, notify_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(statusId, userId, note || null, location || null, closesAt, startsAt, endsAt, reminderMinutes, notifyAt);
-
-  // Add recipients (only friends)
-  const friendIds = (db.prepare(`
-    SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
-    FROM friendships WHERE user_a_id = ? OR user_b_id = ?
-  `).all(userId, userId, userId) as Array<{ fid: string }>).map(r => r.fid);
-
+  const friendIds = friendIdsOf(userId);
   const validRecipients = (recipient_ids as string[]).filter(id => friendIds.includes(id));
 
-  for (const rid of validRecipients) {
-    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, rid);
-  }
+  db.transaction(() => {
+    // Close any existing active status — but only for spontaneous opens (scheduled sessions coexist)
+    if (!isScheduled) {
+      const existing = getActiveStatus(userId);
+      if (existing) closeStatus(existing.id, nowUnix);
+    }
 
-  // Save last selection
-  const unselectedOnCreate = friendIds.filter((id: string) => !validRecipients.includes(id));
-  db.prepare(`
-    INSERT INTO recipient_sessions (user_id, selected_ids, unselected_ids, updated_at) VALUES (?, ?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
-  `).run(userId, JSON.stringify(validRecipients), JSON.stringify(unselectedOnCreate), nowUnix);
+    db.prepare(`
+      INSERT INTO statuses (id, user_id, note, location, closes_at, starts_at, ends_at, reminder_minutes, notify_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(statusId, userId, note.value || null, location.value || null, closesAt, startsAt, endsAt, reminderMinutes, notifyAt);
 
-  const userFull = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
-  const hiddenByMe = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ? AND (expires_at IS NULL OR expires_at > unixepoch())').all(userId).map((r: any) => r.hidden_user_id);
+    setRecipients(statusId, validRecipients);
+    saveRecipientSelection(userId, validRecipients, friendIds, nowUnix);
+    syncStatusJobs(statusId);
+  })();
 
   if (isScheduled) {
-    // Notify invitees about the upcoming scheduled session immediately
+    // Tell invitees about the upcoming scheduled session right away
     for (const rid of validRecipients) {
-      if (hiddenByMe.includes(rid)) continue;
-      notifyScheduledSession(rid, userFull.display_name, startsAt!);
+      if (isHiddenEitherWay(userId, rid)) continue;
+      notifyScheduledSession(rid, user.display_name, startsAt!);
     }
   }
-  // Spontaneous: notification fires via cron after a 2-minute minimum open window
 
-  log('door.open', userId, { recipients: validRecipients.length, has_note: !!note });
+  log('door.open', userId, { recipients: validRecipients.length, has_note: !!note.value });
 
   const status = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
   res.status(201).json(status);
@@ -234,94 +250,56 @@ router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
   `).get(statusId, userId, nowUnix) as any;
   if (!scheduled) return res.status(404).json({ error: 'No pending scheduled session found' });
 
-  // Close any currently active session
-  const existing = getActiveStatus(userId);
-  if (existing) {
-    db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, existing.id);
-  }
+  db.transaction(() => {
+    // Close any currently active session
+    const existing = getActiveStatus(userId);
+    if (existing) closeStatus(existing.id, nowUnix);
 
-  // Activate: clear starts_at (keep closes_at = ends_at)
-  db.prepare('UPDATE statuses SET starts_at = NULL WHERE id = ?').run(statusId);
+    // Activate: clear starts_at (keep closes_at = ends_at)
+    db.prepare('UPDATE statuses SET starts_at = NULL WHERE id = ?').run(statusId);
+    syncStatusJobs(statusId);
+  })();
 
-  // Notify recipients that door is now open
-  const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
-  const recipients = db.prepare('SELECT user_id FROM status_recipients WHERE status_id = ?').all(statusId).map((r: any) => r.user_id);
-  const hiddenByMe = db.prepare('SELECT hidden_user_id FROM friend_hides WHERE user_id = ? AND (expires_at IS NULL OR expires_at > unixepoch())').all(userId).map((r: any) => r.hidden_user_id);
-
-  for (const rid of recipients) {
-    if (hiddenByMe.includes(rid)) continue;
-    if (isQuietHours(rid)) continue;
-    const prefRow = db.prepare('SELECT pref, last_notified_at FROM friend_notif_prefs WHERE user_id = ? AND friend_user_id = ?')
-      .get(rid, userId) as { pref: string; last_notified_at: number | null } | undefined;
-    const pref = prefRow?.pref ?? 'default';
-    if (pref === 'none') continue;
-    if (pref === 'default' && alreadyNotifiedToday(rid, prefRow?.last_notified_at ?? null)) continue;
-    notifyFriendDoorOpen(rid, user.display_name, scheduled.note || null, statusId, userId);
-    recordDoorOpenNotified(rid, userId, nowUnix);
-  }
-
-  broadcastSSE(recipients, 'status:open', {
-    status_id: statusId,
-    owner_id: userId,
-    owner_name: user.display_name,
-    note: scheduled.note || null,
-    closes_at: scheduled.closes_at,
-  });
+  // Friends hear about it right away — the host chose to open early.
+  announceDoorOpen(statusId);
 
   const status = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
   res.json(status);
 });
 
-// PUT /api/status — update note + recipients (+ starts_at/ends_at for scheduled)
+// PUT /api/status — update note + recipients (+ ends_at) of the active or next scheduled status
 router.put('/', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
-  let { note, location, recipient_ids, ends_at } = req.body;
+  const { recipient_ids, ends_at } = req.body;
 
   // Try active first, then scheduled
   const status = getActiveStatus(userId) || getScheduledStatus(userId);
   if (!status) return res.status(404).json({ error: 'No active status' });
 
-  if (note !== undefined) {
-    if (note) {
-      note = sanitizeNote(note);
-      if (note.length > 160) return res.status(400).json({ error: 'Note max 160 chars' });
-      if (!(await isNoteAllowed(note))) note = null;
+  const note = await cleanText(req.body.note, 160, 'Note');
+  if (!note.ok) return res.status(400).json({ error: note.error });
+  const location = await cleanText(req.body.location, 200, 'Location');
+  if (!location.ok) return res.status(400).json({ error: location.error });
+
+  db.transaction(() => {
+    if (note.value !== undefined) {
+      db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note.value, status.id);
     }
-    db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, status.id);
-  }
-
-  if (location !== undefined) {
-    if (location) {
-      location = sanitizeNote(location);
-      if (location.length > 200) return res.status(400).json({ error: 'Location max 200 chars' });
-      if (!(await isNoteAllowed(location))) location = null;
+    if (location.value !== undefined) {
+      db.prepare('UPDATE statuses SET location = ? WHERE id = ?').run(location.value, status.id);
     }
-    db.prepare('UPDATE statuses SET location = ? WHERE id = ?').run(location || null, status.id);
-  }
-
-  if (ends_at !== undefined) {
-    const newEndsAt = ends_at ? Number(ends_at) : null;
-    db.prepare('UPDATE statuses SET ends_at = ?, closes_at = COALESCE(?, closes_at) WHERE id = ?').run(newEndsAt, newEndsAt, status.id);
-  }
-
-  if (recipient_ids !== undefined) {
-    const friendIds = (db.prepare(`
-      SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
-      FROM friendships WHERE user_a_id = ? OR user_b_id = ?
-    `).all(userId, userId, userId) as Array<{ fid: string }>).map(r => r.fid);
-
-    const valid = (recipient_ids as string[]).filter(id => friendIds.includes(id));
-    db.prepare('DELETE FROM status_recipients WHERE status_id = ?').run(status.id);
-    for (const rid of valid) {
-      db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), status.id, rid);
+    if (ends_at !== undefined) {
+      const newEndsAt = ends_at ? Number(ends_at) : null;
+      db.prepare('UPDATE statuses SET ends_at = ?, closes_at = COALESCE(?, closes_at) WHERE id = ?').run(newEndsAt, newEndsAt, status.id);
     }
-
-    const unselectedOnUpdate = friendIds.filter((id: string) => !valid.includes(id));
-    db.prepare(`
-      INSERT INTO recipient_sessions (user_id, selected_ids, unselected_ids, updated_at) VALUES (?, ?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET selected_ids = excluded.selected_ids, unselected_ids = excluded.unselected_ids, updated_at = excluded.updated_at
-    `).run(userId, JSON.stringify(valid), JSON.stringify(unselectedOnUpdate), Math.floor(Date.now() / 1000));
-  }
+    if (recipient_ids !== undefined) {
+      const friendIds = friendIdsOf(userId);
+      const valid = (recipient_ids as string[]).filter(id => friendIds.includes(id));
+      setRecipients(status.id, valid);
+      saveRecipientSelection(userId, valid, friendIds, Math.floor(Date.now() / 1000));
+    }
+    syncStatusJobs(status.id);
+  })();
 
   const updated = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(status.id), userId);
   res.json(updated);
@@ -330,62 +308,50 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
 // PUT /api/status/:statusId — update a specific session by ID
 router.put('/:statusId', requireAuth, async (req: AuthRequest, res) => {
   const userId = req.userId!;
-  const { statusId } = req.params;
-  let { note, location, recipient_ids, starts_at, ends_at } = req.body;
+  const { statusId } = req.params as { statusId: string };
+  const { recipient_ids, starts_at, ends_at } = req.body;
 
   const status = db.prepare('SELECT * FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL').get(statusId, userId) as any;
   if (!status) return res.status(404).json({ error: 'Session not found' });
 
-  if (note !== undefined) {
-    if (note) {
-      note = sanitizeNote(note);
-      if (note.length > 160) return res.status(400).json({ error: 'Note max 160 chars' });
-      if (!(await isNoteAllowed(note))) note = null;
-    }
-    db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note || null, statusId);
-  }
-
-  if (location !== undefined) {
-    if (location) {
-      location = sanitizeNote(location);
-      if (location.length > 200) return res.status(400).json({ error: 'Location max 200 chars' });
-      if (!(await isNoteAllowed(location))) location = null;
-    }
-    db.prepare('UPDATE statuses SET location = ? WHERE id = ?').run(location || null, statusId);
-  }
+  const note = await cleanText(req.body.note, 160, 'Note');
+  if (!note.ok) return res.status(400).json({ error: note.error });
+  const location = await cleanText(req.body.location, 200, 'Location');
+  if (!location.ok) return res.status(400).json({ error: location.error });
 
   const timesChanged = starts_at !== undefined || ends_at !== undefined;
 
-  if (starts_at !== undefined) {
-    db.prepare('UPDATE statuses SET starts_at = ? WHERE id = ?').run(starts_at ? Number(starts_at) : null, statusId);
-  }
-
-  if (ends_at !== undefined) {
-    const newEndsAt = ends_at ? Number(ends_at) : null;
-    db.prepare('UPDATE statuses SET ends_at = ?, closes_at = COALESCE(?, closes_at) WHERE id = ?').run(newEndsAt, newEndsAt, statusId);
-  }
+  db.transaction(() => {
+    if (note.value !== undefined) {
+      db.prepare('UPDATE statuses SET note = ? WHERE id = ?').run(note.value, statusId);
+    }
+    if (location.value !== undefined) {
+      db.prepare('UPDATE statuses SET location = ? WHERE id = ?').run(location.value, statusId);
+    }
+    if (starts_at !== undefined) {
+      db.prepare('UPDATE statuses SET starts_at = ? WHERE id = ?').run(starts_at ? Number(starts_at) : null, statusId);
+    }
+    if (ends_at !== undefined) {
+      const newEndsAt = ends_at ? Number(ends_at) : null;
+      db.prepare('UPDATE statuses SET ends_at = ?, closes_at = COALESCE(?, closes_at) WHERE id = ?').run(newEndsAt, newEndsAt, statusId);
+    }
+    if (timesChanged) {
+      db.prepare('UPDATE statuses SET ics_sequence = ics_sequence + 1 WHERE id = ?').run(statusId);
+    }
+    if (recipient_ids !== undefined) {
+      const friendIds = friendIdsOf(userId);
+      setRecipients(statusId, (recipient_ids as string[]).filter(id => friendIds.includes(id)));
+    }
+    syncStatusJobs(statusId);
+  })();
 
   if (timesChanged) {
-    db.prepare('UPDATE statuses SET ics_sequence = ics_sequence + 1 WHERE id = ?').run(statusId);
     const downloads = db.prepare('SELECT user_id, token FROM status_ics_downloads WHERE status_id = ?').all(statusId) as Array<{ user_id: string | null; token: string | null }>;
     const appUrl = process.env.APP_URL || 'http://localhost:5173';
     for (const d of downloads) {
       if (d.user_id && d.token) {
         notifyCalendarUpdate(d.user_id, `${appUrl}/api/invites/${d.token}/calendar.ics`);
       }
-    }
-  }
-
-  if (recipient_ids !== undefined) {
-    const friendIds = (db.prepare(`
-      SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
-      FROM friendships WHERE user_a_id = ? OR user_b_id = ?
-    `).all(userId, userId, userId) as Array<{ fid: string }>).map(r => r.fid);
-
-    const valid = (recipient_ids as string[]).filter(id => friendIds.includes(id));
-    db.prepare('DELETE FROM status_recipients WHERE status_id = ?').run(statusId);
-    for (const rid of valid) {
-      db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, rid);
     }
   }
 
@@ -405,8 +371,11 @@ router.post('/duration', requireAuth, (req: AuthRequest, res) => {
   const nowUnix = Math.floor(Date.now() / 1000);
   const newClosesAt = Math.max(status.created_at + minutes * 60, nowUnix + 60);
 
-  db.prepare('UPDATE statuses SET closes_at = ?, closing_notification_sent = 0 WHERE id = ?').run(newClosesAt, status.id);
-  db.prepare('UPDATE users SET default_door_minutes = ? WHERE id = ?').run(minutes, userId);
+  db.transaction(() => {
+    db.prepare('UPDATE statuses SET closes_at = ? WHERE id = ?').run(newClosesAt, status.id);
+    db.prepare('UPDATE users SET default_door_minutes = ? WHERE id = ?').run(minutes, userId);
+    syncStatusJobs(status.id);
+  })();
 
   res.json({ closes_at: newClosesAt });
 });
@@ -418,7 +387,7 @@ router.delete('/', requireAuth, (req: AuthRequest, res) => {
   if (!status) return res.status(404).json({ error: 'No active status' });
 
   const nowUnix = Math.floor(Date.now() / 1000);
-  db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, status.id);
+  closeStatus(status.id, nowUnix);
 
   // Only broadcast close if friends were already notified of the open
   if (status.notifications_sent) {
@@ -443,11 +412,11 @@ router.get('/upcoming', requireAuth, (req: AuthRequest, res) => {
 // DELETE /api/status/scheduled/:statusId — cancel a specific scheduled session
 router.delete('/scheduled/:statusId', requireAuth, (req: AuthRequest, res) => {
   const userId = req.userId!;
-  const { statusId } = req.params;
+  const { statusId } = req.params as { statusId: string };
   const nowUnix = Math.floor(Date.now() / 1000);
   const status = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ? AND closed_at IS NULL AND starts_at > ?').get(statusId, userId, nowUnix) as any;
   if (!status) return res.status(404).json({ error: 'Not found' });
-  db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, statusId);
+  closeStatus(statusId, nowUnix);
 
   const downloads = db.prepare('SELECT user_id, token FROM status_ics_downloads WHERE status_id = ?').all(statusId) as Array<{ user_id: string | null; token: string | null }>;
   const appUrl = process.env.APP_URL || 'http://localhost:5173';
@@ -466,8 +435,7 @@ router.delete('/scheduled', requireAuth, (req: AuthRequest, res) => {
   const status = getScheduledStatus(userId);
   if (!status) return res.status(404).json({ error: 'No scheduled session' });
 
-  const nowUnix = Math.floor(Date.now() / 1000);
-  db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, status.id);
+  closeStatus(status.id, Math.floor(Date.now() / 1000));
   res.json({ ok: true });
 });
 
@@ -478,7 +446,10 @@ router.post('/prolong', requireAuth, (req: AuthRequest, res) => {
   if (!status) return res.status(404).json({ error: 'No active status' });
 
   const newClosesAt = status.closes_at + 30 * 60;
-  db.prepare('UPDATE statuses SET closes_at = ?, closing_notification_sent = 0 WHERE id = ?').run(newClosesAt, status.id);
+  db.transaction(() => {
+    db.prepare('UPDATE statuses SET closes_at = ? WHERE id = ?').run(newClosesAt, status.id);
+    syncStatusJobs(status.id);
+  })();
 
   res.json({ closes_at: newClosesAt });
 });
@@ -497,11 +468,7 @@ router.post('/quick-open', requireAuth, (req: AuthRequest, res) => {
   const closesAt = nowUnix + doorMinutes * 60;
 
   // Get all friends, then subtract unselected to get recipients
-  const friendIds = (db.prepare(`
-    SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
-    FROM friendships WHERE user_a_id = ? OR user_b_id = ?
-  `).all(userId, userId, userId) as Array<{ fid: string }>).map(r => r.fid);
-
+  const friendIds = friendIdsOf(userId);
   const sessionRow = db.prepare('SELECT unselected_ids FROM recipient_sessions WHERE user_id = ?').get(userId) as { unselected_ids: string } | undefined;
   const unselected: string[] = sessionRow ? JSON.parse(sessionRow.unselected_ids) : [];
   const recipientIds = friendIds.filter(id => !unselected.includes(id));
@@ -509,14 +476,14 @@ router.post('/quick-open', requireAuth, (req: AuthRequest, res) => {
   const statusId = randomUUID();
   const notifyAt = nowUnix + 2 * 60;
 
-  db.prepare(`
-    INSERT INTO statuses (id, user_id, closes_at, notify_at)
-    VALUES (?, ?, ?, ?)
-  `).run(statusId, userId, closesAt, notifyAt);
-
-  for (const rid of recipientIds) {
-    db.prepare('INSERT OR IGNORE INTO status_recipients (id, status_id, user_id) VALUES (?, ?, ?)').run(randomUUID(), statusId, rid);
-  }
+  db.transaction(() => {
+    db.prepare(`
+      INSERT INTO statuses (id, user_id, closes_at, notify_at)
+      VALUES (?, ?, ?, ?)
+    `).run(statusId, userId, closesAt, notifyAt);
+    setRecipients(statusId, recipientIds);
+    syncStatusJobs(statusId);
+  })();
 
   log('door.open', userId, { recipients: recipientIds.length, has_note: false, source: 'quick_open' });
 

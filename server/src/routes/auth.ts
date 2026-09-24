@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
-import { join, extname } from 'path';
-import { mkdirSync } from 'fs';
+import { join, extname, basename } from 'path';
+import { mkdirSync, unlink } from 'fs';
 import multer from 'multer';
 import { db } from '../db/index.js';
 import { requireAuth, signJwt, AuthRequest } from '../middleware/auth.js';
@@ -10,6 +10,7 @@ import { sendVerificationEmail } from '../services/email.js';
 import { acceptInviteToken } from './invites.js';
 import { normalizeToken } from '../utils/invite-link.js';
 import { log } from '../services/analytics.js';
+import { syncUserGoingJobs } from '../services/jobs.js';
 
 const avatarsDir = join(process.cwd(), 'data', 'avatars');
 mkdirSync(avatarsDir, { recursive: true });
@@ -26,6 +27,15 @@ const upload = multer({
 });
 
 const router = Router();
+
+// Uploaded avatars are files on the volume; Google pictures are remote URLs and are left alone.
+function removeAvatarFile(avatarUrl: string | null | undefined) {
+  if (!avatarUrl?.startsWith('/avatars/')) return;
+  const file = basename(avatarUrl);
+  unlink(join(avatarsDir, file), err => {
+    if (err && err.code !== 'ENOENT') console.error('[avatar] could not remove', file, err.message);
+  });
+}
 
 // Validate an invite token exists, is not revoked, and is not expired.
 // Returns the inviter's user id, or null if the token is invalid.
@@ -104,7 +114,11 @@ router.put('/me', requireAuth, (req: AuthRequest, res) => {
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
 
   values.push(req.userId);
-  db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+  db.transaction(() => {
+    db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    // Reminder settings decide when each going reminder fires, so re-time them.
+    if (going_reminder_1 !== undefined || going_reminder_2 !== undefined) syncUserGoingJobs(req.userId!);
+  })();
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId) as any;
   res.json(userResponse(user));
 });
@@ -113,12 +127,15 @@ router.put('/me', requireAuth, (req: AuthRequest, res) => {
 router.put('/avatar', requireAuth, upload.single('avatar'), (req: AuthRequest, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const avatarUrl = `/avatars/${req.file.filename}`;
+  const previous = (db.prepare('SELECT avatar_url FROM users WHERE id = ?').get(req.userId) as any)?.avatar_url;
   db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatarUrl, req.userId);
+  removeAvatarFile(previous);
   res.json({ avatar_url: avatarUrl });
 });
 
 // DELETE /api/auth/avatar
 router.delete('/avatar', requireAuth, (req: AuthRequest, res) => {
+  removeAvatarFile(req.user?.avatar_url);
   db.prepare('UPDATE users SET avatar_url = NULL WHERE id = ?').run(req.userId);
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId) as any;
   res.json(userResponse(user));
@@ -126,8 +143,11 @@ router.delete('/avatar', requireAuth, (req: AuthRequest, res) => {
 
 // DELETE /api/auth/me
 router.delete('/me', requireAuth, (req: AuthRequest, res) => {
-  db.prepare('DELETE FROM event_log WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM users WHERE id = ?').run(req.userId);
+  db.transaction(() => {
+    db.prepare('DELETE FROM event_log WHERE user_id = ?').run(req.userId);
+    db.prepare('DELETE FROM users WHERE id = ?').run(req.userId);
+  })();
+  removeAvatarFile(req.user?.avatar_url);
   res.json({ ok: true });
 });
 
