@@ -55,7 +55,15 @@ Related but separate: with no group object there is nothing to select as door re
 - [ ] Set `min_machines_running = 1` in `fly.toml` — with `auto_stop_machines = 'stop'` and no traffic, Fly stops the machine and the `node-cron` timers in `server/src/cron.ts` (closing-soon pushes, nudges, reminders, coalesced notification flush) don't run until the next request wakes it. Open SSE connections mask this while someone has the app open; it fails in the quiet periods. ~$2/month.
 
 ## Native device test pass
-The Playwright suite runs in a desktop browser where the app and API share an origin, so it cannot catch native-only breakage. Check these by hand on a real iPhone and Android device after the next `fly deploy` + app build:
+The Playwright suite runs in a desktop browser where the app and API share an origin, so it cannot catch native-only breakage. Check these by hand on a real iPhone and Android device after the next `fly deploy` + app build.
+
+**Why this is needed.** No recent change caused these bugs. They have been there since the native apps were added, and nothing caught them:
+
+- The web app was built first (2026-03-11) and calls the server with relative paths like `/api/...`. That works in a browser because the server serves the page too.
+- The native apps load the page from the phone itself, so a relative path points at the phone. The switch to native (c404cdb, 2026-03-19) fixed this only in the main API client (`api/index.ts`). The live-updates hook (`useSSE.ts`) kept its relative path, and the calendar links added after it (2026-03-16, 2026-03-29) copied the same pattern.
+- The server rejects requests from origins it doesn't know (CORS). iOS's origin was added on 2026-04-01 (f8c676a), presumably when iOS hit this problem. Android's origin (`https://localhost`, set by `androidScheme: 'https'`) was never added, so Android has probably never been able to reach production.
+
+Since c246962, the server address lives in one exported value (`serverOrigin` in `client/src/api/index.ts`), so new code can reuse it instead of repeating the relative-path mistake.
 
 - [ ] **Android can reach the API at all** — CORS allowlist gained `https://localhost` (commit c246962, needs `fly deploy`). Before it, production sent no allow-origin header to Android, so sign-in and every API call failed. Check: sign in on Android.
 - [ ] **Live updates on native** — SSE now uses the absolute server URL (commit c246962, needs a new app build). Check: with the app open on the phone, open a door from another account; it should appear without refreshing.
