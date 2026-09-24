@@ -138,7 +138,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             return
         }
 
-        let urlString = "https://drop-by.fly.dev/api/friends/\(friendId)/hide"
+        let urlString = "https://dropby.cc/api/friends/\(friendId)/hide"
         guard let url = URL(string: urlString) else { completion(); return }
 
         var request = URLRequest(url: url)

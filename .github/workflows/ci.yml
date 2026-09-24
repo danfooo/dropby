@@ -1,0 +1,42 @@
+# Checks every push and pull request: types, builds, unit tests and the end-to-end
+# suite. Never deploys and never builds the native apps.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # The root postinstall downloads Chromium for Playwright.
+      - run: npm ci
+      - run: npx playwright install-deps chromium
+
+      # The test server reads ../.env; nothing in it needs to be real.
+      - run: printf 'JWT_SECRET=ci-only\n' > .env
+
+      - name: Build (shared, server, client)
+        run: |
+          npm run build:server
+          npm run build --workspace=client
+
+      - run: npm run test:unit
+
+      - run: npx playwright test
+
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

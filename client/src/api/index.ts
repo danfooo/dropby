@@ -8,7 +8,9 @@ import type {
 
 // On native the page runs at capacitor://localhost (iOS) or https://localhost (Android),
 // so server paths have to be absolute. On web they stay relative to the same origin.
-export const serverOrigin = Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : '';
+// Native apps use our own domain rather than the Fly hostname, so moving hosts never
+// needs an app release. (Builds before this used drop-by.fly.dev, which keeps working.)
+export const serverOrigin = Capacitor.isNativePlatform() ? 'https://dropby.cc' : '';
 export const baseURL = `${serverOrigin}/api`;
 
 export const api = axios.create({ baseURL });

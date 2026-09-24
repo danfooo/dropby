@@ -1,0 +1,7 @@
+# Continuous backup of the SQLite database (https://litestream.io).
+# Only used when LITESTREAM_REPLICA_URL is set — see deploy/start.sh.
+# Credentials come from LITESTREAM_ACCESS_KEY_ID / LITESTREAM_SECRET_ACCESS_KEY.
+dbs:
+  - path: /app/server/data/drop-by.db
+    replica:
+      url: ${LITESTREAM_REPLICA_URL}

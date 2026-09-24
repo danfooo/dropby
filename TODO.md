@@ -54,8 +54,16 @@ Related but separate: with no group object there is nothing to select as door re
 - [ ] Optional: "Sign out everywhere" in Profile — the server side exists (`revokeAllSessions`); needs a button, an endpoint and copy in all locales
 - [ ] Optional: keep the native session token in the Keychain/Keystore instead of Capacitor Preferences (UserDefaults on iOS). Needs a secure-storage plugin and a matching change in `AppDelegate.swift`'s mute action
 
-## Before launch
-- [ ] Set `min_machines_running = 1` in `fly.toml` — with `auto_stop_machines = 'stop'` and no traffic, Fly stops the machine and the `node-cron` timers in `server/src/cron.ts` (closing-soon pushes, nudges, reminders, coalesced notification flush) don't run until the next request wakes it. Open SSE connections mask this while someone has the app open; it fails in the quiet periods. ~$2/month.
+## Database backups (Litestream)
+The image now includes Litestream (`deploy/start.sh`, `deploy/litestream.yml`), which streams every database change to object storage and restores from it when the volume is empty. It stays **off** until `LITESTREAM_REPLICA_URL` is set, so deploying changes nothing by itself. Verified locally: replicate, then restore into a fresh container. Turning it on (Cloudflare R2, since dropby.cc is already on Cloudflare; ~free at this size):
+
+- [ ] 1. Cloudflare dashboard → **R2 Object Storage** → **Create bucket**, name it `dropby-db`, location automatic. Keep it private (the default).
+- [ ] 2. R2 → **Manage API tokens** → **Create API token** → permission **Object Read & Write**, limited to the `dropby-db` bucket. Copy the **Access Key ID**, the **Secret Access Key**, and your account's S3 endpoint (`https://<account-id>.r2.cloudflarestorage.com`). The secret is shown once.
+- [ ] 3. Set the Fly secrets (this restarts the app once):
+  `fly secrets set LITESTREAM_ACCESS_KEY_ID=… LITESTREAM_SECRET_ACCESS_KEY=… LITESTREAM_REPLICA_URL="s3://dropby-db/drop-by.db?endpoint=https://<account-id>.r2.cloudflarestorage.com&region=auto"`
+- [ ] 4. Check: `fly logs` should show `snapshot complete`, and the bucket should fill with files under `drop-by.db/`.
+- Careful: if the volume is ever empty on boot, the server restores from the bucket, so never point two apps at the same `LITESTREAM_REPLICA_URL`.
+- On a normal boot (database present) the restore step is skipped without touching the network, so an R2 outage can't stop the app. Only an empty volume needs the bucket, and then the app refuses to start rather than starting empty.
 
 ## Native device test pass
 The Playwright suite runs in a desktop browser where the app and API share an origin, so it cannot catch native-only breakage. Check these by hand on a real iPhone and Android device after the next `fly deploy` + app build.
@@ -71,11 +79,12 @@ Since c246962, the server address lives in one exported value (`serverOrigin` in
 - [ ] **Android can reach the API at all** — CORS allowlist gained `https://localhost` (commit c246962, needs `fly deploy`). Before it, production sent no allow-origin header to Android, so sign-in and every API call failed. Check: sign in on Android.
 - [ ] **Live updates on native** — SSE now uses the absolute server URL (commit c246962, needs a new app build). Check: with the app open on the phone, open a door from another account; it should appear without refreshing.
 - [ ] **Calendar (.ics) links on native** — now built from `baseURL` in `client/src/api/index.ts` (Invite page and the Later tab's calendar toasts) instead of relative `/api/...` hrefs. Check: download a session's calendar file on both platforms.
+- [ ] **Staying signed in across the update** — the app's saved 30-day token is swapped for a session on its first request (see spec §7). Check: install the new build over the old one while signed in; you should stay signed in, and live updates should connect.
+- [ ] **Native apps now talk to `dropby.cc`** (through Cloudflare) instead of `drop-by.fly.dev`. Check on both platforms: sign in, open a door, receive a live update, and use "Mute for 3 days" from a door-open push on iOS (that one is sent by `AppDelegate.swift`, not the web code).
 
 ## Not needed for launch
 - [ ] Remove or update `rua` in DMARC record (currently no mailbox receiving aggregate reports)
 - [ ] GitHub Actions deploy-on-push (manual `fly deploy` is fine for now)
-- [ ] Optional: GitHub Actions CI on push — `npm run build`, `npm run build:server`, `npm run test:unit`, `npx playwright test` on ubuntu with dummy env values; no deploy, no native builds. Free tier is ample (~5 min per run).
 
 ## Deferred dependency bumps
 - [ ] Node 24 → 26 in the `Dockerfile` (`node:26-alpine`) once Node 26 becomes LTS (October 2026); Node 24 security support runs to April 2028 so there is no rush. Bump `@types/node` to 26 at the same time. `better-sqlite3` rebuilds in the image, nothing else to do.

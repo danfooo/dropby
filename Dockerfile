@@ -43,8 +43,13 @@ COPY client/package.json client/package.json
 COPY server/package.json server/package.json
 RUN npm ci --workspace=server --omit=dev
 
+# ── Litestream (continuous database backup; off unless configured) ──
+FROM litestream/litestream:0.5.17 AS litestream
+
 # ── Production ─────────────────────────────────────────────────
 FROM node:24-alpine
+COPY --from=litestream /usr/local/bin/litestream /usr/local/bin/litestream
+COPY deploy/ /app/deploy/
 WORKDIR /app/server
 # Same layout as the workspace: node_modules/@dropby/shared is a link to /app/shared.
 COPY --from=server-deps /app/node_modules /app/node_modules
@@ -56,4 +61,4 @@ COPY --from=client-build /app/client/dist ../client/dist
 RUN mkdir -p data
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+CMD ["/app/deploy/start.sh"]

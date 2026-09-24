@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Capacitor } from '@capacitor/core';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { bigEmojiClass, formatTime, formatTimeShort, addHours, toUnix } from '../utils/schedule';
 import Avatar from './Avatar';
 import { LinkifiedText } from '../utils/linkify';
+import { baseURL } from '../api';
 
 // One of your own scheduled sessions on the Later tab, with inline edit and cancel.
 export default function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
@@ -195,7 +195,7 @@ export default function ScheduledSessionCard({ session, friends = [], me, onCanc
           {t('home.edit')}
         </button>
         <a
-          href={`${Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : ''}/api/status/${session.id}/calendar.ics`}
+          href={`${baseURL}/status/${session.id}/calendar.ics`}
           download
           onClick={() => localStorage.setItem(icsKey, '1')}
           className="flex items-center gap-1.5 text-xs text-violet-400 dark:text-violet-500 hover:text-violet-600 dark:hover:text-violet-300"

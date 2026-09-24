@@ -18,7 +18,7 @@ If you hit native-module errors (e.g. `NODE_MODULE_VERSION` mismatch), clean and
 
 ```
 nvm use
-rm -rf node_modules client/node_modules server/node_modules
+rm -rf node_modules client/node_modules server/node_modules shared/node_modules
 npm install
 ```
 
@@ -28,8 +28,20 @@ Copy `.env.example` to `.env` and fill in any values you need locally. Most feat
 
 - **Client:** React + Vite + Tailwind (`/client`)
 - **Server:** Node + Express + TypeScript + SQLite via better-sqlite3 (`/server`)
+- **Shared:** the API contract — zod request schemas and response types used by both (`/shared`). Dev and tests read it from source; `npm run build:server` compiles it first for production
+- **Schema changes:** append a migration to `server/src/db/migrations.ts`; never edit one that has shipped
+- **Timed notifications:** rows in the `jobs` table, run by a worker in the server process (`server/src/services/jobs.ts`)
 - **Native:** Capacitor wrapping the Vite build for iOS and Android
 - **Hosting:** Fly.io (Frankfurt)
+
+## Tests
+
+```
+npm run test:unit   # server logic, migrations, the API contract
+npm test            # end-to-end (Playwright), starts its own servers
+```
+
+Both run on every push in GitHub Actions (`.github/workflows/ci.yml`).
 
 ## Deploy
 
@@ -52,7 +64,7 @@ Set once with `fly secrets set`, then never needed locally again:
 
 | Secret | Purpose |
 |--------|---------|
-| `JWT_SECRET` | Token signing — generate with `openssl rand -hex 32` |
+| `JWT_SECRET` | Verifies sign-in tokens issued before sessions existed; can be removed once they have all expired (see TODO.md) |
 | `RESEND_API_KEY` | Transactional email |
 | `APPLE_SERVICE_ID` | Apple Sign In (web) |
 | `APNS_KEY_ID` | iOS push notifications |
@@ -63,7 +75,8 @@ Set once with `fly secrets set`, then never needed locally again:
 | `FCM_PRIVATE_KEY` | Android push notifications |
 | `FCM_PRIVATE_KEY_ID` | Android push notifications |
 | `ADMIN_EMAILS` | Comma-separated emails with access to `/admin` |
-| `APP_URL` | Base URL for email links (e.g. `https://drop-by.fly.dev`) |
+| `APP_URL` | Base URL for email links (e.g. `https://dropby.cc`) |
+| `LITESTREAM_REPLICA_URL`, `LITESTREAM_ACCESS_KEY_ID`, `LITESTREAM_SECRET_ACCESS_KEY` | Optional: continuous database backup. Off until set — see TODO.md |
 
 ## APNs sandbox
 

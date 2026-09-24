@@ -13,7 +13,9 @@ primary_region = 'fra'
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 0
+  # One machine always runs: the notification worker and cron live in the app process,
+  # so a stopped machine means no reminders, nudges or closing-soon pushes.
+  min_machines_running = 1
 
 [[vm]]
   memory = '256mb'

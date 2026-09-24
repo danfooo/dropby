@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Capacitor } from '@capacitor/core';
 import Avatar from './Avatar';
 import { bigEmojiClass, formatTime, formatTimeShort } from '../utils/schedule';
 import { LinkifiedText } from '../utils/linkify';
+import { baseURL } from '../api';
 
 export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
   status: any;
@@ -115,7 +115,7 @@ export default function FriendStatusCard({ status, onGoing, onNoteUpdate }: {
       {isScheduled && (
         <div className="px-4 py-3 border-t border-violet-100 dark:border-violet-900 flex justify-end">
           <a
-            href={`${Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : ''}/api/status/${status.id}/calendar.ics`}
+            href={`${baseURL}/status/${status.id}/calendar.ics`}
             download
             className="flex items-center gap-1.5 text-xs text-violet-400 dark:text-violet-500 hover:text-violet-600 dark:hover:text-violet-300"
           >
