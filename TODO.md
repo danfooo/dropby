@@ -49,7 +49,10 @@ Related but separate: with no group object there is nothing to select as door re
 - [ ] Admin UI to promote waitlist entries to invites (deferred — for now copy an invite link manually)
 
 ## Limits & Safety
-- [x] Rate limiting — waitlist endpoint has per-IP limits (5/hour, 20/day); broader API rate limiting still TODO
+- [x] Rate limiting — waitlist (per IP), and every sign-in and email-sending endpoint (per IP and per email/user; see spec §7). Other signed-in endpoints are unlimited
+- [ ] **Remove legacy JWT sign-in** — 30 days after the sessions deploy, every pre-sessions JWT has expired. Then delete `looksLikeJwt`/`verifyLegacyJwt` and the `JWT_SECRET` check in `server/src/services/sessions.ts`, the swap in `server/src/middleware/auth.ts`, the `/api/test/legacy-jwt` route and its e2e test, and the `JWT_SECRET` Fly secret (`fly secrets unset JWT_SECRET`)
+- [ ] Optional: "Sign out everywhere" in Profile — the server side exists (`revokeAllSessions`); needs a button, an endpoint and copy in all locales
+- [ ] Optional: keep the native session token in the Keychain/Keystore instead of Capacitor Preferences (UserDefaults on iOS). Needs a secure-storage plugin and a matching change in `AppDelegate.swift`'s mute action
 
 ## Before launch
 - [ ] Set `min_machines_running = 1` in `fly.toml` — with `auto_stop_machines = 'stop'` and no traffic, Fly stops the machine and the `node-cron` timers in `server/src/cron.ts` (closing-soon pushes, nudges, reminders, coalesced notification flush) don't run until the next request wakes it. Open SSE connections mask this while someone has the app open; it fails in the quiet periods. ~$2/month.

@@ -1,16 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { jwtVerify } from 'jose';
 import { db } from '../db/index.js';
-
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET env var must be set in production');
-}
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'dev-secret-change-in-production'
-);
+import { createSession, verifySession, looksLikeJwt, verifyLegacyJwt } from '../services/sessions.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
+  sessionToken?: string;
   user?: {
     id: string;
     email: string;
@@ -23,58 +17,66 @@ export interface AuthRequest extends Request {
   };
 }
 
-export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+// Header that carries a replacement token back to the client. Exposed via CORS in index.ts.
+export const SESSION_TOKEN_HEADER = 'X-Session-Token';
 
-  const token = authHeader.slice(7);
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    const userId = payload.sub as string;
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as AuthRequest['user'];
-    if (!user) return res.status(401).json({ error: 'User not found' });
-    req.userId = userId;
-    req.user = user;
+// An app sends several requests at once on startup, all with the same old JWT. Swap
+// each JWT for one session, not one per request. Cleared as it grows; a miss only
+// costs an extra session row.
+const swapped = new Map<string, string>();
 
-    // Auto-update timezone if provided and different
-    const clientTimezone = req.headers['x-timezone'] as string;
-    if (clientTimezone && clientTimezone !== user.timezone) {
-      db.prepare('UPDATE users SET timezone = ? WHERE id = ?').run(clientTimezone, userId);
-    }
-
-    next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
+function sessionForLegacyJwt(jwt: string, userId: string, userAgent?: string): string {
+  const existing = swapped.get(jwt);
+  if (existing && verifySession(existing) === userId) return existing;
+  if (swapped.size > 5000) swapped.clear();
+  const token = createSession(userId, userAgent);
+  swapped.set(jwt, token);
+  return token;
 }
 
-export async function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
+// Resolve the bearer token to a user. A legacy JWT is accepted and swapped for a
+// session: the new token goes back in a response header and the client stores it.
+async function authenticate(req: AuthRequest, res: Response): Promise<boolean> {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) return next();
-
+  if (!authHeader?.startsWith('Bearer ')) return false;
   const token = authHeader.slice(7);
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    const userId = payload.sub as string;
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as AuthRequest['user'];
-    if (user) {
-      req.userId = userId;
-      req.user = user;
+
+  let userId: string | null;
+  let sessionToken = token;
+  if (looksLikeJwt(token)) {
+    userId = await verifyLegacyJwt(token);
+    if (userId && db.prepare('SELECT 1 FROM users WHERE id = ?').get(userId)) {
+      sessionToken = sessionForLegacyJwt(token, userId, req.headers['user-agent']);
+      res.setHeader(SESSION_TOKEN_HEADER, sessionToken);
     }
-  } catch {
-    // ignore
+  } else {
+    userId = verifySession(token);
   }
+  if (!userId) return false;
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as AuthRequest['user'];
+  if (!user) return false;
+  req.userId = userId;
+  req.user = user;
+  req.sessionToken = sessionToken;
+
+  // Auto-update timezone if provided and different
+  const clientTimezone = req.headers['x-timezone'] as string;
+  if (clientTimezone && clientTimezone !== user.timezone) {
+    db.prepare('UPDATE users SET timezone = ? WHERE id = ?').run(clientTimezone, userId);
+  }
+  return true;
+}
+
+export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.headers.authorization?.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (!(await authenticate(req, res))) return res.status(401).json({ error: 'Invalid token' });
   next();
 }
 
-export async function signJwt(userId: string): Promise<string> {
-  const { SignJWT } = await import('jose');
-  return new SignJWT({})
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(userId)
-    .setIssuedAt()
-    .setExpirationTime('30d')
-    .sign(JWT_SECRET);
+export async function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  await authenticate(req, res);
+  next();
 }

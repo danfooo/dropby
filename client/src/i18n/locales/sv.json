@@ -85,7 +85,8 @@
     "continueWithApple": "Fortsätt med Apple",
     "continueWithGoogle": "Fortsätt med Google",
     "inviteRequired": "dropby är bara för inbjudna just nu. Be en kompis om deras inbjudningslänk, eller ställ dig i kön.",
-    "consentNotice": "Genom att skapa ett konto godkänner du <privacy>integritetspolicyn</privacy>. dropby sparar vilka inbjudningslänkar du öppnar för att kunna föreslå personer du kanske känner."
+    "consentNotice": "Genom att skapa ett konto godkänner du <privacy>integritetspolicyn</privacy>. dropby sparar vilka inbjudningslänkar du öppnar för att kunna föreslå personer du kanske känner.",
+    "rateLimited": "För många försök. Försök igen senare."
   },
   "waitlist": {
     "title": "dropby är bara för inbjudna just nu",

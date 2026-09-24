@@ -89,7 +89,9 @@ export default function Auth() {
       }
     } catch (err: any) {
       const code = err.response?.data?.error;
-      if (code === 'EMAIL_NOT_VERIFIED' || code === 'EMAIL_EXISTS_UNVERIFIED') {
+      if (code === 'RATE_LIMITED') {
+        setError(t('auth.rateLimited'));
+      } else if (code === 'EMAIL_NOT_VERIFIED' || code === 'EMAIL_EXISTS_UNVERIFIED') {
         setError(t('auth.verifyEmailSent'));
         setShowResend(true);
       } else if (code === 'INVITE_REQUIRED') {
@@ -128,8 +130,8 @@ export default function Auth() {
       await authApi.resendVerification(email, redirect !== '/home' ? redirect : undefined);
       setMessage(t('auth.verificationResent'));
       setShowResend(false);
-    } catch {
-      setError(t('auth.couldNotResend'));
+    } catch (err: any) {
+      setError(err.response?.data?.error === 'RATE_LIMITED' ? t('auth.rateLimited') : t('auth.couldNotResend'));
     }
   };
 
@@ -182,6 +184,8 @@ export default function Auth() {
       const msg = String(err?.message ?? err?.error ?? '');
       if (err?.response?.data?.error === 'INVITE_REQUIRED') {
         setError(t('auth.inviteRequired'));
+      } else if (err?.response?.data?.error === 'RATE_LIMITED') {
+        setError(t('auth.rateLimited'));
       } else if (err?.code !== '1001' && !msg.includes('1001') && err?.error !== 'popup_closed_by_user') {
         setError(t('auth.appleFailed'));
       }
@@ -199,6 +203,7 @@ export default function Auth() {
     } catch (err: any) {
       const code = err.response?.data?.error;
       if (code === 'INVITE_REQUIRED') setError(t('auth.inviteRequired'));
+      else if (code === 'RATE_LIMITED') setError(t('auth.rateLimited'));
       else setError(code || t('auth.googleFailed'));
     } finally {
       setLoading(false);
@@ -226,6 +231,8 @@ export default function Auth() {
         // user dismissed the sign-in sheet — no error message needed
       } else if (err?.response?.data?.error === 'INVITE_REQUIRED') {
         setError(t('auth.inviteRequired'));
+      } else if (err?.response?.data?.error === 'RATE_LIMITED') {
+        setError(t('auth.rateLimited'));
       } else {
         setError(t('auth.googleFailed'));
       }
@@ -256,8 +263,8 @@ export default function Auth() {
                   try {
                     await authApi.forgotPassword(forgotEmail);
                     setForgotSent(true);
-                  } catch {
-                    setError(t('auth.somethingWentWrong'));
+                  } catch (err: any) {
+                    setError(err.response?.data?.error === 'RATE_LIMITED' ? t('auth.rateLimited') : t('auth.somethingWentWrong'));
                   } finally {
                     setLoading(false);
                   }

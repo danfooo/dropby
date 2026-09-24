@@ -1,28 +1,22 @@
 import { Router } from 'express';
-import { jwtVerify } from 'jose';
 import { db } from '../db/index.js';
-import { registerSSE, unregisterSSE } from '../services/sse.js';
+import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import { registerSSE, unregisterSSE, issueTicket, redeemTicket } from '../services/sse.js';
 import { log } from '../services/analytics.js';
 
 const router = Router();
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'dev-secret-change-in-production'
-);
+// POST /api/events/ticket — a single-use ticket for opening the event stream
+router.post('/ticket', requireAuth, (req: AuthRequest, res) => {
+  res.json({ ticket: issueTicket(req.userId!) });
+});
 
-// GET /api/events?token=xxx
-router.get('/', async (req, res) => {
-  const token = req.query.token as string;
-  if (!token) return res.status(401).json({ error: 'Token required' });
-
-  let userId: string;
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    userId = payload.sub as string;
-    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
-    if (!user) throw new Error('User not found');
-  } catch {
-    return res.status(401).json({ error: 'Invalid token' });
+// GET /api/events?ticket=xxx
+router.get('/', (req, res) => {
+  const ticket = req.query.ticket;
+  const userId = typeof ticket === 'string' ? redeemTicket(ticket) : null;
+  if (!userId || !db.prepare('SELECT id FROM users WHERE id = ?').get(userId)) {
+    return res.status(401).json({ error: 'Invalid ticket' });
   }
 
   res.setHeader('Content-Type', 'text/event-stream');

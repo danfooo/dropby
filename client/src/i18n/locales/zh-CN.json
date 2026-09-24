@@ -85,7 +85,8 @@
     "continueWithGoogle": "通过 Google 继续",
     "somethingWentWrong": "出了点问题，请重试。",
     "inviteRequired": "dropby 目前仅限受邀加入。请向朋友索取邀请链接，或加入等待名单。",
-    "consentNotice": "创建账户即表示你同意<privacy>隐私政策</privacy>。dropby 会记录你打开过哪些邀请链接，以便向你推荐可能认识的人。"
+    "consentNotice": "创建账户即表示你同意<privacy>隐私政策</privacy>。dropby 会记录你打开过哪些邀请链接，以便向你推荐可能认识的人。",
+    "rateLimited": "尝试次数过多，请稍后再试。"
   },
   "waitlist": {
     "title": "dropby 目前仅限受邀加入",

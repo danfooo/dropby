@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
+import { connectionCount } from '../services/sse.js';
 
 const router = Router();
 
@@ -128,6 +129,20 @@ router.get('/events/:userId', (req, res) => {
     event: r.event,
     ...(r.data ? JSON.parse(r.data) : {}),
   })));
+});
+
+// GET /api/test/sse-connections/:userId — how many event streams this user has open
+router.get('/sse-connections/:userId', (req, res) => {
+  res.json({ count: connectionCount(req.params.userId) });
+});
+
+// GET /api/test/legacy-jwt/:userId — a pre-sessions style 30-day JWT, to test the swap
+router.get('/legacy-jwt/:userId', async (req, res) => {
+  const { SignJWT } = await import('jose');
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-change-in-production');
+  const token = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setSubject(req.params.userId)
+    .setIssuedAt().setExpirationTime('30d').sign(secret);
+  res.json({ token });
 });
 
 export default router;

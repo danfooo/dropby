@@ -85,7 +85,8 @@
     "continueWithApple": "Continua con Apple",
     "continueWithGoogle": "Continua con Google",
     "inviteRequired": "dropby è solo su invito in questo momento. Chiedi a un amico il suo link di invito, oppure iscriviti alla lista d'attesa.",
-    "consentNotice": "Creando un account accetti l'<privacy>Informativa sulla privacy</privacy>. dropby registra quali link d'invito apri per suggerirti persone che potresti conoscere."
+    "consentNotice": "Creando un account accetti l'<privacy>Informativa sulla privacy</privacy>. dropby registra quali link d'invito apri per suggerirti persone che potresti conoscere.",
+    "rateLimited": "Troppi tentativi. Riprova più tardi."
   },
   "waitlist": {
     "title": "dropby è solo su invito in questo momento",

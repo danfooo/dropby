@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useAuthStore } from './stores/auth';
-import { authApi } from './api';
+import { authApi, onSessionToken } from './api';
 import { useSSE } from './hooks/useSSE';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import { useUniversalLinks } from './hooks/useUniversalLinks';
@@ -23,6 +23,8 @@ import Privacy from './pages/Privacy';
 import Admin from './pages/Admin';
 import Layout from './components/Layout';
 
+onSessionToken(token => useAuthStore.getState().setToken(token));
+
 function AppRoutes() {
   const { user, token, isLoading, setAuth, clearAuth, setLoading } = useAuthStore();
   useSSE();
@@ -36,7 +38,8 @@ function AppRoutes() {
     }
     authApi.me()
       .then(u => {
-        setAuth(u, token);
+        // Read the token again: the response may have carried a replacement for it.
+        setAuth(u, useAuthStore.getState().token ?? token);
         setLoading(false);
       })
       .catch(() => {

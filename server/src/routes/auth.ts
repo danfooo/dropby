@@ -5,12 +5,14 @@ import { join, extname, basename } from 'path';
 import { mkdirSync, unlink } from 'fs';
 import multer from 'multer';
 import { db } from '../db/index.js';
-import { requireAuth, signJwt, AuthRequest } from '../middleware/auth.js';
+import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import { createSession, revokeSession, revokeAllSessions } from '../services/sessions.js';
 import { sendVerificationEmail } from '../services/email.js';
 import { acceptInviteToken } from './invites.js';
 import { normalizeToken } from '../utils/invite-link.js';
 import { log } from '../services/analytics.js';
 import { syncUserGoingJobs } from '../services/jobs.js';
+import { limits } from '../services/rate-limit.js';
 
 const avatarsDir = join(process.cwd(), 'data', 'avatars');
 mkdirSync(avatarsDir, { recursive: true });
@@ -152,7 +154,7 @@ router.delete('/me', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/auth/signup
-router.post('/signup', async (req, res) => {
+router.post('/signup', limits.signup, async (req, res) => {
   const { email, password, display_name, locale, redirect_url, invite_token } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   if (!display_name?.trim()) return res.status(400).json({ error: 'Display name required' });
@@ -198,7 +200,7 @@ router.get('/verify-email/:token', (req, res) => {
 });
 
 // POST /api/auth/verify-email — verify token, return JWT for auto-login
-router.post('/verify-email', async (req, res) => {
+router.post('/verify-email', limits.tokenCheck, async (req, res) => {
   const { token } = req.body;
   if (!token) return res.status(400).json({ error: 'Token required' });
 
@@ -217,12 +219,12 @@ router.post('/verify-email', async (req, res) => {
   log('user.verify', user.id);
 
   const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
-  const jwt = await signJwt(user.id);
+  const jwt = createSession(user.id, req.headers['user-agent']);
   res.json({ token: jwt, user: userResponse(updatedUser) });
 });
 
 // POST /api/auth/resend-verification
-router.post('/resend-verification', (req, res) => {
+router.post('/resend-verification', limits.emailSending, (req, res) => {
   const { email, redirect_url } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
 
@@ -238,7 +240,7 @@ router.post('/resend-verification', (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', limits.login, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
@@ -252,12 +254,12 @@ router.post('/login', async (req, res) => {
     return res.status(403).json({ error: 'EMAIL_NOT_VERIFIED' });
   }
 
-  const token = await signJwt(user.id);
+  const token = createSession(user.id, req.headers['user-agent']);
   res.json({ token, user: userResponse(user) });
 });
 
 // POST /api/auth/google
-router.post('/google', async (req, res) => {
+router.post('/google', limits.tokenCheck, async (req, res) => {
   const { credential, invite_token } = req.body;
   if (!credential) return res.status(400).json({ error: 'Google credential required' });
 
@@ -315,7 +317,7 @@ router.post('/google', async (req, res) => {
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
     }
 
-    const token = await signJwt(user.id);
+    const token = createSession(user.id, req.headers['user-agent']);
     res.json({ token, user: userResponse(user) });
   } catch (err: any) {
     console.error('Google auth error:', err.message);
@@ -324,7 +326,7 @@ router.post('/google', async (req, res) => {
 });
 
 // POST /api/auth/apple
-router.post('/apple', async (req, res) => {
+router.post('/apple', limits.tokenCheck, async (req, res) => {
   const { identityToken, fullName, invite_token } = req.body;
   if (!identityToken) return res.status(400).json({ error: 'Apple identity token required' });
 
@@ -383,7 +385,7 @@ router.post('/apple', async (req, res) => {
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
     }
 
-    const token = await signJwt(user.id);
+    const token = createSession(user.id, req.headers['user-agent']);
     res.json({ token, user: userResponse(user) });
   } catch (err: any) {
     console.error('Apple auth error:', err.message);
@@ -392,7 +394,7 @@ router.post('/apple', async (req, res) => {
 });
 
 // POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', limits.emailSending, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
 
@@ -414,7 +416,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // POST /api/auth/reset-password
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', limits.tokenCheck, async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ error: 'Token and password required' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
@@ -427,13 +429,23 @@ router.post('/reset-password', async (req, res) => {
   if (!user) return res.status(400).json({ error: 'INVALID_OR_EXPIRED' });
 
   const hash = await bcrypt.hash(password, 10);
-  db.prepare(
-    'UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires_at = NULL, email_verified = 1 WHERE id = ?'
-  ).run(hash, user.id);
+  db.transaction(() => {
+    db.prepare(
+      'UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires_at = NULL, email_verified = 1 WHERE id = ?'
+    ).run(hash, user.id);
+    // A new password signs out every device that used the old one.
+    revokeAllSessions(user.id);
+  })();
 
   const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as any;
-  const jwt = await signJwt(user.id);
+  const jwt = createSession(user.id, req.headers['user-agent']);
   res.json({ token: jwt, user: userResponse(updatedUser) });
+});
+
+// POST /api/auth/logout — end this device's session
+router.post('/logout', requireAuth, (req: AuthRequest, res) => {
+  if (req.sessionToken) revokeSession(req.sessionToken);
+  res.json({ ok: true });
 });
 
 // DELETE /api/auth/push-token — deregister current device token on logout

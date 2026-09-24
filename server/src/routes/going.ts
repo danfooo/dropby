@@ -6,8 +6,14 @@ import { notifyGoingSignal } from '../services/notifications.js';
 import { sendWelcomeMessage } from '../services/email.js';
 import { log } from '../services/analytics.js';
 import { syncGoingJobs, cancelGoingJobs } from '../services/jobs.js';
+import { sendSSE } from '../services/sse.js';
 
 const router = Router();
+
+// Refresh the host's view of who is coming.
+function tellHost(hostId: string, statusId: string) {
+  sendSSE(hostId, 'going:received', { status_id: statusId });
+}
 
 // GET /api/going/ever-received — has this user ever had a going signal on any of their statuses?
 router.get('/ever-received', requireAuth, (req: AuthRequest, res) => {
@@ -44,7 +50,7 @@ router.post('/claim', requireAuth, (req: AuthRequest, res) => {
 
 // POST /api/going/:statusId — logged-in RSVP (going only), changeable; accepts optional note
 router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
-  const { statusId } = req.params;
+  const { statusId } = req.params as { statusId: string };
   const userId = req.userId!;
   const { note } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
@@ -77,6 +83,7 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
 
   const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
   notifyGoingSignal(status.user_id, user.display_name, trimmedNote, status.starts_at);
+  tellHost(status.user_id, statusId);
 
   log('going.sent', userId, { rsvp: 'going', is_guest: false });
 
@@ -85,7 +92,7 @@ router.post('/:statusId', requireAuth, (req: AuthRequest, res) => {
 
 // PATCH /api/going/:statusId — update note only (logged-in)
 router.patch('/:statusId', requireAuth, (req: AuthRequest, res) => {
-  const { statusId } = req.params;
+  const { statusId } = req.params as { statusId: string };
   const userId = req.userId!;
   const { note } = req.body;
 
@@ -101,6 +108,7 @@ router.patch('/:statusId', requireAuth, (req: AuthRequest, res) => {
   if (status) {
     const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(userId) as any;
     notifyGoingSignal(status.user_id, user.display_name, trimmedNote, status.starts_at);
+    tellHost(status.user_id, statusId);
   }
 
   res.json({ ok: true });
@@ -108,19 +116,21 @@ router.patch('/:statusId', requireAuth, (req: AuthRequest, res) => {
 
 // DELETE /api/going/:statusId — remove RSVP
 router.delete('/:statusId', requireAuth, (req: AuthRequest, res) => {
-  const { statusId } = req.params;
+  const { statusId } = req.params as { statusId: string };
   db.transaction(() => {
     const signal = db.prepare('SELECT id FROM going_signals WHERE status_id = ? AND user_id = ?').get(statusId, req.userId) as { id: string } | undefined;
     if (!signal) return;
     cancelGoingJobs(signal.id);
     db.prepare('DELETE FROM going_signals WHERE id = ?').run(signal.id);
   })();
+  const host = db.prepare('SELECT user_id FROM statuses WHERE id = ?').get(statusId) as { user_id: string } | undefined;
+  if (host) tellHost(host.user_id, statusId);
   res.json({ ok: true });
 });
 
 // POST /api/going/:statusId/guest — web guest RSVP
 router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
-  const { statusId } = req.params;
+  const { statusId } = req.params as { statusId: string };
   const { name, contact, marketing_consent, note } = req.body;
   const nowUnix = Math.floor(Date.now() / 1000);
 
@@ -152,6 +162,7 @@ router.post('/:statusId/guest', optionalAuth, (req: AuthRequest, res) => {
   }
 
   notifyGoingSignal(status.user_id, name.trim(), trimmedNote, status.starts_at);
+  tellHost(status.user_id, statusId);
   log('going.sent', null, { rsvp: 'going', is_guest: true });
 
   res.status(201).json({ ok: true, signal_id: signalId, status_id: statusId });
@@ -164,7 +175,7 @@ router.patch('/guest/:signalId', (req, res) => {
   const trimmedNote = note?.trim() || null;
 
   const signal = db.prepare(`
-    SELECT gs.id, s.user_id as host_id, s.starts_at, gc.name as guest_name
+    SELECT gs.id, gs.status_id, s.user_id as host_id, s.starts_at, gc.name as guest_name
     FROM going_signals gs
     JOIN statuses s ON s.id = gs.status_id
     LEFT JOIN guest_contacts gc ON gc.id = gs.guest_contact_id
@@ -177,6 +188,7 @@ router.patch('/guest/:signalId', (req, res) => {
 
   // Notify host of note update
   notifyGoingSignal(signal.host_id, signal.guest_name || 'Guest', trimmedNote, signal.starts_at);
+  tellHost(signal.host_id, signal.status_id);
 
   res.json({ ok: true });
 });

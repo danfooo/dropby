@@ -16,8 +16,22 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+// The server swaps an old sign-in token for a new one by sending it back in this
+// header (server/src/middleware/auth.ts). Whoever owns the auth state listens here.
+let sessionTokenListener: ((token: string) => void) | null = null;
+export function onSessionToken(listener: (token: string) => void) {
+  sessionTokenListener = listener;
+}
+
 api.interceptors.response.use(
-  r => r,
+  r => {
+    const replacement = r.headers?.['x-session-token'];
+    if (typeof replacement === 'string' && replacement) {
+      localStorage.setItem('token', replacement);
+      sessionTokenListener?.(replacement);
+    }
+    return r;
+  },
   err => {
     const url: string = err.config?.url ?? '';
     if (err.response?.status === 401 && !url.startsWith('/auth')) {
@@ -46,6 +60,7 @@ export const authApi = {
   updateMe: (data: { display_name?: string; auto_nudge_enabled?: boolean; notif_door_closed?: boolean; going_reminder_1?: string; going_reminder_2?: string }) =>
     api.put('/auth/me', data).then(r => r.data),
   deleteMe: () => api.delete('/auth/me').then(r => r.data),
+  logout: () => api.post('/auth/logout').then(r => r.data),
   registerPushToken: (token: string, platform: 'ios' | 'android') =>
     api.post('/auth/push-token', { token, platform }).then(r => r.data),
   deregisterPushToken: (token?: string) =>
@@ -169,4 +184,9 @@ export const trackApi = {
     api.post('/track', { event: 'chip.selected', data }).catch(() => {}),
   event: (event: string, data?: Record<string, unknown>) =>
     api.post('/track', { event, data }).catch(() => {}),
+};
+
+// Live updates
+export const eventsApi = {
+  ticket: (): Promise<{ ticket: string }> => api.post('/events/ticket').then(r => r.data),
 };

@@ -3,6 +3,7 @@ import cors from 'cors';
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { invitePreview, applyPreview } from './services/invite-preview.js';
+import { SESSION_TOKEN_HEADER } from './middleware/auth.js';
 
 import authRouter from './routes/auth.js';
 import friendsRouter from './routes/friends.js';
@@ -36,6 +37,8 @@ const allowedOrigins = isDev
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
+  // Lets the client read a replacement session token (see middleware/auth.ts).
+  exposedHeaders: [SESSION_TOKEN_HEADER],
 }));
 
 // Security headers

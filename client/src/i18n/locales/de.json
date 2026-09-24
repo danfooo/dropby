@@ -85,7 +85,8 @@
     "continueWithApple": "Mit Apple fortfahren",
     "continueWithGoogle": "Mit Google fortfahren",
     "inviteRequired": "dropby ist gerade nur mit Einladung. Frag einen Freund nach seinem Einladungslink oder trag dich auf die Warteliste ein.",
-    "consentNotice": "Mit der Erstellung eines Kontos stimmst du der <privacy>Datenschutzerklärung</privacy> zu. dropby speichert, welche Einladungslinks du öffnest, um dir Leute vorzuschlagen, die du kennen könntest."
+    "consentNotice": "Mit der Erstellung eines Kontos stimmst du der <privacy>Datenschutzerklärung</privacy> zu. dropby speichert, welche Einladungslinks du öffnest, um dir Leute vorzuschlagen, die du kennen könntest.",
+    "rateLimited": "Zu viele Versuche. Bitte versuch es später erneut."
   },
   "waitlist": {
     "title": "dropby ist gerade nur mit Einladung",

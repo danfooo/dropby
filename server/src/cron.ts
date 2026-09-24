@@ -5,6 +5,7 @@ import { sendWaitlistDigest } from './services/email.js';
 import {
   runDueJobs, syncAllLiveJobs, purgeOldJobs, runScheduledNudges, runAutoNudges, runReengagement,
 } from './services/jobs.js';
+import { purgeExpiredSessions } from './services/sessions.js';
 
 // Timed notifications about a specific door or RSVP are rows in `jobs` (see
 // services/jobs.ts). Recompute them for every live record on boot, then run whatever
@@ -37,6 +38,12 @@ cron.schedule('0 12 * * *', () => {
 cron.schedule('0 3 * * *', () => {
   const purged = purgeOldJobs();
   if (purged > 0) console.log(`[cron] purged ${purged} finished jobs`);
+});
+
+// Daily at 03:00 UTC: drop expired sign-in sessions
+cron.schedule('0 3 * * *', () => {
+  const purged = purgeExpiredSessions();
+  if (purged > 0) console.log(`[cron] purged ${purged} expired sessions`);
 });
 
 // Daily at 03:00 UTC: purge expired temporary mutes

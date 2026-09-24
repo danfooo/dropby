@@ -207,6 +207,16 @@ Timed notifications about a specific door or RSVP. Whenever a status or going si
 
 `UNIQUE(type, subject_id, dedupe_key)`. Finished jobs are purged after 30 days. Recurring nudges (scheduled, auto, re-engagement) follow weekly or daily patterns rather than a single record and run as sweeps instead.
 
+### Sessions
+| Field | Type | Notes |
+|---|---|---|
+| id | text PK | SHA-256 (hex) of the session token; the token itself is never stored |
+| user_id | uuid FK → users | Cascade on delete |
+| created_at | unix timestamp | |
+| last_seen_at | unix timestamp | Updated at most hourly on use |
+| expires_at | unix timestamp | 180 days after last use; expired rows purged daily |
+| user_agent | text nullable | From the sign-in request |
+
 ### User Notes (Saved)
 | Field | Type | Notes |
 |---|---|---|
@@ -944,16 +954,16 @@ Muting user A suppresses:
 
 ### Real-Time Updates (SSE)
 
-The app maintains a persistent SSE connection (`GET /api/events?token=<jwt>`) for real-time Home screen updates. Events:
+The app maintains a persistent SSE connection for real-time updates. `EventSource` can't send an `Authorization` header, so the client first trades its session token for a single-use ticket (`POST /api/events/ticket`, valid 60 seconds) and connects with `GET /api/events?ticket=<ticket>`. The session token never appears in a URL. Native apps connect to the server's absolute URL, like every other API call. Events:
 
 | Event | Fired when | Client effect |
 |---|---|---|
 | `status:open` | A friend opens their door | Refetches friend statuses |
 | `status:close` | A friend closes their door | Refetches friend statuses |
-| `going:received` | Someone signals they're on their way | Refetches own status |
+| `going:received` | Someone RSVPs, changes their note, or un-RSVPs on this user's door (sent to the host) | Refetches own status and upcoming sessions |
 | `friend:joined` | Someone accepts this user's invite link | Refetches friends and own status |
 
-The connection is opened once for the whole app and reconnects automatically. Events only invalidate cached queries — they never reset local UI state, so a screen the user is mid-way through editing keeps its input and selection state when one arrives.
+The connection is opened once for the whole app. When it drops, the client reconnects with a fresh ticket, backing off from 1 to 30 seconds. Events only invalidate cached queries — they never reset local UI state, so a screen the user is mid-way through editing keeps its input and selection state when one arrives.
 
 ### Email Verification
 
@@ -961,16 +971,20 @@ The connection is opened once for the whole app and reconnects automatically. Ev
 - Expires 24 hours after generation
 - Sent via Resend transactional email, localised based on `locale`
 - Verification link points to `/verify-email?token=<token>` (frontend page), not the API directly
-- The server's `POST /api/auth/verify-email` verifies the token, sets `email_verified = 1`, clears the token fields, and returns a JWT for immediate auto-login
+- The server's `POST /api/auth/verify-email` verifies the token, sets `email_verified = 1`, clears the token fields, and returns a session token for immediate auto-login
 - Tokens are single-use: once verified, the token fields are cleared and the link cannot be used again
 
 ---
 
 ## 7. Authentication & Session
 
-- JWT-based; token stored in localStorage
-- Sent on every request via `Authorization: Bearer <token>` header
-- No server-side session; logout is purely client-side (clear token + auth store, redirect to `/`)
+- Session-based. Signing in (password, Google, Apple, email verification, password reset) creates a row in `sessions` and returns a random token; the server stores only its SHA-256
+- The token is stored in localStorage (and mirrored to native Preferences for background notification actions) and sent on every request via `Authorization: Bearer <token>`
+- Sessions last 180 days and slide: each use (checked at most hourly) pushes the expiry out again, so a regular user stays signed in
+- Logout (`POST /api/auth/logout`) deletes the device's session on the server, then clears the token and auth store and redirects to `/`
+- Resetting the password deletes all of the user's sessions (signs out every device) before signing in the device that reset it. Deleting the account deletes its sessions
+- Tokens issued before sessions existed (30-day JWTs) are still accepted until they expire; the first request with one returns a replacement session token in the `X-Session-Token` response header, which the client stores in place of the JWT
+- Rate limits (429 `RATE_LIMITED`, shown as "Too many attempts"): login 30 per 15 min per IP and 10 per 15 min per email; signup 10 per hour per IP; forgot-password and resend-verification 10 per hour per IP and 3 per hour per email; email verification, password reset, Google and Apple sign-in 30 per 15 min per IP; email invites 20 per day per user; feedback 10 per hour per user. Limits are in memory and reset on restart
 - Google OAuth: credential verified server-side via `google-auth-library`; account created on first use or linked to existing account by email
 - The server accepts ID tokens audienced to either the web OAuth client (`GOOGLE_CLIENT_ID`, used by web and Android) or the iOS OAuth client (`GOOGLE_IOS_CLIENT_ID`) — both are part of the same Google Cloud project, so `sub`/email identity is consistent across platforms
 - Email not verified for Google accounts (Google guarantees ownership)

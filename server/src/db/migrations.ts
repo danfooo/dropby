@@ -400,9 +400,26 @@ function jobs(db: Database) {
   `);
 }
 
+// Revocable sign-in sessions (server/src/services/sessions.ts) replace 30-day JWTs.
+// `id` is the SHA-256 of the token; the token itself is never stored.
+function sessions(db: Database) {
+  db.exec(`
+    CREATE TABLE sessions (
+      id           TEXT PRIMARY KEY,
+      user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at   INTEGER NOT NULL DEFAULT (unixepoch()),
+      last_seen_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      expires_at   INTEGER NOT NULL,
+      user_agent   TEXT
+    );
+    CREATE INDEX idx_sessions_user ON sessions(user_id);
+  `);
+}
+
 export const migrations: Migration[] = [
   { version: 1, name: 'baseline', up: baseline },
   { version: 2, name: 'jobs', up: jobs },
+  { version: 3, name: 'sessions', up: sessions },
 ];
 
 export function runMigrations(db: Database, list: Migration[] = migrations) {

@@ -3,13 +3,14 @@ import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { sendFeedbackNotification } from '../services/email.js';
+import { limits } from '../services/rate-limit.js';
 
 const router = Router();
 
 const VALID_TYPES = ['thought', 'bug'];
 
 // POST /api/feedback
-router.post('/', requireAuth, (req: AuthRequest, res) => {
+router.post('/', requireAuth, limits.feedback, (req: AuthRequest, res) => {
   const { type, message, reply_email } = req.body;
 
   if (!VALID_TYPES.includes(type)) return res.status(400).json({ error: 'Invalid type' });

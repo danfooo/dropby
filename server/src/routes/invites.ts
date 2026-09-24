@@ -9,6 +9,7 @@ import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 import { normalizeToken, inviteUrl } from '../utils/invite-link.js';
 import { notifyFriendJoined, notifyConnectionSuggestion } from '../services/notifications.js';
 import { sendSSE } from '../services/sse.js';
+import { limits } from '../services/rate-limit.js';
 
 const router = Router();
 
@@ -432,7 +433,7 @@ router.post('/:token/accept', requireAuth, (req: AuthRequest, res) => {
 });
 
 // POST /api/invites/email — send an email invite (30-day link)
-router.post('/email', requireAuth, async (req: AuthRequest, res) => {
+router.post('/email', requireAuth, limits.perUserEmail, async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { email } = req.body;
 
