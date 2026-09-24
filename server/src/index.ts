@@ -29,7 +29,9 @@ mkdirSync(avatarsDir, { recursive: true });
 
 const allowedOrigins = isDev
   ? ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173']
-  : [process.env.APP_URL ?? 'https://drop-by.fly.dev', 'capacitor://localhost'];
+  // Native webviews: iOS serves the app from capacitor://localhost, Android from
+  // https://localhost (androidScheme: 'https' in capacitor.config.ts).
+  : [process.env.APP_URL ?? 'https://drop-by.fly.dev', 'capacitor://localhost', 'https://localhost'];
 
 app.use(cors({
   origin: allowedOrigins,

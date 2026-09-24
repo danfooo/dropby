@@ -2,8 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { createAvatar } from '@dicebear/core';
 import * as shapes from '@dicebear/shapes';
 import { Capacitor } from '@capacitor/core';
-
-const SERVER = 'https://drop-by.fly.dev';
+import { serverOrigin } from '../api';
 
 interface Props {
   name: string;
@@ -24,7 +23,7 @@ export default function Avatar({ name, url, seed, size = 'md', className = '' }:
   // Uploaded avatars are stored as server-relative paths; on native there's no
   // same-origin server to resolve them against.
   const resolvedUrl = url && url.startsWith('/') && Capacitor.isNativePlatform()
-    ? `${SERVER}${url}`
+    ? `${serverOrigin}${url}`
     : url;
 
   const [failed, setFailed] = useState(false);

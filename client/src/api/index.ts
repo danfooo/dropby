@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 
-const baseURL = Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev/api' : '/api';
+// On native the page runs at capacitor://localhost (iOS) or https://localhost (Android),
+// so server paths have to be absolute. On web they stay relative to the same origin.
+export const serverOrigin = Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : '';
+export const baseURL = `${serverOrigin}/api`;
 
 export const api = axios.create({ baseURL });
 

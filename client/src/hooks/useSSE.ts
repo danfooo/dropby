@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/auth';
+import { baseURL } from '../api';
 
 export function useSSE() {
   const token = useAuthStore(s => s.token);
@@ -10,7 +11,7 @@ export function useSSE() {
   useEffect(() => {
     if (!token) return;
 
-    const url = `/api/events?token=${encodeURIComponent(token)}`;
+    const url = `${baseURL}/events?token=${encodeURIComponent(token)}`;
     const es = new EventSource(url);
     esRef.current = es;
 
