@@ -54,6 +54,13 @@ Related but separate: with no group object there is nothing to select as door re
 ## Before launch
 - [ ] Set `min_machines_running = 1` in `fly.toml` — with `auto_stop_machines = 'stop'` and no traffic, Fly stops the machine and the `node-cron` timers in `server/src/cron.ts` (closing-soon pushes, nudges, reminders, coalesced notification flush) don't run until the next request wakes it. Open SSE connections mask this while someone has the app open; it fails in the quiet periods. ~$2/month.
 
+## Native device test pass
+The Playwright suite runs in a desktop browser where the app and API share an origin, so it cannot catch native-only breakage. Check these by hand on a real iPhone and Android device after the next `fly deploy` + app build:
+
+- [ ] **Android can reach the API at all** — CORS allowlist gained `https://localhost` (commit c246962, needs `fly deploy`). Before it, production sent no allow-origin header to Android, so sign-in and every API call failed. Check: sign in on Android.
+- [ ] **Live updates on native** — SSE now uses the absolute server URL (commit c246962, needs a new app build). Check: with the app open on the phone, open a door from another account; it should appear without refreshing.
+- [ ] **Calendar (.ics) links on native** — not fixed yet: `Invite.tsx:419` and `Upcoming.tsx:280`/`:290` still use relative `/api/...` hrefs, which resolve against the webview, not the server. Fix with `serverOrigin` from `client/src/api/index.ts`, then check the download on both platforms.
+
 ## Not needed for launch
 - [ ] Remove or update `rua` in DMARC record (currently no mailbox receiving aggregate reports)
 - [ ] GitHub Actions deploy-on-push (manual `fly deploy` is fine for now)
