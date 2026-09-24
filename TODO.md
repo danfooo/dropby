@@ -70,7 +70,7 @@ Since c246962, the server address lives in one exported value (`serverOrigin` in
 
 - [ ] **Android can reach the API at all** — CORS allowlist gained `https://localhost` (commit c246962, needs `fly deploy`). Before it, production sent no allow-origin header to Android, so sign-in and every API call failed. Check: sign in on Android.
 - [ ] **Live updates on native** — SSE now uses the absolute server URL (commit c246962, needs a new app build). Check: with the app open on the phone, open a door from another account; it should appear without refreshing.
-- [ ] **Calendar (.ics) links on native** — not fixed yet: `Invite.tsx:419` and `Upcoming.tsx:280`/`:290` still use relative `/api/...` hrefs, which resolve against the webview, not the server. Fix with `serverOrigin` from `client/src/api/index.ts`, then check the download on both platforms.
+- [ ] **Calendar (.ics) links on native** — now built from `baseURL` in `client/src/api/index.ts` (Invite page and the Later tab's calendar toasts) instead of relative `/api/...` hrefs. Check: download a session's calendar file on both platforms.
 
 ## Not needed for launch
 - [ ] Remove or update `rua` in DMARC record (currently no mailbox receiving aggregate reports)

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { copyText } from '../utils/clipboard';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { friendsApi, invitesApi } from '../api';
 import Avatar from '../components/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
+import { invalidate, useFriendSuggestions, useFriends, useIncomingInvites, useOpenLinks, usePendingInvites } from '../queries';
 
 type NotifPref = 'none' | 'default' | 'all';
 
@@ -59,33 +60,33 @@ export default function Friends() {
     return () => document.removeEventListener('mousedown', handler);
   }, [notifPickerFor]);
 
-  const { data: friends = [], isLoading } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
-  const { data: pendingInvites = [] } = useQuery({ queryKey: ['pending-invites'], queryFn: invitesApi.listPending });
-  const { data: openLinks = [] } = useQuery({ queryKey: ['open-links'], queryFn: invitesApi.listOpenLinks });
-  const { data: incoming = [] } = useQuery({ queryKey: ['incoming-invites'], queryFn: invitesApi.listIncoming });
-  const { data: suggestions = [] } = useQuery({ queryKey: ['friend-suggestions'], queryFn: friendsApi.suggestions });
+  const { data: friends = [], isLoading } = useFriends();
+  const { data: pendingInvites = [] } = usePendingInvites();
+  const { data: openLinks = [] } = useOpenLinks();
+  const { data: incoming = [] } = useIncomingInvites();
+  const { data: suggestions = [] } = useFriendSuggestions();
   const checkedIncoming = (incoming as any[])
     .map(i => i.inviter.id as string)
     .filter(id => !uncheckedIncoming.includes(id));
 
   const removeFriend = useMutation({
     mutationFn: (id: string) => friendsApi.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['friends'] }),
+    onSuccess: () => invalidate(qc, 'friends'),
   });
 
   const hideFriend = useMutation({
     mutationFn: (id: string) => friendsApi.hide(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['friends'] });
-      qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+      invalidate(qc, 'friends');
+      invalidate(qc, 'friendStatuses');
     },
   });
 
   const unhideFriend = useMutation({
     mutationFn: (id: string) => friendsApi.unhide(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['friends'] });
-      qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+      invalidate(qc, 'friends');
+      invalidate(qc, 'friendStatuses');
     },
   });
 
@@ -93,54 +94,54 @@ export default function Friends() {
     mutationFn: ({ friendId, pref }: { friendId: string; pref: NotifPref }) =>
       friendsApi.setNotifPref(friendId, pref),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['friends'] });
+      invalidate(qc, 'friends');
       setNotifPickerFor(null);
     },
   });
 
   const cancelInvite = useMutation({
     mutationFn: (token: string) => invitesApi.revoke(token),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['pending-invites'] }),
+    onSuccess: () => invalidate(qc, 'pendingInvites'),
   });
 
   const acceptIncoming = useMutation({
     mutationFn: (fromUserIds: string[]) => invitesApi.acceptPending(fromUserIds),
     onSuccess: () => {
       setUnchecked([]);
-      qc.invalidateQueries({ queryKey: ['incoming-invites'] });
-      qc.invalidateQueries({ queryKey: ['friends'] });
-      qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+      invalidate(qc, 'incomingInvites');
+      invalidate(qc, 'friends');
+      invalidate(qc, 'friendStatuses');
     },
   });
 
   const dismissIncoming = useMutation({
     mutationFn: (fromUserIds: string[]) => invitesApi.dismiss(fromUserIds),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['incoming-invites'] }),
+    onSuccess: () => invalidate(qc, 'incomingInvites'),
   });
 
   const connectSuggested = useMutation({
     mutationFn: (userIds: string[]) => friendsApi.connect(userIds),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['friend-suggestions'] });
-      qc.invalidateQueries({ queryKey: ['friends'] });
-      qc.invalidateQueries({ queryKey: ['incoming-invites'] });
+      invalidate(qc, 'friendSuggestions');
+      invalidate(qc, 'friends');
+      invalidate(qc, 'incomingInvites');
     },
   });
 
   const dismissSuggested = useMutation({
     mutationFn: (userIds: string[]) => friendsApi.dismissSuggestions(userIds),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['friend-suggestions'] }),
+    onSuccess: () => invalidate(qc, 'friendSuggestions'),
   });
 
   const revokeLink = useMutation({
     mutationFn: (token: string) => invitesApi.revoke(token),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['open-links'] }),
+    onSuccess: () => invalidate(qc, 'openLinks'),
   });
 
   const sendEmailInvite = useMutation({
     mutationFn: (email: string) => invitesApi.sendByEmail(email),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['pending-invites'] });
+      invalidate(qc, 'pendingInvites');
       setAddMsg(t('friends.inviteSentSuccess'));
     },
     onError: (err: any) => {
@@ -161,7 +162,7 @@ export default function Friends() {
     const name = linkName.trim();
     try {
       await copyText(invitesApi.generate(undefined, name || undefined).then(data => {
-        qc.invalidateQueries({ queryKey: ['open-links'] });
+        invalidate(qc, 'openLinks');
         return `${t('home.friendshipCopyText')}\n${data.url}`;
       }));
       setShowNameModal(false);

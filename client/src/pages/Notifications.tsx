@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { authApi, nudgesApi } from '../api';
 import { requestNotificationPermission } from '../utils/notifications';
@@ -8,6 +8,7 @@ import DeniedNotifModal from '../components/DeniedNotifModal';
 import { useDeniedNotifModal } from '../hooks/useDeniedNotifModal';
 import { useAuthStore } from '../stores/auth';
 import Modal from '../components/Modal';
+import { invalidate, useNudges } from '../queries';
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 type DayKey = typeof DAY_KEYS[number];
@@ -32,7 +33,7 @@ function AddNudgeModal({ open, onClose, existing }: { open: boolean; onClose: ()
 
   const addNudge = useMutation({
     mutationFn: ({ d, h }: { d: string; h: number }) => nudgesApi.add(d, h),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['nudges'] }); onClose(); },
+    onSuccess: () => { invalidate(qc, 'nudges'); onClose(); },
   });
 
   return (
@@ -113,7 +114,7 @@ export default function Notifications() {
     return `${disp}${ampm}`;
   };
 
-  const { data: nudges = [] } = useQuery({ queryKey: ['nudges'], queryFn: nudgesApi.list });
+  const { data: nudges = [] } = useNudges();
 
   const updateMe = useMutation({
     mutationFn: (data: { auto_nudge_enabled?: boolean; notif_door_closed?: boolean; notif_friend_suggestions?: boolean; going_reminder_1?: string; going_reminder_2?: string }) => authApi.updateMe(data),
@@ -124,12 +125,12 @@ export default function Notifications() {
 
   const removeNudge = useMutation({
     mutationFn: (id: string) => nudgesApi.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['nudges'] }),
+    onSuccess: () => invalidate(qc, 'nudges'),
   });
 
   const addNudgeInline = useMutation({
     mutationFn: ({ d, h }: { d: string; h: number }) => nudgesApi.add(d, h),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['nudges'] }),
+    onSuccess: () => invalidate(qc, 'nudges'),
   });
 
   return (

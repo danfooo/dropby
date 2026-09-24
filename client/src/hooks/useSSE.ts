@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/auth';
 import { baseURL, eventsApi } from '../api';
+import { invalidate } from '../queries';
 
 const MAX_RETRY_MS = 30_000;
 
@@ -41,22 +42,22 @@ export function useSSE() {
       es.addEventListener('connected', () => { retryMs = 1000; });
 
       es.addEventListener('status:open', () => {
-        queryClient.invalidateQueries({ queryKey: ['friendStatuses'] });
+        invalidate(queryClient, 'friendStatuses');
       });
 
       es.addEventListener('status:close', () => {
-        queryClient.invalidateQueries({ queryKey: ['friendStatuses'] });
+        invalidate(queryClient, 'friendStatuses');
       });
 
       es.addEventListener('going:received', () => {
-        queryClient.invalidateQueries({ queryKey: ['myStatus'] });
-        queryClient.invalidateQueries({ queryKey: ['upcomingSessions'] });
+        invalidate(queryClient, 'myStatus');
+        invalidate(queryClient, 'upcomingSessions');
       });
 
       es.addEventListener('friend:joined', () => {
-        queryClient.invalidateQueries({ queryKey: ['friends'] });
+        invalidate(queryClient, 'friends');
         // A door-specific link adds the new friend to the open door right away.
-        queryClient.invalidateQueries({ queryKey: ['myStatus'] });
+        invalidate(queryClient, 'myStatus');
       });
 
       es.onerror = () => {

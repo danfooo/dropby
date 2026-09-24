@@ -1,232 +1,20 @@
 import { useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
-import { Capacitor } from '@capacitor/core';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { statusApi, notesApi, goingApi, friendsApi } from '../api';
+import { statusApi, notesApi, goingApi, baseURL } from '../api';
 import { shouldShowNotifPrompt, requestNotificationPermission } from '../utils/notifications';
 import DeniedNotifModal from '../components/DeniedNotifModal';
 import { useDeniedNotifModal } from '../hooks/useDeniedNotifModal';
 import { useAuthStore } from '../stores/auth';
-import {
-  bigEmojiClass, formatTime, formatTimeShort,
-  addHours, toUnix, getScheduleGroup, groupScheduledDoors,
-} from '../utils/schedule';
-import Avatar from '../components/Avatar';
+import { getScheduleGroup, groupScheduledDoors } from '../utils/schedule';
+import ScheduledSessionCard from '../components/ScheduledSessionCard';
 import FriendStatusCard from '../components/FriendStatusCard';
 import Modal from '../components/Modal';
 import { UpcomingScheduleForm, clearScheduleDraft, SCHEDULE_DRAFT_KEY } from '../components/UpcomingScheduleForm';
 import { useToast } from '../contexts/toast';
-import { LinkifiedText } from '../utils/linkify';
-
-// --- ScheduledSessionCard ---
-
-function ScheduledSessionCard({ session, friends = [], me, onCancel, onSave }: {
-  session: any;
-  friends?: any[];
-  me?: { display_name: string; avatar_url?: string | null } | null;
-  onCancel: () => void;
-  onSave?: (data: { note?: string; location?: string; starts_at?: number; ends_at?: number; recipient_ids?: string[] }) => void;
-}) {
-  const { t } = useTranslation();
-  const bigNote = session.note ? bigEmojiClass(session.note) : null;
-  const icsKey = `dropby_ics_${session.id}`;
-  const [editing, setEditing] = useState(false);
-  const sessionDate = format(new Date(session.starts_at * 1000), 'yyyy-MM-dd');
-  const [editDate, setEditDate] = useState(sessionDate);
-  const [editStart, setEditStart] = useState(format(new Date(session.starts_at * 1000), 'HH:mm'));
-  const [hasEditEnd, setHasEditEnd] = useState(!!session.ends_at);
-  const [editEnd, setEditEnd] = useState(session.ends_at ? format(new Date(session.ends_at * 1000), 'HH:mm') : addHours(sessionDate, format(new Date(session.starts_at * 1000), 'HH:mm'), 2));
-  const [editNote, setEditNote] = useState(session.note || '');
-  const [editLocation, setEditLocation] = useState(session.location || '');
-  const [editRecipients, setEditRecipients] = useState<string[]>((session.recipients || []).map((r: any) => r.id));
-
-  const activeFriends = friends.filter((f: any) => !f.hidden);
-  const [friendsAtBottom, setFriendsAtBottom] = useState(false);
-
-  if (editing) {
-    return (
-      <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl p-4 space-y-3">
-        <div className="flex border border-violet-200 dark:border-violet-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900">
-          <div className="flex-2 px-3 py-2 border-r border-violet-200 dark:border-violet-800">
-            <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">Date</label>
-            <input type="date" value={editDate} min={format(new Date(), 'yyyy-MM-dd')} onChange={e => setEditDate(e.target.value)}
-              className="w-full text-base bg-transparent outline-hidden dark:text-gray-50" />
-          </div>
-          <div className={`flex-1 px-3 py-2 ${hasEditEnd ? 'border-r border-violet-200 dark:border-violet-800' : ''}`}>
-            <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleStartTime')}</label>
-            <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
-              className="w-full text-base bg-transparent outline-hidden dark:text-gray-50" />
-          </div>
-          {hasEditEnd && (
-            <div className="flex-1 px-3 py-2 relative">
-              <label className="text-xs text-violet-400 dark:text-violet-500 block mb-0.5">{t('home.scheduleEndTime')}</label>
-              <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
-                className="w-full text-base bg-transparent outline-hidden dark:text-gray-50 pr-5" />
-              <button onClick={() => setHasEditEnd(false)} className="absolute top-2 right-2 text-violet-300 dark:text-violet-700 hover:text-violet-500 text-xs leading-none">✕</button>
-            </div>
-          )}
-        </div>
-        {!hasEditEnd && (
-          <button onClick={() => setHasEditEnd(true)} className="text-xs text-violet-500 dark:text-violet-400 self-start">
-            + end time
-          </button>
-        )}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder={t('home.notePlaceholder')}
-            value={editNote}
-            maxLength={160}
-            onChange={e => setEditNote(e.target.value)}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
-          />
-          {editNote.length >= 130 && (
-            <span className={`absolute right-3 bottom-2.5 text-xs pointer-events-none ${editNote.length >= 150 ? 'text-red-400' : 'text-gray-400'}`}>
-              {160 - editNote.length}
-            </span>
-          )}
-        </div>
-        <input
-          type="text"
-          placeholder={t('home.locationPlaceholder')}
-          value={editLocation}
-          maxLength={200}
-          onChange={e => setEditLocation(e.target.value)}
-          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-violet-200 dark:border-violet-800 rounded-xl text-base dark:text-gray-50 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
-        />
-        {friends.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs text-violet-500 dark:text-violet-400 font-medium">{t('home.openDoorTo')}</p>
-              {activeFriends.length >= 5 && (
-                <span className="text-xs text-violet-400 dark:text-violet-500">
-                  {activeFriends.filter((f: any) => editRecipients.includes(f.id)).length} / {activeFriends.length}
-                </span>
-              )}
-            </div>
-            <div className="relative -mx-4">
-              <div
-                className={`divide-y divide-violet-100 dark:divide-violet-900${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
-                onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
-              >
-                {activeFriends.map((f: any) => (
-                  <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900 px-4">
-                    <input type="checkbox" checked={editRecipients.includes(f.id)}
-                      onChange={e => setEditRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                      className="w-4 h-4 accent-violet-600 shrink-0" />
-                    <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
-                    <span className="text-sm font-medium text-violet-900 dark:text-violet-100">{f.display_name}</span>
-                  </label>
-                ))}
-              </div>
-              {activeFriends.length >= 5 && !friendsAtBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-linear-to-t from-violet-50 dark:from-violet-950 to-transparent pointer-events-none" />
-              )}
-            </div>
-          </div>
-        )}
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              onSave?.({
-                note: editNote || undefined,
-                location: editLocation || undefined,
-                starts_at: toUnix(editDate, editStart),
-                ends_at: hasEditEnd ? toUnix(editDate, editEnd) : undefined,
-                recipient_ids: editRecipients,
-              });
-              setEditing(false);
-            }}
-            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2 rounded-xl text-sm font-semibold"
-          >
-            {t('home.saveChanges')}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="px-4 py-2 text-sm text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 font-medium"
-          >
-            {t('common.cancel')}
-          </button>
-        </div>
-        <button
-          onClick={onCancel}
-          className="w-full text-xs text-red-400 dark:text-red-500 hover:text-red-600 dark:hover:text-red-400 py-1 transition-colors"
-        >
-          {t('home.scheduleCancelSession')}
-        </button>
-      </div>
-    );
-  }
-
-  const goingByUserId = new Map<string, { note: string | null }>((session.going_signals ?? []).map((g: any) => [g.user_id as string, g as { note: string | null }]));
-
-  return (
-    <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-2xl overflow-hidden">
-      <div className="px-4 pt-4 pb-3">
-        <p className="text-xl font-semibold text-violet-900 dark:text-violet-100 mb-1">
-          {formatTime(session.starts_at)}{session.ends_at ? ` – ${formatTimeShort(session.ends_at)}` : ''}
-        </p>
-        {session.note && (
-          <p className={bigNote ? `${bigNote} leading-none` : 'text-sm text-violet-600 dark:text-violet-400'}>
-            {session.note}
-          </p>
-        )}
-        {session.location && (
-          <p className="text-sm text-violet-500 dark:text-violet-400 mt-0.5">
-            <LinkifiedText text={session.location} />
-          </p>
-        )}
-      </div>
-      {session.recipients?.length > 0 && (
-        <div className={`divide-y divide-violet-100 dark:divide-violet-900 border-t border-violet-100 dark:border-violet-900 ${session.recipients.length >= 5 ? 'max-h-44 overflow-y-auto' : ''}`}>
-          {session.recipients.map((r: any) => {
-            const signal = goingByUserId.get(r.id);
-            return (
-              <div key={r.id} className="px-4 py-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Avatar name={r.display_name} url={r.avatar_url} size="sm" />
-                    <span className="text-sm text-violet-900 dark:text-violet-100">{r.display_name}</span>
-                  </div>
-                  {signal && (
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">going</span>
-                  )}
-                </div>
-                {signal?.note && (
-                  <p className="text-xs text-violet-500 dark:text-violet-400 mt-1 ml-[34px]">{signal.note}</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-      <div className="px-4 py-3 border-t border-violet-100 dark:border-violet-900 flex items-center justify-between">
-        <button
-          onClick={() => setEditing(true)}
-          className="px-3 py-1.5 text-sm text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-lg font-medium transition-colors -ml-3"
-        >
-          {t('home.edit')}
-        </button>
-        <a
-          href={`${Capacitor.isNativePlatform() ? 'https://drop-by.fly.dev' : ''}/api/status/${session.id}/calendar.ics`}
-          download
-          onClick={() => localStorage.setItem(icsKey, '1')}
-          className="flex items-center gap-1.5 text-xs text-violet-400 dark:text-violet-500 hover:text-violet-600 dark:hover:text-violet-300"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
-          </svg>
-          {t('home.addToCalendar')}
-        </a>
-      </div>
-    </div>
-  );
-}
-
-// --- Upcoming page ---
+import { invalidate, useFriendStatuses, useFriends, useUpcomingSessions } from '../queries';
 
 export default function Upcoming() {
   const { t } = useTranslation();
@@ -242,22 +30,11 @@ export default function Upcoming() {
   const deniedNotif = useDeniedNotifModal();
   const setToast = useToast();
 
-  const { data: upcomingSessions = [] } = useQuery({
-    queryKey: ['upcomingSessions'],
-    queryFn: statusApi.getUpcoming,
-    refetchInterval: 30000,
-  });
+  const { data: upcomingSessions = [] } = useUpcomingSessions({ refetchInterval: 30000 });
 
-  const { data: friendStatuses = [] } = useQuery({
-    queryKey: ['friendStatuses'],
-    queryFn: statusApi.getFriends,
-    refetchInterval: 30000,
-  });
+  const { data: friendStatuses = [] } = useFriendStatuses({ refetchInterval: 30000 });
 
-  const { data: friends = [] } = useQuery({
-    queryKey: ['friends'],
-    queryFn: friendsApi.list,
-  });
+  const { data: friends = [] } = useFriends();
 
   const nowTs = Math.floor(Date.now() / 1000);
   const scheduledFriendGroups = groupScheduledDoors(
@@ -268,7 +45,7 @@ export default function Upcoming() {
     mutationFn: (data: Parameters<typeof statusApi.create>[0]) => statusApi.create(data),
     onSuccess: () => {
       clearScheduleDraft();
-      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
+      invalidate(qc, 'upcomingSessions');
       setShowForm(false);
     },
   });
@@ -276,8 +53,8 @@ export default function Upcoming() {
   const cancelScheduled = useMutation({
     mutationFn: (id: string) => statusApi.cancelScheduledById(id),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
-      setToast({ message: t('home.removeFromCalendar'), linkText: t('home.downloadIcs'), linkHref: `/api/status/${id}/calendar.ics?cancel=1`, download: true });
+      invalidate(qc, 'upcomingSessions');
+      setToast({ message: t('home.removeFromCalendar'), linkText: t('home.downloadIcs'), linkHref: `${baseURL}/status/${id}/calendar.ics?cancel=1`, download: true });
     },
   });
 
@@ -285,9 +62,9 @@ export default function Upcoming() {
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof statusApi.updateById>[1] }) =>
       statusApi.updateById(id, data),
     onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: ['upcomingSessions'] });
+      invalidate(qc, 'upcomingSessions');
       if (localStorage.getItem(`dropby_ics_${id}`)) {
-        setToast({ message: t('home.updateCalendar'), linkText: t('home.downloadIcs'), linkHref: `/api/status/${id}/calendar.ics`, download: true });
+        setToast({ message: t('home.updateCalendar'), linkText: t('home.downloadIcs'), linkHref: `${baseURL}/status/${id}/calendar.ics`, download: true });
       }
     },
   });
@@ -303,13 +80,13 @@ export default function Upcoming() {
     } else {
       await goingApi.send(statusId, note);
     }
-    qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    invalidate(qc, 'friendStatuses');
     if (rsvp !== null) deniedNotif.check();
   };
 
   const updateGoingNote = async (statusId: string, note: string) => {
     await goingApi.updateNote(statusId, note);
-    qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    invalidate(qc, 'friendStatuses');
   };
 
   const handleNotifOk = () => {
@@ -330,7 +107,7 @@ export default function Upcoming() {
   const handleScheduleSubmit = async (data: { note?: string; location?: string; recipient_ids: string[]; starts_at: number; ends_at?: number; reminder_minutes: number }) => {
     if (data.note) {
       await notesApi.save(data.note);
-      qc.invalidateQueries({ queryKey: ['notes'] });
+      invalidate(qc, 'notes');
     }
     createStatus.mutate(data);
   };

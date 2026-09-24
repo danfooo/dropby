@@ -1,24 +1,15 @@
 import type { MouseEvent } from 'react';
 import { NavLink, useNavigate, useLocation, type NavLinkRenderProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { statusApi } from '../api';
+import { useFriendStatuses, useUpcomingSessions } from '../queries';
 
 export default function TabBar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { data: upcoming = [] } = useQuery({
-    queryKey: ['upcomingSessions'],
-    queryFn: statusApi.getUpcoming,
-    staleTime: 60000,
-  });
-  const { data: friendStatuses = [] } = useQuery({
-    queryKey: ['friendStatuses'],
-    queryFn: statusApi.getFriends,
-    staleTime: 60000,
-  });
+  const { data: upcoming = [] } = useUpcomingSessions({ staleTime: 60000 });
+  const { data: friendStatuses = [] } = useFriendStatuses({ staleTime: 60000 });
 
   const nowTs = Math.floor(Date.now() / 1000);
   const scheduledFriendCount = (friendStatuses as any[]).filter((s: any) => s.starts_at && s.starts_at > nowTs).length;

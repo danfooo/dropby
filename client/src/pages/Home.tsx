@@ -1,101 +1,29 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
-import { Capacitor } from '@capacitor/core';
-import { statusApi, notesApi, invitesApi, goingApi, friendsApi, trackApi } from '../api';
+import { statusApi, notesApi, invitesApi, goingApi, trackApi } from '../api';
 import { shouldShowNotifPrompt, requestNotificationPermission } from '../utils/notifications';
 import DeniedNotifModal from '../components/DeniedNotifModal';
 import { useDeniedNotifModal } from '../hooks/useDeniedNotifModal';
 import { useAuthStore } from '../stores/auth';
 import { bigEmojiClass, formatTimeShort } from '../utils/schedule';
 import Avatar from '../components/Avatar';
-import FriendStatusCard from '../components/FriendStatusCard';
-import UserMenu from '../components/UserMenu';
+import FriendDoorsNow from '../components/FriendDoorsNow';
+import Glimmer from '../components/Glimmer';
+import HomeTips from '../components/HomeTips';
+import InviteLinkRow from '../components/InviteLinkRow';
+import RecipientRow from '../components/RecipientRow';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
-import FeedbackModal from '../components/FeedbackModal';
 import { useToast } from '../contexts/toast';
 import { copyText } from '../utils/clipboard';
 import { getSuggestions, IM_HOME_CHIP } from '../i18n/suggestions';
 import { LinkifiedText } from '../utils/linkify';
+import { invalidate, useFriendStatuses, useFriends, useMyStatus, useSavedNotes } from '../queries';
 
 type HomeView = 'closed' | 'open' | 'edit';
-
-// Recipient row in door-open view
-function RecipientRow({ recipient }: { recipient: any }) {
-  return (
-    <div className="flex items-center gap-3 py-2">
-      <Avatar name={recipient.display_name} url={recipient.avatar_url} size="sm" />
-      <span className="flex-1 text-sm text-gray-900 dark:text-gray-50">
-        {recipient.display_name}
-      </span>
-    </div>
-  );
-}
-
-function relativeTime(unixTs: number): string {
-  const secs = Math.floor(Date.now() / 1000) - unixTs;
-  if (secs < 60) return 'just now';
-  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
-  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
-  return `${Math.floor(secs / 86400)}d ago`;
-}
-
-function InviteLinkRow({ token, createdAt, onRevoke }: { token: string; createdAt: number; onRevoke: () => void }) {
-  const { t } = useTranslation();
-  const [removing, setRemoving] = useState(false);
-  const [countdown, setCountdown] = useState(3);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const startRemove = () => {
-    setRemoving(true);
-    setCountdown(3);
-    timerRef.current = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) {
-          clearInterval(timerRef.current!);
-          onRevoke();
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-  };
-
-  const undo = () => {
-    setRemoving(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-  };
-
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
-
-  return (
-    <div className="flex items-center gap-3 py-2">
-      <div className="w-7 h-7 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center shrink-0">
-        <svg className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-        </svg>
-      </div>
-      <div className={`flex-1 ${removing ? 'opacity-40' : ''}`}>
-        <p className="text-sm text-gray-900 dark:text-gray-50">{t('home.anyoneWithLink')}</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500">{relativeTime(createdAt)}</p>
-      </div>
-      {removing ? (
-        <button onClick={undo} className="text-xs text-emerald-600 font-medium px-2">
-          {t('home.undo', { seconds: countdown })}
-        </button>
-      ) : (
-        <button onClick={startRemove} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      )}
-    </div>
-  );
-}
 
 function getGreeting(t: (key: string) => string): string {
   const hour = new Date().getHours();
@@ -138,27 +66,13 @@ export default function Home() {
     });
   };
 
-  const { data: myStatus, isLoading: statusLoading } = useQuery({
-    queryKey: ['myStatus'],
-    queryFn: statusApi.get,
-    refetchInterval: 30000,
-  });
+  const { data: myStatus, isLoading: statusLoading } = useMyStatus({ refetchInterval: 30000 });
 
-  const { data: friendStatuses = [] } = useQuery({
-    queryKey: ['friendStatuses'],
-    queryFn: statusApi.getFriends,
-    refetchInterval: 30000,
-  });
+  const { data: friendStatuses = [] } = useFriendStatuses({ refetchInterval: 30000 });
 
-  const { data: friends = [] } = useQuery({
-    queryKey: ['friends'],
-    queryFn: friendsApi.list,
-  });
+  const { data: friends = [] } = useFriends();
 
-  const { data: savedNotes = [] } = useQuery({
-    queryKey: ['notes'],
-    queryFn: notesApi.list,
-  });
+  const { data: savedNotes = [] } = useSavedNotes();
 
   const savedChips = savedNotes as any[];
   const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
@@ -193,43 +107,43 @@ export default function Home() {
   const createStatus = useMutation({
     mutationFn: (data: Parameters<typeof statusApi.create>[0]) => statusApi.create(data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['myStatus'] });
+      invalidate(qc, 'myStatus');
       // The server now owns this selection; drop the local overrides so the friend
       // records stay the single source of truth.
       setRecipientOverrides({});
-      qc.invalidateQueries({ queryKey: ['friends'] });
+      invalidate(qc, 'friends');
       setView('open');
     },
   });
 
   const deleteNote = useMutation({
     mutationFn: (id: string) => notesApi.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
+    onSuccess: () => invalidate(qc, 'notes'),
   });
 
   const closeStatus = useMutation({
     mutationFn: statusApi.close,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setView('closed'); },
+    onSuccess: () => { invalidate(qc, 'myStatus'); setView('closed'); },
   });
 
   const setDuration = useMutation({
     mutationFn: (minutes: number) => statusApi.setDuration(minutes),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
+    onSuccess: () => invalidate(qc, 'myStatus'),
   });
 
   const updateStatus = useMutation({
     mutationFn: (data: Parameters<typeof statusApi.update>[0]) => statusApi.update(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['myStatus'] }); setView('open'); },
+    onSuccess: () => { invalidate(qc, 'myStatus'); setView('open'); },
   });
 
   const removeRecipient = useMutation({
     mutationFn: (id: string) => statusApi.removeRecipient(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
+    onSuccess: () => invalidate(qc, 'myStatus'),
   });
 
   const revokeInvite = useMutation({
     mutationFn: (token: string) => invitesApi.revoke(token),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['myStatus'] }),
+    onSuccess: () => invalidate(qc, 'myStatus'),
   });
 
   const sendGoing = async (statusId: string, rsvp: 'going' | null = 'going', note?: string) => {
@@ -243,13 +157,13 @@ export default function Home() {
     } else {
       await goingApi.send(statusId, note);
     }
-    qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    invalidate(qc, 'friendStatuses');
     if (rsvp !== null) deniedNotif.check();
   };
 
   const updateGoingNote = async (statusId: string, note: string) => {
     await goingApi.updateNote(statusId, note);
-    qc.invalidateQueries({ queryKey: ['friendStatuses'] });
+    invalidate(qc, 'friendStatuses');
   };
 
   const doOpen = async () => {
@@ -257,7 +171,7 @@ export default function Home() {
     const trimmedLocation = doorLocation.trim() || undefined;
     if (trimmedNote && !selectedChip) {
       await notesApi.save(trimmedNote);
-      qc.invalidateQueries({ queryKey: ['notes'] });
+      invalidate(qc, 'notes');
     }
     createStatus.mutate({ note: trimmedNote, location: trimmedLocation, recipient_ids: selectedRecipients });
   };
@@ -285,6 +199,15 @@ export default function Home() {
     const action = pendingAction.current;
     pendingAction.current = null;
     if (action) action();
+  };
+
+  // Enter the edit view with the open door's current values.
+  const startEdit = () => {
+    setEditNote(myStatus?.note || '');
+    setEditLocation(myStatus?.location || '');
+    setEditRecipients(myStatus?.recipients.map(r => r.id) || []);
+    setEditEndsAt(myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
+    setView('edit');
   };
 
   const handleSaveEdit = () => {
@@ -343,31 +266,10 @@ export default function Home() {
           ? 'bg-linear-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950'
           : 'bg-gray-200 dark:bg-gray-950'
       }`}>
-        {openFriendDoors.length > 0 && (
-          <div
-            className="pointer-events-none absolute -inset-4"
-            style={{
-              animation: 'glimmer 6s ease-in-out infinite',
-              background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.28) 0%, transparent 100%)',
-              mixBlendMode: 'overlay',
-            }}
-          />
-        )}
+        {openFriendDoors.length > 0 && <Glimmer />}
         <PageHeader />
 
-        {/* Friend doors open now */}
-        {openFriendDoors.length > 0 && (
-          <div data-testid="friends-available" className="mb-6">
-            <h2 className="text-2xl font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
-              {t('home.friendsAvailable')}
-            </h2>
-            <div className="space-y-3">
-              {openFriendDoors.map((s: any) => (
-                <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
-              ))}
-            </div>
-          </div>
-        )}
+        <FriendDoorsNow doors={openFriendDoors} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
 
         <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-xs mb-4">
         <h2 className={`font-bold text-gray-900 dark:text-gray-50 mb-4 ${openFriendDoors.length > 0 ? 'text-lg' : 'text-2xl'}`}>
@@ -523,7 +425,7 @@ export default function Home() {
         </div>{/* end door card */}
 
         <div className="mt-auto pt-6 -mx-4">
-          <TipsSection />
+          <HomeTips />
         </div>
 
         <DeniedNotifModal open={deniedNotif.open} onDismiss={deniedNotif.dismiss} onSnooze={deniedNotif.snooze} onOpenSettings={deniedNotif.goToSettings} />
@@ -658,31 +560,11 @@ export default function Home() {
   // --- DOOR OPEN VIEW ---
   return (
     <div className="relative overflow-hidden min-h-full bg-linear-to-br from-violet-100 via-fuchsia-50 to-amber-50 dark:from-violet-950 dark:via-fuchsia-950 dark:to-amber-950 px-4 safe-top">
-      {/* Glimmer overlay — blends with gradient, barely touches opaque cards */}
-      <div
-        className="pointer-events-none absolute -inset-4"
-        style={{
-          animation: 'glimmer 6s ease-in-out infinite',
-          background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.28) 0%, transparent 100%)',
-          mixBlendMode: 'overlay',
-        }}
-      />
+      <Glimmer />
       {/* Header */}
       <PageHeader />
 
-      {/* Friend doors open now */}
-      {openFriendDoors.length > 0 && (
-        <div data-testid="friends-available" className="mb-6">
-          <h2 className="text-2xl font-bold text-fuchsia-900 dark:text-fuchsia-100 mb-3">
-            {t('home.friendsAvailable')}
-          </h2>
-          <div className="space-y-3">
-            {openFriendDoors.map((s: any) => (
-              <FriendStatusCard key={s.id} status={s} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
-            ))}
-          </div>
-        </div>
-      )}
+      <FriendDoorsNow doors={openFriendDoors} onGoing={sendGoing} onNoteUpdate={updateGoingNote} />
 
       <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-xs">
       <div className="text-center mb-4">
@@ -694,13 +576,7 @@ export default function Home() {
           const big = bigEmojiClass(myStatus.note);
           return (
             <button
-              onClick={() => {
-                setEditNote(myStatus.note || '');
-                setEditLocation(myStatus.location || '');
-                setEditRecipients(myStatus.recipients.map((r: any) => r.id) || []);
-                setEditEndsAt(myStatus.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
-                setView('edit');
-              }}
+              onClick={startEdit}
               className={big ? `${big} leading-none mt-2 block w-full` : 'text-sm text-gray-500 dark:text-gray-400 mt-2 block w-full'}
             >
               {myStatus.note}
@@ -711,13 +587,7 @@ export default function Home() {
           <div
             role="button"
             tabIndex={0}
-            onClick={() => {
-              setEditNote(myStatus.note || '');
-              setEditLocation(myStatus.location || '');
-              setEditRecipients(myStatus.recipients.map((r: any) => r.id) || []);
-              setEditEndsAt(myStatus.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
-              setView('edit');
-            }}
+            onClick={startEdit}
             className="text-sm text-gray-500 dark:text-gray-400 mt-1 block w-full cursor-pointer"
           >
             📍 <LinkifiedText text={myStatus.location} />
@@ -775,13 +645,7 @@ export default function Home() {
 
       {/* Actions */}
       <button
-        onClick={() => {
-          setEditNote(myStatus?.note || '');
-          setEditLocation(myStatus?.location || '');
-          setEditRecipients(myStatus?.recipients.map((r: any) => r.id) || []);
-          setEditEndsAt(myStatus?.ends_at ? format(new Date(myStatus.ends_at * 1000), 'HH:mm') : '');
-          setView('edit');
-        }}
+        onClick={startEdit}
         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-gray-50 py-3 rounded-2xl font-medium text-sm mb-3 hover:bg-gray-100 dark:hover:bg-gray-700"
       >
         {t('home.addMoreEdit')}
@@ -866,113 +730,5 @@ export default function Home() {
       </Modal>
 
     </div>
-  );
-}
-
-function usePermanentDismiss(key: string): [boolean, () => void] {
-  const [dismissed, setDismissed] = useState(() => localStorage.getItem(key) === '1');
-  const dismiss = () => { localStorage.setItem(key, '1'); setDismissed(true); };
-  return [dismissed, dismiss];
-}
-
-function TipsSection() {
-  const { t } = useTranslation();
-  const setToast = useToast();
-  const { user } = useAuthStore();
-  const [appBannerDismissed, dismissAppBanner] = usePermanentDismiss('app_banner_dismissed');
-  const [inviteDismissed, dismissInvite] = usePermanentDismiss('tip_invite_dismissed');
-  const [feedbackDismissed, dismissFeedback] = usePermanentDismiss('tip_feedback_dismissed');
-  const [coffeeDismissed, dismissCoffee] = usePermanentDismiss('tip_coffee_dismissed');
-  const [showFeedback, setShowFeedback] = useState(false);
-
-  const { data: everReceived } = useQuery({ queryKey: ['everReceived'], queryFn: async () => { const { goingApi } = await import('../api'); return goingApi.everReceived(); } });
-  const { data: friends = [] } = useQuery({ queryKey: ['friends'], queryFn: friendsApi.list });
-
-  const isFirstDay = user ? new Date(user.created_at * 1000).toDateString() === new Date().toDateString() : false;
-  const recentFeedbackTs = Number(localStorage.getItem('feedback_last_submitted') ?? 0);
-  const submittedFeedbackRecently = recentFeedbackTs > 0 && Date.now() - recentFeedbackTs < 30 * 24 * 60 * 60 * 1000;
-
-  const showAppBanner = !Capacitor.isNativePlatform() && !appBannerDismissed;
-  const showInviteTip = !inviteDismissed && !showAppBanner && (friends as any[]).length < 3;
-  const showFeedbackTip = !feedbackDismissed && !showInviteTip && !showAppBanner && !isFirstDay && !submittedFeedbackRecently;
-
-  const tipContent = showAppBanner ? (
-    <div className="bg-white dark:bg-gray-900 px-4 py-4">
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('common.appBannerText')}</p>
-        <button onClick={dismissAppBanner} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 shrink-0">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <Link to="/get" className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-        {t('common.appBannerCta')}
-      </Link>
-    </div>
-  ) : showInviteTip ? (
-    <div className="bg-white dark:bg-gray-900 px-4 py-4">
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.inviteFriendsText')}</p>
-        <button onClick={dismissInvite} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 shrink-0">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <button
-        onClick={async () => {
-          try {
-            await copyText(invitesApi.generate().then(data => `${t('home.friendshipCopyText')}\n${data.url}`));
-            alert(t('home.inviteLinkCopied'));
-          } catch {
-            alert(t('home.couldNotCopy'));
-          }
-        }}
-        className="text-sm font-semibold text-emerald-600 dark:text-emerald-400"
-      >
-        {t('home.copyInviteLink')}
-      </button>
-    </div>
-  ) : showFeedbackTip ? (
-    <div className="bg-white dark:bg-gray-900 px-4 py-4">
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.feedbackTipText')}</p>
-        <button onClick={() => { dismissFeedback(); setToast({ message: t('home.feedbackTipDismissed'), linkText: t('profile.title'), linkTo: '/profile' }); }} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 shrink-0">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <button onClick={() => setShowFeedback(true)} className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-        {t('home.feedbackTipLink')}
-      </button>
-    </div>
-  ) : !coffeeDismissed && everReceived?.received ? (
-    <div className="bg-white dark:bg-gray-900 px-4 py-4">
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t('home.coffeeTipText')}</p>
-        <button onClick={dismissCoffee} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 -mt-0.5 -mr-0.5 p-1 ml-2 shrink-0">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <a href="https://www.buymeacoffee.com/dropby" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-        {t('home.coffeeTipLink')}
-      </a>
-    </div>
-  ) : null;
-
-  return (
-    <>
-      {tipContent && (
-        <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
-          <p className="px-4 pt-3 pb-0 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{t('home.tipsSectionTitle')}</p>
-          {tipContent}
-        </div>
-      )}
-      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
-    </>
   );
 }

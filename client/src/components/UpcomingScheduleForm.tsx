@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { notesApi } from '../api';
 import { todayStr, defaultStartTime, addHours, toUnix, REMINDER_OPTIONS } from '../utils/schedule';
 import Avatar from './Avatar';
 import { getSuggestions } from '../i18n/suggestions';
+import { invalidate, useSavedNotes } from '../queries';
 
 export const SCHEDULE_DRAFT_KEY = 'dropby_schedule_draft';
 
@@ -51,10 +52,10 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
   const [friendsAtBottom, setFriendsAtBottom] = useState(false);
   const [hasEditedDateTime, setHasEditedDateTime] = useState<boolean>(draft.hasEditedDateTime ?? false);
 
-  const { data: savedNotes = [] } = useQuery({ queryKey: ['notes'], queryFn: notesApi.list });
+  const { data: savedNotes = [] } = useSavedNotes();
   const hideNote = useMutation({
     mutationFn: (id: string) => notesApi.setHidden(id, true),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
+    onSuccess: () => invalidate(qc, 'notes'),
   });
   const suggestions = useMemo(() => getSuggestions(i18n.language), [i18n.language]);
   const visibleSaved = (savedNotes as any[]).filter((n: any) => !n.hidden).slice(0, 2);
