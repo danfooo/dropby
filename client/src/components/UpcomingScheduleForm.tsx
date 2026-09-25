@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { notesApi } from '../api';
 import { todayStr, defaultStartTime, addHours, toUnix, REMINDER_OPTIONS } from '../utils/schedule';
-import Avatar from './Avatar';
+import FriendPicker, { useActiveFriends, selectedRecipientIds, type RecipientOverrides } from './FriendPicker';
 import { getSuggestions } from '../i18n/suggestions';
 import { invalidate, useSavedNotes } from '../queries';
 
@@ -34,22 +34,16 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
   const [location, setLocation] = useState<string>(draft.location ?? '');
   const [selectedChip, setSelectedChip] = useState<string>(draft.selectedChip ?? '');
   const [previousNote, setPreviousNote] = useState<string | null>(null);
-  const [recipients, setRecipients] = useState<string[]>(() => {
-    const allIds = friends.filter((f: any) => !f.hidden).map((f: any) => f.id);
-    if (hasDraft && Array.isArray(draft.recipients)) {
-      const validIds = new Set(allIds);
-      const restored = (draft.recipients as string[]).filter(id => validIds.has(id));
-      if (restored.length) return restored;
-    }
-    return allIds;
-  });
+  // Same defaults as the Now view: each friend's server `selected` flag, plus local toggles
+  const [recipientOverrides, setRecipientOverrides] = useState<RecipientOverrides>(
+    () => (draft.recipientOverrides && typeof draft.recipientOverrides === 'object') ? draft.recipientOverrides : {}
+  );
   const [date, setDate] = useState<string>(() => draft.date ?? todayStr());
   const [start, setStart] = useState<string>(() => draft.start ?? defaultStartTime());
   const [end, setEnd] = useState<string>(() => draft.end ?? addHours(todayStr(), defaultStartTime(), 2));
   const [reminder, setReminder] = useState<number>(draft.reminder ?? 30);
   const [showReminder, setShowReminder] = useState(false);
   const [hasEndTime, setHasEndTime] = useState<boolean>(draft.hasEndTime ?? false);
-  const [friendsAtBottom, setFriendsAtBottom] = useState(false);
   const [hasEditedDateTime, setHasEditedDateTime] = useState<boolean>(draft.hasEditedDateTime ?? false);
 
   const { data: savedNotes = [] } = useSavedNotes();
@@ -84,12 +78,13 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
   useEffect(() => {
     try {
       sessionStorage.setItem(SCHEDULE_DRAFT_KEY, JSON.stringify({
-        note, location, selectedChip, date, start, end, hasEndTime, reminder, recipients, hasEditedDateTime,
+        note, location, selectedChip, date, start, end, hasEndTime, reminder, recipientOverrides, hasEditedDateTime,
       }));
     } catch {}
-  }, [note, location, selectedChip, date, start, end, hasEndTime, reminder, recipients, hasEditedDateTime]);
+  }, [note, location, selectedChip, date, start, end, hasEndTime, reminder, recipientOverrides, hasEditedDateTime]);
 
-  const activeFriends = friends.filter((f: any) => !f.hidden);
+  const activeFriends = useActiveFriends(friends);
+  const recipients = selectedRecipientIds(activeFriends, recipientOverrides);
   const trimmedNote = note.trim() || undefined;
   const trimmedLocation = location.trim() || undefined;
 
@@ -224,37 +219,7 @@ export function UpcomingScheduleForm({ friends, isPending, onSubmit, onCancel }:
       )}
 
       {/* Recipient selection */}
-      {friends.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{t('home.openDoorTo')}</p>
-            {activeFriends.length >= 5 && (
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                {activeFriends.filter((f: any) => recipients.includes(f.id)).length} / {activeFriends.length}
-              </span>
-            )}
-          </div>
-          <div className="relative -mx-4">
-            <div
-              className={`divide-y divide-gray-50 dark:divide-gray-800${activeFriends.length >= 5 ? ' h-[176px] overflow-y-auto' : ''}`}
-              onScroll={e => { const el = e.currentTarget; setFriendsAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1); }}
-            >
-              {activeFriends.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-4">
-                  <input type="checkbox" checked={recipients.includes(f.id)}
-                    onChange={e => setRecipients(prev => e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id))}
-                    className="w-4 h-4 accent-emerald-500 shrink-0" />
-                  <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
-                </label>
-              ))}
-            </div>
-            {activeFriends.length >= 5 && !friendsAtBottom && (
-              <div className="absolute bottom-0 left-0 right-0 h-14 bg-linear-to-t from-white dark:from-gray-900 to-transparent pointer-events-none" />
-            )}
-          </div>
-        </div>
-      )}
+      <FriendPicker activeFriends={activeFriends} overrides={recipientOverrides} onChange={setRecipientOverrides} />
 
       <div className="flex gap-2">
         <button

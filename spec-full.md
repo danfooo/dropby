@@ -122,7 +122,7 @@ Unique constraint on `(status_id, user_id)`.
 | unselected_ids | JSON string | Array of friend user IDs explicitly *un*checked in the most recent session |
 | updated_at | unix timestamp | |
 
-Persists the recipient selection across sessions. Written on door open and on door update; hiding a friend also adds them to `unselected_ids`.
+Persists the recipient selection across sessions. Written on door open (spontaneous or scheduled) and on door update; hiding a friend also adds them to `unselected_ids`.
 
 `unselected_ids` is the authority for the default selection, not `selected_ids` — storing the exclusions means a friend who joins later is selected by default without any list needing to be rewritten. It is never sent to the client as a list of its own: `GET /api/friends` resolves it into a `selected` boolean on each friend record.
 
@@ -499,14 +499,14 @@ All future/scheduled content lives here. Home (Now tab) is present-only.
 **Plan something CTA**
 - "Plan something" button always visible at top
 - Tapping expands the schedule creation form; tapping Cancel collapses it and discards any in-progress state
-- Form state (note, date, time, recipients, reminder) is persisted in sessionStorage — switching tabs and returning restores the form in its in-progress state; Cancel clears the draft
+- Form state (note, date, time, recipient toggles, reminder) is persisted in sessionStorage — switching tabs and returning restores the form in its in-progress state; Cancel clears the draft
 
 **Schedule creation form** (always in schedule mode)
 - Note chips + free-text note input (same as Home)
 - Free-text location input (same as Home)
 - Date, start time, optional end time pickers
 - Reminder picker (5 / 15 / 30 min / 1h; default 30 min)
-- Recipient checkboxes (non-muted friends)
+- Recipient checkboxes: the same friend list as the Now view — same order, same per-friend `selected` defaults from the server, same local-override behaviour. Scheduling writes the selection back to `recipient_sessions`, so a friend unchecked here is unchecked by default next time on either screen
 - "Schedule" submit button → `POST /api/statuses` with `starts_at`; invalidates upcoming sessions list
 
 **Grouped sessions list** (grouped by time bucket: Tomorrow / This week / Next week / Soon / Later)

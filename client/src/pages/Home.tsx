@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { differenceInSeconds, format } from 'date-fns';
@@ -11,6 +11,7 @@ import { useAuthStore } from '../stores/auth';
 import { bigEmojiClass, formatTimeShort } from '../utils/schedule';
 import Avatar from '../components/Avatar';
 import FriendDoorsNow from '../components/FriendDoorsNow';
+import FriendPicker, { useActiveFriends, selectedRecipientIds } from '../components/FriendPicker';
 import Glimmer from '../components/Glimmer';
 import HomeTips from '../components/HomeTips';
 import InviteLinkRow from '../components/InviteLinkRow';
@@ -55,16 +56,6 @@ export default function Home() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const friendsListRef = useRef<HTMLDivElement | null>(null);
-  const [friendsScroll, setFriendsScroll] = useState({ canScroll: false, atBottom: false });
-  const measureFriendsList = () => {
-    const el = friendsListRef.current;
-    if (!el) return;
-    setFriendsScroll({
-      canScroll: el.scrollHeight > el.clientHeight + 1,
-      atBottom: el.scrollTop + el.clientHeight >= el.scrollHeight - 1,
-    });
-  };
 
   const { data: myStatus, isLoading: statusLoading } = useMyStatus({ refetchInterval: 30000 });
 
@@ -236,25 +227,13 @@ export default function Home() {
   };
 
   const hasFriends = (friends as any[]).length > 0;
-  // Order comes only from the server record, never from live toggles, so checking a box
-  // never reorders the list under the user's finger.
-  const activeFriends = useMemo(() => {
-    return (friends as any[])
-      .filter((f: any) => !f.hidden)
-      .sort((a: any, b: any) => {
-        if (a.selected !== b.selected) return a.selected ? -1 : 1;
-        return (b.friendship_created_at ?? 0) - (a.friendship_created_at ?? 0);
-      });
-  }, [friends]);
+  const activeFriends = useActiveFriends(friends as any[]);
   // A row's checked state is its own: the server default it carries, plus any override the
   // user made, keyed by friend id. Friends arriving or leaving never disturb the others.
-  const isRecipientSelected = (f: any): boolean => recipientOverrides[f.id] ?? Boolean(f.selected);
   const selectedRecipients = useMemo(
-    () => activeFriends.filter(isRecipientSelected).map((f: any) => f.id),
+    () => selectedRecipientIds(activeFriends, recipientOverrides),
     [activeFriends, recipientOverrides],
   );
-  // Re-measure when the list grows (e.g. a friend joins) so the fade matches reality.
-  useLayoutEffect(() => { measureFriendsList(); }, [activeFriends.length, view]);
   const nowTs = Math.floor(Date.now() / 1000);
   const openFriendDoors = (friendStatuses as any[]).filter((s: any) => !s.starts_at || s.starts_at <= nowTs);
 
@@ -382,28 +361,8 @@ export default function Home() {
 
         {/* Recipient selection */}
         {activeFriends.length > 0 && (
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 mb-3 border border-gray-100 dark:border-gray-700">
-            <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('home.openDoorTo')}</h2>
-            <div className="relative">
-              <div
-                className="divide-y divide-gray-50 dark:divide-gray-800 overflow-x-hidden rounded-xl max-h-[192px] overflow-y-auto"
-                ref={friendsListRef}
-                onScroll={measureFriendsList}
-              >
-                {activeFriends.map((f: any) => (
-                  <label key={f.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 -mx-3 px-3 transition-colors">
-                    <input type="checkbox" checked={isRecipientSelected(f)}
-                      onChange={e => setRecipientOverrides(prev => ({ ...prev, [f.id]: e.target.checked }))}
-                      className="w-4 h-4 accent-emerald-500 shrink-0" />
-                    <Avatar name={f.display_name} url={f.avatar_url} size="sm" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{f.display_name}</span>
-                  </label>
-                ))}
-              </div>
-              {friendsScroll.canScroll && !friendsScroll.atBottom && (
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-linear-to-t from-white dark:from-gray-900 to-transparent pointer-events-none rounded-b-xl" />
-              )}
-            </div>
+          <div className="mb-3">
+            <FriendPicker activeFriends={activeFriends} overrides={recipientOverrides} onChange={setRecipientOverrides} />
           </div>
         )}
 

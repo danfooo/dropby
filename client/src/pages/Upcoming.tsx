@@ -46,6 +46,8 @@ export default function Upcoming() {
     onSuccess: () => {
       clearScheduleDraft();
       invalidate(qc, 'upcomingSessions');
+      // The server saved this selection as the new default; refresh the friend records
+      invalidate(qc, 'friends');
       setShowForm(false);
     },
   });
