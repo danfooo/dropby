@@ -786,7 +786,7 @@ Static page, reachable without auth, linked from the signup consent notice and t
 
 - Manual: "Close now" sets `closed_at = now()`
 - Automatic: server-side job expires statuses where `closed_at IS NULL AND closes_at < now()`
-- After auto-close, host receives a confirmation push if `notif_door_closed` is enabled: "Your door is closed" / "It closed automatically." (no action buttons) — only within 2 minutes of `closes_at`, so a server outage never produces a stale one
+- After auto-close, host receives a confirmation push if `notif_door_closed` is enabled: "Your door is closed" (title only, no body or action buttons) — only within 2 minutes of `closes_at`, so a server outage never produces a stale one
 
 ### Recipient Removal (Undo Pattern)
 
@@ -909,7 +909,7 @@ Sent via FCM (Android) and APNs (iOS).
 | Going signal or note update | Door opener | "[Name] is on their way" / note as body if provided | — |
 | 10 min before close | Door opener — except Android installs with the open-door notification, which alerts at 5 minutes instead | "Your door closes in 10 minutes" | "Keep open", "Close now" |
 | Scheduled session reminder | Host — `reminder_minutes` before a scheduled session starts. Skipped if that moment is already past, or less than 5 minutes away, when the session is scheduled or its time changes | "Your door is scheduled to open at [time] — ready?" | — |
-| Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Your door is closed" / "It closed automatically." | — |
+| Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Your door is closed" (title only) | — |
 | Friend accepted invite | Inviter | One: "[Name] just joined your dropby!" · Two: "[Name] and [Name] just joined your dropby!" · Three or more: "[Name] and [n] others just joined your dropby!" | — |
 | Connection suggestion | Everyone already on a link, when someone new opens it (if `notif_friend_suggestions` enabled) | One: "[Name] might be someone you know" · Two or more: "[Name] and [n] others might be people you know" | — |
 | Nudge reminder | User themselves | "Hey, got a free [day]? Open your door" | "Open now" |

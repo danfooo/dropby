@@ -7,7 +7,7 @@ import { formatScheduledDayTime, formatScheduledTime } from '../utils/time-forma
 
 interface PushPayload {
   title: string;
-  body: string;
+  body?: string; // Omitted for a title-only notification
   data?: Record<string, string>;
   actions?: Array<{ id: string; title: string }>;
 }
@@ -296,7 +296,7 @@ async function postToApns(
 
 async function sendApns(token: string, payload: PushPayload): Promise<void> {
   if (!apnsConfig()) {
-    console.log(`[APNs] not configured — ${token.slice(0, 20)}… | ${payload.title}: ${payload.body}`);
+    console.log(`[APNs] not configured — ${token.slice(0, 20)}… | ${payload.title}${payload.body ? `: ${payload.body}` : ''}`);
     return;
   }
   console.log(`[APNs] Sending — token=${token.slice(0, 20)}… | ${payload.title}`);
@@ -584,7 +584,6 @@ export function notifyDoorClosed(userId: string) {
   tokens.forEach(t =>
     sendPush(userId, t.token, t.platform, {
       title: 'Your door is closed',
-      body: 'It closed automatically.',
       data: { type: 'door_closed' },
     })
   );
