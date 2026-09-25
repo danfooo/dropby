@@ -584,7 +584,7 @@ export function notifyDoorClosed(userId: string) {
   tokens.forEach(t =>
     sendPush(userId, t.token, t.platform, {
       title: 'Your door is closed',
-      body: 'Hope it was a good one. Open again?',
+      body: 'It closed automatically.',
       data: { type: 'door_closed' },
     })
   );

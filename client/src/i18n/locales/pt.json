@@ -403,7 +403,7 @@
     "noReminders": "Sem lembretes definidos.",
     "autoNudgeTitle": "Lembrar-me com base em vezes anteriores",
     "doorClosedTitle": "Confirmar quando a tua porta fecha",
-    "doorClosedDesc": "Uma notificação após o fecho automático, com a opção de voltar a abrir.",
+    "doorClosedDesc": "Uma notificação breve quando fecha automaticamente.",
     "sessionRemindersTitle": "Lembretes de sessão",
     "reminder1Label": "Primeiro lembrete",
     "reminder2Label": "Segundo lembrete",

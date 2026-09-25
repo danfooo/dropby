@@ -403,7 +403,7 @@
     "noReminders": "Keine Erinnerungen gesetzt.",
     "autoNudgeTitle": "Erinnere mich anhand früherer Zeiten",
     "doorClosedTitle": "Bestätige, wenn deine Tür schließt",
-    "doorClosedDesc": "Eine kurze Meldung nach dem automatischen Schließen, mit der Option, wieder zu öffnen.",
+    "doorClosedDesc": "Eine kurze Meldung, wenn sie automatisch schließt.",
     "sessionRemindersTitle": "Sitzungserinnerungen",
     "reminder1Label": "Erste Erinnerung",
     "reminder2Label": "Zweite Erinnerung",

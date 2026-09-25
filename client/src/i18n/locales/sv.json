@@ -403,7 +403,7 @@
     "noReminders": "Inga påminnelser inställda.",
     "autoNudgeTitle": "Påminn mig baserat på tidigare tider",
     "doorClosedTitle": "Bekräfta när din dörr stängs",
-    "doorClosedDesc": "En notis efter automatisk stängning, med möjlighet att öppna igen.",
+    "doorClosedDesc": "En kort notis när den stängs automatiskt.",
     "sessionRemindersTitle": "Sessionspåminnelser",
     "reminder1Label": "Första påminnelse",
     "reminder2Label": "Andra påminnelse",

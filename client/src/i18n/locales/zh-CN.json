@@ -403,7 +403,7 @@
     "noReminders": "还没有设置提醒。",
     "autoNudgeTitle": "根据以往时间提醒我",
     "doorClosedTitle": "门关闭时通知我",
-    "doorClosedDesc": "门自动关闭后会提醒你，并可以选择再次开门。",
+    "doorClosedDesc": "门自动关闭时发一条简短通知。",
     "sessionRemindersTitle": "安排提醒",
     "reminder1Label": "第一次提醒",
     "reminder2Label": "第二次提醒",

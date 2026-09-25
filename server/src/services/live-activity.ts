@@ -125,7 +125,7 @@ function syncIosActivity(statusId: string, current: DoorActivity | null) {
 
   if (!current || current.ended) {
     // Ending removes it from the Lock Screen straight away: a closed door has nothing
-    // left to say, and "Hope it was a good one" is the host push's job.
+    // left to say, and confirming the close is the host push's job.
     db.prepare('DELETE FROM live_activity_tokens WHERE status_id = ?').run(statusId);
     const aps = {
       timestamp: now,

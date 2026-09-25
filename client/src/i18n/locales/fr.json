@@ -403,7 +403,7 @@
     "noReminders": "Aucun rappel configuré.",
     "autoNudgeTitle": "Me rappeler selon les fois précédentes",
     "doorClosedTitle": "Confirmer quand ta porte se ferme",
-    "doorClosedDesc": "Une notification après la fermeture automatique, avec l'option de rouvrir.",
+    "doorClosedDesc": "Une courte notification quand elle se ferme automatiquement.",
     "sessionRemindersTitle": "Rappels de session",
     "reminder1Label": "Premier rappel",
     "reminder2Label": "Deuxième rappel",
