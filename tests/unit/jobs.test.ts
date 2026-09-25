@@ -240,6 +240,28 @@ test('host reminder — sent reminder_minutes before start, once even if the tim
   assert.equal(await pushesTo(host, 'scheduled_reminder'), 1);
 });
 
+test('host reminder — dropped when it would be past or within 5 minutes of scheduling', async () => {
+  const host = user();
+  const past = scheduleDoor(host, 20 * 60, 30); // reminder time already passed
+  const tooSoon = scheduleDoor(host, 33 * 60, 30); // reminder in 3 minutes
+  assert.ok(!pendingJobs(past).some(j => j.type === 'door.host_reminder'));
+  assert.ok(!pendingJobs(tooSoon).some(j => j.type === 'door.host_reminder'));
+  jobs.runDueJobs(now() + 20 * 60);
+  assert.equal(await pushesTo(host, 'scheduled_reminder'), 0);
+});
+
+test('host reminder — an armed one survives a re-sync close to its time', () => {
+  const host = user();
+  const status = scheduleDoor(host, 40 * 60, 30); // reminder in 10 minutes
+  assert.ok(pendingJobs(status).some(j => j.type === 'door.host_reminder'));
+  // Time has moved on: the reminder is now a minute away.
+  const runAt = now() + 60;
+  db.prepare('UPDATE jobs SET run_at = ? WHERE subject_id = ? AND type = ?').run(runAt, status, 'door.host_reminder');
+  db.prepare('UPDATE statuses SET starts_at = ? WHERE id = ?').run(runAt + 1800, status);
+  jobs.syncStatusJobs(status);
+  assert.ok(pendingJobs(status).some(j => j.type === 'door.host_reminder'));
+});
+
 test('going reminders — both windows fire, follow setting changes, and stop on un-RSVP', async () => {
   const host = user({ name: 'Nina' });
   const guest = user();

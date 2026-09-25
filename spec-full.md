@@ -908,6 +908,7 @@ Sent via FCM (Android) and APNs (iOS).
 | Friend opens door | All selected recipients with OS permission | "[Name]'s door is open" | "Mark as Going", "Mute for 3 days", "Mute permanently" |
 | Going signal or note update | Door opener | "[Name] is on their way" / note as body if provided | — |
 | 10 min before close | Door opener — except Android installs with the open-door notification, which alerts at 5 minutes instead | "Your door closes in 10 minutes" | "Keep open", "Close now" |
+| Scheduled session reminder | Host — `reminder_minutes` before a scheduled session starts. Skipped if that moment is already past, or less than 5 minutes away, when the session is scheduled or its time changes | "Your door is scheduled to open at [time] — ready?" | — |
 | Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Hope it was a good one. Open again?" | — |
 | Friend accepted invite | Inviter | One: "[Name] just joined your dropby!" · Two: "[Name] and [Name] just joined your dropby!" · Three or more: "[Name] and [n] others just joined your dropby!" | — |
 | Connection suggestion | Everyone already on a link, when someone new opens it (if `notif_friend_suggestions` enabled) | One: "[Name] might be someone you know" · Two or more: "[Name] and [n] others might be people you know" | — |

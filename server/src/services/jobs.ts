@@ -31,6 +31,9 @@ const LIVE_ACTIVITY_START_GRACE = 300;
 // soon" with "Keep open" in place of "Close now", and sounds once. The phone picks the
 // content when it draws; this redraws it then.
 const KEEP_OPEN_OFFER_LEAD = 300;
+// A host reminder that would go out within this long of scheduling (or is already past)
+// is dropped: the host has just set the time and doesn't need telling.
+const HOST_REMINDER_MIN_LEAD = 300;
 
 type JobType =
   | 'door.notify_open'
@@ -136,7 +139,15 @@ export function syncStatusJobs(statusId: string) {
     desired.push({ type: 'door.auto_closed', key: String(s.closes_at), runAt: s.closes_at });
     desired.push({ type: 'door.keep_open_offer', key: String(s.closes_at), runAt: s.closes_at - KEEP_OPEN_OFFER_LEAD });
     if (s.starts_at && s.reminder_minutes !== null) {
-      desired.push({ type: 'door.host_reminder', key: '', runAt: s.starts_at - s.reminder_minutes * 60 });
+      const runAt = s.starts_at - s.reminder_minutes * 60;
+      // One already armed for this time stays, so a restart or an unrelated edit close to
+      // the reminder doesn't drop it.
+      const armed = db.prepare(
+        "SELECT 1 FROM jobs WHERE subject_id = ? AND type = 'door.host_reminder' AND done_at IS NULL AND run_at = ?"
+      ).get(statusId, runAt);
+      if (armed || runAt > nowUnix() + HOST_REMINDER_MIN_LEAD) {
+        desired.push({ type: 'door.host_reminder', key: '', runAt });
+      }
     }
     if (s.starts_at) {
       desired.push({ type: 'door.live_activity_start', key: String(s.starts_at), runAt: s.starts_at });
