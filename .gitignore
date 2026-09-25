@@ -9,3 +9,8 @@ client/dist/
 .DS_Store
 *.log
 android/app/google-services.json
+
+# Test output and IDE files
+playwright-report/
+test-results/
+android/.idea/

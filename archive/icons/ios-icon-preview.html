@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>iOS Icon Variants</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 32px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #ccc;
+      gap: 48px;
+    }
+    h1 { margin: 0; font-size: 13px; letter-spacing: 0.08em; color: #666; text-transform: uppercase; }
+    .row {
+      display: flex;
+      gap: 40px;
+      align-items: flex-end;
+    }
+    .icon-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .label {
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .label strong { color: #888; display: block; font-size: 12px; }
+    img {
+      display: block;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+    }
+    .size-180 { width: 180px; height: 180px; border-radius: 40px; }
+    .size-120 { width: 120px; height: 120px; border-radius: 27px; }
+    .size-60  { width:  60px; height:  60px; border-radius: 13px; }
+
+    .divider {
+      width: 600px;
+      border: none;
+      border-top: 1px solid #333;
+    }
+    .section-label {
+      font-size: 11px;
+      color: #444;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <h1>iOS App Icon — Stroke weight variants (scale 1.05)</h1>
+
+  <!-- 180px -->
+  <div class="row">
+    <div class="icon-group">
+      <img src="../../ios-icon.svg" class="size-180" alt="Original">
+      <div class="label"><strong>Original</strong>stroke 0</div>
+    </div>
+    <div class="icon-group">
+      <img src="ios-icon-sw2.svg" class="size-180" alt="sw2">
+      <div class="label"><strong>↑</strong>stroke 2</div>
+    </div>
+    <div class="icon-group">
+      <img src="ios-icon-sw4.svg" class="size-180" alt="sw4">
+      <div class="label"><strong>↑</strong>stroke 4</div>
+    </div>
+    <div class="icon-group">
+      <img src="ios-icon-sw6.svg" class="size-180" alt="sw6">
+      <div class="label"><strong>↑</strong>stroke 6</div>
+    </div>
+    <div class="icon-group">
+      <img src="ios-icon-v3.svg" class="size-180" alt="sw8">
+      <div class="label"><strong>Light</strong>stroke 8</div>
+    </div>
+    <div class="icon-group">
+      <img src="ios-icon-sw10.svg" class="size-180" alt="sw10">
+      <div class="label"><strong>↑</strong>stroke 10</div>
+    </div>
+    <div class="icon-group">
+      <img src="ios-icon-sw12.svg" class="size-180" alt="sw12">
+      <div class="label"><strong>↑</strong>stroke 12</div>
+    </div>
+    <div class="icon-group">
+      <img src="ios-icon-sw14.svg" class="size-180" alt="sw14">
+      <div class="label"><strong>↑</strong>stroke 14</div>
+    </div>
+    <div class="icon-group">
+      <img src="ios-icon-v4.svg" class="size-180" alt="sw16">
+      <div class="label"><strong>Medium</strong>stroke 16</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <span class="section-label">120px</span>
+
+  <!-- 120px -->
+  <div class="row">
+    <div class="icon-group"><img src="../../ios-icon.svg" class="size-120" alt="Original"></div>
+    <div class="icon-group"><img src="ios-icon-sw2.svg" class="size-120" alt="sw2"></div>
+    <div class="icon-group"><img src="ios-icon-sw4.svg" class="size-120" alt="sw4"></div>
+    <div class="icon-group"><img src="ios-icon-sw6.svg" class="size-120" alt="sw6"></div>
+    <div class="icon-group"><img src="ios-icon-v3.svg" class="size-120" alt="sw8"></div>
+    <div class="icon-group"><img src="ios-icon-sw10.svg" class="size-120" alt="sw10"></div>
+    <div class="icon-group"><img src="ios-icon-sw12.svg" class="size-120" alt="sw12"></div>
+    <div class="icon-group"><img src="ios-icon-sw14.svg" class="size-120" alt="sw14"></div>
+    <div class="icon-group"><img src="ios-icon-v4.svg" class="size-120" alt="sw16"></div>
+  </div>
+
+  <hr class="divider">
+  <span class="section-label">60px</span>
+
+  <!-- 60px -->
+  <div class="row">
+    <div class="icon-group"><img src="../../ios-icon.svg" class="size-60" alt="Original"></div>
+    <div class="icon-group"><img src="ios-icon-sw2.svg" class="size-60" alt="sw2"></div>
+    <div class="icon-group"><img src="ios-icon-sw4.svg" class="size-60" alt="sw4"></div>
+    <div class="icon-group"><img src="ios-icon-sw6.svg" class="size-60" alt="sw6"></div>
+    <div class="icon-group"><img src="ios-icon-v3.svg" class="size-60" alt="sw8"></div>
+    <div class="icon-group"><img src="ios-icon-sw10.svg" class="size-60" alt="sw10"></div>
+    <div class="icon-group"><img src="ios-icon-sw12.svg" class="size-60" alt="sw12"></div>
+    <div class="icon-group"><img src="ios-icon-sw14.svg" class="size-60" alt="sw14"></div>
+    <div class="icon-group"><img src="ios-icon-v4.svg" class="size-60" alt="sw16"></div>
+  </div>
+
+</body>
+</html>
