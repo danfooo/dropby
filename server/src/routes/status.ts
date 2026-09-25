@@ -236,7 +236,8 @@ router.post('/', requireAuth, validateBody(createStatusBody), async (req: AuthRe
     syncStatusJobs(statusId);
   })();
 
-  // Opened on the web or another phone: put it on the host's other iPhones too.
+  // Show it outside the app: on Android, and on the host's other iPhones (this one, if
+  // it is an iPhone, starts its own).
   if (!isScheduled) startLiveActivityRemotely(statusId, sessionIdOfRequest(req));
 
   if (isScheduled) {
@@ -524,6 +525,7 @@ router.post('/quick-open', requireAuth, (req: AuthRequest, res) => {
   })();
 
   log('door.open', userId, { recipients: recipientIds.length, has_note: false, source: 'quick_open' });
+  startLiveActivityRemotely(statusId, sessionIdOfRequest(req));
 
   res.status(201).json(formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId));
 });

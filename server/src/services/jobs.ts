@@ -27,6 +27,9 @@ const CLOSING_SOON_MIN_REMAINING = 600;
 const AUTO_CLOSED_GRACE = 120;
 // A scheduled door's Live Activity is started remotely only this soon after it opens.
 const LIVE_ACTIVITY_START_GRACE = 300;
+// In the last five minutes the Android door notification's button turns from "Close
+// now" into "Keep open". The phone picks the button when it draws; this redraws it then.
+const KEEP_OPEN_OFFER_LEAD = 300;
 
 type JobType =
   | 'door.notify_open'
@@ -34,6 +37,7 @@ type JobType =
   | 'door.auto_closed'
   | 'door.host_reminder'
   | 'door.live_activity_start'
+  | 'door.keep_open_offer'
   | 'going.reminder_1'
   | 'going.reminder_2';
 
@@ -129,6 +133,7 @@ export function syncStatusJobs(statusId: string) {
     }
     desired.push({ type: 'door.closing_soon', key: String(s.closes_at), runAt: s.closes_at - CLOSING_SOON_LEAD });
     desired.push({ type: 'door.auto_closed', key: String(s.closes_at), runAt: s.closes_at });
+    desired.push({ type: 'door.keep_open_offer', key: String(s.closes_at), runAt: s.closes_at - KEEP_OPEN_OFFER_LEAD });
     if (s.starts_at && s.reminder_minutes !== null) {
       desired.push({ type: 'door.host_reminder', key: '', runAt: s.starts_at - s.reminder_minutes * 60 });
     }
@@ -200,6 +205,14 @@ const handlers: Record<JobType, (subjectId: string, key: string, now: number) =>
     if (!s || s.closed_at !== null || !s.starts_at || String(s.starts_at) !== key) return;
     if (s.starts_at > now || now - s.starts_at > LIVE_ACTIVITY_START_GRACE || s.closes_at <= now) return;
     startLiveActivityRemotely(s.id);
+  },
+
+  'door.keep_open_offer': (id, key, now) => {
+    const s = loadStatus(id);
+    if (!s || s.closed_at !== null || String(s.closes_at) !== key) return;
+    if (s.closes_at <= now || s.closes_at - now > KEEP_OPEN_OFFER_LEAD) return;
+    if (s.starts_at !== null && s.starts_at > now) return;
+    syncLiveActivity(s.id);
   },
 
   'going.reminder_1': (id, _key, now) => sendGoingReminder(id, 1, now),

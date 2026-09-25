@@ -37,10 +37,11 @@ Still open:
 
 Related but separate: with no group object there is nothing to select as door recipients in one tap. Saved recipient sets ("open my door to these 8") are a real ergonomic want, but a different feature — do not drag the group object back for it.
 
-## iOS Live Activity
-- [ ] **Localize the Live Activity.** Its copy ("Your door is open", "on their way", "closes in") is English-only, like every push. Needs a strings catalog in the `DoorActivity` extension once native copy is localized at all.
+## Open door outside the app (iOS Live Activity, Android notification)
+- [ ] **Localize both.** Their copy ("Your door is open", "on their way", "closes in", "Close now", "Keep open +30") is English-only, like every push. Needs a strings catalog in the iOS `DoorActivity` extension and Android string resources once native copy is localized at all.
 - [ ] **Scheduled starts on iOS 16.2–17.1.** Push-to-start needs 17.2, so on older iOS a scheduled session that starts while the app is closed only gets its Live Activity when the app is next opened.
-- [ ] **Buttons on the activity** ("Keep open +30", "Close now") via App Intents (iOS 17+). Today tapping it just opens the app.
+- [ ] **The one button on iOS** — Android has "Close now", swapping to "Keep open +30" in the last 5 minutes. iOS needs App Intents (iOS 17+) for this; today tapping the activity just opens the app.
+- [ ] **Android: the "closes in 10 minutes" push still arrives** alongside the door notification's own "Keep open" button. Decide whether to drop it on Android.
 
 ## Maybe
 - [ ] New user with no friends: "Open Now" gives no hint that a share link is coming. Needs a solution that doesn't introduce the friends concept prematurely — the right fix probably lives earlier in the onboarding flow, not on the home screen.

@@ -184,6 +184,28 @@ async function sendFcm(token: string, payload: PushPayload) {
   }
 }
 
+// A data-only message: nothing is shown by the system, the app's own messaging service
+// (android/.../DoorMessagingService.java) decides what to do. High priority so it is
+// delivered promptly even when the phone is idle. Never throws.
+export async function sendFcmData(token: string, data: Record<string, string>): Promise<void> {
+  const projectId = process.env.FCM_PROJECT_ID;
+  const accessToken = await getFcmAccessToken();
+  if (!accessToken || !projectId) {
+    console.log(`[FCM] not configured — data ${data.type ?? ''} ${token.slice(0, 20)}…`);
+    return;
+  }
+  try {
+    const res = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: { token, data, android: { priority: 'high' } } }),
+    });
+    if (!res.ok) console.error('[FCM] Data send error:', (await res.text()).slice(0, 200));
+  } catch (err: any) {
+    console.error('[FCM] Data send error:', err.message);
+  }
+}
+
 // ── APNs (iOS) ────────────────────────────────────────────────
 let apnsJwt: { token: string; issuedAt: number } | null = null;
 let apnsSession: http2.ClientHttp2Session | null = null;

@@ -952,6 +952,25 @@ While the user's own door is open, the iOS app shows it as a Live Activity on th
 - Ended — and removed from the Lock Screen at once — when the door is closed manually, replaced by a new door, or auto-closes at `closes_at` (the `door.auto_closed` job); also when the user signs out
 - Not started if the user has turned Live Activities off for dropby in iOS Settings
 
+### Open Door Notification (Android)
+
+The Android counterpart of the Live Activity: while the user's own door is open, an ongoing notification (it can't be swiped away) in the "Your open door" channel, which is silent and doesn't vibrate. On Android 16+ it asks to be promoted to a Live Update: a countdown chip in the status bar and a place at the top of the lock screen. The user can turn promotion off in system settings, and Android decides whether it qualifies.
+
+- Title "Your door is open"; text is who is on their way (same wording as iOS), else the note, else the location; when there are both, the expanded view shows the note and then who is coming
+- A countdown to `closes_at`, ticked by the system
+- **One button**, handled without opening the app:
+  - "Close now" — closes the door (`DELETE /api/status`) and removes the notification
+  - In the last 5 minutes before `closes_at` it becomes "Keep open +30" — prolongs the door (`POST /api/status/prolong`) and shows the new time straight away
+- Tapping it opens the app
+- English only, like push copy
+
+**Lifecycle** — driven entirely by the server with data-only FCM messages (`type: door_live`) to all the host's Android push tokens:
+- Shown when a door opens (from any device, including quick-open from a nudge), when a scheduled session is opened early, and when a scheduled session reaches `starts_at` (skipped if more than 5 minutes late)
+- Updated whenever the note, location, closing time or going signals change, and at 5 minutes before `closes_at` (the `door.keep_open_offer` job) so the button swaps
+- Removed when the door is closed manually, replaced by a new door, or auto-closes; as a fallback it also times out on its own 2 minutes after `closes_at`
+- Messages carry the server's send time; one that arrives after a newer one is ignored
+- A scheduled session that is cancelled before it starts sends nothing
+
 ### Nudge Reminders
 
 - Set per user on the Profile page (day + hour, stored in `nudge_schedules`)

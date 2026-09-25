@@ -82,7 +82,7 @@ test('door open — friends are told at notify_at, once', async () => {
   befriend(host, friend);
   const status = openDoor(host, [friend], { notifyIn: 120 });
 
-  assert.deepEqual(pendingJobs(status).map(j => j.type), ['door.auto_closed', 'door.closing_soon', 'door.notify_open']);
+  assert.deepEqual(pendingJobs(status).map(j => j.type), ['door.auto_closed', 'door.closing_soon', 'door.keep_open_offer', 'door.notify_open']);
 
   jobs.runDueJobs(now() + 60);
   assert.equal(await pushesTo(friend, 'door_open'), 0, 'not before notify_at');

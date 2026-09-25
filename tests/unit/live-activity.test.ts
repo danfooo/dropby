@@ -78,6 +78,31 @@ test('live activity — a scheduled session gets a start job at its start time',
   assert.equal(db.prepare("SELECT 1 FROM jobs WHERE subject_id = ? AND type = 'door.live_activity_start' AND done_at IS NULL").get(id), undefined);
 });
 
+test('live activity — the Android message carries the door as strings, or just the end', () => {
+  const door = openDoor(user('Host'));
+  going(door, user('Ana'));
+  const open = la.androidDoorMessage(door, la.doorActivityState(door)!);
+  assert.equal(open.type, 'door_live');
+  assert.equal(open.event, 'update');
+  assert.equal(open.note, 'Pizza');
+  assert.equal(open.location, '');
+  assert.deepEqual(JSON.parse(open.going), ['Ana']);
+  assert.equal(open.goingCount, '1');
+  for (const v of Object.values(open)) assert.equal(typeof v, 'string');
+
+  db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(now(), door);
+  const ended = la.androidDoorMessage(door, la.doorActivityState(door)!);
+  assert.equal(ended.event, 'end');
+  assert.equal(ended.closesAt, undefined);
+});
+
+test('live activity — a cancelled scheduled session never started', () => {
+  const id = randomUUID();
+  db.prepare('INSERT INTO statuses (id, user_id, starts_at, closes_at, closed_at) VALUES (?, ?, ?, ?, ?)')
+    .run(id, user('Host'), now() + 3600, now() + 7200, now());
+  assert.equal(la.doorActivityState(id)!.started, false);
+});
+
 test('live activity — ending forgets the door\'s tokens', () => {
   const door = openDoor(user('Host'));
   la.saveLiveActivityToken(door, 'tok');
