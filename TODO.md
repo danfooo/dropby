@@ -39,7 +39,7 @@ Related but separate: with no group object there is nothing to select as door re
 
 ## iOS Live Activity
 - [ ] **Localize the Live Activity.** Its copy ("Your door is open", "on their way", "closes in") is English-only, like every push. Needs a strings catalog in the `DoorActivity` extension once native copy is localized at all.
-- [ ] **Push-to-start (iOS 17.2+).** A scheduled session that starts on its own while the app is closed only gets its Live Activity when the app is next opened. The server could start it remotely with a push-to-start token.
+- [ ] **Scheduled starts on iOS 16.2–17.1.** Push-to-start needs 17.2, so on older iOS a scheduled session that starts while the app is closed only gets its Live Activity when the app is next opened.
 - [ ] **Buttons on the activity** ("Keep open +30", "Close now") via App Intents (iOS 17+). Today tapping it just opens the app.
 
 ## Maybe

@@ -10,6 +10,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         registerNotificationCategories()
         UNUserNotificationCenter.current().delegate = self
+        // Also runs when iOS wakes the app for a Live Activity the server started.
+        if #available(iOS 16.2, *) {
+            DoorActivityCenter.shared.start()
+        }
         return true
     }
 

@@ -53,6 +53,31 @@ test('live activity — a closed or run-out door has ended', () => {
   assert.equal(la.doorActivityState(openDoor(user('Host'), -10))!.ended, true);
 });
 
+test('live activity — a device\'s start token goes when it signs out', async () => {
+  const sessions = await import('../../server/src/services/sessions.js');
+  const host = user('Host');
+  const session = sessions.createSession(host);
+  la.saveLiveActivityStartToken(host, sessions.sessionIdOf(session), 'start-tok');
+  la.saveLiveActivityStartToken(host, sessions.sessionIdOf(session), 'start-tok');
+  const count = () => (db.prepare('SELECT COUNT(*) AS n FROM live_activity_start_tokens WHERE user_id = ?').get(host) as any).n;
+  assert.equal(count(), 1);
+  sessions.revokeSession(session);
+  assert.equal(count(), 0);
+});
+
+test('live activity — a scheduled session gets a start job at its start time', async () => {
+  const jobs = await import('../../server/src/services/jobs.js');
+  const id = randomUUID();
+  const startsAt = now() + 3600;
+  db.prepare('INSERT INTO statuses (id, user_id, starts_at, closes_at) VALUES (?, ?, ?, ?)').run(id, user('Host'), startsAt, startsAt + 3600);
+  jobs.syncStatusJobs(id);
+  const job = db.prepare("SELECT run_at FROM jobs WHERE subject_id = ? AND type = 'door.live_activity_start' AND done_at IS NULL").get(id) as any;
+  assert.equal(job?.run_at, startsAt);
+  db.prepare('UPDATE statuses SET starts_at = NULL WHERE id = ?').run(id);
+  jobs.syncStatusJobs(id);
+  assert.equal(db.prepare("SELECT 1 FROM jobs WHERE subject_id = ? AND type = 'door.live_activity_start' AND done_at IS NULL").get(id), undefined);
+});
+
 test('live activity — ending forgets the door\'s tokens', () => {
   const door = openDoor(user('Host'));
   la.saveLiveActivityToken(door, 'tok');

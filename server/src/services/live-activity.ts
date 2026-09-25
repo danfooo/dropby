@@ -4,7 +4,9 @@ import { sendLiveActivityPush } from './notifications.js';
 // The iOS Live Activity that shows the host's own open door on the Lock Screen and in
 // the Dynamic Island. The app starts it and hands us its push token; from then on the
 // server keeps it current, since the app is usually closed while guests say they're
-// on their way. The shape here must match DoorActivityAttributes.ContentState in
+// on their way. On iOS 17.2+ the server can also start it (push-to-start) when the door
+// opens without the app: a scheduled session reaching its start, or a door opened on
+// another device. The shape here must match DoorActivityAttributes.ContentState in
 // ios/App/App/DoorActivityAttributes.swift.
 
 export interface DoorActivityState {
@@ -41,6 +43,46 @@ export function doorActivityState(statusId: string): { state: DoorActivityState;
     },
     ended: s.closed_at !== null || s.closes_at <= now,
   };
+}
+
+export function saveLiveActivityStartToken(userId: string, sessionId: string | null, token: string) {
+  db.prepare(`
+    INSERT INTO live_activity_start_tokens (token, user_id, session_id) VALUES (?, ?, ?)
+    ON CONFLICT(token) DO UPDATE SET user_id = excluded.user_id, session_id = excluded.session_id, updated_at = unixepoch()
+  `).run(token, userId, sessionId);
+}
+
+// Start the door's Live Activity on the host's iPhones. `exceptSessionId` is the device
+// that opened the door, which starts its own. Does nothing once an activity is running.
+export function startLiveActivityRemotely(statusId: string, exceptSessionId?: string | null) {
+  const s = db.prepare('SELECT user_id FROM statuses WHERE id = ?').get(statusId) as { user_id: string } | undefined;
+  const current = doorActivityState(statusId);
+  if (!s || !current || current.ended) return;
+  if (db.prepare('SELECT 1 FROM live_activity_tokens WHERE status_id = ?').get(statusId)) return;
+
+  const tokens = (db.prepare(`
+    SELECT token FROM live_activity_start_tokens WHERE user_id = ? AND session_id IS NOT ?
+  `).all(s.user_id, exceptSessionId ?? null) as Array<{ token: string }>).map(r => r.token);
+  if (!tokens.length) return;
+
+  const aps = {
+    timestamp: Math.floor(Date.now() / 1000),
+    event: 'start',
+    'content-state': current.state,
+    'stale-date': current.state.closesAt,
+    'attributes-type': 'DoorActivityAttributes',
+    attributes: { statusId },
+    // Required for push-to-start; shown as the activity appears.
+    alert: {
+      title: 'Your door is open',
+      body: current.state.note || current.state.location || 'Friends can drop by now',
+    },
+  };
+  for (const t of tokens) {
+    void sendLiveActivityPush(t, aps).then(({ status }) => {
+      if (status === 410) db.prepare('DELETE FROM live_activity_start_tokens WHERE token = ?').run(t);
+    });
+  }
 }
 
 export function saveLiveActivityToken(statusId: string, token: string) {

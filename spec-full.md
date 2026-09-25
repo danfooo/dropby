@@ -283,6 +283,16 @@ Unique constraint on `(user_id, token)`. Multiple devices per user are supported
 
 Primary key `(status_id, token)`. Rows are deleted when the activity is ended by the server, or when APNs reports the activity gone (410).
 
+### Live Activity Start Tokens
+| Field | Type | Notes |
+|---|---|---|
+| token | string PK | The device's APNs push-to-start token for the door Live Activity (iOS 17.2+) |
+| user_id | uuid FK → users | |
+| session_id | string FK → sessions nullable | The sign-in session that sent it; signing out of that device deletes the row |
+| updated_at | unix timestamp | |
+
+One row per signed-in iPhone. Upserted on each app launch and after signing in. Deleted when APNs reports it invalid (410).
+
 ### Event Log
 | Field | Type | Notes |
 |---|---|---|
@@ -932,8 +942,13 @@ While the user's own door is open, the iOS app shows it as a Live Activity on th
 - English only, like push copy
 
 **Lifecycle**
-- Started by the app whenever it sees an open door (on open, on activating a scheduled session early, or on next launch if a scheduled session started while the app was closed). Opening a new door ends the previous door's activity
-- The app sends the activity's push token to `POST /api/status/:statusId/live-activity { token }` (owner only). From then on the server pushes updates (APNs `liveactivity` push type) whenever the note, location, closing time or going signals change — so it stays current while the app is closed
+- Started by the app whenever it sees an open door (on open, on activating a scheduled session early, or on next launch). Opening a new door ends the previous door's activity
+- **Started without the app (iOS 17.2+):** the server starts it by push-to-start when
+  - a scheduled session reaches its start time (the `door.live_activity_start` job at `starts_at`; skipped if more than 5 minutes late)
+  - a door is opened, or a scheduled session opened early, from another device (the web, or another phone). The device that opened it is left out, since it starts its own
+  - Not sent if the door's activity is already running. The push shows an alert as the activity appears: "Your door is open" with the note, the location, or "Friends can drop by now"
+- The app's native code sends each activity's push token to `POST /api/status/:statusId/live-activity { token }` (owner only), and the device's push-to-start token to `POST /api/status/live-activity/start-token { token }`, on launch, when iOS issues them, and again after signing in. This works when iOS wakes the app in the background for an activity it started. From then on the server pushes updates (APNs `liveactivity` push type) whenever the note, location, closing time or going signals change — so it stays current while the app is closed
+- If the app and the server both start one for the same door, the second is ended at once
 - Ended — and removed from the Lock Screen at once — when the door is closed manually, replaced by a new door, or auto-closes at `closes_at` (the `door.auto_closed` job); also when the user signs out
 - Not started if the user has turned Live Activities off for dropby in iOS Settings
 

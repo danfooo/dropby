@@ -429,11 +429,27 @@ function liveActivities(db: Database) {
   `);
 }
 
+// Push-to-start tokens (iOS 17.2+): one per signed-in device, so the server can put an
+// open door on the Lock Screen without the app. Tied to the session, so signing out of
+// the device drops it.
+function liveActivityStartTokens(db: Database) {
+  db.exec(`
+    CREATE TABLE live_activity_start_tokens (
+      token      TEXT PRIMARY KEY,
+      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      session_id TEXT REFERENCES sessions(id) ON DELETE CASCADE,
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    CREATE INDEX idx_live_activity_start_tokens_user ON live_activity_start_tokens(user_id);
+  `);
+}
+
 export const migrations: Migration[] = [
   { version: 1, name: 'baseline', up: baseline },
   { version: 2, name: 'jobs', up: jobs },
   { version: 3, name: 'sessions', up: sessions },
   { version: 4, name: 'live_activities', up: liveActivities },
+  { version: 5, name: 'live_activity_start_tokens', up: liveActivityStartTokens },
 ];
 
 export function runMigrations(db: Database, list: Migration[] = migrations) {

@@ -4,7 +4,7 @@ import {
   notifyNudge, notifyAutoNudge, notifyReengagement,
 } from './notifications.js';
 import { log } from './analytics.js';
-import { syncLiveActivity } from './live-activity.js';
+import { startLiveActivityRemotely, syncLiveActivity } from './live-activity.js';
 import { randomUUID } from 'crypto';
 
 // Timed notifications are rows in `jobs`: what to do, about which record, and when.
@@ -25,12 +25,15 @@ const CLOSING_SOON_MIN_REMAINING = 600;
 // A door that closed on its own is announced to the host only within this window, so a
 // server that was down for a while doesn't send a stale "your door is closed".
 const AUTO_CLOSED_GRACE = 120;
+// A scheduled door's Live Activity is started remotely only this soon after it opens.
+const LIVE_ACTIVITY_START_GRACE = 300;
 
 type JobType =
   | 'door.notify_open'
   | 'door.closing_soon'
   | 'door.auto_closed'
   | 'door.host_reminder'
+  | 'door.live_activity_start'
   | 'going.reminder_1'
   | 'going.reminder_2';
 
@@ -129,6 +132,9 @@ export function syncStatusJobs(statusId: string) {
     if (s.starts_at && s.reminder_minutes !== null) {
       desired.push({ type: 'door.host_reminder', key: '', runAt: s.starts_at - s.reminder_minutes * 60 });
     }
+    if (s.starts_at) {
+      desired.push({ type: 'door.live_activity_start', key: String(s.starts_at), runAt: s.starts_at });
+    }
   }
   replacePending(statusId, 'door.', desired);
 
@@ -186,6 +192,14 @@ const handlers: Record<JobType, (subjectId: string, key: string, now: number) =>
     if (!s || s.closed_at !== null || !s.starts_at || s.reminder_minutes === null) return;
     if (s.starts_at <= now || s.starts_at - s.reminder_minutes * 60 > now) return;
     notifyScheduledReminder(s.user_id, s.starts_at);
+  },
+
+  // A scheduled session opens on its own at starts_at, usually with the app closed.
+  'door.live_activity_start': (id, key, now) => {
+    const s = loadStatus(id);
+    if (!s || s.closed_at !== null || !s.starts_at || String(s.starts_at) !== key) return;
+    if (s.starts_at > now || now - s.starts_at > LIVE_ACTIVITY_START_GRACE || s.closes_at <= now) return;
+    startLiveActivityRemotely(s.id);
   },
 
   'going.reminder_1': (id, _key, now) => sendGoingReminder(id, 1, now),

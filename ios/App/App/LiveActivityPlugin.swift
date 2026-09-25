@@ -5,7 +5,7 @@ import Capacitor
 // Starts, updates and ends the open-door Live Activity for the web app
 // (client/src/utils/liveActivity.ts). The web app calls `sync` with the current door
 // whenever it changes; the server keeps the activity current while the app is closed,
-// using the push token this plugin hands back through the `pushToken` event.
+// using the push tokens DoorActivityCenter sends it.
 @objc(LiveActivityPlugin)
 public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "LiveActivityPlugin"
@@ -13,12 +13,11 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "sync", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "endAll", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "resendTokens", returnType: CAPPluginReturnPromise),
     ]
 
     // Calls run one after another, so two quick syncs can't each start an activity.
     private var queue: Task<Void, Never>?
-    // Activities whose push token we already forward.
-    private var observed = Set<String>()
 
     @objc func sync(_ call: CAPPluginCall) {
         guard #available(iOS 16.2, *) else {
@@ -55,6 +54,18 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    // After signing in: tokens issued while signed out never reached the server.
+    @objc func resendTokens(_ call: CAPPluginCall) {
+        guard #available(iOS 16.2, *) else {
+            call.resolve()
+            return
+        }
+        enqueue {
+            DoorActivityCenter.shared.resend()
+            call.resolve()
+        }
+    }
+
     private func enqueue(_ work: @escaping @MainActor () async -> Void) {
         let previous = queue
         queue = Task { @MainActor in
@@ -63,8 +74,9 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    // Shows this door: updates its activity if one is running, otherwise starts one.
-    // Activities for any other door are ended — a host has one open door at a time.
+    // Shows this door: updates its activity if one is running (started here or by the
+    // server), otherwise starts one. Activities for any other door are ended — a host
+    // has one open door at a time.
     @available(iOS 16.2, *)
     @MainActor
     private func show(statusId: String, state: DoorActivityAttributes.ContentState) async -> Bool {
@@ -82,7 +94,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             if current.content.state != state {
                 await current.update(content)
             }
-            forwardPushToken(of: current)
+            DoorActivityCenter.shared.observe(current)
             return true
         }
 
@@ -94,25 +106,11 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
                 content: content,
                 pushType: .token
             )
-            forwardPushToken(of: activity)
+            DoorActivityCenter.shared.observe(activity)
             return true
         } catch {
             print("[LiveActivity] Could not start: \(error.localizedDescription)")
             return false
-        }
-    }
-
-    @available(iOS 16.2, *)
-    @MainActor
-    private func forwardPushToken(of activity: Activity<DoorActivityAttributes>) {
-        guard !observed.contains(activity.id) else { return }
-        observed.insert(activity.id)
-        let statusId = activity.attributes.statusId
-        Task { @MainActor in
-            for await data in activity.pushTokenUpdates {
-                let token = data.map { String(format: "%02x", $0) }.joined()
-                self.notifyListeners("pushToken", data: ["statusId": statusId, "token": token], retainUntilConsumed: true)
-            }
         }
     }
 }

@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { authApi, friendsApi, goingApi, statusApi } from '../api';
+import { resendLiveActivityTokens } from './liveActivity';
 
 let listenersSetup = false;
 let lastToken: string | null = null;
@@ -10,7 +11,7 @@ export function syncAuthTokenToNative() {
   const token = localStorage.getItem('token');
   try {
     import('@capacitor/preferences').then(({ Preferences }) => {
-      if (token) Preferences.set({ key: 'auth_token', value: token });
+      if (token) Preferences.set({ key: 'auth_token', value: token }).then(resendLiveActivityTokens);
       else Preferences.remove({ key: 'auth_token' });
     });
   } catch {}

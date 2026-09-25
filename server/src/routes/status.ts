@@ -4,7 +4,8 @@ import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { announceDoorOpen, isHiddenEitherWay, notifyScheduledSession, notifyCalendarUpdate, notifyCalendarCancel } from '../services/notifications.js';
 import { syncStatusJobs } from '../services/jobs.js';
-import { saveLiveActivityToken, syncLiveActivity } from '../services/live-activity.js';
+import { saveLiveActivityStartToken, saveLiveActivityToken, startLiveActivityRemotely, syncLiveActivity } from '../services/live-activity.js';
+import { sessionIdOf } from '../services/sessions.js';
 import { broadcastSSE } from '../services/sse.js';
 import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 import { log } from '../services/analytics.js';
@@ -166,6 +167,11 @@ function saveRecipientSelection(userId: string, selected: string[], friendIds: s
   `).run(userId, JSON.stringify(selected), JSON.stringify(unselected), nowUnix);
 }
 
+// The device making this request, as stored with its push-to-start token.
+function sessionIdOfRequest(req: AuthRequest): string | null {
+  return req.sessionToken ? sessionIdOf(req.sessionToken) : null;
+}
+
 function closeStatus(statusId: string, nowUnix: number) {
   db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, statusId);
   syncStatusJobs(statusId);
@@ -230,6 +236,9 @@ router.post('/', requireAuth, validateBody(createStatusBody), async (req: AuthRe
     syncStatusJobs(statusId);
   })();
 
+  // Opened on the web or another phone: put it on the host's other iPhones too.
+  if (!isScheduled) startLiveActivityRemotely(statusId, sessionIdOfRequest(req));
+
   if (isScheduled) {
     // Tell invitees about the upcoming scheduled session right away
     for (const rid of validRecipients) {
@@ -267,9 +276,17 @@ router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
 
   // Friends hear about it right away — the host chose to open early.
   announceDoorOpen(statusId);
+  startLiveActivityRemotely(statusId, sessionIdOfRequest(req));
 
   const status = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(statusId), userId);
   res.json(status);
+});
+
+// POST /api/status/live-activity/start-token — this device's push-to-start token
+// (iOS 17.2+), sent by the app's native code on launch
+router.post('/live-activity/start-token', requireAuth, validateBody(liveActivityTokenBody), (req: AuthRequest, res) => {
+  saveLiveActivityStartToken(req.userId!, sessionIdOfRequest(req), req.body.token);
+  res.json({ ok: true });
 });
 
 // POST /api/status/:statusId/live-activity — the push token of the iOS Live Activity

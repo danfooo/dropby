@@ -1,10 +1,10 @@
-import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import type { Status } from '@dropby/shared';
-import { statusApi } from '../api';
 
 // The iOS Live Activity for the user's own open door (Lock Screen + Dynamic Island).
-// Native side: ios/App/App/LiveActivityPlugin.swift. Once started, the server keeps it
-// current through its push token, so it stays right while the app is closed.
+// Native side: ios/App/App/LiveActivityPlugin.swift. Native code sends its push tokens
+// to the server itself (DoorActivityCenter.swift), so the server can keep it current
+// while the app is closed — and, on iOS 17.2+, start it without the app.
 
 interface LiveActivityPlugin {
   sync(door: {
@@ -16,7 +16,7 @@ interface LiveActivityPlugin {
     goingCount: number;
   }): Promise<{ active: boolean }>;
   endAll(): Promise<void>;
-  addListener(event: 'pushToken', cb: (e: { statusId: string; token: string }) => void): Promise<PluginListenerHandle>;
+  resendTokens(): Promise<void>;
 }
 
 const LiveActivity = registerPlugin<LiveActivityPlugin>('LiveActivity');
@@ -51,19 +51,9 @@ export function endLiveActivity() {
   LiveActivity.endAll().catch(() => {});
 }
 
-// Hand each activity's push token to the server as iOS issues it.
-export function listenForLiveActivityTokens(): () => void {
-  if (!liveActivitySupported()) return () => {};
-  let handle: PluginListenerHandle | undefined;
-  let removed = false;
-  LiveActivity.addListener('pushToken', ({ statusId, token }) => {
-    statusApi.liveActivityToken(statusId, token).catch(() => {});
-  }).then(h => {
-    if (removed) h.remove();
-    else handle = h;
-  }).catch(() => {});
-  return () => {
-    removed = true;
-    handle?.remove();
-  };
+// Native code signs its uploads with the token mirrored into Preferences; call once that
+// is written, so tokens issued while signed out reach the server.
+export function resendLiveActivityTokens() {
+  if (!liveActivitySupported()) return;
+  LiveActivity.resendTokens().catch(() => {});
 }

@@ -37,6 +37,9 @@ export function verifySession(token: string): string | null {
   return row.user_id;
 }
 
+// The stored id of a session token, for tables that hang off a session.
+export const sessionIdOf = hash;
+
 export function revokeSession(token: string) {
   db.prepare('DELETE FROM sessions WHERE id = ?').run(hash(token));
 }

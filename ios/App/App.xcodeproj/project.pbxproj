@@ -19,6 +19,7 @@
 		F9981A870CE179FB5050206D /* DoorActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24B9BE164A1A6FC1D24FBA5 /* DoorActivityAttributes.swift */; };
 		6EAAF79F2D8B18745CCD5948 /* DoorActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24B9BE164A1A6FC1D24FBA5 /* DoorActivityAttributes.swift */; };
 		E51B71FC316A35E880D60AE9 /* LiveActivityPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0B2D2E5C25B9F0BBEBB426 /* LiveActivityPlugin.swift */; };
+		7A3C1E5B9D2F4A6C8E0B1D40 /* DoorActivityCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3C1E5B9D2F4A6C8E0B1D3F /* DoorActivityCenter.swift */; };
 		312D17CF51F65C073403870F /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1824A3E0AD906818B25E7EC5 /* MainViewController.swift */; };
 		1574682F45E57C7485BDA1DD /* DoorActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D53FDAA71BD0A25EF4F39E5 /* DoorActivityBundle.swift */; };
 		D2E514C9D8F26482221194A1 /* DoorActivityLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E7BB5BD42D62BB7AF497A0 /* DoorActivityLiveActivity.swift */; };
@@ -63,6 +64,7 @@
 		DBFD9E6DB1D84F7D8D6C5E19 /* SceneDelegate.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		A24B9BE164A1A6FC1D24FBA5 /* DoorActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorActivityAttributes.swift; sourceTree = "<group>"; };
+		7A3C1E5B9D2F4A6C8E0B1D3F /* DoorActivityCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorActivityCenter.swift; sourceTree = "<group>"; };
 		AD0B2D2E5C25B9F0BBEBB426 /* LiveActivityPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityPlugin.swift; sourceTree = "<group>"; };
 		1824A3E0AD906818B25E7EC5 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		5D53FDAA71BD0A25EF4F39E5 /* DoorActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorActivityBundle.swift; sourceTree = "<group>"; };
@@ -124,6 +126,7 @@
 				DBFD9E6DB1D84F7D8D6C5E19 /* SceneDelegate.swift */,
 				1824A3E0AD906818B25E7EC5 /* MainViewController.swift */,
 				AD0B2D2E5C25B9F0BBEBB426 /* LiveActivityPlugin.swift */,
+				7A3C1E5B9D2F4A6C8E0B1D3F /* DoorActivityCenter.swift */,
 				A24B9BE164A1A6FC1D24FBA5 /* DoorActivityAttributes.swift */,
 			);
 			path = App;
@@ -255,6 +258,7 @@
 				8581FECC244D4098A90A3389 /* SceneDelegate.swift in Sources */,
 				312D17CF51F65C073403870F /* MainViewController.swift in Sources */,
 				E51B71FC316A35E880D60AE9 /* LiveActivityPlugin.swift in Sources */,
+				7A3C1E5B9D2F4A6C8E0B1D40 /* DoorActivityCenter.swift in Sources */,
 				F9981A870CE179FB5050206D /* DoorActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
