@@ -67,8 +67,10 @@ export const authApi = {
   updateMe: (data: UpdateMeBody) => api.put<User>('/auth/me', data).then(r => r.data),
   deleteMe: () => api.delete('/auth/me').then(r => r.data),
   logout: () => api.post('/auth/logout').then(r => r.data),
+  // door_live: this Android build draws the open-door notification itself
+  // (android/.../DoorNotification.java), so the server sends it door updates.
   registerPushToken: (token: string, platform: 'ios' | 'android') =>
-    api.post('/auth/push-token', { token, platform }).then(r => r.data),
+    api.post('/auth/push-token', { token, platform, ...(platform === 'android' && { door_live: true }) }).then(r => r.data),
   deregisterPushToken: (token?: string) =>
     api.delete('/auth/push-token', { data: token ? { token } : undefined }).then(r => r.data),
   uploadAvatar: (blob: Blob) => {

@@ -497,7 +497,11 @@ export function notifyReengagement(userId: string) {
 }
 
 export function notifyDoorClosingSoon(userId: string, statusId: string) {
-  const tokens = getPushTokens(userId);
+  // Android installs with the open-door notification get one prompt instead: it alerts
+  // with "Keep open +30" at 5 minutes (live-activity.ts).
+  const tokens = db
+    .prepare("SELECT token, platform FROM push_tokens WHERE user_id = ? AND NOT (platform = 'android' AND door_live = 1)")
+    .all(userId) as Array<{ token: string; platform: string }>;
   tokens.forEach(t =>
     sendPush(userId, t.token, t.platform, {
       title: 'Your door closes soon',

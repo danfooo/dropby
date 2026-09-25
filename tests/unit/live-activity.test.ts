@@ -103,6 +103,25 @@ test('live activity — a cancelled scheduled session never started', () => {
   assert.equal(la.doorActivityState(id)!.started, false);
 });
 
+test('closing soon — Android installs with the door notification don\'t get the 10-minute push', async () => {
+  const { notifyDoorClosingSoon } = await import('../../server/src/services/notifications.js');
+  const host = user('Host');
+  const addToken = (token: string, platform: string, doorLive: number) =>
+    db.prepare('INSERT INTO push_tokens (id, user_id, token, platform, door_live) VALUES (?, ?, ?, ?, ?)')
+      .run(randomUUID(), host, token, platform, doorLive);
+  addToken('ios-tok', 'ios', 0);
+  addToken('old-android', 'android', 0);
+  addToken('new-android', 'android', 1);
+  notifyDoorClosingSoon(host, openDoor(host));
+  await new Promise(r => setTimeout(r, 20));
+  const sent = db.prepare(`
+    SELECT json_extract(data, '$.platform') AS platform FROM event_log
+    WHERE event = 'push.sent' AND user_id = ? AND json_extract(data, '$.type') = 'closing_soon'
+    ORDER BY platform
+  `).all(host) as Array<{ platform: string }>;
+  assert.deepEqual(sent.map(s => s.platform), ['android', 'ios']);
+});
+
 test('live activity — ending forgets the door\'s tokens', () => {
   const door = openDoor(user('Host'));
   la.saveLiveActivityToken(door, 'tok');

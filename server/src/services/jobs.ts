@@ -27,8 +27,9 @@ const CLOSING_SOON_MIN_REMAINING = 600;
 const AUTO_CLOSED_GRACE = 120;
 // A scheduled door's Live Activity is started remotely only this soon after it opens.
 const LIVE_ACTIVITY_START_GRACE = 300;
-// In the last five minutes the Android door notification's button turns from "Close
-// now" into "Keep open". The phone picks the button when it draws; this redraws it then.
+// In the last five minutes the Android door notification turns into "Your door closes
+// soon" with "Keep open" in place of "Close now", and sounds once. The phone picks the
+// content when it draws; this redraws it then.
 const KEEP_OPEN_OFFER_LEAD = 300;
 
 type JobType =
@@ -212,7 +213,8 @@ const handlers: Record<JobType, (subjectId: string, key: string, now: number) =>
     if (!s || s.closed_at !== null || String(s.closes_at) !== key) return;
     if (s.closes_at <= now || s.closes_at - now > KEEP_OPEN_OFFER_LEAD) return;
     if (s.starts_at !== null && s.starts_at > now) return;
-    syncLiveActivity(s.id);
+    // On Android this is the one "closes soon" prompt, so it sounds.
+    syncLiveActivity(s.id, { alert: true });
   },
 
   'going.reminder_1': (id, _key, now) => sendGoingReminder(id, 1, now),

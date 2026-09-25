@@ -109,11 +109,12 @@ export function saveLiveActivityToken(statusId: string, token: string) {
 }
 
 // Push the door's current state to the host's devices, or end it once the door is
-// closed. Call after anything it shows changes.
-export function syncLiveActivity(statusId: string) {
+// closed. Call after anything it shows changes. `alert` makes the Android notification
+// sound once — used when it turns into "closes soon" with the "Keep open" button.
+export function syncLiveActivity(statusId: string, opts: { alert?: boolean } = {}) {
   const current = doorActivityState(statusId);
   syncIosActivity(statusId, current);
-  if (current) syncAndroidDoor(statusId, current);
+  if (current) syncAndroidDoor(statusId, current, opts.alert ?? false);
 }
 
 function syncIosActivity(statusId: string, current: DoorActivity | null) {
@@ -152,12 +153,13 @@ function syncIosActivity(statusId: string, current: DoorActivity | null) {
 
 // Every value is a string: FCM data payloads allow nothing else. `sentAt` (ms) lets the
 // phone drop a message that arrives after a newer one.
-export function androidDoorMessage(statusId: string, current: DoorActivity): Record<string, string> {
+export function androidDoorMessage(statusId: string, current: DoorActivity, alert = false): Record<string, string> {
   const base = { type: 'door_live', statusId, sentAt: String(Date.now()) };
   if (current.ended) return { ...base, event: 'end' };
   return {
     ...base,
     event: 'update',
+    alert: alert ? '1' : '0',
     closesAt: String(current.state.closesAt),
     note: current.state.note ?? '',
     location: current.state.location ?? '',
@@ -166,12 +168,13 @@ export function androidDoorMessage(statusId: string, current: DoorActivity): Rec
   };
 }
 
-function syncAndroidDoor(statusId: string, current: DoorActivity) {
+function syncAndroidDoor(statusId: string, current: DoorActivity, alert = false) {
   // A scheduled session that hasn't started was never shown, so there is nothing to end.
   if (!current.started) return;
-  const tokens = (db.prepare("SELECT token FROM push_tokens WHERE user_id = ? AND platform = 'android'")
+  // Only installs that draw the notification (older builds would ignore the message).
+  const tokens = (db.prepare("SELECT token FROM push_tokens WHERE user_id = ? AND platform = 'android' AND door_live = 1")
     .all(current.hostId) as Array<{ token: string }>).map(r => r.token);
   if (!tokens.length) return;
-  const data = androidDoorMessage(statusId, current);
+  const data = androidDoorMessage(statusId, current, alert);
   for (const t of tokens) void sendFcmData(t, data);
 }

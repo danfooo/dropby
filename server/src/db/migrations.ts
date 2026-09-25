@@ -444,12 +444,20 @@ function liveActivityStartTokens(db: Database) {
   `);
 }
 
+// Android installs that draw the open-door notification themselves say so when they
+// register (door_live = 1). Only they get its data messages, and they skip the
+// "closes in 10 minutes" push, which the notification replaces.
+function pushTokenDoorLive(db: Database) {
+  db.exec('ALTER TABLE push_tokens ADD COLUMN door_live INTEGER NOT NULL DEFAULT 0');
+}
+
 export const migrations: Migration[] = [
   { version: 1, name: 'baseline', up: baseline },
   { version: 2, name: 'jobs', up: jobs },
   { version: 3, name: 'sessions', up: sessions },
   { version: 4, name: 'live_activities', up: liveActivities },
   { version: 5, name: 'live_activity_start_tokens', up: liveActivityStartTokens },
+  { version: 6, name: 'push_token_door_live', up: pushTokenDoorLive },
 ];
 
 export function runMigrations(db: Database, list: Migration[] = migrations) {

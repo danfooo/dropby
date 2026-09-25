@@ -269,6 +269,7 @@ Created when a non-logged-in user submits the web Going form with contact info. 
 | user_id | uuid FK → users | |
 | token | string | APNs device token or FCM registration token |
 | platform | enum: ios, android | |
+| door_live | boolean | Android builds that draw the open-door notification send `door_live: true` when registering. Only these get its data messages, and they don't get the "closes in 10 minutes" push |
 | created_at | unix timestamp | |
 | updated_at | unix timestamp | |
 
@@ -906,7 +907,7 @@ Sent via FCM (Android) and APNs (iOS).
 |---|---|---|---|
 | Friend opens door | All selected recipients with OS permission | "[Name]'s door is open" | "Mark as Going", "Mute for 3 days", "Mute permanently" |
 | Going signal or note update | Door opener | "[Name] is on their way" / note as body if provided | — |
-| 10 min before close | Door opener | "Your door closes in 10 minutes" | "Keep open", "Close now" |
+| 10 min before close | Door opener — except Android installs with the open-door notification, which alerts at 5 minutes instead | "Your door closes in 10 minutes" | "Keep open", "Close now" |
 | Auto-close confirmation | Door opener (if `notif_door_closed` enabled) | "Hope it was a good one. Open again?" | — |
 | Friend accepted invite | Inviter | One: "[Name] just joined your dropby!" · Two: "[Name] and [Name] just joined your dropby!" · Three or more: "[Name] and [n] others just joined your dropby!" | — |
 | Connection suggestion | Everyone already on a link, when someone new opens it (if `notif_friend_suggestions` enabled) | One: "[Name] might be someone you know" · Two or more: "[Name] and [n] others might be people you know" | — |
@@ -961,12 +962,13 @@ The Android counterpart of the Live Activity: while the user's own door is open,
 - **One button**, handled without opening the app:
   - "Close now" — closes the door (`DELETE /api/status`) and removes the notification
   - In the last 5 minutes before `closes_at` it becomes "Keep open +30" — prolongs the door (`POST /api/status/prolong`) and shows the new time straight away
+- **Closes soon:** in the last 5 minutes the title reads "Your door closes soon". At the 5-minute mark it sounds once, as a heads-up (the "Your door closes soon" channel), with the "Keep open +30" button. This replaces the "closes in 10 minutes" push, which these installs don't get — so there is one prompt, not two
 - Tapping it opens the app
 - English only, like push copy
 
-**Lifecycle** — driven entirely by the server with data-only FCM messages (`type: door_live`) to all the host's Android push tokens:
+**Lifecycle** — driven entirely by the server with data-only FCM messages (`type: door_live`) to the host's Android push tokens that have `door_live` set:
 - Shown when a door opens (from any device, including quick-open from a nudge), when a scheduled session is opened early, and when a scheduled session reaches `starts_at` (skipped if more than 5 minutes late)
-- Updated whenever the note, location, closing time or going signals change, and at 5 minutes before `closes_at` (the `door.keep_open_offer` job) so the button swaps
+- Updated whenever the note, location, closing time or going signals change, and at 5 minutes before `closes_at` (the `door.keep_open_offer` job, which asks it to sound) so the title and button swap
 - Removed when the door is closed manually, replaced by a new door, or auto-closes; as a fallback it also times out on its own 2 minutes after `closes_at`
 - Messages carry the server's send time; one that arrives after a newer one is ignored
 - A scheduled session that is cancelled before it starts sends nothing

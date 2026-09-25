@@ -46,7 +46,11 @@ export const updateMeBody = z.looseObject({
 });
 
 // Platform is checked (and logged when wrong) by the handler.
-export const pushTokenBody = z.looseObject({ token: z.string().optional(), platform: z.string().optional() });
+export const pushTokenBody = z.looseObject({
+  token: z.string().optional(),
+  platform: z.string().optional(),
+  door_live: z.boolean().optional(),
+});
 export const removePushTokenBody = z.looseObject({ token: z.string().optional() });
 
 // ── Doors ─────────────────────────────────────────────────────

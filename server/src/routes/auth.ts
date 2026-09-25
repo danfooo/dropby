@@ -471,11 +471,13 @@ router.post('/push-token', requireAuth, validateBody(pushTokenBody), (req: AuthR
     return res.status(400).json({ error: 'token and platform (ios|android) required' });
   }
   const now = Math.floor(Date.now() / 1000);
+  // Android builds with the open-door notification send door_live: true.
+  const doorLive = platform === 'android' && req.body.door_live === true ? 1 : 0;
   db.prepare(`
-    INSERT INTO push_tokens (id, user_id, token, platform, updated_at)
-    VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(user_id, token) DO UPDATE SET updated_at = excluded.updated_at
-  `).run(randomUUID(), req.userId, token, platform, now);
+    INSERT INTO push_tokens (id, user_id, token, platform, updated_at, door_live)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, token) DO UPDATE SET updated_at = excluded.updated_at, door_live = excluded.door_live
+  `).run(randomUUID(), req.userId, token, platform, now, doorLive);
   log('push.register.ok', req.userId!, { platform });
   console.log(`[Push] Token registered — user=${req.userId} platform=${platform} token=${token.slice(0, 20)}…`);
   res.json({ ok: true });
