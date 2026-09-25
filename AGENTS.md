@@ -72,7 +72,7 @@ Go slow and explain clearly for: infrastructure, DevOps, and platform setup — 
 Commit after every change, without being asked. Push immediately too unless it requires a build/deploy (e.g. `fly deploy`), in which case ask first.
 
 - Prefer specific file staging over `git add -A`
-- Always co-author: `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`
+- Always add a `Co-Authored-By` trailer naming the Claude model that made the change, e.g. `Co-Authored-By: Claude <model> <noreply@anthropic.com>`
 
 ## Local image verification
 
