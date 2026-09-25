@@ -18,6 +18,8 @@ test('contract — door bodies sent by Home and Later', () => {
   accepts(s.updateStatusBody, { note: undefined, location: undefined, recipient_ids: ['a'], ends_at: 1790003600 }, 'Home edit');
   accepts(s.updateStatusByIdBody, { note: 'x', starts_at: 1790000000, ends_at: 1790003600 }, 'Later edit');
   accepts(s.setDurationBody, { minutes: 90 }, 'Home duration');
+  accepts(s.liveActivityTokenBody, { token: 'a1b2c3' }, 'iOS Live Activity push token');
+  rejects(s.liveActivityTokenBody, {}, 'no token');
   accepts(s.createStatusBody, {}, 'quick POST with empty body');
 });
 

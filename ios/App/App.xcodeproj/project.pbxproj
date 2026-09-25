@@ -16,7 +16,38 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		8581FECC244D4098A90A3389 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBFD9E6DB1D84F7D8D6C5E19 /* SceneDelegate.swift */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
+		F9981A870CE179FB5050206D /* DoorActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24B9BE164A1A6FC1D24FBA5 /* DoorActivityAttributes.swift */; };
+		6EAAF79F2D8B18745CCD5948 /* DoorActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24B9BE164A1A6FC1D24FBA5 /* DoorActivityAttributes.swift */; };
+		E51B71FC316A35E880D60AE9 /* LiveActivityPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0B2D2E5C25B9F0BBEBB426 /* LiveActivityPlugin.swift */; };
+		312D17CF51F65C073403870F /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1824A3E0AD906818B25E7EC5 /* MainViewController.swift */; };
+		1574682F45E57C7485BDA1DD /* DoorActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D53FDAA71BD0A25EF4F39E5 /* DoorActivityBundle.swift */; };
+		D2E514C9D8F26482221194A1 /* DoorActivityLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E7BB5BD42D62BB7AF497A0 /* DoorActivityLiveActivity.swift */; };
+		538FF3A2B45A634231C4C90F /* DoorActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DF1B219DB5C0A6F07A847C65 /* DoorActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		02AF51D8FC609126EDD90CB8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CCB31AE3D2298C25633A72B9;
+			remoteInfo = DoorActivity;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		03C5F7270936AEF2D7FC02F9 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				538FF3A2B45A634231C4C90F /* DoorActivity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
@@ -31,6 +62,13 @@
 		8DF3D4BC2F708167005C87E7 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		DBFD9E6DB1D84F7D8D6C5E19 /* SceneDelegate.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		A24B9BE164A1A6FC1D24FBA5 /* DoorActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorActivityAttributes.swift; sourceTree = "<group>"; };
+		AD0B2D2E5C25B9F0BBEBB426 /* LiveActivityPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityPlugin.swift; sourceTree = "<group>"; };
+		1824A3E0AD906818B25E7EC5 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		5D53FDAA71BD0A25EF4F39E5 /* DoorActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorActivityBundle.swift; sourceTree = "<group>"; };
+		13E7BB5BD42D62BB7AF497A0 /* DoorActivityLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorActivityLiveActivity.swift; sourceTree = "<group>"; };
+		517124F1A0916A24C1D9BD45 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DF1B219DB5C0A6F07A847C65 /* DoorActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DoorActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +80,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4E871AEA73B556B62F678D9B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -50,6 +95,7 @@
 			children = (
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
+				C1149B1EA1293CA579F2734B /* DoorActivity */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -58,6 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				DF1B219DB5C0A6F07A847C65 /* DoorActivity.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -75,8 +122,21 @@
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 				DBFD9E6DB1D84F7D8D6C5E19 /* SceneDelegate.swift */,
+				1824A3E0AD906818B25E7EC5 /* MainViewController.swift */,
+				AD0B2D2E5C25B9F0BBEBB426 /* LiveActivityPlugin.swift */,
+				A24B9BE164A1A6FC1D24FBA5 /* DoorActivityAttributes.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		C1149B1EA1293CA579F2734B /* DoorActivity */ = {
+			isa = PBXGroup;
+			children = (
+				5D53FDAA71BD0A25EF4F39E5 /* DoorActivityBundle.swift */,
+				13E7BB5BD42D62BB7AF497A0 /* DoorActivityLiveActivity.swift */,
+				517124F1A0916A24C1D9BD45 /* Info.plist */,
+			);
+			path = DoorActivity;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -89,10 +149,12 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				03C5F7270936AEF2D7FC02F9 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				349076CC9AF68209B219C906 /* PBXTargetDependency */,
 			);
 			name = App;
 			productName = App;
@@ -101,6 +163,23 @@
 				4D22ABE82AF431CB00220026 /* CapApp-SPM */,
 			);
 			productType = "com.apple.product-type.application";
+		};
+		CCB31AE3D2298C25633A72B9 /* DoorActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 15419B703CD9EE325AE03238 /* Build configuration list for PBXNativeTarget "DoorActivity" */;
+			buildPhases = (
+				A6A8A7F7AD27F5ED55DB7B4D /* Sources */,
+				4E871AEA73B556B62F678D9B /* Frameworks */,
+				A8725F71DAE0AFDD2FE50C72 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DoorActivity;
+			productName = DoorActivity;
+			productReference = DF1B219DB5C0A6F07A847C65 /* DoorActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -114,6 +193,10 @@
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
+						ProvisioningStyle = Automatic;
+					};
+					CCB31AE3D2298C25633A72B9 = {
+						CreatedOnToolsVersion = 16.0;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -135,6 +218,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				CCB31AE3D2298C25633A72B9 /* DoorActivity */,
 			);
 		};
 /* End PBXProject section */
@@ -153,6 +237,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A8725F71DAE0AFDD2FE50C72 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -162,10 +253,31 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				8581FECC244D4098A90A3389 /* SceneDelegate.swift in Sources */,
+				312D17CF51F65C073403870F /* MainViewController.swift in Sources */,
+				E51B71FC316A35E880D60AE9 /* LiveActivityPlugin.swift in Sources */,
+				F9981A870CE179FB5050206D /* DoorActivityAttributes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A6A8A7F7AD27F5ED55DB7B4D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1574682F45E57C7485BDA1DD /* DoorActivityBundle.swift in Sources */,
+				D2E514C9D8F26482221194A1 /* DoorActivityLiveActivity.swift in Sources */,
+				6EAAF79F2D8B18745CCD5948 /* DoorActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		349076CC9AF68209B219C906 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CCB31AE3D2298C25633A72B9 /* DoorActivity */;
+			targetProxy = 02AF51D8FC609126EDD90CB8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
@@ -337,6 +449,44 @@
 			};
 			name = Release;
 		};
+		631E5699F3263413BC78E414 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = PD486B4Z2Q;
+				INFOPLIST_FILE = DoorActivity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = cc.dropby.app.DoorActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EB7831530BF6F76DF3C1A873 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = PD486B4Z2Q;
+				INFOPLIST_FILE = DoorActivity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = cc.dropby.app.DoorActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -354,6 +504,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		15419B703CD9EE325AE03238 /* Build configuration list for PBXNativeTarget "DoorActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				631E5699F3263413BC78E414 /* Debug */,
+				EB7831530BF6F76DF3C1A873 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

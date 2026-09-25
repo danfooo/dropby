@@ -4,6 +4,7 @@ import {
   notifyNudge, notifyAutoNudge, notifyReengagement,
 } from './notifications.js';
 import { log } from './analytics.js';
+import { syncLiveActivity } from './live-activity.js';
 import { randomUUID } from 'crypto';
 
 // Timed notifications are rows in `jobs`: what to do, about which record, and when.
@@ -172,7 +173,10 @@ const handlers: Record<JobType, (subjectId: string, key: string, now: number) =>
   'door.auto_closed': (id, key, now) => {
     const s = loadStatus(id);
     if (!s || s.closed_at !== null || String(s.closes_at) !== key) return;
-    if (s.closes_at > now || now - s.closes_at > AUTO_CLOSED_GRACE) return;
+    if (s.closes_at > now) return;
+    // Ends the Live Activity even after an outage; the phone has already marked it stale.
+    syncLiveActivity(s.id);
+    if (now - s.closes_at > AUTO_CLOSED_GRACE) return;
     const host = db.prepare('SELECT notif_door_closed FROM users WHERE id = ?').get(s.user_id) as { notif_door_closed: number } | undefined;
     if (host?.notif_door_closed) notifyDoorClosed(s.user_id);
   },

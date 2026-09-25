@@ -4,12 +4,13 @@ import { db } from '../db/index.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { announceDoorOpen, isHiddenEitherWay, notifyScheduledSession, notifyCalendarUpdate, notifyCalendarCancel } from '../services/notifications.js';
 import { syncStatusJobs } from '../services/jobs.js';
+import { saveLiveActivityToken, syncLiveActivity } from '../services/live-activity.js';
 import { broadcastSSE } from '../services/sse.js';
 import { sanitizeNote, isNoteAllowed } from '../services/moderation.js';
 import { log } from '../services/analytics.js';
 import { validateBody } from '../middleware/validate.js';
 import type { Status, FriendStatus } from '@dropby/shared';
-import { createStatusBody, setDurationBody, updateStatusBody, updateStatusByIdBody } from '@dropby/shared';
+import { createStatusBody, liveActivityTokenBody, setDurationBody, updateStatusBody, updateStatusByIdBody } from '@dropby/shared';
 
 const router = Router();
 
@@ -168,6 +169,7 @@ function saveRecipientSelection(userId: string, selected: string[], friendIds: s
 function closeStatus(statusId: string, nowUnix: number) {
   db.prepare('UPDATE statuses SET closed_at = ? WHERE id = ?').run(nowUnix, statusId);
   syncStatusJobs(statusId);
+  syncLiveActivity(statusId);
 }
 
 type Cleaned = { ok: true; value: string | null | undefined } | { ok: false; error: string };
@@ -270,6 +272,18 @@ router.post('/:statusId/activate', requireAuth, (req: AuthRequest, res) => {
   res.json(status);
 });
 
+// POST /api/status/:statusId/live-activity — the push token of the iOS Live Activity
+// showing this door, so the server can keep it current while the app is closed
+router.post('/:statusId/live-activity', requireAuth, validateBody(liveActivityTokenBody), (req: AuthRequest, res) => {
+  const { statusId } = req.params as { statusId: string };
+  const status = db.prepare('SELECT id FROM statuses WHERE id = ? AND user_id = ?').get(statusId, req.userId!) as { id: string } | undefined;
+  if (!status) return res.status(404).json({ error: 'Not found' });
+  saveLiveActivityToken(statusId, req.body.token);
+  // The door may have changed between the app starting the activity and this call.
+  syncLiveActivity(statusId);
+  res.json({ ok: true });
+});
+
 // PUT /api/status — update note + recipients (+ ends_at) of the active or next scheduled status
 router.put('/', requireAuth, validateBody(updateStatusBody), async (req: AuthRequest, res) => {
   const userId = req.userId!;
@@ -303,6 +317,7 @@ router.put('/', requireAuth, validateBody(updateStatusBody), async (req: AuthReq
     }
     syncStatusJobs(status.id);
   })();
+  syncLiveActivity(status.id);
 
   const updated = formatStatus(db.prepare('SELECT * FROM statuses WHERE id = ?').get(status.id), userId);
   res.json(updated);
@@ -347,6 +362,7 @@ router.put('/:statusId', requireAuth, validateBody(updateStatusByIdBody), async 
     }
     syncStatusJobs(statusId);
   })();
+  syncLiveActivity(statusId);
 
   if (timesChanged) {
     const downloads = db.prepare('SELECT user_id, token FROM status_ics_downloads WHERE status_id = ?').all(statusId) as Array<{ user_id: string | null; token: string | null }>;
@@ -379,6 +395,7 @@ router.post('/duration', requireAuth, validateBody(setDurationBody), (req: AuthR
     db.prepare('UPDATE users SET default_door_minutes = ? WHERE id = ?').run(minutes, userId);
     syncStatusJobs(status.id);
   })();
+  syncLiveActivity(status.id);
 
   res.json({ closes_at: newClosesAt });
 });
@@ -453,6 +470,7 @@ router.post('/prolong', requireAuth, (req: AuthRequest, res) => {
     db.prepare('UPDATE statuses SET closes_at = ? WHERE id = ?').run(newClosesAt, status.id);
     syncStatusJobs(status.id);
   })();
+  syncLiveActivity(status.id);
 
   res.json({ closes_at: newClosesAt });
 });

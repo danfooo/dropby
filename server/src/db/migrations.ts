@@ -416,10 +416,24 @@ function sessions(db: Database) {
   `);
 }
 
+// Push tokens of iOS Live Activities showing an open door (services/live-activity.ts).
+// Each activity has its own token, unrelated to the device's push token.
+function liveActivities(db: Database) {
+  db.exec(`
+    CREATE TABLE live_activity_tokens (
+      status_id  TEXT NOT NULL REFERENCES statuses(id) ON DELETE CASCADE,
+      token      TEXT NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      PRIMARY KEY (status_id, token)
+    );
+  `);
+}
+
 export const migrations: Migration[] = [
   { version: 1, name: 'baseline', up: baseline },
   { version: 2, name: 'jobs', up: jobs },
   { version: 3, name: 'sessions', up: sessions },
+  { version: 4, name: 'live_activities', up: liveActivities },
 ];
 
 export function runMigrations(db: Database, list: Migration[] = migrations) {

@@ -274,6 +274,15 @@ Created when a non-logged-in user submits the web Going form with contact info. 
 
 Unique constraint on `(user_id, token)`. Multiple devices per user are supported. Upserted on each app launch.
 
+### Live Activity Tokens
+| Field | Type | Notes |
+|---|---|---|
+| status_id | uuid FK → statuses | The door the Live Activity shows |
+| token | string | The activity's own APNs push token (not the device token) |
+| created_at | unix timestamp | |
+
+Primary key `(status_id, token)`. Rows are deleted when the activity is ended by the server, or when APNs reports the activity gone (410).
+
 ### Event Log
 | Field | Type | Notes |
 |---|---|---|
@@ -911,6 +920,22 @@ Muting user A suppresses:
 **Quiet hours:** "Friend opens door" and "Connection suggestion" pushes are not sent between 22:00–08:00 in the recipient's local time (based on their stored `timezone`, falling back to UTC). The door-open event itself, and the Home screen's real-time SSE update, are unaffected — only the push is skipped, so the recipient sees it next time they open the app.
 
 **Once-per-day cap:** For the `default` notification preference, a recipient receives at most one "door opened" push per calendar day per host, in the recipient's local timezone. The `all` preference bypasses this cap. Brief door openings that close within 2 minutes never trigger a push regardless (the `notify_at` fires 2 minutes after creation and the cron excludes statuses with `closed_at` set), so only genuine openings count against the daily cap. Custom-set nudge schedules are unaffected by this cap.
+
+### Live Activity (iOS)
+
+While the user's own door is open, the iOS app shows it as a Live Activity on the Lock Screen and in the Dynamic Island (iOS 16.2+). Only the user's own door is shown — a user has at most one open door at a time, so there is never more than one. Friends' doors are not shown.
+
+- **Lock Screen:** 🚪, "Your door is open", the note (or the location if there is no note), who is on their way, and a live "closes in" countdown
+- **Dynamic Island:** compact — 🚪 and the countdown, or "[n] 🏃" once someone is on their way; minimal — 🚪; expanded — the Lock Screen content
+- **On their way:** "[Name] is on their way" · "[Name] and [Name] are on their way" · "[Name], [Name], [Name] are on their way" · beyond three names: "[Name], [Name], [Name] +[n] on their way". Guests count too
+- After `closes_at` the activity reads "Your door closed" until it is removed; tapping it opens the app
+- English only, like push copy
+
+**Lifecycle**
+- Started by the app whenever it sees an open door (on open, on activating a scheduled session early, or on next launch if a scheduled session started while the app was closed). Opening a new door ends the previous door's activity
+- The app sends the activity's push token to `POST /api/status/:statusId/live-activity { token }` (owner only). From then on the server pushes updates (APNs `liveactivity` push type) whenever the note, location, closing time or going signals change — so it stays current while the app is closed
+- Ended — and removed from the Lock Screen at once — when the door is closed manually, replaced by a new door, or auto-closes at `closes_at` (the `door.auto_closed` job); also when the user signs out
+- Not started if the user has turned Live Activities off for dropby in iOS Settings
 
 ### Nudge Reminders
 

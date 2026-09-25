@@ -71,6 +71,8 @@ export const updateStatusByIdBody = updateStatusBody.extend({ starts_at: unixTim
 
 export const setDurationBody = z.looseObject({ minutes: unixTime });
 
+export const liveActivityTokenBody = z.looseObject({ token: z.string().min(1).max(512) });
+
 // ── Going ─────────────────────────────────────────────────────
 
 export const goingBody = z.looseObject({ note: text });

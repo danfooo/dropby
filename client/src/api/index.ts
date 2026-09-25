@@ -110,6 +110,8 @@ export const statusApi = {
   quickOpen: () => api.post<Status>('/status/quick-open').then(r => r.data),
   setDuration: (minutes: number) => api.post<{ closes_at: number }>('/status/duration', { minutes }).then(r => r.data),
   removeRecipient: (recipientId: string) => api.delete(`/status/recipients/${recipientId}`).then(r => r.data),
+  liveActivityToken: (statusId: string, token: string) =>
+    api.post(`/status/${statusId}/live-activity`, { token }).then(r => r.data),
 };
 
 // Invites

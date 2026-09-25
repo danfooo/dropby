@@ -6,15 +6,17 @@ import { notifyGoingSignal } from '../services/notifications.js';
 import { sendWelcomeMessage } from '../services/email.js';
 import { log } from '../services/analytics.js';
 import { syncGoingJobs, cancelGoingJobs } from '../services/jobs.js';
+import { syncLiveActivity } from '../services/live-activity.js';
 import { sendSSE } from '../services/sse.js';
 import { validateBody } from '../middleware/validate.js';
 import { claimGuestBody, goingBody, guestGoingBody } from '@dropby/shared';
 
 const router = Router();
 
-// Refresh the host's view of who is coming.
+// Refresh the host's view of who is coming, in the app and on their Live Activity.
 function tellHost(hostId: string, statusId: string) {
   sendSSE(hostId, 'going:received', { status_id: statusId });
+  syncLiveActivity(statusId);
 }
 
 // GET /api/going/ever-received — has this user ever had a going signal on any of their statuses?

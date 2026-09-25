@@ -216,21 +216,68 @@ function getApnsSession(): http2.ClientHttp2Session {
   return apnsSession;
 }
 
-async function sendApns(token: string, payload: PushPayload): Promise<void> {
+function apnsConfig() {
   const keyId = process.env.APNS_KEY_ID;
   const teamId = process.env.APNS_TEAM_ID;
   const privateKey = process.env.APNS_PRIVATE_KEY?.replace(/\\n/g, '\n');
   const bundleId = process.env.APNS_BUNDLE_ID ?? 'cc.dropby.app';
+  if (!keyId || !teamId || !privateKey) return null;
+  return { keyId, teamId, privateKey, bundleId };
+}
 
-  if (!keyId || !teamId || !privateKey) {
-    console.log(`[APNs] not configured — ${token.slice(0, 20)}… | ${payload.title}: ${payload.body}`);
-    return;
-  }
-  const jwt = getApnsJwt(teamId, keyId, privateKey);
+// One request to APNs. Resolves with the HTTP status (0 if the request itself failed)
+// and APNs' error reason, if any; never rejects.
+async function postToApns(
+  token: string,
+  headers: { pushType: 'alert' | 'liveactivity'; topicSuffix?: string; priority?: 5 | 10 },
+  body: string,
+): Promise<{ status: number; reason?: string }> {
+  const cfg = apnsConfig();
+  if (!cfg) return { status: 0, reason: 'not configured' };
+  const jwt = getApnsJwt(cfg.teamId, cfg.keyId, cfg.privateKey);
   const session = getApnsSession();
   const sandbox = process.env.APNS_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
   const host = sandbox ? 'api.sandbox.push.apple.com' : 'api.push.apple.com';
-  console.log(`[APNs] Sending to ${host} — token=${token.slice(0, 20)}… | ${payload.title}`);
+
+  return new Promise((resolve) => {
+    const req = session.request({
+      ':method': 'POST',
+      ':path': `/3/device/${token}`,
+      ':authority': host,
+      'authorization': `bearer ${jwt}`,
+      'apns-topic': cfg.bundleId + (headers.topicSuffix ?? ''),
+      'apns-push-type': headers.pushType,
+      ...(headers.priority ? { 'apns-priority': String(headers.priority) } : {}),
+      'content-type': 'application/json',
+      'content-length': String(Buffer.byteLength(body)),
+    });
+
+    req.write(body);
+    req.end();
+
+    let status = 0;
+    req.on('response', (h) => { status = Number(h[':status']); });
+
+    let responseData = '';
+    req.on('data', (chunk) => { responseData += chunk; });
+    req.on('end', () => {
+      let reason: string | undefined;
+      try { reason = responseData ? JSON.parse(responseData).reason : undefined; } catch { reason = responseData; }
+      resolve({ status, reason });
+    });
+    req.on('error', (err) => {
+      console.error('[APNs] Request error:', err.message);
+      resolve({ status: 0, reason: err.message });
+    });
+  });
+}
+
+async function sendApns(token: string, payload: PushPayload): Promise<void> {
+  if (!apnsConfig()) {
+    console.log(`[APNs] not configured — ${token.slice(0, 20)}… | ${payload.title}: ${payload.body}`);
+    return;
+  }
+  console.log(`[APNs] Sending — token=${token.slice(0, 20)}… | ${payload.title}`);
 
   const aps: Record<string, unknown> = {
     alert: { title: payload.title, body: payload.body },
@@ -245,36 +292,21 @@ async function sendApns(token: string, payload: PushPayload): Promise<void> {
     ...payload.data,
   });
 
-  return new Promise((resolve) => {
-    const req = session.request({
-      ':method': 'POST',
-      ':path': `/3/device/${token}`,
-      ':authority': host,
-      'authorization': `bearer ${jwt}`,
-      'apns-topic': bundleId,
-      'apns-push-type': 'alert',
-      'content-type': 'application/json',
-      'content-length': String(Buffer.byteLength(apnsBody)),
-    });
+  const { status, reason } = await postToApns(token, { pushType: 'alert' }, apnsBody);
+  if (status === 200) console.log(`[APNs] Delivered — token=${token.slice(0, 20)}…`);
+  else console.error(`[APNs] ${status}:`, reason);
+}
 
-    req.write(apnsBody);
-    req.end();
-
-    let status = 0;
-    req.on('response', (headers) => { status = Number(headers[':status']); });
-
-    let responseData = '';
-    req.on('data', (chunk) => { responseData += chunk; });
-    req.on('end', () => {
-      if (status === 200) console.log(`[APNs] Delivered — token=${token.slice(0, 20)}…`);
-      else console.error(`[APNs] ${status}:`, responseData);
-      resolve();
-    });
-    req.on('error', (err) => {
-      console.error('[APNs] Request error:', err.message);
-      resolve();
-    });
-  });
+// A Live Activity update or end. The topic carries the `.push-type.liveactivity` suffix
+// and the token is the activity's own, not the device's.
+export async function sendLiveActivityPush(token: string, aps: Record<string, unknown>) {
+  if (!apnsConfig()) {
+    console.log(`[APNs] not configured — live activity ${String(aps.event)} ${token.slice(0, 20)}…`);
+    return { status: 0, reason: 'not configured' };
+  }
+  const result = await postToApns(token, { pushType: 'liveactivity', topicSuffix: '.push-type.liveactivity', priority: 10 }, JSON.stringify({ aps }));
+  if (result.status !== 200) console.error(`[APNs] live activity ${result.status}:`, result.reason);
+  return result;
 }
 
 // ── Router ────────────────────────────────────────────────────

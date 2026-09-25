@@ -6,6 +6,7 @@ import { authApi, onSessionToken } from './api';
 import { useSSE } from './hooks/useSSE';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import { useUniversalLinks } from './hooks/useUniversalLinks';
+import { useLiveActivity } from './hooks/useLiveActivity';
 import Landing from './pages/Landing';
 import Get from './pages/Get';
 import Auth from './pages/Auth';
@@ -30,6 +31,7 @@ function AppRoutes() {
   useSSE();
   usePushNotifications(!!user);
   useUniversalLinks();
+  useLiveActivity(!!user);
 
   useEffect(() => {
     if (!token) {

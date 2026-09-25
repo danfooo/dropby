@@ -37,6 +37,11 @@ Still open:
 
 Related but separate: with no group object there is nothing to select as door recipients in one tap. Saved recipient sets ("open my door to these 8") are a real ergonomic want, but a different feature — do not drag the group object back for it.
 
+## iOS Live Activity
+- [ ] **Localize the Live Activity.** Its copy ("Your door is open", "on their way", "closes in") is English-only, like every push. Needs a strings catalog in the `DoorActivity` extension once native copy is localized at all.
+- [ ] **Push-to-start (iOS 17.2+).** A scheduled session that starts on its own while the app is closed only gets its Live Activity when the app is next opened. The server could start it remotely with a push-to-start token.
+- [ ] **Buttons on the activity** ("Keep open +30", "Close now") via App Intents (iOS 17+). Today tapping it just opens the app.
+
 ## Maybe
 - [ ] New user with no friends: "Open Now" gives no hint that a share link is coming. Needs a solution that doesn't introduce the friends concept prematurely — the right fix probably lives earlier in the onboarding flow, not on the home screen.
 - [ ] SMS delivery for Add Friend: currently logs to console, only email delivery is implemented

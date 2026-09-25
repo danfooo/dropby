@@ -17,8 +17,9 @@ export const queryKeys = {
   friendSuggestions: ['friend-suggestions'],
 } as const;
 
-// Options a screen may tune: how often it polls, or how long a cached value is fresh.
-interface Freshness { refetchInterval?: number; staleTime?: number }
+// Options a screen may tune: how often it polls, how long a cached value is fresh, or
+// whether to fetch at all.
+interface Freshness { refetchInterval?: number; staleTime?: number; enabled?: boolean }
 
 export const useMyStatus = (opts: Freshness = {}) =>
   useQuery({ queryKey: queryKeys.myStatus, queryFn: statusApi.get, ...opts });
