@@ -1,5 +1,32 @@
 # dropby — TODOs
 
+## Release plan — native builds (written 2026-10-03)
+The server side of the September work is live (production database is at migration v6, including the Live Activity tables). What's left is getting the new iOS and Android builds out, then testing on real phones. One step at a time, in this order.
+
+**1. Make sure production runs current `main`.**
+- [ ] The last deploy (v152) was on 2026-09-25; a few server commits from that evening (door-closed push copy, Android "closes soon") may have landed after it. Run `fly deploy` **from the repo root**. In `android/` it fails with "missing an app name". If nothing changed, the deploy is a harmless restart.
+
+**2. iOS — get the Xcode Cloud build through.**
+- Where it stands: the app and the new `DoorActivity` Live Activity extension compile (local unsigned Release build succeeded 2026-09-26). Xcode Cloud archived fine but failed at the **ad-hoc export** step (`xcodebuild -exportArchive`, exit code 70) — a signing failure, most likely because the extension's identifier `cc.dropby.app.DoorActivity` didn't exist in the Apple Developer account yet.
+- Already done: in local Xcode, the DoorActivity target now signs automatically with team PD486B4Z2Q without errors, which registers the identifier.
+- No new capability is needed: Live Activity pushes use the app's existing Push Notifications capability; the app and extension share no data (no App Group); `NSSupportsLiveActivities` is already in `Info.plist`.
+- [ ] Check developer.apple.com → Certificates, Identifiers & Profiles → **Identifiers** lists `cc.dropby.app.DoorActivity`. If not: **+** → App IDs → App → Bundle ID (Explicit) `cc.dropby.app.DoorActivity`, no capabilities.
+- [ ] App Store Connect → the app → **Xcode Cloud** → failed build → **Rebuild**.
+- [ ] If it fails again: the build's **Artifacts** → download `ad-hoc-export-archive-logs` → open `IDEDistribution.standard.log` and look for the `error` lines. They name the part that couldn't be signed.
+
+**3. Android — build and upload.**
+- [ ] Rebuild the web code into the Android project first, because Android changes landed after the version bump (ongoing door notification, one "closes soon" prompt): `npm run build && npx cap sync android`. Version is already 1.1 / `versionCode 2` (08bf829); bump `versionCode` again only if 2 was already uploaded to Play.
+- [ ] Java: Gradle 8.14.3 runs on Java 8–24, but Android Studio bundles Java 25. One-time fix: open the project (`npx cap open android`) → Settings → Build, Execution, Deployment → Build Tools → Gradle → **Gradle JDK** → **Download JDK…** → version **21** (JetBrains Runtime or Eclipse Temurin) → OK. Not an outdated setup: it's exactly the Capacitor 8 template; Gradle 9 waits for Capacitor 9 (see Deferred dependency bumps).
+- [ ] **Build → Generate Signed App Bundle or APK… → Android App Bundle.** Key store `/Users/danielherzog/dropby.keystore`, alias `dropby`, the existing passwords, **release** variant. Never let Android Studio create a new key: Play only accepts updates signed with the original one. Output: `android/app/release/app-release.aab`.
+- [ ] Play Console → dropby → **Test and release → Testing → Internal testing → Create new release** → upload the `.aab` → add release notes → **Next** → **Save and publish**.
+
+**4. Test on real phones.** Work through *Native device test pass* below, plus the Live Activity on iOS and the ongoing door notification on Android (*Open door outside the app*).
+
+**5. Later.**
+- [ ] Turn on database backups whenever convenient: *Database backups (Litestream)* below.
+- [ ] On or after **2026-10-26**: remove legacy JWT sign-in (*Limits & Safety*).
+- [ ] Around end of November: Capacitor 9, with Gradle 9 / AGP 9, and the Java 25 issue goes away (*Deferred dependency bumps*).
+
 ## Icon design double-accounting
 `ios-icon.svg` and `favicon.svg` use the **cropped/offset** composition:
 `translate(730, 614) scale(1.55) translate(-751, -639)` — house pushed right and enlarged so it bleeds off the icon edges.
