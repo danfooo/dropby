@@ -4,7 +4,7 @@ dropby helps people spend more real time together — low-friction enough for a 
 
 ## Dev setup
 
-Requires **Node 24** (matches the Dockerfile). If you use nvm:
+Requires **Node 26** (matches the Dockerfile). If you use nvm:
 
 ```
 nvm use

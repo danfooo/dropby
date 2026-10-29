@@ -1,13 +1,12 @@
 #!/bin/sh
 set -e
 
-# Node 24 — matches local dev and the production Dockerfile.
+# Node 26 (LTS since 2026-10-28) — matches local dev and the production Dockerfile.
 # Node 22 is the hard floor: @capacitor/cli 8 and better-sqlite3 13 both require >=22.
-# Node 26 breaks better-sqlite3's native build, so don't use the unversioned `node` formula.
-brew install node@24
-# node@24 is keg-only, so it must be put on PATH explicitly. `brew --prefix` resolves the
-# right location on both Apple silicon (/opt/homebrew) and Intel (/usr/local) runners.
-export PATH="$(brew --prefix node@24)/bin:$PATH"
+# node@26 is Homebrew's alias for the unversioned `node` formula; `brew --prefix` resolves
+# the right location on both Apple silicon (/opt/homebrew) and Intel (/usr/local) runners.
+brew install node@26
+export PATH="$(brew --prefix node@26)/bin:$PATH"
 node -v
 
 # Install node dependencies and build web assets

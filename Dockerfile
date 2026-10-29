@@ -2,7 +2,7 @@
 # One root lockfile is the single source of truth for both workspaces.
 # Copying only the package.json files (not source) keeps this layer
 # cached across source-only changes.
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 RUN apk add --no-cache python3 make g++
 # The root postinstall fetches Chromium for the end-to-end tests; no image needs it.
 ENV SKIP_PLAYWRIGHT_INSTALL=1
@@ -33,7 +33,7 @@ COPY server/ server/
 RUN npm run build --workspace=server
 
 # ── Production deps (native modules compiled for target, server only) ──
-FROM node:24-alpine AS server-deps
+FROM node:26-alpine AS server-deps
 RUN apk add --no-cache python3 make g++
 ENV SKIP_PLAYWRIGHT_INSTALL=1
 WORKDIR /app
@@ -47,7 +47,7 @@ RUN npm ci --workspace=server --omit=dev
 FROM litestream/litestream:0.5.17 AS litestream
 
 # ── Production ─────────────────────────────────────────────────
-FROM node:24-alpine
+FROM node:26-alpine
 COPY --from=litestream /usr/local/bin/litestream /usr/local/bin/litestream
 COPY deploy/ /app/deploy/
 WORKDIR /app/server

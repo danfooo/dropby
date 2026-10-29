@@ -98,4 +98,4 @@ Dev builds need the APNs sandbox host; TestFlight and production need it unset. 
 
 ## Shell
 
-Use `zsh -c "..."` for shell commands (picks up nvm and Node 24).
+Use `zsh -c "..."` for shell commands (picks up nvm and Node 26).

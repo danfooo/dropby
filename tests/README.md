@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node 24** via nvm (`nvm use 24` or set as default)
+- **Node 26** via nvm (`nvm use 26` or set as default)
 
 Running `npm install` from the repo root installs the matching Playwright
 browser build automatically (a `postinstall` script runs `npx playwright
